@@ -93,10 +93,10 @@ class A10DeleteContext(A10WriteContext):
             return
 
         ctx = self.openstack_context
-        n = self.driver.pool._total(ctx, self.tenant_id)
-        n += self.driver.load_balancer._total(ctx, self.tenant_id)
-        n += self.driver.listener._total(ctx, self.tenant_id)
-        n += self.driver.health_monitor._total(ctx, self.tenant_id)
+        n = self.a10_driver.pool._total(ctx, self.tenant_id)
+        n += self.a10_driver.load_balancer._total(ctx, self.tenant_id)
+        n += self.a10_driver.listener._total(ctx, self.tenant_id)
+        n += self.a10_driver.health_monitor._total(ctx, self.tenant_id)
         if n == 0:
             try:
                 self.client.system.partition.delete(self.tenant_id)
