@@ -15,7 +15,7 @@
 import a10_context as a10
 
 
-class LoadBalancerManager(ManagerBase):
+class LoadBalancerHandler(HandlerBase):
 
     def _set(self, c, set_method, context, load_balancer):
         status = c.slb.UP
@@ -31,7 +31,7 @@ class LoadBalancerManager(ManagerBase):
 
             for listener in load_balancer.listeners:
                 try:
-                    self.lbaas_manager.listener._create(c, context, listener)
+                    self.a10_driver.listener._create(c, context, listener)
                 except acos_errors.Exists:
                     pass
 

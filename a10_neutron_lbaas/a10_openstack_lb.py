@@ -16,16 +16,15 @@ import acos_client
 import logging
 
 import a10_config
-import mgr_hm
-import mgr_lb
-import mgr_listener
-import mgr_member
-import mgr_pool
+import handler_hm
+import handler_lb
+import handler_listener
+import handler_member
+import handler_pool
 
 LOG = logging.getLogger(__name__)
 
 
-#class LbaasManager(object):
 class A10OpenstackLB(object):
 
     def __init__(self, openstack_driver):
@@ -67,20 +66,26 @@ class A10OpenstackLB(object):
 
     @property
     def lb(self):
-        return mgr_lb.LoadBalancer(self, self.openstack_driver.load_balancer)
+        return handler_lb.LoadBalancerHandler(
+            self,
+            self.openstack_driver.load_balancer)
 
     @property
     def listener(self):
-        return mgr_listener.Listener(self, self.openstack_driver.listener)
+        return handler_listener.ListenerHandler(
+            self,
+            self.openstack_driver.listener)
 
     @property
     def pool(self):
-        return mgr_pool.Pool(self, self.openstack_driver.pool)
+        return handler_pool.PoolHandler(self, self.openstack_driver.pool)
 
     @property
     def member(self):
-        return mgr_member.Member(self, self.openstack_driver.member)
+        return handler_member.MemberHandler(self, self.openstack_driver.member)
 
     @property
     def hm(self):
-        return mgr_hm.HealthMonitor(self, self.openstack_driver.health_monitor)
+        return handler_hm.HealthMonitorHandler(
+            self,
+            self.openstack_driver.health_monitor)

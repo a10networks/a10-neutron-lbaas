@@ -15,7 +15,7 @@
 import a10_context as a10
 
 
-class ListenerManager(ManagerBase):
+class ListenerHandler(HandlerBase):
 
     def _persistence_get(self, c, context, listener):
         if not listener.pool or not listener.pool.sessionpersistence:

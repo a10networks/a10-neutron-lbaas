@@ -15,7 +15,7 @@
 import a10_context as a10
 
 
-class HealthMonitorManager(ManagerBase):
+class HealthMonitorHandler(HandlerBase):
 
     def _set(self, c, set_method, context, hm):
         hm_map = {

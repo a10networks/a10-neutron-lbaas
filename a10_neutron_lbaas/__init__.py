@@ -13,5 +13,5 @@
 #    under the License.
 # flake8: noqa
 
-from lbaas_driver import LBaaSDriver
+from a10_openstack_lb import A10OpenstackLB
 from version import VERSION

@@ -15,7 +15,8 @@
 import a10_context as a10
 import a10_exceptions as a10_ex
 
-class Pool(ManagerBase):
+
+class PoolHandler(HandlerBase):
 
     def _set(self, c, set_method, context, pool):
         lb_algorithms = {
@@ -33,7 +34,7 @@ class Pool(ManagerBase):
                    lb_method=algoritms[pool.lb_algorithm])
 
         if pool.sessionpersistence:
-            PersistenceManager(self, c, pool).create()
+            PersistenceHandler(self, c, pool).create()
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
@@ -46,22 +47,22 @@ class Pool(ManagerBase):
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
             for member in pool.members:
-                self.lbaas_manager.member._delete(c, context, member)
+                self.a10_driver.member._delete(c, context, member)
 
             if pool.health_monitor:
-                self.lbaas_manager.health_monitor._delete(c, context,
-                                                          pool.health_monitor)
+                self.a10_driver.health_monitor._delete(c, context,
+                                                       pool.health_monitor)
 
             c.client.slb.service_group.delete(pool.id)
 
             if pool.sessionpersistence:
-                PersistenceManager(self, c, pool).delete()
+                PersistenceHandler(self, c, pool).delete()
 
 
-class PersistenceManager(object):
+class PersistenceHandler(object):
 
-    def __init__(self, mgr, c, context, pool):
-        self.mgr = mgr
+    def __init__(self, pool_handler, c, context, pool):
+        self.pool_handler = pool_handler
         self.c = c
         self.context = context
         self.pool = pool
@@ -84,7 +85,8 @@ class PersistenceManager(object):
             raise a10_ex.UnsupportedFeature()
 
         if pool.listener:
-            self.mgr.lbaas_manager.listener._update(c, context, pool.listener)
+            self.pool_handler.a10_driver.listener._update(c, context,
+                                                          pool.listener)
 
     def delete(self):
         methods = {
@@ -100,5 +102,5 @@ class PersistenceManager(object):
                 pass
 
         if pool.listener:
-            self.mgr.lbaas_manager.listener._update(c, self.context,
-                                                    self.pool.listener)
+            self.pool_handler.a10_driver.listener._update(c, self.context,
+                                                          self.pool.listener)

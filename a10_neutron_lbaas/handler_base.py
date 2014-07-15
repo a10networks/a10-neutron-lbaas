@@ -13,9 +13,9 @@
 #    under the License.
 
 
-class ManagerBase(object):
+class HandlerBase(object):
 
-    def __init__(self, lbaas_manager, openstack_manager):
-        self.lbaas_manager = lbaas_manager
-        self.openstack_driver = self.lbaas_manager.openstack_driver
+    def __init__(self, a10_driver, openstack_manager):
+        self.a10_driver = a10_driver
+        self.openstack_driver = self.a10_driver.openstack_driver
         self.openstack_manager = openstack_manager
