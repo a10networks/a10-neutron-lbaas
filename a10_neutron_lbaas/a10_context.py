@@ -68,9 +68,9 @@ class A10WriteStatusContext(A10WriteContext):
         if exc_type is None:
             self.openstack_manager.active(self.context, self.lbaas_obj.id)
         else:
-            self.openstack_manager.failed(self.context, self.baas_obj.id)
+            self.openstack_manager.failed(self.context, self.lbaas_obj.id)
 
-        super(A10CreateContext, self).__exit__(exc_type, exc_value, traceback)
+        super(A10WriteStatusContext, self).__exit__(exc_type, exc_value, traceback)
 
 
 class A10DeleteContext(A10WriteContext):

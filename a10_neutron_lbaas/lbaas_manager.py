@@ -25,7 +25,8 @@ import mgr_pool
 LOG = logging.getLogger(__name__)
 
 
-class LbaasManager(object):
+#class LbaasManager(object):
+class A10OpenstackLB(object):
 
     def __init__(self, openstack_driver):
         self.openstack_driver = openstack_driver
