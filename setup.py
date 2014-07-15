@@ -1,17 +1,12 @@
 #!/usr/bin/env python
+# flake8: noqa
 
-import os
 from setuptools import setup, find_packages
-
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name = "a10-neutron-lbaas",
     version = "0.1",
-    packages = ['a10_neutron_lbaas'],
-
-    data_files = []
+    packages = find_packages(),
 
     author = "A10 Networks",
     author_email = "dougw@a10networks.com",
@@ -20,7 +15,7 @@ setup(
     keywords = "a10 axapi acos adc slb load balancer",
     url = "https://github.com/a10networks/a10-neutron-lbaas",
 
-    long_description = read('README.md'),
+    long_description = open('README.md').read(),
 
     classifiers = [
         'Development Status :: 4 - Beta',
