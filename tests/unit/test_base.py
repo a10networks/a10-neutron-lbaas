@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
 import unittest
 
 import mock
@@ -58,4 +59,7 @@ class FakeA10OpenstackLB(a10_neutron_lbaas.A10OpenstackLB):
 class UnitTestBase(unittest.TestCase):
 
     def setUp(self):
+        unit_dir = os.path.dirname(__file__)
+        unit_config = os.path.join(unit_dir, "unit_config")
+        os.environ['A10_CONFIG_DIR'] = unit_config
         self.a = FakeA10OpenstackLB(None)

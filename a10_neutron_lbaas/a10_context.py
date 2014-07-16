@@ -43,7 +43,7 @@ class A10Context(object):
 
     def select_appliance_partition(self):
         # If we are not using appliance partitions, we are done.
-        if self.device_cfg.get('v_method', 'lsi').lower() != 'adp':
+        if self.device_cfg['v_method'].lower() != 'adp':
             return
 
         # Try to make the requested partition active
@@ -93,7 +93,7 @@ class A10DeleteContext(A10WriteContext):
 
     def partition_cleanup_check(self):
         # If we are not using appliance partitions, we are done.
-        if self.device_cfg.get('v_method', 'lsi').lower() != 'adp':
+        if self.device_cfg['v_method'].lower() != 'adp':
             return
 
         ctx = self.openstack_context

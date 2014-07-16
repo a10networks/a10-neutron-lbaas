@@ -21,6 +21,16 @@ LOG = logging.getLogger(__name__)
 
 class A10Config(object):
 
+    DEVICE_DEFAULTS = {
+        "status": True,
+        "autosnat": True,
+        "api_version": "2.1",
+        "v_method": "LSI",
+        "max_instance": 5000,
+        "use_float": False,
+        "method": "hash"
+    }
+
     def __init__(self):
         self.config_dir = os.environ.get(
             'A10_CONFIG_DIR',
@@ -34,11 +44,21 @@ class A10Config(object):
             self.config = config
             self.devices = {}
             for k, v in self.config.devices.items():
-                if v['status']:
-                    self.devices[k] = v
-                else:
+                if 'status' in v and not v['status']:
                     LOG.debug("status is False, skipping dev: %s", v)
+                else:
+                    self.devices[k] = v
+                    for dk, dv in self.DEVICE_DEFAULTS.items():
+                        if dk not in self.devices:
+                            self.devices[dk] = dv
         finally:
             sys.path = real_sys_path
 
         LOG.debug("A10Config, devices=%s", self.devices)
+
+    @property
+    def verify_appliances(self):
+        if hasattr(self.config, 'verify_appliances'):
+            return self.config.verify_appliances
+        else:
+            return True

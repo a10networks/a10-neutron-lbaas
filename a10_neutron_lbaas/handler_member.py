@@ -34,7 +34,7 @@ class MemberHandler(handler_base.HandlerBase):
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
             server_ip = self._get_ip(context, member,
-                                     c.device_cfg.get('use_float', False))
+                                     c.device_cfg['use_float'])
             server_name = self._get_name(member, server_ip)
 
             status = c.client.slb.UP
@@ -52,7 +52,7 @@ class MemberHandler(handler_base.HandlerBase):
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
             server_ip = self._get_ip(context, member,
-                                     c.device_cfg.get('use_float', False))
+                                     c.device_cfg['use_float'])
             server_name = self._get_name(member, server_ip)
 
             status = c.client.slb.UP
@@ -65,8 +65,7 @@ class MemberHandler(handler_base.HandlerBase):
                                                      status)
 
     def _delete(self, c, context, member):
-        server_ip = self._get_ip(context, member,
-                                 c.device_cfg.get('use_float', False))
+        server_ip = self._get_ip(context, member, c.device_cfg['use_float'])
         server_name = self._get_name(member, server_ip)
 
         if self._count(context, member) > 1:

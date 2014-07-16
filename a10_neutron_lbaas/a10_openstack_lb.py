@@ -31,7 +31,7 @@ class A10OpenstackLB(object):
         self.openstack_driver = openstack_driver
         self.config = a10_config.A10Config()
         self.appliance_hash = acos_client.Hash(self.config.devices.keys())
-        if self.config.get('verify_appliances', True):
+        if self.config.verify_appliances:
             self._verify_appliances()
 
     def _select_a10_device(self, tenant_id):
