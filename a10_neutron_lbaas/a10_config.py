@@ -48,9 +48,18 @@ class A10Config(object):
                     LOG.debug("status is False, skipping dev: %s", v)
                 else:
                     self.devices[k] = v
+
+                    # Figure out port and protocol
+                    protocol = self.devices[k].get('protocol', 'https')
+                    port = self.devices[k].get(
+                        'port', {'http': 80, 'https': 443}[protocol])
+                    self.devices[k]['protocol'] = protocol
+                    self.devices[k]['port'] = port
+
+                    # Device defaults
                     for dk, dv in self.DEVICE_DEFAULTS.items():
-                        if dk not in self.devices:
-                            self.devices[dk] = dv
+                        if dk not in self.devices[k]:
+                            self.devices[k][dk] = dv
         finally:
             sys.path = real_sys_path
 

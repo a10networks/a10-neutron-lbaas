@@ -40,13 +40,10 @@ class A10OpenstackLB(object):
 
     def _get_a10_client(self, device_info):
         d = device_info
-        protocol = d.get('protocol', 'https')
-        port = d.get('port', {'http': 80, 'https': 443}[protocol])
-
         return acos_client.Client(d['host'],
                                   d.get('api_version', acos_client.AXAPI_21),
                                   d['username'], d['password'],
-                                  port=port, protocol=protocol)
+                                  port=d['port'], protocol=d['protocol'])
 
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")

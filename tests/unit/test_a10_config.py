@@ -19,3 +19,23 @@ class TestPools(test_base.UnitTestBase):
 
     def test_sanity(self):
         pass
+
+    def test_verify_appliances(self):
+        self.assertTrue(self.a.config.verify_appliances)
+
+    def test_num_appliances(self):
+        self.assertEqual(3, len(self.a.config.devices))
+
+    def test_expected_ports(self):
+        self.assertEqual(8443, self.a.config.devices['ax1']['port'])
+        self.assertEqual(80, self.a.config.devices['ax3']['port'])
+        self.assertEqual(443, self.a.config.devices['ax4']['port'])
+
+    def test_expected_protocols(self):
+        self.assertEqual('https', self.a.config.devices['ax1']['protocol'])
+        self.assertEqual('http', self.a.config.devices['ax3']['protocol'])
+        self.assertEqual('https', self.a.config.devices['ax4']['protocol'])
+
+    def test_v_method(self):
+        for k, v in self.a.config.devices.items():
+            self.assertEqual('LSI', v['v_method'])
