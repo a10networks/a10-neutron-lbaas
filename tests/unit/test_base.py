@@ -53,7 +53,8 @@ class FakeA10OpenstackLB(a10_neutron_lbaas.A10OpenstackLB):
         super(FakeA10OpenstackLB, self).__init__(mock.MagicMock())
 
     def _get_a10_client(self, device_info):
-        return mock.MagicMock()
+        self.last_client = mock.MagicMock()
+        return self.last_client
 
 
 class UnitTestBase(unittest.TestCase):

@@ -22,7 +22,7 @@ class TestA10Openstack(test_base.UnitTestBase):
 
     def test_select(self):
         a = self.a._select_a10_device("first-token")
-        b = self.a._select_a10_device("second-token")
+        self.a._select_a10_device("second-token")
         self.assertEqual(a, self.a._select_a10_device("first-token"))
 
     def test_verify(self):
