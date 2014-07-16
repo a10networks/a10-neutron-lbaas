@@ -12,3 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import test_base
+
+
+class TestPools(test_base.UnitTestBase):
+
+    def test_sanity(self):
+        pass
+

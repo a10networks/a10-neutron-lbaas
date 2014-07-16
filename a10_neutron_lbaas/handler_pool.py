@@ -14,9 +14,10 @@
 
 import a10_context as a10
 import a10_exceptions as a10_ex
+import handler_base
 
 
-class PoolHandler(HandlerBase):
+class PoolHandler(handler_base.HandlerBase):
 
     def _set(self, c, set_method, context, pool):
         lb_algorithms = {

@@ -12,6 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import unittest
+
+import a10_neutron_lbaas
+
 
 class FakeModel(object):
 
@@ -33,4 +37,20 @@ class FakeMember(FakeModel):
 
 class FakeHM(FakeModel):
     pass
+
+
+class FakeA10OpenstackLB(a10_neutron_lbaas.A10OpenstackLB):
+
+    def __init__(self, openstack_driver):
+        super(FakeA10OpenstackLB, self).__init__(mock.MagicMock())
+
+    def _get_a10_client(self, device_info):
+        return mock.MagicMock()
+
+
+class UnitTestBase(unittest.TestCase):
+
+    def setUp(self):
+        self.a = FakeA10OpenstackLB(None)
+
 

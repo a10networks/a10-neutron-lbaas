@@ -13,9 +13,10 @@
 #    under the License.
 
 import a10_context as a10
+import handler_base
 
 
-class MemberHandler(HandlerBase):
+class MemberHandler(handler_base.HandlerBase):
 
     def _get_ip(self, context, member, use_float=False):
         return self.openstack_manager._get_ip(context, member, use_float)
@@ -32,7 +33,7 @@ class MemberHandler(HandlerBase):
     def create(self, context, member):
         with A10WriteStatusContext(self, context, member) as c:
             server_ip = self._get_ip(context, member,
-                                     c.device_cfg['use_float'])
+                                     c.device_cfg.get('use_float', False))
             server_name = self._get_name(member, server_ip)
 
             status = c.client.slb.UP
@@ -50,7 +51,7 @@ class MemberHandler(HandlerBase):
     def update(self, context, old_member, member):
         with A10WriteStatusContext(self, context, member) as c:
             server_ip = self._get_ip(context, member,
-                                     c.device_cfg['use_float'])
+                                     c.device_cfg.get('use_float', False))
             server_name = self._get_name(member, server_ip)
 
             status = c.client.slb.UP
@@ -64,7 +65,7 @@ class MemberHandler(HandlerBase):
 
     def _delete(self, c, context, member):
         server_ip = self._get_ip(context, member,
-                                 c.device_cfg['use_float'])
+                                 c.device_cfg.get('use_float', False))
         server_name = self._get_name(member, server_ip)
 
         if self._count(context, member) > 1:

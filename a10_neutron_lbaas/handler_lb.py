@@ -13,9 +13,10 @@
 #    under the License.
 
 import a10_context as a10
+import handler_base
 
 
-class LoadBalancerHandler(HandlerBase):
+class LoadBalancerHandler(handler_base.HandlerBase):
 
     def _set(self, c, set_method, context, load_balancer):
         status = c.slb.UP

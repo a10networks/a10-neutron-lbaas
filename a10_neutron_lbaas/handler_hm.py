@@ -13,9 +13,10 @@
 #    under the License.
 
 import a10_context as a10
+import handler_base
 
 
-class HealthMonitorHandler(HandlerBase):
+class HealthMonitorHandler(handler_base.HandlerBase):
 
     def _set(self, c, set_method, context, hm):
         hm_map = {

@@ -13,9 +13,10 @@
 #    under the License.
 
 import a10_context as a10
+import handler_base
 
 
-class ListenerHandler(HandlerBase):
+class ListenerHandler(handler_base.HandlerBase):
 
     def _persistence_get(self, c, context, listener):
         if not listener.pool or not listener.pool.sessionpersistence:
