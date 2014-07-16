@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import acos_client
 import logging
 
 import a10_config
+import acos_client
 import handler_hm
 import handler_lb
 import handler_listener

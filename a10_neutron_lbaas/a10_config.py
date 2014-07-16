@@ -23,12 +23,12 @@ class A10Config(object):
 
     def __init__(self):
         self.config_dir = os.environ.get(
-                        'A10_CONFIG_DIR',
-                        '/etc/neutron/services/loadbalancer/a10networks')
-        self.config_path = os.path.join(config_dir, "config.py")
+            'A10_CONFIG_DIR',
+            '/etc/neutron/services/loadbalancer/a10networks')
+        self.config_path = os.path.join(self.config_dir, "config.py")
 
         real_sys_path = sys.path
-        sys.path = [config_dir]
+        sys.path = [self.config_dir]
         try:
             import config
             self.config = config

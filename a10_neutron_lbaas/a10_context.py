@@ -12,7 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 import acos_client.errors as acos_errors
+
+LOG = logging.getLogger(__name__)
 
 
 class A10Context(object):
@@ -100,5 +104,5 @@ class A10DeleteContext(A10WriteContext):
         if n == 0:
             try:
                 self.client.system.partition.delete(self.tenant_id)
-            except:
+            except Exception:
                 LOG.error("A10Driver: partition cleanup failed; ignoring")

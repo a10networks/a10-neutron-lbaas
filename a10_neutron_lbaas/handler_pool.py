@@ -14,13 +14,14 @@
 
 import a10_context as a10
 import a10_exceptions as a10_ex
+import acos_client.errors as acos_errors
 import handler_base
 
 
 class PoolHandler(handler_base.HandlerBase):
 
     def _set(self, c, set_method, context, pool):
-        lb_algorithms = {
+        lb_methods = {
             'ROUND_ROBIN': c.client.slb.service_group.ROUND_ROBIN,
             'LEAST_CONNECTIONS': c.client.slb.service_group.LEAST_CONNECTION,
             'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
@@ -32,7 +33,7 @@ class PoolHandler(handler_base.HandlerBase):
 
         set_method(pool.id,
                    protocol=protocols[pool.protocol],
-                   lb_method=algoritms[pool.lb_algorithm])
+                   lb_method=lb_methods[pool.lb_algorithm])
 
         if pool.sessionpersistence:
             PersistenceHandler(self, c, pool).create()
@@ -85,9 +86,9 @@ class PersistenceHandler(object):
         else:
             raise a10_ex.UnsupportedFeature()
 
-        if pool.listener:
-            self.pool_handler.a10_driver.listener._update(c, context,
-                                                          pool.listener)
+        if self.pool.listener:
+            self.pool_handler.a10_driver.listener._update(self.c, self.context,
+                                                          self.pool.listener)
 
     def delete(self):
         methods = {
@@ -102,6 +103,6 @@ class PersistenceHandler(object):
             except Exception:
                 pass
 
-        if pool.listener:
-            self.pool_handler.a10_driver.listener._update(c, self.context,
+        if self.pool.listener:
+            self.pool_handler.a10_driver.listener._update(self.c, self.context,
                                                           self.pool.listener)

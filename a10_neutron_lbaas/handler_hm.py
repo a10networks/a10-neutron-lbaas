@@ -39,18 +39,18 @@ class HealthMonitorHandler(handler_base.HandlerBase):
         self._set(c, c.client.slb.hm.create, context, hm)
 
     def create(self, context, hm):
-        with a10.A10WriteStatusContext(self, context, pool) as c:
+        with a10.A10WriteStatusContext(self, context, hm) as c:
             self._create(c, context, hm)
 
     def update(self, context, old_hm, hm):
-        with a10.A10WriteStatusContext(self, context, pool) as c:
+        with a10.A10WriteStatusContext(self, context, hm) as c:
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
         c.client.slb.hm.delete(hm.id[0:28])
 
     def delete(self, context, hm):
-        with a10.A10DeleteContext(self, context, pool) as c:
+        with a10.A10DeleteContext(self, context, hm) as c:
             if hm.pool:
                 c.client.slb.service_group.update(hm.pool.id,
                                                   health_monitor="")

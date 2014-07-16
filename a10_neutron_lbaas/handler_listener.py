@@ -18,6 +18,14 @@ import handler_base
 
 class ListenerHandler(handler_base.HandlerBase):
 
+    def _protocols(self, c):
+        return {
+            'TCP': c.client.slb.virtual_server.vport.protocol.TCP,
+            'UDP': c.client.slb.virtual_server.vport.protocol.UDP,
+            'HTTP': c.client.slb.virtual_server.vport.protocol.HTTP,
+            'HTTPS': c.client.slb.virtual_server.vport.protocol.HTTPS
+        }
+
     def _persistence_get(self, c, context, listener):
         if not listener.pool or not listener.pool.sessionpersistence:
             return [None, None]
@@ -35,13 +43,6 @@ class ListenerHandler(handler_base.HandlerBase):
         return [c_pers, s_pers]
 
     def _set(self, c, set_method, context, listener):
-        protocols = {
-            'TCP': c.client.slb.virtual_server.vport.protocol.TCP,
-            'UDP': c.client.slb.virtual_server.vport.protocol.UDP,
-            'HTTP': c.client.slb.virtual_server.vport.protocol.HTTP,
-            'HTTPS': c.client.slb.virtual_server.vport.protocol.HTTPS
-        }
-
         status = c.slb.UP
         if not listener.admin_state_up:
             status = c.slb.DOWN
@@ -49,7 +50,7 @@ class ListenerHandler(handler_base.HandlerBase):
         pers = self._persistence_get(c, context, listener)
 
         set_method(listener.load_balancer_id, listener.id,
-                   protocol=protocols[listener.protocol],
+                   protocol=self._protocols[listener.protocol],
                    port=listener.port,
                    service_group_name=listener.pool_id,
                    s_pers_name=pers[1],
@@ -60,7 +61,7 @@ class ListenerHandler(handler_base.HandlerBase):
         if not listener.load_balancer:
             return
 
-        with a10.A10WriteStatusContext(self, context, pool) as c:
+        with a10.A10WriteStatusContext(self, context, listener) as c:
             self._set(c, c.client.slb.virtual_server.vport.create, context,
                       listener)
 
@@ -71,17 +72,17 @@ class ListenerHandler(handler_base.HandlerBase):
     def update(self, context, old_listener, listener):
         if not listener.load_balancer:
             return
-            
-        with a10.A10WriteStatusContext(self, context, pool) as c:
+
+        with a10.A10WriteStatusContext(self, context, listener) as c:
             self._update(c, context, listener)
 
     def delete(self, context, listener):
         if not listener.load_balancer:
             return
-            
-        with a10.A10DeleteContext(self, context, pool) as c:
+
+        with a10.A10DeleteContext(self, context, listener) as c:
             c.client.slb.virtual_server.vport.delete(
                 listener.load_balancer_id,
                 listener.id,
-                protocol=protocols[listener.protocol],
+                protocol=self._protocols[listener.protocol],
                 port=listener.port)

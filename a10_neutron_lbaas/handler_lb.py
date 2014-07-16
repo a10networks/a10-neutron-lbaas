@@ -13,6 +13,8 @@
 #    under the License.
 
 import a10_context as a10
+import a10_exceptions as a10_ex
+import acos_client.errors as acos_errors
 import handler_base
 
 
@@ -55,7 +57,7 @@ class LoadBalancerHandler(handler_base.HandlerBase):
                 return {
                     "bytes_in": r["virtual_server_stat"]["req_bytes"],
                     "bytes_out": r["virtual_server_stat"]["resp_bytes"],
-                    "active_connections": 
+                    "active_connections":
                         r["virtual_server_stat"]["cur_conns"],
                     "total_connections": r["virtual_server_stat"]["tot_conns"]
                 }

@@ -14,6 +14,8 @@
 
 import unittest
 
+import mock
+
 import a10_neutron_lbaas
 
 
@@ -23,17 +25,22 @@ class FakeModel(object):
         self.id = kwargs.get('id', 'fake-id-001')
         self.tenant_id = kwargs.get('tenant_id', 'get-off-my-lawn')
 
+
 class FakeLB(FakeModel):
     pass
+
 
 class FakeListener(FakeModel):
     pass
 
+
 class FakePool(FakeModel):
     pass
 
+
 class FakeMember(FakeModel):
     pass
+
 
 class FakeHM(FakeModel):
     pass
@@ -52,5 +59,3 @@ class UnitTestBase(unittest.TestCase):
 
     def setUp(self):
         self.a = FakeA10OpenstackLB(None)
-
-

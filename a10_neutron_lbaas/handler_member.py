@@ -13,6 +13,7 @@
 #    under the License.
 
 import a10_context as a10
+import acos_client.errors as acos_errors
 import handler_base
 
 
@@ -31,7 +32,7 @@ class MemberHandler(handler_base.HandlerBase):
         return self.openstack_manager._count(context, member)
 
     def create(self, context, member):
-        with A10WriteStatusContext(self, context, member) as c:
+        with a10.A10WriteStatusContext(self, context, member) as c:
             server_ip = self._get_ip(context, member,
                                      c.device_cfg.get('use_float', False))
             server_name = self._get_name(member, server_ip)
@@ -41,7 +42,7 @@ class MemberHandler(handler_base.HandlerBase):
                 status = c.client.slb.DOWN
 
             try:
-                c.client.server_create(server_name, ip_address)
+                c.client.server_create(server_name, server_ip)
             except acos_errors.Exists:
                 pass
 
@@ -49,7 +50,7 @@ class MemberHandler(handler_base.HandlerBase):
                                        member.protocol_port, status=status)
 
     def update(self, context, old_member, member):
-        with A10WriteStatusContext(self, context, member) as c:
+        with a10.A10WriteStatusContext(self, context, member) as c:
             server_ip = self._get_ip(context, member,
                                      c.device_cfg.get('use_float', False))
             server_name = self._get_name(member, server_ip)
@@ -76,5 +77,5 @@ class MemberHandler(handler_base.HandlerBase):
             c.client.slb.server.delete(server_name)
 
     def delete(self, context, member):
-        with A10DeleteContext(self, context, member) as c:
+        with a10.A10DeleteContext(self, context, member) as c:
             self._delete(c, context, member)

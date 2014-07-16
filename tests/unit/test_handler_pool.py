@@ -19,4 +19,3 @@ class TestPools(test_base.UnitTestBase):
 
     def test_sanity(self):
         pass
-
