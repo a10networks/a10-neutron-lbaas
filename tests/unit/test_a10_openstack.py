@@ -15,7 +15,15 @@
 import test_base
 
 
-class TestPools(test_base.UnitTestBase):
+class TestA10Openstack(test_base.UnitTestBase):
 
     def test_sanity(self):
         pass
+
+    def test_select(self):
+        a = self.a._select_a10_device("first-token")
+        b = self.a._select_a10_device("second-token")
+        self.assertEqual(a, self.a._select_a10_device("first-token"))
+
+    def test_verify(self):
+        self.a._verify_appliances()

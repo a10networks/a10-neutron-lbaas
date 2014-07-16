@@ -15,7 +15,7 @@
 import test_base
 
 
-class TestPools(test_base.UnitTestBase):
+class TestA10Context(test_base.UnitTestBase):
 
     def test_sanity(self):
         pass
