@@ -27,9 +27,17 @@ class HealthMonitorHandler(handler_base.HandlerBase):
         }
 
         hm_name = hm.id[0:28]
+        method = None
+        url = None
+        expect_code = None
+        if hm.type in ['HTTP', 'HTTPS']:
+            method = hm.http_method
+            url = hm.url_path
+            expect_code = hm.expected_codes
+
         set_method(hm_name, hm_map[hm.type],
                    hm.delay, hm.timeout, hm.max_retries,
-                   hm.http_method, hm.url_path, hm.expected_codes)
+                   method=method, url=url, expect_code=expect_code)
 
         if hm.pool:
             c.client.slb.service_group.update(hm.pool.id,

@@ -29,25 +29,6 @@ class TestA10Context(test_base.UnitTestBase):
         self.ctx = None
         self.m = test_base.FakeModel()
 
-    def reset_adp(self):
-        for k, v in self.a.config.devices.items():
-            v['v_method'] = 'adp'
-
-    def print_mocks(self):
-        print("OPENSTACK ", self.a.openstack_driver.mock_calls)
-        print("CLIENT ", self.a.last_client.mock_calls)
-
-    def empty_mocks(self):
-        self.print_mocks()
-        self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
-        self.assertEqual(0, len(self.a.last_client.mock_calls))
-
-    def empty_close_mocks(self):
-        self.print_mocks()
-        self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
-        self.assertEqual(1, len(self.a.last_client.mock_calls))
-        self.a.last_client.session.close.assert_called_with()
-
     def test_context(self):
         with a10.A10Context(self.handler, self.ctx, self.m) as c:
             self.empty_mocks()
@@ -116,11 +97,14 @@ class TestA10ContextADP(TestA10Context):
 
     def setUp(self):
         super(TestA10ContextADP, self).setUp()
-        self.reset_adp()
+        self.reset_v_method('adp')
 
-    def reset_adp(self):
+    def tearDown(self):
+        self.reset_v_method('lsi')
+
+    def reset_v_method(self, val):
         for k, v in self.a.config.devices.items():
-            v['v_method'] = 'adp'
+            v['v_method'] = val
 
     def empty_mocks(self):
         self.print_mocks()

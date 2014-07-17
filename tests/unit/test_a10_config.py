@@ -17,9 +17,6 @@ import test_base
 
 class TestA10Config(test_base.UnitTestBase):
 
-    def test_sanity(self):
-        pass
-
     def test_verify_appliances(self):
         self.assertTrue(self.a.config.verify_appliances)
 

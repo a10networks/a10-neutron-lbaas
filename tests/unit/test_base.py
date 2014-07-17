@@ -43,10 +43,6 @@ class FakeMember(FakeModel):
     pass
 
 
-class FakeHM(FakeModel):
-    pass
-
-
 class FakeA10OpenstackLB(a10_neutron_lbaas.A10OpenstackLB):
 
     def __init__(self, openstack_driver):
@@ -64,3 +60,18 @@ class UnitTestBase(unittest.TestCase):
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
         self.a = FakeA10OpenstackLB(None)
+
+    def print_mocks(self):
+        print("OPENSTACK ", self.a.openstack_driver.mock_calls)
+        print("CLIENT ", self.a.last_client.mock_calls)
+
+    def empty_mocks(self):
+        self.print_mocks()
+        self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
+        self.assertEqual(0, len(self.a.last_client.mock_calls))
+
+    def empty_close_mocks(self):
+        self.print_mocks()
+        self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
+        self.assertEqual(1, len(self.a.last_client.mock_calls))
+        self.a.last_client.session.close.assert_called_with()
