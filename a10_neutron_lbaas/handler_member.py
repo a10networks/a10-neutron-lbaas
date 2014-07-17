@@ -23,7 +23,7 @@ class MemberHandler(handler_base.HandlerBase):
         return self.openstack_manager._get_ip(context, member, use_float)
 
     def _get_name(self, member, ip_address):
-        tenant_label = member['tenant_id'][:5]
+        tenant_label = member.tenant_id[:5]
         addr_label = str(ip_address).replace(".", "_", 4)
         server_name = "_%s_%s_neutron" % (tenant_label, addr_label)
         return server_name
@@ -38,16 +38,18 @@ class MemberHandler(handler_base.HandlerBase):
             server_name = self._get_name(member, server_ip)
 
             status = c.client.slb.UP
-            if not member["admin_state_up"]:
+            if not member.admin_state_up:
                 status = c.client.slb.DOWN
 
             try:
-                c.client.server_create(server_name, server_ip)
+                c.client.slb.server.create(server_name, server_ip)
             except acos_errors.Exists:
                 pass
 
-            c.client.slb.member.create(member.pool_id, server_name,
-                                       member.protocol_port, status=status)
+            c.client.slb.service_group.member.create(member.pool.id,
+                                                     server_name,
+                                                     member.protocol_port,
+                                                     status=status)
 
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
@@ -56,10 +58,10 @@ class MemberHandler(handler_base.HandlerBase):
             server_name = self._get_name(member, server_ip)
 
             status = c.client.slb.UP
-            if not member["admin_state_up"]:
+            if not member.admin_state_up:
                 status = c.client.slb.DOWN
 
-            c.client.slb.service_group.member.update(member.pool_id,
+            c.client.slb.service_group.member.update(member.pool.id,
                                                      server_name,
                                                      member.protocol_port,
                                                      status)
@@ -69,7 +71,7 @@ class MemberHandler(handler_base.HandlerBase):
         server_name = self._get_name(member, server_ip)
 
         if self._count(context, member) > 1:
-            c.client.slb.service_group.member.delete(member.pool_id,
+            c.client.slb.service_group.member.delete(member.pool.id,
                                                      server_name,
                                                      member.protocol_port)
         else:

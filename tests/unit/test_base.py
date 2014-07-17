@@ -39,10 +39,6 @@ class FakePool(FakeModel):
     pass
 
 
-class FakeMember(FakeModel):
-    pass
-
-
 class FakeA10OpenstackLB(a10_neutron_lbaas.A10OpenstackLB):
 
     def __init__(self, openstack_driver):

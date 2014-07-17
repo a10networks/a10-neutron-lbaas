@@ -50,6 +50,7 @@ devices = {
         "status": True,
         "api_version": "2.1",
         "max_instance": 5000,
+        "use_float": True,
     },
     "ax4": {
         "host": "10.10.100.23",

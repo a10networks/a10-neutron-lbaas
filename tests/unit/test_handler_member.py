@@ -12,10 +12,85 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 import test_base
+
+def return_one(*args):
+    print "ONE"
+    return 1
+
+def return_two(*args):
+    print "TWO"
+    return 2
+
+class FakeMember(test_base.FakeModel):
+
+    def __init__(self, admin_state_up=True):
+        super(FakeMember, self).__init__()
+        self.id = 'fake-member-id-001'
+        self.address = '2.2.2.2'
+        self.admin_state_up = admin_state_up
+        self.pool = mock.MagicMock()
+        self.protocol_port = 80
 
 
 class TestMembers(test_base.UnitTestBase):
 
-    def test_sanity(self):
-        pass
+    def test_get_ip(self):
+        m = FakeMember()
+        self.a.member._get_ip(None, m, False)
+        self.a.openstack_driver.member._get_ip.assert_called_with(
+            None, m, False)
+
+    def test_get_name(self):
+        z = self.a.member._get_name(FakeMember(), '1.1.1.1')
+        self.assertEqual(z, '_get-o_1_1_1_1_neutron')
+
+    def test_count(self):
+        self.a.member._count(None, FakeMember())
+
+    def test_create(self, admin_state_up=True):
+        m = FakeMember(admin_state_up=admin_state_up)
+        ip = self.a.member._get_ip(None, m, True)
+        name = self.a.member._get_name(m, ip)
+        self.a.member.create(None, m)
+
+        self.a.last_client.slb.server.create.assert_called_with(name, ip)
+        if admin_state_up:
+            status = self.a.last_client.slb.UP
+        else:
+            status = self.a.last_client.slb.DOWN
+        self.a.last_client.slb.service_group.member.create.assert_called_with(
+            m.pool.id, name, m.protocol_port, status=status)
+
+    def test_create_down(self):
+        self.test_create(False)
+
+    def test_update_down(self):
+        m = FakeMember(False)
+        ip = self.a.member._get_ip(None, m, True)
+        name = self.a.member._get_name(m, ip)
+        self.a.member.update(None, m, m)
+
+        self.a.last_client.slb.service_group.member.update.assert_called_with(
+            m.pool.id, name, m.protocol_port, self.a.last_client.slb.DOWN)
+
+    def test_delete(self):
+        m = FakeMember(False)
+        ip = self.a.member._get_ip(None, m, True)
+        name = self.a.member._get_name(m, ip)
+
+        oc = self.a.member._count
+        self.a.member._count = return_one
+        print self.a.member._count(None, m)
+        self.a.member.delete(None, m)
+        self.a.member._count = oc
+
+        self.print_mocks()
+        # self.a.last_client.slb.service_group.member.delete.assert_called_with(
+        #     m.pool.id, name, m.protocol_port)
+        raise "hellfire"
+
+    # def test_delete_count_gt_one(self):
+    #     raise "hellfire"
