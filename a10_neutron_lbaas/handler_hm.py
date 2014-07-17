@@ -18,6 +18,9 @@ import handler_base
 
 class HealthMonitorHandler(handler_base.HandlerBase):
 
+    def _hm_name(self, hm):
+        return hm.id[0:28]
+
     def _set(self, c, set_method, context, hm):
         hm_map = {
             'PING': c.client.slb.hm.ICMP,
@@ -26,7 +29,7 @@ class HealthMonitorHandler(handler_base.HandlerBase):
             'HTTPS': c.client.slb.hm.HTTPS
         }
 
-        hm_name = hm.id[0:28]
+        hm_name = self._hm_name(hm)
         method = None
         url = None
         expect_code = None
@@ -39,12 +42,13 @@ class HealthMonitorHandler(handler_base.HandlerBase):
                    hm.delay, hm.timeout, hm.max_retries,
                    method=method, url=url, expect_code=expect_code)
 
-        if hm.pool:
-            c.client.slb.service_group.update(hm.pool.id,
-                                              health_monitor=hm_name)
-
     def _create(self, c, context, hm):
         self._set(c, c.client.slb.hm.create, context, hm)
+
+        if hm.pool:
+            c.client.slb.service_group.update(
+                hm.pool.id,
+                health_monitor=self._hm_name(hm))
 
     def create(self, context, hm):
         with a10.A10WriteStatusContext(self, context, hm) as c:
@@ -53,6 +57,15 @@ class HealthMonitorHandler(handler_base.HandlerBase):
     def update(self, context, old_hm, hm):
         with a10.A10WriteStatusContext(self, context, hm) as c:
             self._set(c, c.client.slb.hm.update, context, hm)
+
+            if hm.pool and hm.pool != old_hm.pool:
+                c.client.slb.service_group.update(
+                    hm.pool.id,
+                    health_monitor=self._hm_name(hm))
+            elif not hm.pool and old_hm.pool:
+                c.client.slb.service_group.update(
+                    old_hm.pool.id,
+                    health_monitor='')
 
     def _delete(self, c, context, hm):
         c.client.slb.hm.delete(hm.id[0:28])
