@@ -95,10 +95,9 @@ class TestHM(test_base.UnitTestBase):
             None, 'fake-hm-id-001')
         self.a.last_client.slb.hm.delete.assert_called_with('fake-hm-id-001')
 
-    def test_delete(self):
+    def test_delete_with_pool(self):
         m = FakeHM('TCP', pool=mock.MagicMock())
         self.a.hm.delete(None, m)
-        self.print_mocks()
         self.a.openstack_driver.health_monitor.db_delete.assert_called_with(
             None, 'fake-hm-id-001')
         self.a.last_client.slb.service_group.update.assert_called_with(
