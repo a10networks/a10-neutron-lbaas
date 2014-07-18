@@ -60,10 +60,11 @@ class TestPools(test_base.UnitTestBase):
 
                         self.print_mocks()
 
-                        self.a.last_client.slb.service_group.create(
+                        (self.a.last_client.slb.service_group.create.
+                            assert_called_with(
                             pool.id,
                             lb_method=methods[m],
-                            protocol=protocols[p])
+                            protocol=protocols[p]))
 
                         if pers == 'SOURCE_IP':
                             (self.a.last_client.slb.template.
@@ -84,10 +85,45 @@ class TestPools(test_base.UnitTestBase):
             lb_method=self.a.last_client.slb.service_group.ROUND_ROBIN,
             protocol=self.a.last_client.slb.service_group.TCP)
 
-#    def test_delete(self):
+    def test_delete(self):
+        members = [[], [test_base.FakeMember()]]
+        hms = [None, test_base.FakeHM('PING')]
+        persistences = [None, 'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE']
+        listeners = [False, True]
 
+        for m in members:
+            for hm in hms:
+                for pers in persistences:
+                    for lst in listeners:
+                        c = self.a.reset_mocks()
+                        o = self.a.openstack_driver
 
-# delete no members or hm
-# delete no members, with hm
-# delete with members, no hm
-# delete with members and hm
+                        print m, " ", hm, " ", pers, " ", lst
+
+                        pool = test_base.FakePool('TCP', 'ROUND_ROBIN',
+                                                  pers, lst,
+                                                  members=m,
+                                                  hm=hm)
+
+                        try:
+                            self.a.pool.delete(None, pool)
+                        except a10_ex.UnsupportedFeature as e:
+                            if pers == 'APP_COOKIE':
+                                o.pool.failed.assert_called_with(
+                                    None, pool.id)
+                            else:
+                                raise e
+
+                        self.print_mocks()
+
+                        (self.a.last_client.slb.service_group.delete.
+                            assert_called_with(pool.id))
+
+                        if pers == 'SOURCE_IP':
+                            (self.a.last_client.slb.template.
+                                source_ip_persistence.delete.
+                                assert_called_with(pool.id))
+                        elif pers == 'HTTP_COOKIE':
+                            (self.a.last_client.slb.template.
+                                cookie_persistence.delete.
+                                assert_called_with(pool.id))

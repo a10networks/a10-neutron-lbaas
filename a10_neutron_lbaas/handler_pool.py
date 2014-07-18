@@ -51,9 +51,8 @@ class PoolHandler(handler_base.HandlerBase):
             for member in pool.members:
                 self.a10_driver.member._delete(c, context, member)
 
-            if pool.health_monitor:
-                self.a10_driver.health_monitor._delete(c, context,
-                                                       pool.health_monitor)
+            if pool.healthmonitor:
+                self.a10_driver.hm._delete(c, context, pool.healthmonitor)
 
             c.client.slb.service_group.delete(pool.id)
 

@@ -56,10 +56,12 @@ class FakePersistence(FakeModel):
 
 class FakeMember(FakeModel):
 
-    def __init__(self, admin_state_up=True, pool=None):
+    def __init__(self, admin_state_up=True, pool=None,
+                 id='fake-member-id-001',
+                 address='2.2.2.2'):
         super(FakeMember, self).__init__()
-        self.id = 'fake-member-id-001'
-        self.address = '2.2.2.2'
+        self.id = id
+        self.address = address
         self.admin_state_up = admin_state_up
         self.pool = pool
         self.protocol_port = 80
@@ -68,7 +70,7 @@ class FakeMember(FakeModel):
 class FakePool(FakeModel):
 
     def __init__(self, protocol, method, persistence, listener=False,
-                 members=[]):
+                 members=[], hm=None):
         super(FakePool, self).__init__()
         self.id = 'fake-pool-id-001'
         self.protocol = protocol
@@ -81,7 +83,12 @@ class FakePool(FakeModel):
             self.listener = FakeListener(protocol, 2222, pool=self)
         else:
             self.listener = None
+        for member in members:
+            member.pool = self
         self.members = members
+        self.healthmonitor = hm
+        if hm is not None:
+            self.healthmonitor.pool = self
 
 
 class FakeHM(FakeModel):
