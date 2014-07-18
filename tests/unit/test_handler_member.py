@@ -13,7 +13,6 @@
 #    under the License.
 
 import mock
-
 import test_base
 
 
@@ -86,7 +85,6 @@ class TestMembers(test_base.UnitTestBase):
     def test_delete(self):
         m = FakeMember(False)
         ip = self.a.member._get_ip(None, m, True)
-        name = self.a.member._get_name(m, ip)
 
         self.set_count_1()
         self.a.member.delete(None, m)

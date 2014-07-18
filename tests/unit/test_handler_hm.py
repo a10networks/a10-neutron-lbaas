@@ -13,7 +13,6 @@
 #    under the License.
 
 import mock
-
 import test_base
 
 
@@ -31,6 +30,7 @@ class FakeHM(test_base.FakeModel):
         self.url_path = '/'
         self.expected_codes = '200'
         self.pool = pool
+
 
 class TestHM(test_base.UnitTestBase):
 
