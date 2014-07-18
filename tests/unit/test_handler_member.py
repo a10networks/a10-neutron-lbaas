@@ -16,13 +16,14 @@ import mock
 
 import test_base
 
+
 def return_one(*args):
-    print "ONE"
     return 1
 
+
 def return_two(*args):
-    print "TWO"
     return 2
+
 
 class FakeMember(test_base.FakeModel):
 
@@ -36,6 +37,12 @@ class FakeMember(test_base.FakeModel):
 
 
 class TestMembers(test_base.UnitTestBase):
+
+    def set_count_1(self):
+        self.a.member.openstack_manager._count = return_one
+
+    def set_count_2(self):
+        self.a.member.openstack_manager._count = return_two
 
     def test_get_ip(self):
         m = FakeMember()
@@ -81,16 +88,18 @@ class TestMembers(test_base.UnitTestBase):
         ip = self.a.member._get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
 
-        oc = self.a.member._count
-        self.a.member._count = return_one
-        print self.a.member._count(None, m)
+        self.set_count_1()
         self.a.member.delete(None, m)
-        self.a.member._count = oc
 
-        self.print_mocks()
-        # self.a.last_client.slb.service_group.member.delete.assert_called_with(
-        #     m.pool.id, name, m.protocol_port)
-        raise "hellfire"
+        self.a.last_client.slb.server.delete(ip)
 
-    # def test_delete_count_gt_one(self):
-    #     raise "hellfire"
+    def test_delete_count_gt_one(self):
+        m = FakeMember(False)
+        ip = self.a.member._get_ip(None, m, True)
+        name = self.a.member._get_name(m, ip)
+
+        self.set_count_2()
+        self.a.member.delete(None, m)
+
+        self.a.last_client.slb.service_group.member.delete.assert_called_with(
+            m.pool.id, name, m.protocol_port)
