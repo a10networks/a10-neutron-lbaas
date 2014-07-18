@@ -36,7 +36,7 @@ class PoolHandler(handler_base.HandlerBase):
                    lb_method=lb_methods[pool.lb_algorithm])
 
         if pool.sessionpersistence:
-            PersistenceHandler(self, c, pool).create()
+            PersistenceHandler(self, c, context, pool).create()
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
@@ -58,7 +58,7 @@ class PoolHandler(handler_base.HandlerBase):
             c.client.slb.service_group.delete(pool.id)
 
             if pool.sessionpersistence:
-                PersistenceHandler(self, c, pool).delete()
+                PersistenceHandler(self, c, context, pool).delete()
 
 
 class PersistenceHandler(object):

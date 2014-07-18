@@ -12,10 +12,82 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 import test_base
+
+import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
 class TestPools(test_base.UnitTestBase):
 
     def test_sanity(self):
         pass
+
+    def test_create(self):
+        methods = {
+            'ROUND_ROBIN':
+                self.a.last_client.slb.service_group.ROUND_ROBIN,
+            'LEAST_CONNECTIONS':
+                self.a.last_client.slb.service_group.LEAST_CONNECTION,
+            'SOURCE_IP':
+                self.a.last_client.slb.service_group.WEIGHTED_LEAST_CONNECTION,
+        }
+        protocols = {
+            'TCP': self.a.last_client.slb.service_group.TCP,
+            'UDP': self.a.last_client.slb.service_group.UDP,
+        }
+        persistences = [None, 'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE']
+        listeners = [False, True]
+
+        for p in protocols.keys():
+            for m in methods.keys():
+                for pers in persistences:
+                    for listener in listeners:
+                        c = self.a.reset_mocks()
+                        o = self.a.openstack_driver
+
+                        print p, " ", m, " ", pers, " ", listener
+
+                        pool = test_base.FakePool(p, m, pers, listener)
+                        try:
+                            self.a.pool.create(None, pool)
+                        except a10_ex.UnsupportedFeature as e:
+                            if pers == 'APP_COOKIE':
+                                o.pool.failed.assert_called_with(
+                                    None, pool.id)
+                            else:
+                                raise e
+
+                        self.print_mocks()
+
+                        self.a.last_client.slb.service_group.create(
+                            pool.id,
+                            lb_method=methods[m],
+                            protocol=protocols[p])
+
+                        if pers == 'SOURCE_IP':
+                            (self.a.last_client.slb.template.
+                                source_ip_persistence.create.
+                                assert_called_with(pool.id))
+                        elif pers == 'HTTP_COOKIE':
+                            (self.a.last_client.slb.template.
+                                cookie_persistence.create.
+                                assert_called_with(pool.id))
+
+    def test_update(self):
+        old_pool = test_base.FakePool('TCP', 'LEAST_CONNECTIONS', None, True)
+        pool = test_base.FakePool('TCP', 'ROUND_ROBIN', None, True)
+        self.a.pool.update(None, old_pool, pool)
+        self.print_mocks()
+        self.a.last_client.slb.service_group.create(
+            pool.id,
+            lb_method=self.a.last_client.slb.service_group.ROUND_ROBIN,
+            protocol=self.a.last_client.slb.service_group.TCP)
+
+#    def test_delete(self):
+
+
+# delete no members or hm
+# delete no members, with hm
+# delete with members, no hm
+# delete with members and hm

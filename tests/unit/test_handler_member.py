@@ -24,17 +24,6 @@ def return_two(*args):
     return 2
 
 
-class FakeMember(test_base.FakeModel):
-
-    def __init__(self, admin_state_up=True):
-        super(FakeMember, self).__init__()
-        self.id = 'fake-member-id-001'
-        self.address = '2.2.2.2'
-        self.admin_state_up = admin_state_up
-        self.pool = mock.MagicMock()
-        self.protocol_port = 80
-
-
 class TestMembers(test_base.UnitTestBase):
 
     def set_count_1(self):
@@ -44,20 +33,22 @@ class TestMembers(test_base.UnitTestBase):
         self.a.member.openstack_manager._count = return_two
 
     def test_get_ip(self):
-        m = FakeMember()
+        m = test_base.FakeMember(pool=mock.MagicMock())
         self.a.member._get_ip(None, m, False)
         self.a.openstack_driver.member._get_ip.assert_called_with(
             None, m, False)
 
     def test_get_name(self):
-        z = self.a.member._get_name(FakeMember(), '1.1.1.1')
+        m = test_base.FakeMember(pool=mock.MagicMock())
+        z = self.a.member._get_name(m, '1.1.1.1')
         self.assertEqual(z, '_get-o_1_1_1_1_neutron')
 
     def test_count(self):
-        self.a.member._count(None, FakeMember())
+        self.a.member._count(None, test_base.FakeMember(pool=mock.MagicMock()))
 
     def test_create(self, admin_state_up=True):
-        m = FakeMember(admin_state_up=admin_state_up)
+        m = test_base.FakeMember(admin_state_up=admin_state_up,
+                                 pool=mock.MagicMock())
         ip = self.a.member._get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
         self.a.member.create(None, m)
@@ -74,7 +65,7 @@ class TestMembers(test_base.UnitTestBase):
         self.test_create(False)
 
     def test_update_down(self):
-        m = FakeMember(False)
+        m = test_base.FakeMember(False, pool=mock.MagicMock())
         ip = self.a.member._get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
         self.a.member.update(None, m, m)
@@ -83,7 +74,7 @@ class TestMembers(test_base.UnitTestBase):
             m.pool.id, name, m.protocol_port, self.a.last_client.slb.DOWN)
 
     def test_delete(self):
-        m = FakeMember(False)
+        m = test_base.FakeMember(False, pool=mock.MagicMock())
         ip = self.a.member._get_ip(None, m, True)
 
         self.set_count_1()
@@ -92,7 +83,7 @@ class TestMembers(test_base.UnitTestBase):
         self.a.last_client.slb.server.delete(ip)
 
     def test_delete_count_gt_one(self):
-        m = FakeMember(False)
+        m = test_base.FakeMember(False, pool=mock.MagicMock())
         ip = self.a.member._get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
 

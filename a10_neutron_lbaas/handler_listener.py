@@ -43,16 +43,16 @@ class ListenerHandler(handler_base.HandlerBase):
         return [c_pers, s_pers]
 
     def _set(self, c, set_method, context, listener):
-        status = c.slb.UP
+        status = c.client.slb.UP
         if not listener.admin_state_up:
-            status = c.slb.DOWN
+            status = c.client.slb.DOWN
 
         pers = self._persistence_get(c, context, listener)
 
-        set_method(listener.load_balancer_id, listener.id,
-                   protocol=self._protocols[listener.protocol],
+        set_method(listener.loadbalancer.id, listener.id,
+                   protocol=self._protocols(c)[listener.protocol],
                    port=listener.port,
-                   service_group_name=listener.pool_id,
+                   service_group_name=listener.pool.id,
                    s_pers_name=pers[1],
                    c_pers_name=pers[0],
                    status=status)
@@ -84,5 +84,5 @@ class ListenerHandler(handler_base.HandlerBase):
             c.client.slb.virtual_server.vport.delete(
                 listener.load_balancer_id,
                 listener.id,
-                protocol=self._protocols[listener.protocol],
+                protocol=self._protocols(c)[listener.protocol],
                 port=listener.port)
