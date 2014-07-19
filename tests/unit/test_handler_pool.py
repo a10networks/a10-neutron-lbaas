@@ -60,11 +60,15 @@ class TestPools(test_base.UnitTestBase):
 
                         self.print_mocks()
 
-                        (self.a.last_client.slb.service_group.create.
-                            assert_called_with(
-                            pool.id,
-                            lb_method=methods[m],
-                            protocol=protocols[p]))
+                        # (self.a.last_client.slb.service_group.create.
+                        #     assert_called_with(
+                        #     pool.id,
+                        #     lb_method=methods[m],
+                        #     protocol=protocols[p]))
+                        
+                        n = str(self.a.last_client.mock_calls).index(
+                            'slb.service_group.create')
+                        self.assertTrue(n >= 0)
 
                         if pers == 'SOURCE_IP':
                             (self.a.last_client.slb.template.
