@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -43,10 +42,8 @@ class TestPools(test_base.UnitTestBase):
             for m in methods.keys():
                 for pers in persistences:
                     for listener in listeners:
-                        c = self.a.reset_mocks()
+                        self.a.reset_mocks()
                         o = self.a.openstack_driver
-
-                        print p, " ", m, " ", pers, " ", listener
 
                         pool = test_base.FakePool(p, m, pers, listener)
                         try:
@@ -65,7 +62,7 @@ class TestPools(test_base.UnitTestBase):
                         #     pool.id,
                         #     lb_method=methods[m],
                         #     protocol=protocols[p]))
-                        
+
                         n = str(self.a.last_client.mock_calls).index(
                             'slb.service_group.create')
                         self.assertTrue(n >= 0)
@@ -99,10 +96,8 @@ class TestPools(test_base.UnitTestBase):
             for hm in hms:
                 for pers in persistences:
                     for lst in listeners:
-                        c = self.a.reset_mocks()
+                        self.a.reset_mocks()
                         o = self.a.openstack_driver
-
-                        print m, " ", hm, " ", pers, " ", lst
 
                         pool = test_base.FakePool('TCP', 'ROUND_ROBIN',
                                                   pers, lst,
