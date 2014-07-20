@@ -13,6 +13,7 @@
 #    under the License.
 
 import a10_context as a10
+import a10_exceptions as a10_ex
 import handler_base
 
 
@@ -27,8 +28,8 @@ class ListenerHandler(handler_base.HandlerBase):
         }
 
     def _persistence_get(self, c, context, listener):
-        if (not listener.default_pool or 
-            not listener.default_pool.sessionpersistence):
+        if (not listener.default_pool or
+           not listener.default_pool.sessionpersistence):
             return [None, None]
 
         sp = listener.default_pool.sessionpersistence
@@ -40,6 +41,8 @@ class ListenerHandler(handler_base.HandlerBase):
             c_pers = name
         elif sp.type == 'SOURCE_IP':
             s_pers = name
+        else:
+            raise a10_ex.UnsupportedFeature()
 
         return [c_pers, s_pers]
 
@@ -83,7 +86,7 @@ class ListenerHandler(handler_base.HandlerBase):
 
         with a10.A10DeleteContext(self, context, listener) as c:
             c.client.slb.virtual_server.vport.delete(
-                listener.load_balancer_id,
+                listener.loadbalancer.id,
                 listener.id,
                 protocol=self._protocols(c)[listener.protocol],
                 port=listener.port)

@@ -43,15 +43,14 @@ class TestPools(test_base.UnitTestBase):
                 for pers in persistences:
                     for listener in listeners:
                         self.a.reset_mocks()
-                        o = self.a.openstack_driver
+                        saw_exception = False
 
                         pool = test_base.FakePool(p, m, pers, listener)
                         try:
                             self.a.pool.create(None, pool)
                         except a10_ex.UnsupportedFeature as e:
                             if pers == 'APP_COOKIE':
-                                o.pool.failed.assert_called_with(
-                                    None, pool.id)
+                                saw_exception = True
                             else:
                                 raise e
 
@@ -63,9 +62,10 @@ class TestPools(test_base.UnitTestBase):
                         #     lb_method=methods[m],
                         #     protocol=protocols[p]))
 
-                        n = str(self.a.last_client.mock_calls).index(
-                            'slb.service_group.create')
-                        self.assertTrue(n >= 0)
+                        if not saw_exception:
+                            n = str(self.a.last_client.mock_calls).index(
+                                'slb.service_group.create')
+                            self.assertTrue(n >= 0)
 
                         if pers == 'SOURCE_IP':
                             (self.a.last_client.slb.template.
@@ -75,6 +75,8 @@ class TestPools(test_base.UnitTestBase):
                             (self.a.last_client.slb.template.
                                 cookie_persistence.create.
                                 assert_called_with(pool.id))
+                        elif pers == 'APP_COOKIE':
+                            self.assertTrue(saw_exception)
 
     def test_update(self):
         old_pool = test_base.FakePool('TCP', 'LEAST_CONNECTIONS', None, True)
@@ -89,7 +91,7 @@ class TestPools(test_base.UnitTestBase):
     def test_delete(self):
         members = [[], [test_base.FakeMember()]]
         hms = [None, test_base.FakeHM('PING')]
-        persistences = [None, 'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE']
+        persistences = [None, 'SOURCE_IP', 'HTTP_COOKIE']
         listeners = [False, True]
 
         for m in members:
@@ -97,21 +99,12 @@ class TestPools(test_base.UnitTestBase):
                 for pers in persistences:
                     for lst in listeners:
                         self.a.reset_mocks()
-                        o = self.a.openstack_driver
 
                         pool = test_base.FakePool('TCP', 'ROUND_ROBIN',
                                                   pers, lst,
                                                   members=m,
                                                   hm=hm)
-
-                        try:
-                            self.a.pool.delete(None, pool)
-                        except a10_ex.UnsupportedFeature as e:
-                            if pers == 'APP_COOKIE':
-                                o.pool.failed.assert_called_with(
-                                    None, pool.id)
-                            else:
-                                raise e
+                        self.a.pool.delete(None, pool)
 
                         self.print_mocks()
 
