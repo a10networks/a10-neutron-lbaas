@@ -36,14 +36,15 @@ class FakeLoadBalancer(FakeModel):
 
 class FakeListener(FakeModel):
 
-    def __init__(self, protocol, port, admin_state_up=True, pool=None):
+    def __init__(self, protocol, port, admin_state_up=True, pool=None,
+                 loadbalancer=None):
         super(FakeListener, self).__init__()
         self.id = 'fake-listen-id-001'
         self.protocol = protocol
         self.port = port
         self.admin_state_up = admin_state_up
-        self.pool = pool
-        self.loadbalancer = FakeLoadBalancer()
+        self.default_pool = pool
+        self.loadbalancer = loadbalancer
 
 
 class FakePersistence(FakeModel):
@@ -80,7 +81,8 @@ class FakePool(FakeModel):
         else:
             self.sessionpersistence = FakePersistence(persistence)
         if listener:
-            self.listener = FakeListener(protocol, 2222, pool=self)
+            self.listener = FakeListener(protocol, 2222, pool=self,
+                                         loadbalancer=FakeLoadBalancer())
         else:
             self.listener = None
         for member in members:

@@ -27,11 +27,12 @@ class ListenerHandler(handler_base.HandlerBase):
         }
 
     def _persistence_get(self, c, context, listener):
-        if not listener.pool or not listener.pool.sessionpersistence:
+        if (not listener.default_pool or 
+            not listener.default_pool.sessionpersistence):
             return [None, None]
 
-        sp = listener.pool.sessionpersistence
-        name = listener.pool.id
+        sp = listener.default_pool.sessionpersistence
+        name = listener.default_pool.id
         c_pers = None
         s_pers = None
 
@@ -52,13 +53,13 @@ class ListenerHandler(handler_base.HandlerBase):
         set_method(listener.loadbalancer.id, listener.id,
                    protocol=self._protocols(c)[listener.protocol],
                    port=listener.port,
-                   service_group_name=listener.pool.id,
+                   service_group_name=listener.default_pool.id,
                    s_pers_name=pers[1],
                    c_pers_name=pers[0],
                    status=status)
 
     def create(self, context, listener):
-        if not listener.load_balancer:
+        if not listener.loadbalancer or not listener.default_pool:
             return
 
         with a10.A10WriteStatusContext(self, context, listener) as c:
@@ -70,14 +71,14 @@ class ListenerHandler(handler_base.HandlerBase):
                   listener)
 
     def update(self, context, old_listener, listener):
-        if not listener.load_balancer:
+        if not listener.loadbalancer or not listener.default_pool:
             return
 
         with a10.A10WriteStatusContext(self, context, listener) as c:
             self._update(c, context, listener)
 
     def delete(self, context, listener):
-        if not listener.load_balancer:
+        if not listener.loadbalancer:
             return
 
         with a10.A10DeleteContext(self, context, listener) as c:

@@ -14,8 +14,28 @@
 
 import test_base
 
+import a10_neutron_lbaas.a10_exceptions as a10_ex
+
 
 class TestLB(test_base.UnitTestBase):
 
     def test_sanity(self):
         pass
+
+# create no listeners
+# create with listeners
+# update down
+# delete no listeners
+# delete with listeners
+
+    def test_refresh(self):
+        try:
+            self.a.lb.refresh(None, test_base.FakeModel())
+        except a10_ex.UnsupportedFeature:
+            pass
+
+    def test_stats(self):
+        self.a.lb.stats(None, test_base.FakeModel())
+        self.print_mocks()
+        self.a.last_client.slb.virtual_server.stats.assert_called_with(
+            'fake-id-001')

@@ -53,7 +53,7 @@ class LoadBalancerHandler(handler_base.HandlerBase):
     def stats(self, context, lb_obj):
         with a10.A10Context(self, context, lb_obj) as c:
             try:
-                r = c.client.client.slb.virtual_server.stats(lb_obj.id)
+                r = c.client.slb.virtual_server.stats(lb_obj.id)
                 return {
                     "bytes_in": r["virtual_server_stat"]["req_bytes"],
                     "bytes_out": r["virtual_server_stat"]["resp_bytes"],
