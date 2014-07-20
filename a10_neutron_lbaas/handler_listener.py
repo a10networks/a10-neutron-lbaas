@@ -61,13 +61,16 @@ class ListenerHandler(handler_base.HandlerBase):
                    c_pers_name=pers[0],
                    status=status)
 
+    def _create(self, c, context, listener):
+        self._set(c, c.client.slb.virtual_server.vport.create, context,
+                  listener)
+
     def create(self, context, listener):
         if not listener.loadbalancer or not listener.default_pool:
             return
 
         with a10.A10WriteStatusContext(self, context, listener) as c:
-            self._set(c, c.client.slb.virtual_server.vport.create, context,
-                      listener)
+            self._create(c, context, listener)
 
     def _update(self, c, context, listener):
         self._set(c, c.client.slb.virtual_server.vport.update, context,

@@ -19,14 +19,48 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 class TestLB(test_base.UnitTestBase):
 
-    def test_sanity(self):
-        pass
+    def test_create(self):
+        m = test_base.FakeLoadBalancer()
+        self.a.lb.create(None, m)
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('call.slb.virtual_server.create' in s)
+        self.assertTrue('fake-lb-id-001' in s)
+        self.assertTrue('5.5.5.5' in s)
+        self.assertTrue('UP' in s)
 
-# create no listeners
-# create with listeners
-# update down
-# delete no listeners
-# delete with listeners
+    def test_create_with_listeners(self):
+        pool = test_base.FakePool('HTTP', 'ROUND_ROBIN', None)
+        m = test_base.FakeLoadBalancer()
+        for x in [1, 2, 3]:
+            z = test_base.FakeListener('TCP', 2222+x, pool=pool,
+                                       loadbalancer=m)
+            m.listeners.append(z)
+        self.a.lb.create(None, m)
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('call.slb.virtual_server.create' in s)
+        self.assertTrue('fake-lb-id-001' in s)
+        self.assertTrue('5.5.5.5' in s)
+        self.assertTrue('UP' in s)
+        self.assertTrue('vport.create' in s)
+        for x in [1, 2, 3]:
+            self.assertTrue(str(2222+x) in s)
+
+    def test_update_down(self):
+        m = test_base.FakeLoadBalancer()
+        m.admin_state_up = False
+        self.a.lb.update(None, m, m)
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('call.slb.virtual_server.update' in s)
+        self.assertTrue('fake-lb-id-001' in s)
+        self.assertTrue('5.5.5.5' in s)
+        self.assertTrue('DOWN' in s)
+
+    def test_delete(self):
+        m = test_base.FakeLoadBalancer()
+        self.a.lb.delete(None, m)
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('call.slb.virtual_server.delete' in s)
+        self.assertTrue('fake-lb-id-001' in s)
 
     def test_refresh(self):
         try:

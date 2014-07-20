@@ -21,11 +21,11 @@ import handler_base
 class LoadBalancerHandler(handler_base.HandlerBase):
 
     def _set(self, c, set_method, context, load_balancer):
-        status = c.slb.UP
+        status = c.client.slb.UP
         if not load_balancer.admin_state_up:
-            status = c.slb.DOWN
+            status = c.client.slb.DOWN
 
-        set_method(load_balancer.name, load_balancer.address, status)
+        set_method(load_balancer.id, load_balancer.address, status)
 
     def create(self, context, load_balancer):
         with a10.A10WriteStatusContext(self, context, load_balancer) as c:
@@ -45,7 +45,7 @@ class LoadBalancerHandler(handler_base.HandlerBase):
 
     def delete(self, context, load_balancer):
         with a10.A10DeleteContext(self, context, load_balancer) as c:
-            c.client.slb.virtual_server.delete(load_balancer.name)
+            c.client.slb.virtual_server.delete(load_balancer.id)
 
     def refresh(self, context, lb_obj, force=False):
         raise a10_ex.UnsupportedFeature()
