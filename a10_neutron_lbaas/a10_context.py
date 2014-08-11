@@ -89,7 +89,8 @@ class A10DeleteContextBase(A10WriteContext):
             #                                  self.openstack_lbaas_obj.id)
             self.partition_cleanup_check()
 
-        super(A10DeleteContext, self).__exit__(exc_type, exc_value, traceback)
+        super(A10DeleteContextBase, self).__exit__(exc_type, exc_value,
+                                                   traceback)
 
     def remaining_root_objects(self):
         return 1

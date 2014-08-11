@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.a10_context as a10
+import a10_neutron_lbaas.v2.v2_context as a10
 
 import test_base
 
