@@ -23,7 +23,7 @@ class A10Context(object):
 
     def __init__(self, handler, openstack_context, openstack_lbaas_obj):
         self.handler = handler
-        self.openstack_manager = handler.openstack_manager
+        self.openstack_driver = handler.openstack_driver
         self.a10_driver = handler.a10_driver
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
@@ -67,41 +67,39 @@ class A10WriteContext(A10Context):
         super(A10WriteContext, self).__exit__(exc_type, exc_value, traceback)
 
 
-class A10WriteStatusContext(A10WriteContext):
+# class A10WriteStatusContext(A10WriteContext):
+
+#     def __exit__(self, exc_type, exc_value, traceback):
+#         if exc_type is None:
+#             self.openstack_manager.active(self.openstack_context,
+#                                           self.openstack_lbaas_obj.id)
+#         else:
+#             self.openstack_manager.failed(self.openstack_context,
+#                                           self.openstack_lbaas_obj.id)
+
+#         super(A10WriteStatusContext, self).__exit__(exc_type, exc_value,
+#                                                     traceback)
+
+
+class A10DeleteContextBase(A10WriteContext):
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
-            self.openstack_manager.active(self.openstack_context,
-                                          self.openstack_lbaas_obj.id)
-        else:
-            self.openstack_manager.failed(self.openstack_context,
-                                          self.openstack_lbaas_obj.id)
-
-        super(A10WriteStatusContext, self).__exit__(exc_type, exc_value,
-                                                    traceback)
-
-
-class A10DeleteContext(A10WriteContext):
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is None:
-            self.openstack_manager.db_delete(self.openstack_context,
-                                             self.openstack_lbaas_obj.id)
+            # self.openstack_manager.db_delete(self.openstack_context,
+            #                                  self.openstack_lbaas_obj.id)
             self.partition_cleanup_check()
 
         super(A10DeleteContext, self).__exit__(exc_type, exc_value, traceback)
+
+    def remaining_root_objects(self):
+        return 1
 
     def partition_cleanup_check(self):
         # If we are not using appliance partitions, we are done.
         if self.device_cfg['v_method'].lower() != 'adp':
             return
 
-        ctx = self.openstack_context
-        d = self.openstack_manager.driver
-        n = d.pool._total(ctx, self.tenant_id)
-        n += d.load_balancer._total(ctx, self.tenant_id)
-        n += d.listener._total(ctx, self.tenant_id)
-        n += d.health_monitor._total(ctx, self.tenant_id)
+        n = self.remaining_root_objects()
         if n == 0:
             try:
                 self.client.system.partition.delete(self.tenant_id)
