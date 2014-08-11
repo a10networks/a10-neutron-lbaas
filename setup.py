@@ -5,12 +5,12 @@ from setuptools import setup, find_packages
 
 setup(
     name = "a10-neutron-lbaas",
-    version = "0.1",
+    version = "1.0.1",
     packages = find_packages(),
 
     author = "A10 Networks",
     author_email = "dougw@a10networks.com",
-    description = "A10 Networks Openstack LBaaS Driver, Juno",
+    description = "A10 Networks Openstack LBaaS Driver Middleware",
     license = "Apache",
     keywords = "a10 axapi acos adc slb load balancer openstack neutron lbaas",
     url = "https://github.com/a10networks/a10-neutron-lbaas",
