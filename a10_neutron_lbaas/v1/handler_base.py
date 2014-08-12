@@ -11,8 +11,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-# flake8: noqa
 
-from a10_openstack_lb import A10OpenstackLBV1
-#from a10_openstack_lb import A10OpenstackLBV2
-from version import VERSION
+
+class HandlerBase(object):
+
+    def __init__(self, a10_driver):
+        self.a10_driver = a10_driver
+        self.openstack_driver = self.a10_driver.openstack_driver

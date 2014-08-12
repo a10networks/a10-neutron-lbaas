@@ -12,10 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_context as a10
-import a10_exceptions as a10_ex
+import a10_neutron_lbaas.a10_exceptions as a10_ex
+
 import acos_client.errors as acos_errors
 import handler_base
+import v2_context as a10
 
 
 class PoolHandler(handler_base.HandlerBase):
@@ -27,6 +28,8 @@ class PoolHandler(handler_base.HandlerBase):
             'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
         }
         protocols = {
+            'HTTP': c.client.slb.service_group.TCP,
+            'HTTPS': c.client.slb.service_group.TCP,
             'TCP': c.client.slb.service_group.TCP,
             'UDP': c.client.slb.service_group.UDP
         }
@@ -75,7 +78,7 @@ class PersistenceHandler(object):
             'HTTP_COOKIE':
                 self.c.client.slb.template.cookie_persistence.create,
             'SOURCE_IP':
-                self.c.client.slb.template.source_ip_persistence.create,
+                self.c.client.slb.template.src_ip_persistence.create,
         }
         if self.sp.type in methods:
             try:
@@ -94,7 +97,7 @@ class PersistenceHandler(object):
             'HTTP_COOKIE':
                 self.c.client.slb.template.cookie_persistence.delete,
             'SOURCE_IP':
-                self.c.client.slb.template.source_ip_persistence.delete,
+                self.c.client.slb.template.src_ip_persistence.delete,
         }
         if self.sp.type in methods:
             try:

@@ -11,8 +11,19 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-# flake8: noqa
 
-from a10_openstack_lb import A10OpenstackLBV1
-#from a10_openstack_lb import A10OpenstackLBV2
-from version import VERSION
+import test_base
+
+
+class TestA10Openstack(test_base.UnitTestBase):
+
+    def test_sanity(self):
+        pass
+
+    def test_select(self):
+        a = self.a._select_a10_device("first-token")
+        self.a._select_a10_device("second-token")
+        self.assertEqual(a, self.a._select_a10_device("first-token"))
+
+    def test_verify(self):
+        self.a._verify_appliances()

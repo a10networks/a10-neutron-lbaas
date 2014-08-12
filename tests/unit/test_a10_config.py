@@ -35,4 +35,4 @@ class TestA10Config(test_base.UnitTestBase):
 
     def test_v_method(self):
         for k, v in self.a.config.devices.items():
-            self.assertEqual('LSI', v['v_method'])
+            self.assertEqual('LSI', v['v_method'].upper())

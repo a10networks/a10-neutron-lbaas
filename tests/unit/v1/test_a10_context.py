@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.a10_context as a10
+import a10_neutron_lbaas.v1.v1_context as a10
 
 import test_base
 
@@ -27,7 +27,7 @@ class TestA10Context(test_base.UnitTestBase):
         super(TestA10Context, self).setUp()
         self.handler = self.a.pool
         self.ctx = None
-        self.m = test_base.FakeModel()
+        self.m = {'id': 'fake-id-001', 'tenant_id': 'faketen1'}
 
     def test_context(self):
         with a10.A10Context(self.handler, self.ctx, self.m) as c:
@@ -47,7 +47,7 @@ class TestA10Context(test_base.UnitTestBase):
     def test_write(self):
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.last_client.system.write_memory.assert_called_with()
+        self.a.last_client.system.action.write_memory.assert_called_with()
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_e(self):
@@ -62,8 +62,8 @@ class TestA10Context(test_base.UnitTestBase):
     def test_write_status(self):
         with a10.A10WriteStatusContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.openstack_driver.pool.active.assert_called_with(
-            None, 'fake-id-001')
+        self.a.openstack_driver._active.assert_called_with(
+            None, 'pool', 'fake-id-001')
 
     def test_write_status_e(self):
         try:
@@ -72,15 +72,15 @@ class TestA10Context(test_base.UnitTestBase):
                 c
                 raise FakeException()
         except FakeException:
-            self.a.openstack_driver.pool.failed.assert_called_with(
-                None, 'fake-id-001')
+            self.a.openstack_driver._failed.assert_called_with(
+                None, 'pool', 'fake-id-001')
             pass
 
     def test_delete(self):
         with a10.A10DeleteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.openstack_driver.pool.db_delete.assert_called_with(
-            None, 'fake-id-001')
+        self.a.openstack_driver._db_delete.assert_called_with(
+            None, 'pool', 'fake-id-001')
 
     def test_delete_e(self):
         try:
@@ -111,7 +111,7 @@ class TestA10ContextADP(TestA10Context):
         self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
         self.assertEqual(1, len(self.a.last_client.mock_calls))
         self.a.last_client.system.partition.active.assert_called_with(
-            self.m.tenant_id)
+            self.m['tenant_id'])
 
     def empty_close_mocks(self):
         self.print_mocks()

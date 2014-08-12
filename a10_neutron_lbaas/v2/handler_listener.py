@@ -12,19 +12,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_context as a10
-import a10_exceptions as a10_ex
+import a10_neutron_lbaas.a10_exceptions as a10_ex
+
 import handler_base
+import v2_context as a10
 
 
 class ListenerHandler(handler_base.HandlerBase):
 
     def _protocols(self, c):
         return {
-            'TCP': c.client.slb.virtual_server.vport.protocol.TCP,
-            'UDP': c.client.slb.virtual_server.vport.protocol.UDP,
-            'HTTP': c.client.slb.virtual_server.vport.protocol.HTTP,
-            'HTTPS': c.client.slb.virtual_server.vport.protocol.HTTPS
+            'TCP': c.client.slb.virtual_server.vport.TCP,
+            'UDP': c.client.slb.virtual_server.vport.UDP,
+            'HTTP': c.client.slb.virtual_server.vport.HTTP,
+            'HTTPS': c.client.slb.virtual_server.vport.TCP
         }
 
     def _persistence_get(self, c, context, listener):

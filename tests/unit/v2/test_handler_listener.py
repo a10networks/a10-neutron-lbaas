@@ -65,7 +65,10 @@ class TestListeners(test_base.UnitTestBase):
                         self.assertTrue('fake-lb-id-001' in s)
                         self.assertTrue('fake-listen-id-001' in s)
                         self.assertTrue('port=2222' in s)
-                        self.assertTrue(p in s)
+                        test_prot = p
+                        if p == 'HTTPS':
+                            test_prot = 'TCP'
+                        self.assertTrue(test_prot in s)
 
                     if pers == 'SOURCE_IP':
                         self.assertTrue('s_pers_name=None' not in s)

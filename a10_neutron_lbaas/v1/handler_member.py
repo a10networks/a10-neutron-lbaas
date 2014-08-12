@@ -12,24 +12,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_context as a10
 import acos_client.errors as acos_errors
 import handler_base
+import v1_context as a10
 
 
 class MemberHandler(handler_base.HandlerBase):
 
+    def _model_type(self):
+        return 'member'
+
     def _get_ip(self, context, member, use_float=False):
-        return self.openstack_manager._get_ip(context, member, use_float)
+        return self.openstack_driver._member_get_ip(context, member, use_float)
 
     def _get_name(self, member, ip_address):
-        tenant_label = member.tenant_id[:5]
+        tenant_label = member['tenant_id'][:5]
         addr_label = str(ip_address).replace(".", "_", 4)
         server_name = "_%s_%s_neutron" % (tenant_label, addr_label)
         return server_name
 
     def _count(self, context, member):
-        return self.openstack_manager._count(context, member)
+        return self.openstack_driver._member_count(context, member)
 
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
@@ -38,7 +41,7 @@ class MemberHandler(handler_base.HandlerBase):
             server_name = self._get_name(member, server_ip)
 
             status = c.client.slb.UP
-            if not member.admin_state_up:
+            if not member['admin_state_up']:
                 status = c.client.slb.DOWN
 
             try:
@@ -46,9 +49,9 @@ class MemberHandler(handler_base.HandlerBase):
             except acos_errors.Exists:
                 pass
 
-            c.client.slb.service_group.member.create(member.pool.id,
+            c.client.slb.service_group.member.create(member['pool_id'],
                                                      server_name,
-                                                     member.protocol_port,
+                                                     member['protocol_port'],
                                                      status=status)
 
     def update(self, context, old_member, member):
@@ -58,12 +61,12 @@ class MemberHandler(handler_base.HandlerBase):
             server_name = self._get_name(member, server_ip)
 
             status = c.client.slb.UP
-            if not member.admin_state_up:
+            if not member['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            c.client.slb.service_group.member.update(member.pool.id,
+            c.client.slb.service_group.member.update(member['pool_id'],
                                                      server_name,
-                                                     member.protocol_port,
+                                                     member['protocol_port'],
                                                      status)
 
     def _delete(self, c, context, member):
@@ -71,9 +74,9 @@ class MemberHandler(handler_base.HandlerBase):
         server_name = self._get_name(member, server_ip)
 
         if self._count(context, member) > 1:
-            c.client.slb.service_group.member.delete(member.pool.id,
+            c.client.slb.service_group.member.delete(member['pool_id'],
                                                      server_name,
-                                                     member.protocol_port)
+                                                     member['protocol_port'])
         else:
             c.client.slb.server.delete(server_name)
 

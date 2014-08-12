@@ -11,8 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-# flake8: noqa
 
-from a10_openstack_lb import A10OpenstackLBV1
-#from a10_openstack_lb import A10OpenstackLBV2
-from version import VERSION
+import tests.unit.test_base as test_base
+
+
+class UnitTestBase(test_base.UnitTestBase):
+
+    def __init__(self, *args):
+        super(UnitTestBase, self).__init__(*args)
+        self.version = 'v1'

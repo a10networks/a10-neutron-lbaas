@@ -69,7 +69,7 @@ class TestPools(test_base.UnitTestBase):
 
                         if pers == 'SOURCE_IP':
                             (self.a.last_client.slb.template.
-                                source_ip_persistence.create.
+                                src_ip_persistence.create.
                                 assert_called_with(pool.id))
                         elif pers == 'HTTP_COOKIE':
                             (self.a.last_client.slb.template.
@@ -113,7 +113,7 @@ class TestPools(test_base.UnitTestBase):
 
                         if pers == 'SOURCE_IP':
                             (self.a.last_client.slb.template.
-                                source_ip_persistence.delete.
+                                src_ip_persistence.delete.
                                 assert_called_with(pool.id))
                         elif pers == 'HTTP_COOKIE':
                             (self.a.last_client.slb.template.
