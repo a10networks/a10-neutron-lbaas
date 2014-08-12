@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -27,7 +26,7 @@ class TestVIP(test_base.UnitTestBase):
             'protocol': 'HTTP',
             'admin_state_up': True,
             'address': '1.1.1.1',
-            'port': '80',
+            'protocol_port': '80',
             'pool_id': 'pool1',
         }
         if pers:
@@ -72,5 +71,5 @@ class TestVIP(test_base.UnitTestBase):
     def test_delete_pers(self):
         self.a.vip.delete(None, self.fake_vip('SOURCE_IP'))
         self.a.last_client.slb.virtual_server.delete.assert_called_with('id1')
-        z = self.a.last_client.slb.template.source_ip_persistence.delete
+        z = self.a.last_client.slb.template.src_ip_persistence.delete
         z.assert_called_with('id1')

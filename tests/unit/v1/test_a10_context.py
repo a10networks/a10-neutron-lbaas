@@ -47,7 +47,7 @@ class TestA10Context(test_base.UnitTestBase):
     def test_write(self):
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.last_client.system.write_memory.assert_called_with()
+        self.a.last_client.system.action.write_memory.assert_called_with()
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_e(self):

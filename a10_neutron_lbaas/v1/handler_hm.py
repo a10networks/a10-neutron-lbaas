@@ -52,7 +52,8 @@ class HealthMonitorHandler(handler_base.HandlerBase):
             self._set(c, c.client.slb.hm.create, context, hm)
 
             if pool_id is not None:
-                c.client.slb.service_group.update(pool_id,
+                c.client.slb.service_group.update(
+                    pool_id,
                     health_monitor=self._hm_name(hm))
 
             for pool in hm['pools']:

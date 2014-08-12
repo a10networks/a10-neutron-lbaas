@@ -15,8 +15,6 @@
 import test_base
 import test_handler_member
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
-
 
 class TestPools(test_base.UnitTestBase):
 
@@ -87,8 +85,8 @@ class TestPools(test_base.UnitTestBase):
     def test_stats(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         z = self.a.pool
-        z._get_tenant_id = lambda x,y: 'hello'
-        z._get_vip_id = lambda x,y: '2.2.2.2'
-        r = z.stats(None, pool['id'])
+        z._get_tenant_id = lambda x, y: 'hello'
+        z._get_vip_id = lambda x, y: '2.2.2.2'
+        z.stats(None, pool['id'])
         self.a.last_client.slb.virtual_server.stats.assert_called_with(
             '2.2.2.2')

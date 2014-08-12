@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import test_base
 
 
@@ -48,7 +47,7 @@ class TestHM(test_base.UnitTestBase):
 
     def test_create_tcp(self):
         hm = self.fake_hm('TCP')
-        hm['pools'] = [{'pool_id': 'p02'},{'pool_id': 'p01'}]
+        hm['pools'] = [{'pool_id': 'p02'}, {'pool_id': 'p01'}]
         self.a.hm.create(None, hm, 'p01')
         self.assert_hm(self.a.last_client.slb.hm.TCP, None, None, None)
         self.a.last_client.slb.service_group.update.assert_called_with(
