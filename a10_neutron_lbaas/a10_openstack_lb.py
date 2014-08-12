@@ -29,7 +29,7 @@ import v2.handler_pool
 LOG = logging.getLogger(__name__)
 
 
-class A10OpenstackLB(object):
+class A10OpenstackLBBase(object):
 
     def __init__(self, openstack_driver):
         self.openstack_driver = openstack_driver
@@ -64,7 +64,7 @@ class A10OpenstackLB(object):
                           "appliance, name=%s", k)
 
 
-class A10OpenstackLBV2(A10OpenstackLB):
+class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def lb(self):
@@ -93,11 +93,11 @@ class A10OpenstackLBV2(A10OpenstackLB):
             self.openstack_driver.health_monitor)
 
 
-class A10OpenstackLBV1(A10OpenstackLB):
+class A10OpenstackLBV1(A10OpenstackLBBase):
 
     @property
     def pool(self):
-        return v2.handler_pool.PoolHandler(self)
+        return v1.handler_pool.PoolHandler(self)
 
     @property
     def vip(self):
@@ -105,8 +105,8 @@ class A10OpenstackLBV1(A10OpenstackLB):
 
     @property
     def member(self):
-        return v2.handler_member.MemberHandler(self)
+        return v1.handler_member.MemberHandler(self)
 
     @property
     def hm(self):
-        return v2.handler_hm.HealthMonitorHandler(self)
+        return v1.handler_hm.HealthMonitorHandler(self)

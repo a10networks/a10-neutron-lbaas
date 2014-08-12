@@ -50,7 +50,8 @@ class HealthMonitorHandler(handler_base.HandlerBase):
             self._set(c, c.client.slb.hm.create, context, hm)
 
             for pool in hm['pools']:
-                c.client.slb.service_group.update(pool['pool_id'],
+                c.client.slb.service_group.update(
+                    pool['pool_id'],
                     health_monitor=self._hm_name(hm))
 
     def update(self, context, old_hm, hm, pool_id):

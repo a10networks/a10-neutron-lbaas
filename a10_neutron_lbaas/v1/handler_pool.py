@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
-import acos_client.errors as acos_errors
 import handler_base
 import v1_context as a10
 
@@ -51,7 +49,7 @@ class PoolHandler(handler_base.HandlerBase):
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
-            for members in pool['members']:
+            for member in pool['members']:
                 self.a10_driver.member._delete(c, context, member)
 
             for hm in pool['health_monitors_status']:
@@ -59,9 +57,6 @@ class PoolHandler(handler_base.HandlerBase):
                                            self._get_hm(hm['monitor_id']))
 
             c.client.slb.service_group.delete(pool['id'])
-
-            if pool.sessionpersistence:
-                PersistenceHandler(self, c, context, pool).delete()
 
     def stats(self, context, pool_id):
         with a10.A10Context(self, context, lb_obj) as c:
