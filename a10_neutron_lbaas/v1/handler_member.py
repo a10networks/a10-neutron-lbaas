@@ -49,7 +49,7 @@ class MemberHandler(handler_base.HandlerBase):
             except acos_errors.Exists:
                 pass
 
-            c.client.slb.service_group.member.create(member['pool.id'],
+            c.client.slb.service_group.member.create(member['pool_id'],
                                                      server_name,
                                                      member['protocol_port'],
                                                      status=status)
@@ -64,7 +64,7 @@ class MemberHandler(handler_base.HandlerBase):
             if not member['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            c.client.slb.service_group.member.update(member['pool.id'],
+            c.client.slb.service_group.member.update(member['pool_id'],
                                                      server_name,
                                                      member['protocol_port'],
                                                      status)
@@ -74,7 +74,7 @@ class MemberHandler(handler_base.HandlerBase):
         server_name = self._get_name(member, server_ip)
 
         if self._count(context, member) > 1:
-            c.client.slb.service_group.member.delete(member['pool.id'],
+            c.client.slb.service_group.member.delete(member['pool_id'],
                                                      server_name,
                                                      member['protocol_port'])
         else:

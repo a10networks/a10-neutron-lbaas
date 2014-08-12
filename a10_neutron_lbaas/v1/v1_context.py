@@ -15,6 +15,10 @@
 import a10_neutron_lbaas.a10_context as a10_context
 
 
+class A10Context(a10_context.A10Context):
+    pass
+
+
 class A10WriteContext(a10_context.A10WriteContext):
     pass
 

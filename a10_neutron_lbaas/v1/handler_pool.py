@@ -41,9 +41,9 @@ class PoolHandler(handler_base.HandlerBase):
             'UDP': c.client.slb.service_group.UDP
         }
 
-        set_method(pool.id,
-                   protocol=protocols[pool.protocol],
-                   lb_method=lb_methods[pool.lb_algorithm])
+        set_method(pool['id'],
+                   protocol=protocols[pool['protocol']],
+                   lb_method=lb_methods[pool['lb_method']])
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
@@ -59,17 +59,17 @@ class PoolHandler(handler_base.HandlerBase):
                 self.a10_driver.member._delete(c, context, member)
 
             for hm in pool['health_monitors_status']:
-                self.a10_driver.hm._delete(c, context,
-                                           self._get_hm(hm['monitor_id']))
+                self.a10_driver.hm._delete(
+                    c, context, self._get_hm(context, hm['monitor_id']))
 
             c.client.slb.service_group.delete(pool['id'])
 
     def stats(self, context, pool_id):
-        tenant_id = self._get_tenant_id(pool_id)
+        tenant_id = self._get_tenant_id(context, pool_id)
         pool = {'id': pool_id, 'tenant_id': tenant_id}
         with a10.A10Context(self, context, pool) as c:
             try:
-                vip_id = self._get_vip_id(pool_id)
+                vip_id = self._get_vip_id(context, pool_id)
                 r = c.client.slb.virtual_server.stats(vip_id)
                 return {
                     "bytes_in": r["virtual_server_stat"]["req_bytes"],

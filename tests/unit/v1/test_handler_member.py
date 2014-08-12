@@ -24,43 +24,41 @@ def return_two(*args):
     return 2
 
 
+def _fake_member(pool_id='pool1', admin_state_up=True):
+    return {
+        'address': '1.1.1.1',
+        'tenant_id': 'ten1',
+        'id': 'id1',
+        'admin_state_up': admin_state_up,
+        'pool_id': pool_id,
+        'protocol_port': '80',
+    }.copy()
+
+
 class TestMembers(test_base.UnitTestBase):
 
     def set_count_1(self):
-        self.a.member.openstack_manager._count = return_one
+        self.a.openstack_driver._member_count = return_one
 
     def set_count_2(self):
-        self.a.member.openstack_manager._count = return_two
+        self.a.openstack_driver._member_count = return_two
 
     def test_get_ip(self):
-        m = test_base.FakeMember(pool=mock.MagicMock())
+        m = self.fake_member()
         self.a.member._get_ip(None, m, False)
-        self.a.openstack_driver.member._get_ip.assert_called_with(
+        self.a.openstack_driver._member_get_ip.assert_called_with(
             None, m, False)
 
     def test_get_name(self):
-        m = test_base.FakeMember(pool=mock.MagicMock())
+        m = self.fake_member()
         z = self.a.member._get_name(m, '1.1.1.1')
-        self.assertEqual(z, '_get-o_1_1_1_1_neutron')
+        self.assertEqual(z, '_ten1_1_1_1_1_neutron')
 
     def test_count(self):
-        self.a.member._count(None, test_base.FakeMember(pool=mock.MagicMock()))
-
-# create with no server
-# create with server
-# update
-# delete with >1 member
-# dlete with 1 member
+        self.a.member._count(None, self.fake_member())
 
     def fake_member(pool_id='pool1', admin_state_up=True):
-        return {
-            'address': '1.1.1.1',
-            'tenant_id': 'ten1',
-            'id': 'id1',
-            'admin_state_up': json.dumps(admin_state_up),
-            'pool_id': pool_id,
-            'protocol_port': '80',
-        }.copy()
+        return _fake_member(pool_id, admin_state_up)
 
     def test_create(self, admin_state_up=True):
         m = self.fake_member(admin_state_up=admin_state_up)
@@ -74,22 +72,23 @@ class TestMembers(test_base.UnitTestBase):
         else:
             status = self.a.last_client.slb.DOWN
         self.a.last_client.slb.service_group.member.create.assert_called_with(
-            m.pool.id, name, m.protocol_port, status=status)
+            m['pool_id'], name, m['protocol_port'], status=status)
 
     def test_create_down(self):
         self.test_create(False)
 
     def test_update_down(self):
-        m = self.fake_member(False)
+        m = self.fake_member(admin_state_up=False)
         ip = self.a.member._get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
         self.a.member.update(None, m, m)
 
         self.a.last_client.slb.service_group.member.update.assert_called_with(
-            m.pool.id, name, m.protocol_port, self.a.last_client.slb.DOWN)
+            m['pool_id'], name, m['protocol_port'],
+            self.a.last_client.slb.DOWN)
 
     def test_delete(self):
-        m = self.fake_member(False)
+        m = self.fake_member()
         ip = self.a.member._get_ip(None, m, True)
 
         self.set_count_1()
@@ -98,7 +97,7 @@ class TestMembers(test_base.UnitTestBase):
         self.a.last_client.slb.server.delete(ip)
 
     def test_delete_count_gt_one(self):
-        m = self.fake_member(False)
+        m = self.fake_member()
         ip = self.a.member._get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
 
@@ -106,4 +105,4 @@ class TestMembers(test_base.UnitTestBase):
         self.a.member.delete(None, m)
 
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
-            m.pool.id, name, m.protocol_port)
+            m['pool_id'], name, m['protocol_port'])

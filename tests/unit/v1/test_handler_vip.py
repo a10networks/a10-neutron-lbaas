@@ -15,6 +15,8 @@
 import mock
 import test_base
 
+import a10_neutron_lbaas.a10_exceptions as a10_ex
+
 
 class TestVIP(test_base.UnitTestBase):
 
@@ -22,7 +24,7 @@ class TestVIP(test_base.UnitTestBase):
         h = {
             'tenant_id': 'ten1',
             'id': 'id1',
-            'protocol': protocol,
+            'protocol': 'HTTP',
             'admin_state_up': True,
             'address': '1.1.1.1',
             'port': '80',
@@ -33,31 +35,42 @@ class TestVIP(test_base.UnitTestBase):
         return h.copy()
 
     def test_create(self):
-        self.a.create_vip(None, self.fake_vip())
-        self.print_mocks()
-        raise "hellfire"
+        self.a.vip.create(None, self.fake_vip())
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('virtual_server.create' in s)
+        self.assertTrue('1.1.1.1' in s)
+        self.assertTrue('vport.create' in s)
+        self.assertTrue('id1' in s)
+        self.assertTrue('UP' in s)
+        self.assertTrue('pool1' in s)
+        self.assertTrue('HTTP' in s)
 
     def test_create_pers(self):
-        self.a.create_vip(None, self.fake_vip('HTTP_COOKIE'))
-        self.print_mocks()
-        raise "hellfire"
+        self.a.vip.create(None, self.fake_vip('HTTP_COOKIE'))
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue("c_pers_name='id1'" in s)
 
     def test_create_unsupported(self):
-        self.a.create_vip(None, self.fake_vip('APP_COOKIE'))
-        self.print_mocks()
-        raise "hellfire"
+        try:
+            self.a.vip.create(None, self.fake_vip('APP_COOKIE'))
+        except a10_ex.UnsupportedFeature:
+            pass
 
     def test_update(self):
-        self.a.update_vip(None, self.fake_vip(), self.fake_vip())
-        self.print_mocks()
-        raise "hellfire"
+        self.a.vip.update(None, self.fake_vip(), self.fake_vip())
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('vport.update' in s)
+        self.assertTrue('id1' in s)
+        self.assertTrue('UP' in s)
+        self.assertTrue('pool1' in s)
+        self.assertTrue('HTTP' in s)
 
     def test_delete(self):
-        self.a.delete_vip(None, self.fake_vip())
-        self.print_mocks()
-        raise "hellfire"
+        self.a.vip.delete(None, self.fake_vip())
+        self.a.last_client.slb.virtual_server.delete.assert_called_with('id1')
 
     def test_delete_pers(self):
-        self.a.delete_vip(None, self.fake_vip('SOURCE_IP'))
-        self.print_mocks()
-        raise "hellfire"
+        self.a.vip.delete(None, self.fake_vip('SOURCE_IP'))
+        self.a.last_client.slb.virtual_server.delete.assert_called_with('id1')
+        z = self.a.last_client.slb.template.source_ip_persistence.delete
+        z.assert_called_with('id1')

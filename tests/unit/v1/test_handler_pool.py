@@ -13,13 +13,14 @@
 #    under the License.
 
 import test_base
+import test_handler_member
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
 class TestPools(test_base.UnitTestBase):
 
-    def fake_pool(protocol, method):
+    def fake_pool(self, protocol, method):
         return {
             'tenant_id': 'ten1',
             'id': 'id1',
@@ -68,23 +69,26 @@ class TestPools(test_base.UnitTestBase):
         self.a.pool.update(None, old_pool, pool)
         self.print_mocks()
         self.a.last_client.slb.service_group.create(
-            pool.id,
+            pool['id'],
             lb_method=self.a.last_client.slb.service_group.ROUND_ROBIN,
             protocol=self.a.last_client.slb.service_group.TCP)
 
     def test_delete(self):
-        pool = self.fake_pool(p, m)
-        pool['members'] = [test_handler_member.fake_member()]
+        pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
+        pool['members'] = [test_handler_member._fake_member()]
         pool['health_monitors_status'] = [{'monitor_id': 'hm1'}]
         self.a.pool.delete(None, pool)
 
         self.print_mocks()
 
         (self.a.last_client.slb.service_group.delete.
-            assert_called_with(pool.id))
+            assert_called_with(pool['id']))
 
     def test_stats(self):
-        pool = self.fake_pool(p, m)
-        self.a.pool.stats(None, pool['id'])
-        self.print_mocks()
-        raise "helfire"
+        pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
+        z = self.a.pool
+        z._get_tenant_id = lambda x,y: 'hello'
+        z._get_vip_id = lambda x,y: '2.2.2.2'
+        r = z.stats(None, pool['id'])
+        self.a.last_client.slb.virtual_server.stats.assert_called_with(
+            '2.2.2.2')

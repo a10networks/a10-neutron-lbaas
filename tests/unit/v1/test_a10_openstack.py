@@ -15,7 +15,7 @@
 import test_base
 
 
-class TestA10Openstack(test_base.UnitTestBaseV1):
+class TestA10Openstack(test_base.UnitTestBase):
 
     def test_sanity(self):
         pass

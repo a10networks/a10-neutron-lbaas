@@ -29,7 +29,7 @@ class VipHandler(handler_base.HandlerBase):
             'TCP': c.client.slb.virtual_server.vport.protocol.TCP,
             'UDP': c.client.slb.virtual_server.vport.protocol.UDP,
             'HTTP': c.client.slb.virtual_server.vport.protocol.HTTP,
-            'HTTPS': c.client.slb.virtual_server.vport.protocol.HTTPS
+            'HTTPS': c.client.slb.virtual_server.vport.protocol.TCP
         }
 
     def create(self, context, vip):
@@ -51,8 +51,8 @@ class VipHandler(handler_base.HandlerBase):
                 protocol=self._protocols(c)[vip['protocol']],
                 port=vip['port'],
                 service_group_name=vip['pool_id'],
-                s_pers_name=p.s_pers(),
-                c_pers_name=p.c_pers(),
+                s_pers_name=p.s_persistence(),
+                c_pers_name=p.c_persistence(),
                 status=status)
 
     def update(self, context, old_vip, vip):
@@ -68,8 +68,8 @@ class VipHandler(handler_base.HandlerBase):
                 vip['id'] + '_VPORT',
                 protocol=self._protocols(c)[vip['protocol']],
                 service_group_name=vip['pool_id'],
-                s_pers_name=p.s_pers(),
-                c_pers_name=p.c_pers(),
+                s_pers_name=p.s_persistence(),
+                c_pers_name=p.c_persistence(),
                 status=status)
 
     def delete(self, context, vip):
@@ -99,10 +99,10 @@ class PersistHandler(object):
         else:
             self.sp = None
 
-    def c_pers(self):
+    def c_persistence(self):
         return self.c_pers
 
-    def s_pers(self):
+    def s_persistence(self):
         return self.s_pers
 
     def create(self):

@@ -25,7 +25,7 @@ class ListenerHandler(handler_base.HandlerBase):
             'TCP': c.client.slb.virtual_server.vport.protocol.TCP,
             'UDP': c.client.slb.virtual_server.vport.protocol.UDP,
             'HTTP': c.client.slb.virtual_server.vport.protocol.HTTP,
-            'HTTPS': c.client.slb.virtual_server.vport.protocol.HTTPS
+            'HTTPS': c.client.slb.virtual_server.vport.protocol.TCP
         }
 
     def _persistence_get(self, c, context, listener):

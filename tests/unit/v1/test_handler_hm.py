@@ -20,9 +20,11 @@ class TestHM(test_base.UnitTestBase):
 
     def assert_hm(self, mon_type, method, url, expect_code):
         self.print_mocks()
-        raise "hellfire"
+        self.a.last_client.slb.hm.create.assert_called_with(
+            'abcdef', mon_type, '5', 5, '5',
+            url=url, method=method, expect_code=expect_code)
 
-    def fake_hm(type):
+    def fake_hm(self, type):
         hm = {
             'tenant_id': 'tenv1',
             'id': 'abcdef',
@@ -30,6 +32,7 @@ class TestHM(test_base.UnitTestBase):
             'delay': '5',
             'timeout': 5,
             'max_retries': '5',
+            'pools': [],
         }
         if type in ['HTTP', 'HTTPS']:
             hm['http_method'] = 'GET'
@@ -38,38 +41,44 @@ class TestHM(test_base.UnitTestBase):
         return hm.copy()
 
     def test_create_ping(self):
-        self.a.create_pool_health_monitor(None, self.fake_hm('PING'), 'p01')
+        self.a.hm.create(None, self.fake_hm('PING'), 'p01')
         self.assert_hm(self.a.last_client.slb.hm.ICMP, None, None, None)
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            'p01', health_monitor='abcdef')
 
     def test_create_tcp(self):
-        self.a.create_pool_health_monitor(None, self.fake_hm('TCP'), 'p01')
+        hm = self.fake_hm('TCP')
+        hm['pools'] = [{'pool_id': 'p02'},{'pool_id': 'p01'}]
+        self.a.hm.create(None, hm, 'p01')
         self.assert_hm(self.a.last_client.slb.hm.TCP, None, None, None)
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            'p02', health_monitor='abcdef')
 
     def test_create_http(self):
-        self.a.create_pool_health_monitor(None, self.fake_hm('HTTP'), 'p01')
+        self.a.hm.create(None, self.fake_hm('HTTP'), 'p01')
         self.assert_hm(self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            'p01', health_monitor='abcdef')
 
     def test_create_https(self):
-        self.a.create_pool_health_monitor(None, self.fake_hm('HTTPS'), 'p01')
+        self.a.hm.create(None, self.fake_hm('HTTPS'), 'p01')
         self.assert_hm(self.a.last_client.slb.hm.HTTPS, 'GET', '/', '200')
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            'p01', health_monitor='abcdef')
 
     def test_update_tcp(self, m_old=None, m=None):
         if m_old is None:
-            m_old = fake_hm('TCP')
+            m_old = self.fake_hm('TCP')
         if m is None:
-            m = fake_hm('TCP')
+            m = self.fake_hm('TCP')
         m['delay'] = 20
-        self.a.update_pool_health_monitor(None, m_old, m, 'p01')
-        self.print_mocks()
-        raise "hellfire"
+        self.a.hm.update(None, m_old, m, 'p01')
+        self.a.last_client.slb.hm.update.assert_called_with(
+            'abcdef',
+            self.a.last_client.slb.hm.TCP, 20, 5, '5',
+            url=None, method=None, expect_code=None)
 
     def test_delete(self):
-        self.a.delete_pool_health_monitor(None, self.fake_hm('HTTP'))
-        self.print_mocks()
-        raise "hellfire"
-
-    # def test_todo(self):
-    #     raise "delete, not last assoc"
-    #     raise "delete, last assoc"
-    #     raise "create, update all pools, 0, 1, N"
-    #     raise "update, same"
+        self.a.hm.delete(None, self.fake_hm('HTTP'), 'p01')
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            'p01', health_monitor='')

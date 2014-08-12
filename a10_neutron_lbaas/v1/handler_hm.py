@@ -51,7 +51,13 @@ class HealthMonitorHandler(handler_base.HandlerBase):
         with a10.A10WriteHMStatusContext(self, context, h) as c:
             self._set(c, c.client.slb.hm.create, context, hm)
 
+            if pool_id is not None:
+                c.client.slb.service_group.update(pool_id,
+                    health_monitor=self._hm_name(hm))
+
             for pool in hm['pools']:
+                if pool['pool_id'] == pool_id:
+                    continue
                 c.client.slb.service_group.update(
                     pool['pool_id'],
                     health_monitor=self._hm_name(hm))
@@ -72,4 +78,4 @@ class HealthMonitorHandler(handler_base.HandlerBase):
             if self._hm_binding_count(context, hm['id']) <= 1:
                 self._delete(c, context, hm)
 
-            c.client.slb.service_group.update(hm.pool.id, health_monitor="")
+            c.client.slb.service_group.update(pool_id, health_monitor="")
