@@ -46,7 +46,9 @@ class HealthMonitorHandler(handler_base.HandlerBase):
                    method=method, url=url, expect_code=expect_code)
 
     def create(self, context, hm, pool_id):
-        with a10.A10WriteHMStatusContext(self, context, hm, pool_id) as c:
+        h = hm.copy()
+        h['pool_id'] = pool_id
+        with a10.A10WriteHMStatusContext(self, context, h) as c:
             self._set(c, c.client.slb.hm.create, context, hm)
 
             for pool in hm['pools']:
@@ -55,14 +57,18 @@ class HealthMonitorHandler(handler_base.HandlerBase):
                     health_monitor=self._hm_name(hm))
 
     def update(self, context, old_hm, hm, pool_id):
-        with a10.A10WriteHMStatusContext(self, context, hm, pool_id) as c:
+        h = hm.copy()
+        h['pool_id'] = pool_id
+        with a10.A10WriteHMStatusContext(self, context, h) as c:
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
         c.client.slb.hm.delete(self._hm_name(hm))
 
     def delete(self, context, hm, pool_id):
-        with a10.A10DeleteHMContext(self, context, hm, pool_id) as c:
+        h = hm.copy()
+        h['pool_id'] = pool_id
+        with a10.A10DeleteHMContext(self, context, h) as c:
             if self._hm_binding_count(hm['id']) <= 1:
                 self._delete(c, context, hm)
 

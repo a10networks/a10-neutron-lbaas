@@ -54,21 +54,17 @@ class A10DeleteContext(a10_context.A10DeleteContextBase):
 
 class A10WriteHMStatusContext(a10_context.A10WriteContext):
 
-    def __init__(self, todo):
-        super() todo
-        self.pool_id = pool_id
-
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
             self.openstack_driver._hm_active(
                 self.openstack_context,
                 self.openstack_lbaas_obj['id'],
-                self.pool_id)
+                self.openstack_lbaas_obj['pool_id'])
         else:
             self.openstack_driver._hm_failed(
                 self.openstack_context,
                 self.openstack_lbaas_obj['id'],
-                self.pool_id)
+                self.openstack_lbaas_obj['pool_id'])
 
         super(A10WriteHMStatusContext, self).__exit__(exc_type, exc_value,
                                                       traceback)
@@ -76,16 +72,12 @@ class A10WriteHMStatusContext(a10_context.A10WriteContext):
 
 class A10DeleteHMContext(a10_context.A10WriteContext):
 
-    def __init__(self, todo):
-        super() todo
-        self.pool_id = pool_id
-
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
             self.openstack_driver._hm_db_delete(
                 self.openstack_context,
-                self.openstack_lbaas_obj.id,
-                self.pool_id)
+                self.openstack_lbaas_obj['id'],
+                self.openstack_lbaas_obj['pool_id'])
 
         super(A10DeleteHMContext, self).__exit__(exc_type, exc_value,
                                                  traceback)

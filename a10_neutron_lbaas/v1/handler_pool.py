@@ -18,11 +18,14 @@ import v1_context as a10
 
 class PoolHandler(handler_base.HandlerBase):
 
-    def _get_vip_id(self, pool_id):
-        return self.openstack_driver._pool_get_vip_id(pool_id)
-
     def _get_hm(self, hm_id):
         return self.openstack_driver._pool_get_hm(hm_id)
+
+    def _get_tenant_id(self, pool_id):
+        return self.openstack_driver._pool_get_tenant_id(pool_id)
+
+    def _get_vip_id(self, pool_id):
+        return self.openstack_driver._pool_get_vip_id(pool_id)
 
     def _set(self, c, set_method, context, pool):
         lb_methods = {
@@ -59,7 +62,9 @@ class PoolHandler(handler_base.HandlerBase):
             c.client.slb.service_group.delete(pool['id'])
 
     def stats(self, context, pool_id):
-        with a10.A10Context(self, context, lb_obj) as c:
+        tenant_id = self._get_tenant_id(pool_id)
+        pool = {'id': pool_id, 'tenant_id': tenant_id}
+        with a10.A10Context(self, context, pool) as c:
             try:
                 vip_id = self._get_vip_id(pool_id)
                 r = c.client.slb.virtual_server.stats(vip_id)

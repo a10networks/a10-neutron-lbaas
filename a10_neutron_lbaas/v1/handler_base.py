@@ -61,3 +61,7 @@ class HandlerBase(object):
     # def _get_hm(self, hm_id):
     #     return self.openstack_driver._pool_get_hm(hm_id)
     #             # hmon = self.plugin.get_health_monitor(context, hm['monitor_id'])
+
+        # pool_qry = context._session.query(lb_db.Pool).filter_by(id=pool_id)
+        # vip_id = pool_qry.vip_id
+        # a10 = self._device_context(tenant_id=pool_qry.tenant_id)

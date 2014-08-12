@@ -29,7 +29,7 @@ class A10Context(object):
         self.openstack_lbaas_obj = openstack_lbaas_obj
 
     def __enter__(self):
-        self.tenant_id = self.openstack_lbaas_obj.tenant_id
+        self.get_tenant_id()
         self.device_cfg = self.a10_driver._select_a10_device(self.tenant_id)
         self.client = self.a10_driver._get_a10_client(self.device_cfg)
         self.select_appliance_partition()
@@ -40,6 +40,12 @@ class A10Context(object):
 
         if exc_type is not None:
             return False
+
+    def get_tenant_id(self):
+        if hasattr(self.openstack_lbaas_obj, 'tenant_id'):
+            self.tenant_id = self.openstack_lbaas_obj.tenant_id
+        else:
+            self.tenant_id = self.openstack_lbaas_obj['tenant_id']
 
     def select_appliance_partition(self):
         # If we are not using appliance partitions, we are done.

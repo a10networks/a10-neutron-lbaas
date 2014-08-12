@@ -84,7 +84,9 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def member(self):
-        return v2.handler_member.MemberHandler(self, self.openstack_driver.member)
+        return v2.handler_member.MemberHandler(
+            self,
+            self.openstack_driver.member)
 
     @property
     def hm(self):
