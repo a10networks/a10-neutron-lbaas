@@ -68,8 +68,8 @@ class TestHM(test_base.UnitTestBase):
         self.print_mocks()
         raise "hellfire"
 
-    def test_todo(self):
-        raise "delete, not last assoc"
-        raise "delete, last assoc"
-        raise "create, update all pools, 0, 1, N"
-        raise "update, same"
+    # def test_todo(self):
+    #     raise "delete, not last assoc"
+    #     raise "delete, last assoc"
+    #     raise "create, update all pools, 0, 1, N"
+    #     raise "update, same"

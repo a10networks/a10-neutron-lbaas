@@ -80,7 +80,7 @@ class TestMembers(test_base.UnitTestBase):
         self.test_create(False)
 
     def test_update_down(self):
-        m = test_base.FakeMember(False, pool=mock.MagicMock())
+        m = self.fake_member(False)
         ip = self.a.member._get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
         self.a.member.update(None, m, m)
@@ -89,7 +89,7 @@ class TestMembers(test_base.UnitTestBase):
             m.pool.id, name, m.protocol_port, self.a.last_client.slb.DOWN)
 
     def test_delete(self):
-        m = test_base.FakeMember(False, pool=mock.MagicMock())
+        m = self.fake_member(False)
         ip = self.a.member._get_ip(None, m, True)
 
         self.set_count_1()
@@ -98,7 +98,7 @@ class TestMembers(test_base.UnitTestBase):
         self.a.last_client.slb.server.delete(ip)
 
     def test_delete_count_gt_one(self):
-        m = test_base.FakeMember(False, pool=mock.MagicMock())
+        m = self.fake_member(False)
         ip = self.a.member._get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
 
