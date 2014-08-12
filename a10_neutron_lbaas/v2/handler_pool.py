@@ -78,7 +78,7 @@ class PersistenceHandler(object):
             'HTTP_COOKIE':
                 self.c.client.slb.template.cookie_persistence.create,
             'SOURCE_IP':
-                self.c.client.slb.template.source_ip_persistence.create,
+                self.c.client.slb.template.src_ip_persistence.create,
         }
         if self.sp.type in methods:
             try:
@@ -97,7 +97,7 @@ class PersistenceHandler(object):
             'HTTP_COOKIE':
                 self.c.client.slb.template.cookie_persistence.delete,
             'SOURCE_IP':
-                self.c.client.slb.template.source_ip_persistence.delete,
+                self.c.client.slb.template.src_ip_persistence.delete,
         }
         if self.sp.type in methods:
             try:

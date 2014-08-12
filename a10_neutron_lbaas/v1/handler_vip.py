@@ -26,10 +26,10 @@ class VipHandler(handler_base.HandlerBase):
 
     def _protocols(self, c):
         return {
-            'TCP': c.client.slb.virtual_server.vport.protocol.TCP,
-            'UDP': c.client.slb.virtual_server.vport.protocol.UDP,
-            'HTTP': c.client.slb.virtual_server.vport.protocol.HTTP,
-            'HTTPS': c.client.slb.virtual_server.vport.protocol.TCP
+            'TCP': c.client.slb.virtual_server.vport.TCP,
+            'UDP': c.client.slb.virtual_server.vport.UDP,
+            'HTTP': c.client.slb.virtual_server.vport.HTTP,
+            'HTTPS': c.client.slb.virtual_server.vport.TCP
         }
 
     def create(self, context, vip):
@@ -39,6 +39,7 @@ class VipHandler(handler_base.HandlerBase):
                 status = c.client.slb.DOWN
 
             p = PersistHandler(c, context, vip)
+            p.create()
 
             c.client.slb.virtual_server.create(
                 vip['id'],
@@ -49,7 +50,7 @@ class VipHandler(handler_base.HandlerBase):
                 vip['id'],
                 vip['id'] + '_VPORT',
                 protocol=self._protocols(c)[vip['protocol']],
-                port=vip['port'],
+                port=vip['protocol_port'],
                 service_group_name=vip['pool_id'],
                 s_pers_name=p.s_persistence(),
                 c_pers_name=p.c_persistence(),
@@ -62,6 +63,7 @@ class VipHandler(handler_base.HandlerBase):
                 status = c.client.slb.DOWN
 
             p = PersistHandler(c, context, vip)
+            p.create()
 
             c.client.slb.virtual_server.vport.update(
                 vip['id'],
@@ -113,7 +115,7 @@ class PersistHandler(object):
             'HTTP_COOKIE':
                 self.c.client.slb.template.cookie_persistence.create,
             'SOURCE_IP':
-                self.c.client.slb.template.source_ip_persistence.create,
+                self.c.client.slb.template.src_ip_persistence.create,
         }
         if self.sp['type'] in methods:
             try:
@@ -129,7 +131,7 @@ class PersistHandler(object):
             'HTTP_COOKIE':
                 self.c.client.slb.template.cookie_persistence.delete,
             'SOURCE_IP':
-                self.c.client.slb.template.source_ip_persistence.delete,
+                self.c.client.slb.template.src_ip_persistence.delete,
         }
         if self.sp['type'] in methods:
             try:
