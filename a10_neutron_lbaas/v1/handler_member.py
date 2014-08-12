@@ -19,6 +19,9 @@ import v1_context as a10
 
 class MemberHandler(handler_base.HandlerBase):
 
+    def _model_type(self):
+        return 'member'
+
     def _get_ip(self, context, member, use_float=False):
         return self.openstack_driver._member_get_ip(context, member, use_float)
 

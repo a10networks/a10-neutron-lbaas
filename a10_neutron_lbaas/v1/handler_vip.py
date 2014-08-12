@@ -21,6 +21,9 @@ import v1_context as a10
 
 class VipHandler(handler_base.HandlerBase):
 
+    def _model_type(self):
+        return 'vip'
+
     def _protocols(self, c):
         return {
             'TCP': c.client.slb.virtual_server.vport.protocol.TCP,

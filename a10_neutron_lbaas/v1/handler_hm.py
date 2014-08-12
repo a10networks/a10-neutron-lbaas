@@ -21,8 +21,8 @@ class HealthMonitorHandler(handler_base.HandlerBase):
     def _hm_name(self, hm):
         return hm['id'][0:28]
 
-    def _hm_binding_count(self, hm_id):
-        return self.openstack_driver._hm_binding_count(hm_id)
+    def _hm_binding_count(self, context, hm_id):
+        return self.openstack_driver._hm_binding_count(context, hm_id)
 
     def _set(self, c, set_method, context, hm):
         hm_map = {
@@ -69,7 +69,7 @@ class HealthMonitorHandler(handler_base.HandlerBase):
         h = hm.copy()
         h['pool_id'] = pool_id
         with a10.A10DeleteHMContext(self, context, h) as c:
-            if self._hm_binding_count(hm['id']) <= 1:
+            if self._hm_binding_count(context, hm['id']) <= 1:
                 self._delete(c, context, hm)
 
             c.client.slb.service_group.update(hm.pool.id, health_monitor="")

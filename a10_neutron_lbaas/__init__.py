@@ -13,4 +13,6 @@
 #    under the License.
 # flake8: noqa
 
+from a10_openstack_lb import A10OpenstackLBV1
+from a10_openstack_lb import A10OpenstackLBV2
 from version import VERSION

@@ -18,14 +18,17 @@ import v1_context as a10
 
 class PoolHandler(handler_base.HandlerBase):
 
-    def _get_hm(self, hm_id):
-        return self.openstack_driver._pool_get_hm(hm_id)
+    def _model_type(self):
+        return 'pool'
 
-    def _get_tenant_id(self, pool_id):
-        return self.openstack_driver._pool_get_tenant_id(pool_id)
+    def _get_hm(self, context, hm_id):
+        return self.openstack_driver._pool_get_hm(context, hm_id)
 
-    def _get_vip_id(self, pool_id):
-        return self.openstack_driver._pool_get_vip_id(pool_id)
+    def _get_tenant_id(self, context, pool_id):
+        return self.openstack_driver._pool_get_tenant_id(context, pool_id)
+
+    def _get_vip_id(self, context, pool_id):
+        return self.openstack_driver._pool_get_vip_id(context, pool_id)
 
     def _set(self, c, set_method, context, pool):
         lb_methods = {

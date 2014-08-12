@@ -25,10 +25,12 @@ class A10WriteStatusContext(a10_context.A10WriteContext):
         if exc_type is None:
             self.openstack_driver._active(
                 self.openstack_context,
+                self.handler._model_type(),
                 self.openstack_lbaas_obj['id'])
         else:
             self.openstack_driver._failed(
                 self.openstack_context,
+                self.handler._model_type(),
                 self.openstack_lbaas_obj['id'])
 
         super(A10WriteStatusContext, self).__exit__(exc_type, exc_value,
@@ -41,7 +43,8 @@ class A10DeleteContext(a10_context.A10DeleteContextBase):
         if exc_type is None:
             self.openstack_driver._db_delete(
                 self.openstack_context,
-                self.openstack_lbaas_obj.id)
+                self.handler._model_type(),
+                self.openstack_lbaas_obj['id'])
 
         super(A10DeleteContext, self).__exit__(exc_type, exc_value, traceback)
 
