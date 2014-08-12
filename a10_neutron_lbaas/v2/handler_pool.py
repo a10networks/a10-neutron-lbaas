@@ -28,6 +28,8 @@ class PoolHandler(handler_base.HandlerBase):
             'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
         }
         protocols = {
+            'HTTP': c.client.slb.service_group.TCP,
+            'HTTPS': c.client.slb.service_group.TCP,
             'TCP': c.client.slb.service_group.TCP,
             'UDP': c.client.slb.service_group.UDP
         }
