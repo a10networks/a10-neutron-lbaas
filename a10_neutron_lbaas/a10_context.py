@@ -68,7 +68,7 @@ class A10WriteContext(A10Context):
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
-            self.client.system.write_memory()
+            self.client.system.action.write_memory()
 
         super(A10WriteContext, self).__exit__(exc_type, exc_value, traceback)
 
