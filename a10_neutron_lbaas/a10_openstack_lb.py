@@ -16,7 +16,10 @@ import logging
 
 import a10_config
 import acos_client
-import v1.handler
+import v1.handler_hm
+import v1.handler_member
+import v1.handler_pool
+import v1.handler_vip
 import v2.handler_hm
 import v2.handler_lb
 import v2.handler_listener
@@ -93,5 +96,17 @@ class A10OpenstackLBV2(A10OpenstackLB):
 class A10OpenstackLBV1(A10OpenstackLB):
 
     @property
-    def op(self):
-        return v1.handler.HandlerV1(self)
+    def pool(self):
+        return v2.handler_pool.PoolHandler(self)
+
+    @property
+    def vip(self):
+        return v1.handler_vip.VipHandler(self)
+
+    @property
+    def member(self):
+        return v2.handler_member.MemberHandler(self)
+
+    @property
+    def hm(self):
+        return v2.handler_hm.HealthMonitorHandler(self)

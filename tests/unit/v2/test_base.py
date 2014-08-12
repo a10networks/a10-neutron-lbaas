@@ -110,4 +110,7 @@ class FakeHM(FakeModel):
 
 
 class UnitTestBase(test_base.UnitTestBase):
-    pass
+
+    def __init__(self, *args):
+        super(UnitTestBase, self).__init__(*args)
+        self.version = 'v2'

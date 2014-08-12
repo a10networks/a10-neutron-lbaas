@@ -20,6 +20,22 @@ import mock
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
 
 
+class FakeA10OpenstackLBV1(a10_os.A10OpenstackLBV1):
+
+    def __init__(self, openstack_driver):
+        super(FakeA10OpenstackLBV1, self).__init__(mock.MagicMock())
+
+    def _get_a10_client(self, device_info):
+        self.device_info = device_info
+        self.last_client = mock.MagicMock()
+        return self.last_client
+
+    def reset_mocks(self):
+        self.openstack_driver = mock.MagicMock()
+        self.last_client = self._get_a10_client(self.device_info)
+        return self.last_client
+
+
 class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
 
     def __init__(self, openstack_driver):
@@ -42,7 +58,10 @@ class UnitTestBase(unittest.TestCase):
         unit_dir = os.path.dirname(__file__)
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
-        self.a = FakeA10OpenstackLBV2(None)
+        if not hasattr(self, 'version') or self.version == 'v2':
+            self.a = FakeA10OpenstackLBV2(None)
+        else:
+            self.a = FakeA10OpenstackLBV1(None)
 
     def print_mocks(self):
         print("OPENSTACK ", self.a.openstack_driver.mock_calls)
