@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import acos_client.errors as acos_errors
 import handler_base
 import v1_context as a10
 
@@ -77,6 +78,9 @@ class HealthMonitorHandler(handler_base.HandlerBase):
         h['pool_id'] = pool_id
         with a10.A10DeleteHMContext(self, context, h) as c:
             if self._hm_binding_count(context, hm['id']) <= 1:
-                self._delete(c, context, hm)
+                try:
+                    self._delete(c, context, hm)
+                except acos_errors.InUse:
+                    pass
 
             c.client.slb.service_group.update(pool_id, health_monitor="")
