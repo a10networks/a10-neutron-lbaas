@@ -34,25 +34,28 @@ class MemberHandler(handler_base.HandlerBase):
     def _count(self, context, member):
         return self.openstack_driver._member_count(context, member)
 
+    def _create(self, c, context, member):
+        server_ip = self._get_ip(context, member,
+                                 c.device_cfg['use_float'])
+        server_name = self._get_name(member, server_ip)
+
+        status = c.client.slb.UP
+        if not member['admin_state_up']:
+            status = c.client.slb.DOWN
+
+        try:
+            c.client.slb.server.create(server_name, server_ip)
+        except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
+            pass
+
+        c.client.slb.service_group.member.create(member['pool_id'],
+                                                 server_name,
+                                                 member['protocol_port'],
+                                                 status=status)
+
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
-            server_ip = self._get_ip(context, member,
-                                     c.device_cfg['use_float'])
-            server_name = self._get_name(member, server_ip)
-
-            status = c.client.slb.UP
-            if not member['admin_state_up']:
-                status = c.client.slb.DOWN
-
-            try:
-                c.client.slb.server.create(server_name, server_ip)
-            except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
-                pass
-
-            c.client.slb.service_group.member.create(member['pool_id'],
-                                                     server_name,
-                                                     member['protocol_port'],
-                                                     status=status)
+            self._create(c, context, member)
 
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
@@ -64,10 +67,15 @@ class MemberHandler(handler_base.HandlerBase):
             if not member['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            c.client.slb.service_group.member.update(member['pool_id'],
-                                                     server_name,
-                                                     member['protocol_port'],
-                                                     status)
+            try:
+                c.client.slb.service_group.member.update(
+                    member['pool_id'],
+                    server_name,
+                    member['protocol_port'],
+                    status)
+            except acos_errors.NotFound:
+                # Adding db relation after the fact
+                self._create(c, context, member)
 
     def _delete(self, c, context, member):
         server_ip = self._get_ip(context, member, c.device_cfg['use_float'])
