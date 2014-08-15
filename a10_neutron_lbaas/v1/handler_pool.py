@@ -28,6 +28,9 @@ class PoolHandler(handler_base.HandlerBase):
     def _get_hm(self, context, hm_id):
         return self.openstack_driver._pool_get_hm(context, hm_id)
 
+    def _get_member(self, context, member_id):
+        return self.openstack_driver._member_get(context, member_id)
+
     def _get_tenant_id(self, context, pool_id):
         return self.openstack_driver._pool_get_tenant_id(context, pool_id)
 
@@ -61,14 +64,15 @@ class PoolHandler(handler_base.HandlerBase):
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
-            LOG.error("POOL = %s", pool)
+            LOG.debug("POOL = %s", pool)
             for member in pool['members']:
-                LOG.error("MEMBER = %s", member)
-                self.a10_driver.member._delete(c, context, member)
+                m = self._get_member(context, member)
+                LOG.debug("MEMBER = %s", m)
+                self.a10_driver.member._delete(c, context, m)
 
             for hm in pool['health_monitors_status']:
                 z = self._get_hm(context, hm['monitor_id'])
-                LOG.error("HM = %s", z)
+                LOG.debug("HM = %s", z)
                 self.a10_driver.hm._delete(c, context, z)
 
             c.client.slb.service_group.delete(pool['id'])
