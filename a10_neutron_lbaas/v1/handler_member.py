@@ -46,7 +46,7 @@ class MemberHandler(handler_base.HandlerBase):
 
             try:
                 c.client.slb.server.create(server_name, server_ip)
-            except acos_errors.Exists:
+            except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
                 pass
 
             c.client.slb.service_group.member.create(member['pool_id'],
