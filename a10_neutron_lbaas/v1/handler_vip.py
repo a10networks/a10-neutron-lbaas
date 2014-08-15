@@ -12,11 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 import acos_client.errors as acos_errors
 import handler_base
 import v1_context as a10
+
+LOG = logging.getLogger(__name__)
 
 
 class VipHandler(handler_base.HandlerBase):
@@ -40,6 +44,9 @@ class VipHandler(handler_base.HandlerBase):
 
             p = PersistHandler(c, context, vip)
             p.create()
+
+            z = c.client.slb.virtual_server.all()
+            LOG.debug("VIPs = %s", z)
 
             c.client.slb.virtual_server.create(
                 vip['id'],
