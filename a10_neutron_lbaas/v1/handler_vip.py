@@ -75,10 +75,13 @@ class VipHandler(handler_base.HandlerBase):
                 c_pers_name=p.c_persistence(),
                 status=status)
 
+    def _delete(self, c, context, vip):
+        c.client.slb.virtual_server.delete(vip['id'])
+        PersistHandler(c, context, vip).delete()
+
     def delete(self, context, vip):
         with a10.A10DeleteContext(self, context, vip) as c:
-            c.client.slb.virtual_server.delete(vip['id'])
-            PersistHandler(c, context, vip).delete()
+            self._delete(c, context, vip)
 
 
 class PersistHandler(object):

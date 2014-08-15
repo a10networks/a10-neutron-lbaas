@@ -75,6 +75,10 @@ class PoolHandler(handler_base.HandlerBase):
                 LOG.debug("HM = %s", z)
                 self.a10_driver.hm._delete(c, context, z)
 
+            if 'vip_id' in pool and pool['vip_id'] is not None:
+                vip = self._get_vip(context, pool['vip_id'])
+                self.a10_driver.vip._delete(c, context, vip)
+
             c.client.slb.service_group.delete(pool['id'])
 
     def stats(self, context, pool_id):
