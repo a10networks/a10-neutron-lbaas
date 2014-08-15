@@ -69,6 +69,7 @@ class VipHandler(handler_base.HandlerBase):
                 vip['id'],
                 vip['id'] + '_VPORT',
                 protocol=self._protocols(c)[vip['protocol']],
+                port=vip['protocol_port'],
                 service_group_name=vip['pool_id'],
                 s_pers_name=p.s_persistence(),
                 c_pers_name=p.c_persistence(),

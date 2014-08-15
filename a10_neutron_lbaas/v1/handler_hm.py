@@ -50,7 +50,10 @@ class HealthMonitorHandler(handler_base.HandlerBase):
         h = hm.copy()
         h['pool_id'] = pool_id
         with a10.A10WriteHMStatusContext(self, context, h) as c:
-            self._set(c, c.client.slb.hm.create, context, hm)
+            try:
+                self._set(c, c.client.slb.hm.create, context, hm)
+            except acos_errors.Exists:
+                pass
 
             if pool_id is not None:
                 c.client.slb.service_group.update(

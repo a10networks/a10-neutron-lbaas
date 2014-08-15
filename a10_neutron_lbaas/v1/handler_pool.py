@@ -12,8 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 import handler_base
 import v1_context as a10
+
+LOG = logging.getLogger(__name__)
 
 
 class PoolHandler(handler_base.HandlerBase):
@@ -57,12 +61,15 @@ class PoolHandler(handler_base.HandlerBase):
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
+            LOG.error("POOL = %s", pool)
             for member in pool['members']:
+                LOG.error("MEMBER = %s", member)
                 self.a10_driver.member._delete(c, context, member)
 
             for hm in pool['health_monitors_status']:
-                self.a10_driver.hm._delete(
-                    c, context, self._get_hm(context, hm['monitor_id']))
+                z = self._get_hm(context, hm['monitor_id'])
+                LOG.error("HM = %s", z)
+                self.a10_driver.hm._delete(c, context, z)
 
             c.client.slb.service_group.delete(pool['id'])
 
