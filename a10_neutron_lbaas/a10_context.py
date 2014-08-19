@@ -36,7 +36,10 @@ class A10Context(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.client.session.close()
+        try:
+            self.client.session.close()
+        except acos_errors.InvalidSession:
+            pass
 
         if exc_type is not None:
             return False
@@ -68,7 +71,10 @@ class A10WriteContext(A10Context):
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
-            self.client.system.action.write_memory()
+            try:
+                self.client.system.action.write_memory()
+            except acos_errors.InvalidSession:
+                pass
 
         super(A10WriteContext, self).__exit__(exc_type, exc_value, traceback)
 
