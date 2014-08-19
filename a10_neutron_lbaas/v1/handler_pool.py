@@ -14,6 +14,7 @@
 
 import logging
 
+import acos_client.errors as acos_errors
 import handler_base
 import v1_context as a10
 
@@ -56,7 +57,10 @@ class PoolHandler(handler_base.HandlerBase):
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
-            self._set(c, c.client.slb.service_group.create, context, pool)
+            try:
+                self._set(c, c.client.slb.service_group.create, context, pool)
+            except acos_errors.Exists:
+                pass
 
     def update(self, context, old_pool, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:

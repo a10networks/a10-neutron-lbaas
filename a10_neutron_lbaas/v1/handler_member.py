@@ -48,10 +48,14 @@ class MemberHandler(handler_base.HandlerBase):
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
             pass
 
-        c.client.slb.service_group.member.create(member['pool_id'],
-                                                 server_name,
-                                                 member['protocol_port'],
-                                                 status=status)
+        try:
+            c.client.slb.service_group.member.create(
+                member['pool_id'],
+                server_name,
+                member['protocol_port'],
+                status=status)
+        except acos_errors.Exists:
+            pass
 
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:

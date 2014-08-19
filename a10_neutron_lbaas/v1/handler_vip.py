@@ -41,20 +41,26 @@ class VipHandler(handler_base.HandlerBase):
             p = PersistHandler(c, context, vip)
             p.create()
 
-            c.client.slb.virtual_server.create(
-                vip['id'],
-                vip['address'],
-                status)
+            try:
+                c.client.slb.virtual_server.create(
+                    vip['id'],
+                    vip['address'],
+                    status)
+            except acos_errors.Exists:
+                pass
 
-            c.client.slb.virtual_server.vport.create(
-                vip['id'],
-                vip['id'] + '_VPORT',
-                protocol=self._protocols(c)[vip['protocol']],
-                port=vip['protocol_port'],
-                service_group_name=vip['pool_id'],
-                s_pers_name=p.s_persistence(),
-                c_pers_name=p.c_persistence(),
-                status=status)
+            try:
+                c.client.slb.virtual_server.vport.create(
+                    vip['id'],
+                    vip['id'] + '_VPORT',
+                    protocol=self._protocols(c)[vip['protocol']],
+                    port=vip['protocol_port'],
+                    service_group_name=vip['pool_id'],
+                    s_pers_name=p.s_persistence(),
+                    c_pers_name=p.c_persistence(),
+                    status=status)
+            except acos_errors.Exists:
+                pass
 
     def update(self, context, old_vip, vip):
         with a10.A10WriteStatusContext(self, context, vip) as c:
