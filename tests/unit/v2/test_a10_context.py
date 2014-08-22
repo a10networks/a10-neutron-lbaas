@@ -111,7 +111,7 @@ class TestA10ContextADP(TestA10Context):
         self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
         self.assertEqual(1, len(self.a.last_client.mock_calls))
         self.a.last_client.system.partition.active.assert_called_with(
-            self.m.tenant_id)
+            self.m.tenant_id[0:13])
 
     def empty_close_mocks(self):
         self.print_mocks()
