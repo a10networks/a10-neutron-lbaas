@@ -56,15 +56,16 @@ class A10Context(object):
             return
 
         # Try to make the requested partition active
+        name = self.tenant_id[0:13]
         try:
-            self.client.system.partition.active(self.tenant_id)
+            self.client.system.partition.active(name)
             return
         except acos_errors.NotFound:
             pass
 
         # Create it if not found
-        self.client.system.partition.create(self.tenant_id)
-        self.client.system.partition.active(self.tenant_id)
+        self.client.system.partition.create(name)
+        self.client.system.partition.active(name)
 
 
 class A10WriteContext(A10Context):
@@ -115,6 +116,7 @@ class A10DeleteContextBase(A10WriteContext):
         n = self.remaining_root_objects()
         if n == 0:
             try:
-                self.client.system.partition.delete(self.tenant_id)
+                name = self.tenant_id[0:13]
+                self.client.system.partition.delete(name)
             except Exception:
                 LOG.error("A10Driver: partition cleanup failed; ignoring")
