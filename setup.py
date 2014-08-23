@@ -18,7 +18,6 @@ setup(
     long_description = open('README.md').read(),
 
     classifiers = [
-        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX',
         'Programming Language :: Python',
@@ -27,5 +26,5 @@ setup(
         'Topic :: Internet',
     ],
 
-    install_requires = ['acos-client>=0.4']
+    install_requires = ['acos-client>=1.0.7']
 )
