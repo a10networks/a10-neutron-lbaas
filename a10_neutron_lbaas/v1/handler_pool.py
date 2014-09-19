@@ -38,33 +38,49 @@ class PoolHandler(handler_base.HandlerBase):
     def _get_vip_id(self, context, pool_id):
         return self.openstack_driver._pool_get_vip_id(context, pool_id)
 
-    def _set(self, c, set_method, context, pool):
-        lb_methods = {
-            'ROUND_ROBIN': c.client.slb.service_group.ROUND_ROBIN,
-            'LEAST_CONNECTIONS': c.client.slb.service_group.LEAST_CONNECTION,
-            'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
-        }
-        protocols = {
-            'HTTP': c.client.slb.service_group.TCP,
-            'HTTPS': c.client.slb.service_group.TCP,
-            'TCP': c.client.slb.service_group.TCP,
-            'UDP': c.client.slb.service_group.UDP
-        }
-
-        set_method(pool['id'],
-                   protocol=protocols[pool['protocol']],
-                   lb_method=lb_methods[pool['lb_method']])
-
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
+            lb_methods = {
+                'ROUND_ROBIN': c.client.slb.service_group.ROUND_ROBIN,
+                'LEAST_CONNECTIONS': c.client.slb.service_group.LEAST_CONNECTION,
+                'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
+            }
+            protocols = {
+                'HTTP': c.client.slb.service_group.TCP,
+                'HTTPS': c.client.slb.service_group.TCP,
+                'TCP': c.client.slb.service_group.TCP,
+                'UDP': c.client.slb.service_group.UDP
+            }
+
+            name = pool.get('a10_meta', {}).get('name', pool['id'])
+            args = pool.get('a10_meta', {}).get('service_group', {})
             try:
-                self._set(c, c.client.slb.service_group.create, context, pool)
+                c.client.slb.service_group.create(
+                    name,
+                    protocol=protocols[pool['protocol']],
+                    lb_method=lb_methods[pool['lb_method']],
+                    axapi_args=args)
             except acos_errors.Exists:
                 pass
 
     def update(self, context, old_pool, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
-            self._set(c, c.client.slb.service_group.update, context, pool)
+            lb_methods = {
+                'ROUND_ROBIN': c.client.slb.service_group.ROUND_ROBIN,
+                'LEAST_CONNECTIONS': c.client.slb.service_group.LEAST_CONNECTION,
+                'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
+            }
+            protocols = {
+                'HTTP': c.client.slb.service_group.TCP,
+                'HTTPS': c.client.slb.service_group.TCP,
+                'TCP': c.client.slb.service_group.TCP,
+                'UDP': c.client.slb.service_group.UDP
+            }
+
+            c.client.slb.service_group.update(
+                pool['id'],
+                protocol=protocols[pool['protocol']],
+                lb_method=lb_methods[pool['lb_method']])
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
