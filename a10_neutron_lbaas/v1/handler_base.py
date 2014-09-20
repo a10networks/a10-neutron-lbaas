@@ -25,6 +25,6 @@ class HandlerBase(object):
         m = lbaas_obj.get('a10_meta', '{}')
         try:
             d = json.loads(m)
-        except:
+        except Exception:
             return default
         return d.get(key, default)

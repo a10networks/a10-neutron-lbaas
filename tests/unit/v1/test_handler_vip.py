@@ -57,6 +57,7 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_update(self):
         self.a.vip.update(None, self.fake_vip(), self.fake_vip())
+        self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
         self.assertTrue('id1' in s)
