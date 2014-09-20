@@ -85,12 +85,16 @@ class MemberHandler(handler_base.HandlerBase):
         server_ip = self._get_ip(context, member, c.device_cfg['use_float'])
         server_name = self._get_name(member, server_ip)
 
-        if self._count(context, member) > 1:
-            c.client.slb.service_group.member.delete(member['pool_id'],
-                                                     server_name,
-                                                     member['protocol_port'])
-        else:
-            c.client.slb.server.delete(server_name)
+        try:
+            if self._count(context, member) > 1:
+                c.client.slb.service_group.member.delete(
+                    member['pool_id'],
+                    server_name,
+                    member['protocol_port'])
+            else:
+                c.client.slb.server.delete(server_name)
+        except acos_errors.NotFound:
+            pass
 
     def delete(self, context, member):
         with a10.A10DeleteContext(self, context, member) as c:

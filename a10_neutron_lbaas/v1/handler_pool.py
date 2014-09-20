@@ -43,7 +43,18 @@ class PoolHandler(handler_base.HandlerBase):
             lb_methods = {
                 'ROUND_ROBIN': c.client.slb.service_group.ROUND_ROBIN,
                 'LEAST_CONNECTIONS': c.client.slb.service_group.LEAST_CONNECTION,
-                'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
+                'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION,
+                'WEIGHTED_ROUND_ROBIN': c.client.slb.service_group.WEIGHTED_ROUND_ROBIN,
+                'WEIGHTED_LEAST_CONNECTION': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION,
+                'LEAST_CONNECTION_ON_SERVICE_PORT': c.client.slb.service_group.LEAST_CONNECTION_ON_SERVICE_PORT,
+                'WEIGHTED_LEAST_CONNECTION_ON_SERVICE_PORT': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION_ON_SERVICE_PORT,
+                'FAST_RESPONSE_TIME': c.client.slb.service_group.FAST_RESPONSE_TIME,
+                'LEAST_REQUEST': c.client.slb.service_group.LEAST_REQUEST,
+                'STRICT_ROUND_ROBIN': c.client.slb.service_group.STRICT_ROUND_ROBIN,
+                'STATELESS_SOURCE_IP_HASH': c.client.slb.service_group.STATELESS_SOURCE_IP_HASH,
+                'STATELESS_DESTINATION_IP_HASH': c.client.slb.service_group.STATELESS_DESTINATION_IP_HASH,
+                'STATELESS_SOURCE_DESTINATION_IP_HASH': c.client.slb.service_group.STATELESS_SOURCE_DESTINATION_IP_HASH,
+                'STATELESS_PER_PACKET_ROUND_ROBIN': c.client.slb.service_group.STATELESS_PER_PACKET_ROUND_ROBIN,
             }
             protocols = {
                 'HTTP': c.client.slb.service_group.TCP,
@@ -52,8 +63,8 @@ class PoolHandler(handler_base.HandlerBase):
                 'UDP': c.client.slb.service_group.UDP
             }
 
-            name = pool.get('a10_meta', {}).get('name', pool['id'])
-            args = pool.get('a10_meta', {}).get('service_group', {})
+            name = self.meta(pool, 'name', pool['id'])
+            args = self.meta(pool, 'service_group', {})
             try:
                 c.client.slb.service_group.create(
                     name,
