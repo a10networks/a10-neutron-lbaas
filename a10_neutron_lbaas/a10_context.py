@@ -27,6 +27,7 @@ class A10Context(object):
         self.a10_driver = handler.a10_driver
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
+        LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
 
     def __enter__(self):
         self.get_tenant_id()

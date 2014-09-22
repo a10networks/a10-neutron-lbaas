@@ -25,11 +25,21 @@ class MemberHandler(handler_base.HandlerBase):
     def _get_ip(self, context, member, use_float=False):
         return self.openstack_driver._member_get_ip(context, member, use_float)
 
+    def _pool_get(self, context, pool_id):
+        return self.openstack_driver.plugin.get_pool(context, pool_id)
+
+    def _pool_name(self, context, pool_id):
+        pool = self._pool_get(context, pool_id)
+        return self.meta(pool, 'name', pool['id'])
+
     def _get_name(self, member, ip_address):
         tenant_label = member['tenant_id'][:5]
         addr_label = str(ip_address).replace(".", "_", 4)
         server_name = "_%s_%s_neutron" % (tenant_label, addr_label)
         return server_name
+
+    def _meta_name(self, member, ip_address):
+        return self.meta(member, 'name', self._get_name(member, ip_address))
 
     def _count(self, context, member):
         return self.openstack_driver._member_count(context, member)
@@ -37,23 +47,27 @@ class MemberHandler(handler_base.HandlerBase):
     def _create(self, c, context, member):
         server_ip = self._get_ip(context, member,
                                  c.device_cfg['use_float'])
-        server_name = self._get_name(member, server_ip)
+        server_name = self._meta_name(member, server_ip)
 
         status = c.client.slb.UP
         if not member['admin_state_up']:
             status = c.client.slb.DOWN
 
         try:
-            c.client.slb.server.create(server_name, server_ip)
+            server_args = {'server': self.meta(member, 'server', {})}
+            c.client.slb.server.create(server_name, server_ip,
+                                       axapi_args=server_args)
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
             pass
 
         try:
+            member_args = {'member': self.meta(member, 'member', {})}
             c.client.slb.service_group.member.create(
-                member['pool_id'],
+                self._pool_name(context, member['pool_id']),
                 server_name,
                 member['protocol_port'],
-                status=status)
+                status=status,
+                axapi_args=member_args)
         except acos_errors.Exists:
             pass
 
@@ -65,32 +79,38 @@ class MemberHandler(handler_base.HandlerBase):
         with a10.A10WriteStatusContext(self, context, member) as c:
             server_ip = self._get_ip(context, member,
                                      c.device_cfg['use_float'])
-            server_name = self._get_name(member, server_ip)
+            server_name = self._meta_name(member, server_ip)
 
             status = c.client.slb.UP
             if not member['admin_state_up']:
                 status = c.client.slb.DOWN
 
             try:
+                member_args = {'member': self.meta(member, 'member', {})}
                 c.client.slb.service_group.member.update(
-                    member['pool_id'],
+                    self._pool_name(context, member['pool_id']),
                     server_name,
                     member['protocol_port'],
-                    status)
+                    status,
+                    axapi_args=member_args)
             except acos_errors.NotFound:
                 # Adding db relation after the fact
                 self._create(c, context, member)
 
     def _delete(self, c, context, member):
         server_ip = self._get_ip(context, member, c.device_cfg['use_float'])
-        server_name = self._get_name(member, server_ip)
+        server_name = self._meta_name(member, server_ip)
 
-        if self._count(context, member) > 1:
-            c.client.slb.service_group.member.delete(member['pool_id'],
-                                                     server_name,
-                                                     member['protocol_port'])
-        else:
-            c.client.slb.server.delete(server_name)
+        try:
+            if self._count(context, member) > 1:
+                c.client.slb.service_group.member.delete(
+                    self._pool_name(context, member['pool_id']),
+                    server_name,
+                    member['protocol_port'])
+            else:
+                c.client.slb.server.delete(server_name)
+        except acos_errors.NotFound:
+            pass
 
     def delete(self, context, member):
         with a10.A10DeleteContext(self, context, member) as c:
