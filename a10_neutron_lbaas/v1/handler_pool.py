@@ -38,60 +38,85 @@ class PoolHandler(handler_base.HandlerBase):
     def _get_vip_id(self, context, pool_id):
         return self.openstack_driver._pool_get_vip_id(context, pool_id)
 
-    def _set(self, c, set_method, context, pool):
+    def _get_vip(self, context, vip_id):
+        return self.openstack_driver.plugin.get_vip(context, vip_id)
+
+    def _meta_name(self, pool):
+        return self.meta(pool, 'name', pool['id'])
+
+    def _set(self, set_method, c, context, pool):
+        z = c.client.slb.service_group
         lb_methods = {
-            'ROUND_ROBIN': c.client.slb.service_group.ROUND_ROBIN,
-            'LEAST_CONNECTIONS': c.client.slb.service_group.LEAST_CONNECTION,
-            'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
+            'ROUND_ROBIN': z.ROUND_ROBIN,
+            'LEAST_CONNECTIONS': z.LEAST_CONNECTION,
+            'SOURCE_IP': z.WEIGHTED_LEAST_CONNECTION,
+            'WEIGHTED_ROUND_ROBIN': z.WEIGHTED_ROUND_ROBIN,
+            'WEIGHTED_LEAST_CONNECTION': z.WEIGHTED_LEAST_CONNECTION,
+            'LEAST_CONNECTION_ON_SERVICE_PORT':
+                z.LEAST_CONNECTION_ON_SERVICE_PORT,
+            'WEIGHTED_LEAST_CONNECTION_ON_SERVICE_PORT':
+                z.WEIGHTED_LEAST_CONNECTION_ON_SERVICE_PORT,
+            'FAST_RESPONSE_TIME': z.FAST_RESPONSE_TIME,
+            'LEAST_REQUEST': z.LEAST_REQUEST,
+            'STRICT_ROUND_ROBIN': z.STRICT_ROUND_ROBIN,
+            'STATELESS_SOURCE_IP_HASH': z.STATELESS_SOURCE_IP_HASH,
+            'STATELESS_DESTINATION_IP_HASH': z.STATELESS_DESTINATION_IP_HASH,
+            'STATELESS_SOURCE_DESTINATION_IP_HASH':
+                z.STATELESS_SOURCE_DESTINATION_IP_HASH,
+            'STATELESS_PER_PACKET_ROUND_ROBIN':
+                z.STATELESS_PER_PACKET_ROUND_ROBIN,
         }
         protocols = {
-            'HTTP': c.client.slb.service_group.TCP,
-            'HTTPS': c.client.slb.service_group.TCP,
-            'TCP': c.client.slb.service_group.TCP,
-            'UDP': c.client.slb.service_group.UDP
+            'HTTP': z.TCP,
+            'HTTPS': z.TCP,
+            'TCP': z.TCP,
+            'UDP': z.UDP
         }
+        args = {'service_group': self.meta(pool, 'service_group', {})}
 
-        set_method(pool['id'],
+        set_method(self._meta_name(pool),
                    protocol=protocols[pool['protocol']],
-                   lb_method=lb_methods[pool['lb_method']])
+                   lb_method=lb_methods[pool['lb_method']],
+                   axapi_args=args)
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
             try:
-                self._set(c, c.client.slb.service_group.create, context, pool)
+                self._set(c.client.slb.service_group.create,
+                          c, context, pool)
             except acos_errors.Exists:
                 pass
 
     def update(self, context, old_pool, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
-            self._set(c, c.client.slb.service_group.update, context, pool)
+            self._set(c.client.slb.service_group.update,
+                      c, context, pool)
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
-            LOG.debug("POOL = %s", pool)
             for member in pool['members']:
                 m = self._get_member(context, member)
-                LOG.debug("MEMBER = %s", m)
                 self.a10_driver.member._delete(c, context, m)
 
             for hm in pool['health_monitors_status']:
                 z = self._get_hm(context, hm['monitor_id'])
-                LOG.debug("HM = %s", z)
                 self.a10_driver.hm._delete(c, context, z)
 
             if 'vip_id' in pool and pool['vip_id'] is not None:
                 vip = self._get_vip(context, pool['vip_id'])
                 self.a10_driver.vip._delete(c, context, vip)
 
-            c.client.slb.service_group.delete(pool['id'])
+            c.client.slb.service_group.delete(self._meta_name(pool))
 
     def stats(self, context, pool_id):
         tenant_id = self._get_tenant_id(context, pool_id)
         pool = {'id': pool_id, 'tenant_id': tenant_id}
         with a10.A10Context(self, context, pool) as c:
             try:
-                vip_id = self._get_vip_id(context, pool_id)
-                r = c.client.slb.virtual_server.stats(vip_id)
+                vip_id = self._get_vip(context, pool['id'])
+                vip = self._get_vip(context, vip_id)
+                name = self.meta(vip, 'vip_name', vip['id'])
+                r = c.client.slb.virtual_server.stats(name)
                 return {
                     "bytes_in": r["virtual_server_stat"]["req_bytes"],
                     "bytes_out": r["virtual_server_stat"]["resp_bytes"],
@@ -99,7 +124,8 @@ class PoolHandler(handler_base.HandlerBase):
                         r["virtual_server_stat"]["cur_conns"],
                     "total_connections": r["virtual_server_stat"]["tot_conns"]
                 }
-            except Exception:
+            except Exception as e:
+                raise e
                 return {
                     "bytes_in": 0,
                     "bytes_out": 0,

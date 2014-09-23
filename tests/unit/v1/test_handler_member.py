@@ -65,13 +65,17 @@ class TestMembers(test_base.UnitTestBase):
         name = self.a.member._get_name(m, ip)
         self.a.member.create(None, m)
 
-        self.a.last_client.slb.server.create.assert_called_with(name, ip)
+        self.a.last_client.slb.server.create.assert_called_with(
+            name, ip,
+            axapi_args={'server': {}})
         if admin_state_up:
             status = self.a.last_client.slb.UP
         else:
             status = self.a.last_client.slb.DOWN
+        pool_name = self.a.member._pool_name(None, m['pool_id'])
         self.a.last_client.slb.service_group.member.create.assert_called_with(
-            m['pool_id'], name, m['protocol_port'], status=status)
+            pool_name, name, m['protocol_port'], status=status,
+            axapi_args={'member': {}})
 
     def test_create_down(self):
         self.test_create(False)
@@ -82,9 +86,11 @@ class TestMembers(test_base.UnitTestBase):
         name = self.a.member._get_name(m, ip)
         self.a.member.update(None, m, m)
 
+        pool_name = self.a.member._pool_name(None, m['pool_id'])
         self.a.last_client.slb.service_group.member.update.assert_called_with(
-            m['pool_id'], name, m['protocol_port'],
-            self.a.last_client.slb.DOWN)
+            pool_name, name, m['protocol_port'],
+            self.a.last_client.slb.DOWN,
+            axapi_args={'member': {}})
 
     def test_delete(self):
         m = self.fake_member()
@@ -103,5 +109,6 @@ class TestMembers(test_base.UnitTestBase):
         self.set_count_2()
         self.a.member.delete(None, m)
 
+        pool_name = self.a.member._pool_name(None, m['pool_id'])
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
-            m['pool_id'], name, m['protocol_port'])
+            pool_name, name, m['protocol_port'])

@@ -88,5 +88,6 @@ class TestPools(test_base.UnitTestBase):
         z._get_tenant_id = lambda x, y: 'hello'
         z._get_vip_id = lambda x, y: '2.2.2.2'
         z.stats(None, pool['id'])
-        self.a.last_client.slb.virtual_server.stats.assert_called_with(
-            '2.2.2.2')
+        self.print_mocks()
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue(s.index('slb.virtual_server.stats') >= 0)

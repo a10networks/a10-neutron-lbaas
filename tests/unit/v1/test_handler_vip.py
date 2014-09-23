@@ -41,7 +41,7 @@ class TestVIP(test_base.UnitTestBase):
         self.assertTrue('vport.create' in s)
         self.assertTrue('id1' in s)
         self.assertTrue('UP' in s)
-        self.assertTrue('pool1' in s)
+        self.assertTrue('get_pool' in s)
         self.assertTrue('HTTP' in s)
 
     def test_create_pers(self):
@@ -57,11 +57,12 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_update(self):
         self.a.vip.update(None, self.fake_vip(), self.fake_vip())
+        self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
         self.assertTrue('id1' in s)
         self.assertTrue('UP' in s)
-        self.assertTrue('pool1' in s)
+        self.assertTrue('get_pool' in s)
         self.assertTrue('HTTP' in s)
 
     def test_delete(self):

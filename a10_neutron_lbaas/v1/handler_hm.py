@@ -25,6 +25,16 @@ class HealthMonitorHandler(handler_base.HandlerBase):
     def _hm_binding_count(self, context, hm_id):
         return self.openstack_driver._hm_binding_count(context, hm_id)
 
+    def _pool_get(self, context, pool_id):
+        return self.openstack_driver.plugin.get_pool(context, pool_id)
+
+    def _pool_name(self, context, pool_id):
+        pool = self._pool_get(context, pool_id)
+        return self.meta(pool, 'name', pool['id'])
+
+    def _meta_name(self, hm):
+        return self.meta(hm, 'name', self._hm_name(hm))
+
     def _set(self, c, set_method, context, hm):
         hm_map = {
             'PING': c.client.slb.hm.ICMP,
@@ -33,7 +43,7 @@ class HealthMonitorHandler(handler_base.HandlerBase):
             'HTTPS': c.client.slb.hm.HTTPS
         }
 
-        hm_name = self._hm_name(hm)
+        hm_name = self._meta_name(hm)
         method = None
         url = None
         expect_code = None
@@ -42,9 +52,12 @@ class HealthMonitorHandler(handler_base.HandlerBase):
             url = hm['url_path']
             expect_code = hm['expected_codes']
 
+        args = self.meta(hm, 'hm', {})
+
         set_method(hm_name, hm_map[hm['type']],
                    hm['delay'], hm['timeout'], hm['max_retries'],
-                   method=method, url=url, expect_code=expect_code)
+                   method=method, url=url, expect_code=expect_code,
+                   axapi_args=args)
 
     def create(self, context, hm, pool_id):
         h = hm.copy()
@@ -57,15 +70,15 @@ class HealthMonitorHandler(handler_base.HandlerBase):
 
             if pool_id is not None:
                 c.client.slb.service_group.update(
-                    pool_id,
-                    health_monitor=self._hm_name(hm))
+                    self._pool_name(context, pool_id),
+                    health_monitor=self._meta_name(hm))
 
             for pool in hm['pools']:
                 if pool['pool_id'] == pool_id:
                     continue
                 c.client.slb.service_group.update(
-                    pool['pool_id'],
-                    health_monitor=self._hm_name(hm))
+                    self._pool_name(context, pool['pool_id']),
+                    health_monitor=self._meta_name(hm))
 
     def update(self, context, old_hm, hm, pool_id):
         h = hm.copy()
@@ -74,7 +87,7 @@ class HealthMonitorHandler(handler_base.HandlerBase):
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
-        c.client.slb.hm.delete(self._hm_name(hm))
+        c.client.slb.hm.delete(self._meta_name(hm))
 
     def delete(self, context, hm, pool_id):
         h = hm.copy()
@@ -86,4 +99,5 @@ class HealthMonitorHandler(handler_base.HandlerBase):
                 except acos_errors.InUse:
                     pass
 
-            c.client.slb.service_group.update(pool_id, health_monitor="")
+            pool_name = self._pool_name(context, pool_id)
+            c.client.slb.service_group.update(pool_name, health_monitor="")

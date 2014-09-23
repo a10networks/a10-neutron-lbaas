@@ -24,13 +24,48 @@ class VipHandler(handler_base.HandlerBase):
     def _model_type(self):
         return 'vip'
 
+    def _pool_get(self, context, pool_id):
+        return self.openstack_driver.plugin.get_pool(context, pool_id)
+
+    def _pool_name(self, context, pool_id):
+        pool = self._pool_get(context, pool_id)
+        return self.meta(pool, 'name', pool['id'])
+
     def _protocols(self, c):
+        z = c.client.slb.virtual_server.vport
         return {
-            'TCP': c.client.slb.virtual_server.vport.TCP,
-            'UDP': c.client.slb.virtual_server.vport.UDP,
-            'HTTP': c.client.slb.virtual_server.vport.HTTP,
-            'HTTPS': c.client.slb.virtual_server.vport.TCP
+            'TCP': z.TCP,
+            'UDP': z.UDP,
+            'HTTP': z.HTTP,
+            'HTTPS': z.TCP,
+            'TERMINATED_HTTPS': z.HTTPS,
+            'OTHERS': z.OTHERS,
+            'RTSP': z.RTSP,
+            'FTP': z.FTP,
+            'MMS': z.MMS,
+            'SIP': z.SIP,
+            'FAST_HTTP': z.FAST_HTTP,
+            'GENERIC_PROXY': z.GENERIC_PROXY,
+            'SSL_PROXY': z.SSL_PROXY,
+            'SMTP': z.SMTP,
+            'SIP_TCP': z.SIP_TCP,
+            'SIPS': z.SIPS,
+            'DIAMETER': z.DIAMETER,
+            'DNS_UDP': z.DNS_UDP,
+            'TFTP': z.TFTP,
+            'DNS_TCP': z.DNS_TCP,
+            'RADIUS': z.RADIUS,
+            'MYSQL': z.MYSQL,
+            'MSSQL': z.MSSQL,
+            'FIX': z.FIX,
+            'SMPP_TCP': z.SMPP_TCP,
+            'SPDY': z.SPDY,
+            'SPDYS': z.SPDYS,
+            'FTP_PROXY': z.FTP_PROXY
         }
+
+    def _meta_name(self, vip):
+        return self.meta(vip, 'name', vip['id'])
 
     def create(self, context, vip):
         with a10.A10WriteStatusContext(self, context, vip) as c:
@@ -38,27 +73,35 @@ class VipHandler(handler_base.HandlerBase):
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            p = PersistHandler(c, context, vip)
+            pool_name = self._pool_name(context, vip['pool_id'])
+
+            p = PersistHandler(c, context, vip, self._meta_name(vip))
             p.create()
 
             try:
+                vip_args = {
+                    'virtual_server': self.meta(vip, 'virtual_server', {})
+                }
                 c.client.slb.virtual_server.create(
-                    vip['id'],
+                    self._meta_name(vip),
                     vip['address'],
-                    status)
+                    status,
+                    axapi_args=vip_args)
             except acos_errors.Exists:
                 pass
 
             try:
+                vport_args = {'vport': self.meta(vip, 'vport', {})}
                 c.client.slb.virtual_server.vport.create(
-                    vip['id'],
-                    vip['id'] + '_VPORT',
+                    self._meta_name(vip),
+                    self._meta_name(vip) + '_VPORT',
                     protocol=self._protocols(c)[vip['protocol']],
                     port=vip['protocol_port'],
-                    service_group_name=vip['pool_id'],
+                    service_group_name=pool_name,
                     s_pers_name=p.s_persistence(),
                     c_pers_name=p.c_persistence(),
-                    status=status)
+                    status=status,
+                    axapi_args=vport_args)
             except acos_errors.Exists:
                 pass
 
@@ -68,22 +111,26 @@ class VipHandler(handler_base.HandlerBase):
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            p = PersistHandler(c, context, vip)
+            pool_name = self._pool_name(context, vip['pool_id'])
+
+            p = PersistHandler(c, context, vip, self._meta_name(vip))
             p.create()
 
+            vport_args = {'vport': self.meta(vip, 'vport', {})}
             c.client.slb.virtual_server.vport.update(
-                vip['id'],
-                vip['id'] + '_VPORT',
+                self._meta_name(vip),
+                self._meta_name(vip) + '_VPORT',
                 protocol=self._protocols(c)[vip['protocol']],
                 port=vip['protocol_port'],
-                service_group_name=vip['pool_id'],
+                service_group_name=pool_name,
                 s_pers_name=p.s_persistence(),
                 c_pers_name=p.c_persistence(),
-                status=status)
+                status=status,
+                axapi_args=vport_args)
 
     def _delete(self, c, context, vip):
-        c.client.slb.virtual_server.delete(vip['id'])
-        PersistHandler(c, context, vip).delete()
+        c.client.slb.virtual_server.delete(self._meta_name(vip))
+        PersistHandler(c, context, vip, self._meta_name(vip)).delete()
 
     def delete(self, context, vip):
         with a10.A10DeleteContext(self, context, vip) as c:
@@ -92,13 +139,13 @@ class VipHandler(handler_base.HandlerBase):
 
 class PersistHandler(object):
 
-    def __init__(self, c, context, vip):
+    def __init__(self, c, context, vip, vip_name):
         self.c = c
         self.context = context
         self.vip = vip
         self.c_pers = None
         self.s_pers = None
-        self.name = vip['id']
+        self.name = vip_name
 
         if vip.get('session_persistence', None) is not None:
             self.sp = vip['session_persistence']

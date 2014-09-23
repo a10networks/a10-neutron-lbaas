@@ -21,7 +21,8 @@ class TestHM(test_base.UnitTestBase):
         self.print_mocks()
         self.a.last_client.slb.hm.create.assert_called_with(
             'abcdef', mon_type, '5', 5, '5',
-            url=url, method=method, expect_code=expect_code)
+            url=url, method=method, expect_code=expect_code,
+            axapi_args={})
 
     def fake_hm(self, type):
         hm = {
@@ -42,28 +43,32 @@ class TestHM(test_base.UnitTestBase):
     def test_create_ping(self):
         self.a.hm.create(None, self.fake_hm('PING'), 'p01')
         self.assert_hm(self.a.last_client.slb.hm.ICMP, None, None, None)
+        pool_name = self.a.hm._pool_name(None, 'p01')
         self.a.last_client.slb.service_group.update.assert_called_with(
-            'p01', health_monitor='abcdef')
+            pool_name, health_monitor='abcdef')
 
     def test_create_tcp(self):
         hm = self.fake_hm('TCP')
         hm['pools'] = [{'pool_id': 'p02'}, {'pool_id': 'p01'}]
         self.a.hm.create(None, hm, 'p01')
         self.assert_hm(self.a.last_client.slb.hm.TCP, None, None, None)
+        pool_name = self.a.hm._pool_name(None, 'p02')
         self.a.last_client.slb.service_group.update.assert_called_with(
-            'p02', health_monitor='abcdef')
+            pool_name, health_monitor='abcdef')
 
     def test_create_http(self):
         self.a.hm.create(None, self.fake_hm('HTTP'), 'p01')
         self.assert_hm(self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
+        pool_name = self.a.hm._pool_name(None, 'p01')
         self.a.last_client.slb.service_group.update.assert_called_with(
-            'p01', health_monitor='abcdef')
+            pool_name, health_monitor='abcdef')
 
     def test_create_https(self):
         self.a.hm.create(None, self.fake_hm('HTTPS'), 'p01')
         self.assert_hm(self.a.last_client.slb.hm.HTTPS, 'GET', '/', '200')
+        pool_name = self.a.hm._pool_name(None, 'p01')
         self.a.last_client.slb.service_group.update.assert_called_with(
-            'p01', health_monitor='abcdef')
+            pool_name, health_monitor='abcdef')
 
     def test_update_tcp(self, m_old=None, m=None):
         if m_old is None:
@@ -75,9 +80,11 @@ class TestHM(test_base.UnitTestBase):
         self.a.last_client.slb.hm.update.assert_called_with(
             'abcdef',
             self.a.last_client.slb.hm.TCP, 20, 5, '5',
-            url=None, method=None, expect_code=None)
+            url=None, method=None, expect_code=None,
+            axapi_args={})
 
     def test_delete(self):
         self.a.hm.delete(None, self.fake_hm('HTTP'), 'p01')
+        pool_name = self.a.hm._pool_name(None, 'p01')
         self.a.last_client.slb.service_group.update.assert_called_with(
-            'p01', health_monitor='')
+            pool_name, health_monitor='')
