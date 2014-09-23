@@ -50,6 +50,14 @@ class TestA10Context(test_base.UnitTestBase):
         self.a.last_client.system.action.write_memory.assert_called_with()
         self.a.last_client.session.close.assert_called_with()
 
+    def test_ha(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m,
+                                 device_name='ax4') as c:
+            c
+        self.a.last_client.ha.sync.assert_called_with(
+            '1.1.1.1', 'admin', 'a10')
+        self.a.last_client.session.close.assert_called_with()
+
     def test_write_e(self):
         try:
             with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:

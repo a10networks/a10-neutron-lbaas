@@ -58,5 +58,13 @@ devices = {
         "password": "a10",
         "api_version": "2.1",
         "use_float": True,
+        "ha_sync_list": [
+            {
+                "name": "ax5",
+                "ip": "1.1.1.1",
+                "username": "admin",
+                "password": "a10"
+            }
+        ]
     },
 }

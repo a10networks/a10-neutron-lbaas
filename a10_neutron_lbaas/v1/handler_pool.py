@@ -38,6 +38,9 @@ class PoolHandler(handler_base.HandlerBase):
     def _get_vip_id(self, context, pool_id):
         return self.openstack_driver._pool_get_vip_id(context, pool_id)
 
+    def _get_vip(self, context, vip_id):
+        return self.openstack_driver.plugin.get_vip(context, vip_id)
+
     def _meta_name(self, pool):
         return self.meta(pool, 'name', pool['id'])
 
@@ -110,7 +113,8 @@ class PoolHandler(handler_base.HandlerBase):
         pool = {'id': pool_id, 'tenant_id': tenant_id}
         with a10.A10Context(self, context, pool) as c:
             try:
-                vip = self._get_vip(context, pool['vip_id'])
+                vip_id = self._get_vip(context, pool['id'])
+                vip = self._get_vip(context, vip_id)
                 name = self.meta(vip, 'vip_name', vip['id'])
                 r = c.client.slb.virtual_server.stats(name)
                 return {
@@ -120,7 +124,8 @@ class PoolHandler(handler_base.HandlerBase):
                         r["virtual_server_stat"]["cur_conns"],
                     "total_connections": r["virtual_server_stat"]["tot_conns"]
                 }
-            except Exception:
+            except Exception as e:
+                raise e
                 return {
                     "bytes_in": 0,
                     "bytes_out": 0,

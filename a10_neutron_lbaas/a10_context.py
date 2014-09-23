@@ -21,17 +21,23 @@ LOG = logging.getLogger(__name__)
 
 class A10Context(object):
 
-    def __init__(self, handler, openstack_context, openstack_lbaas_obj):
+    def __init__(self, handler, openstack_context, openstack_lbaas_obj,
+                 **kwargs):
         self.handler = handler
         self.openstack_driver = handler.openstack_driver
         self.a10_driver = handler.a10_driver
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
+        self.device_name = kwargs.get('device_name', None)
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
 
     def __enter__(self):
         self.get_tenant_id()
-        self.device_cfg = self.a10_driver._select_a10_device(self.tenant_id)
+        if self.device_name:
+            d = self.a10_driver.config.devices[self.device_name]
+        else:
+            d = self.a10_driver._select_a10_device(self.tenant_id)
+        self.device_cfg = d
         self.client = self.a10_driver._get_a10_client(self.device_cfg)
         self.select_appliance_partition()
         return self
@@ -77,6 +83,9 @@ class A10WriteContext(A10Context):
                 self.client.system.action.write_memory()
             except acos_errors.InvalidSessionID:
                 pass
+
+            for v in self.device_cfg.get('ha_sync_list', []):
+                self.client.ha.sync(v['ip'], v['username'], v['password'])
 
         super(A10WriteContext, self).__exit__(exc_type, exc_value, traceback)
 
