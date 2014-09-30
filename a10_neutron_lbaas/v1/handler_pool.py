@@ -69,6 +69,7 @@ class PoolHandler(handler_base.HandlerBase):
         protocols = {
             'HTTP': z.TCP,
             'HTTPS': z.TCP,
+            'TERMINATED_HTTPS': z.TCP,
             'TCP': z.TCP,
             'UDP': z.UDP
         }
