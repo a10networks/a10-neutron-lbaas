@@ -120,7 +120,7 @@ class VipHandler(handler_base.HandlerBase):
             try:
                 if vport_list[0]:
                     vport_args = {'vport': vport_list[0]}
-                elif not vport_args:
+                else:
                     vport_args = {'vport': self.meta(vip, 'vport', {})}
                 c.client.slb.virtual_server.vport.create(
                     self._meta_name(vip),
