@@ -125,7 +125,7 @@ class PoolHandler(handler_base.HandlerBase):
                         r["virtual_server_stat"]["cur_conns"],
                     "total_connections": r["virtual_server_stat"]["tot_conns"]
                 }
-            except Exception as e:
+            except Exception:
                 return {
                     "bytes_in": 0,
                     "bytes_out": 0,

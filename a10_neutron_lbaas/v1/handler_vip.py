@@ -135,7 +135,7 @@ class VipHandler(handler_base.HandlerBase):
             except acos_errors.Exists:
                 pass
 
-            i=1
+            i = 1
             for vport in vport_list[1:]:
                 i += 1
                 try:

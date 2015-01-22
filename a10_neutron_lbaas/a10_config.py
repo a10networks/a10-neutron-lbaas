@@ -32,9 +32,11 @@ class A10Config(object):
     }
 
     def __init__(self):
-        self.config_dir = os.environ.get(
-            'A10_CONFIG_DIR',
-            '/etc/neutron/services/loadbalancer/a10networks')
+        if os.path.exists('/etc/a10'):
+            d = '/etc/a10'
+        else:
+            d = '/etc/neutron/services/loadbalancer/a10networks'
+        self.config_dir = os.environ.get('A10_CONFIG_DIR', d)
         self.config_path = os.path.join(self.config_dir, "config.py")
 
         real_sys_path = sys.path
