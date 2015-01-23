@@ -19,6 +19,7 @@ class HandlerBase(object):
 
     def __init__(self, a10_driver):
         self.a10_driver = a10_driver
+        self.hooks = a10_driver.hooks
         self.openstack_driver = self.a10_driver.openstack_driver
 
     def meta(self, lbaas_obj, key, default):

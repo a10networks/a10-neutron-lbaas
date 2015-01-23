@@ -26,6 +26,7 @@ class A10Context(object):
         self.handler = handler
         self.openstack_driver = handler.openstack_driver
         self.a10_driver = handler.a10_driver
+        self.hooks = self.a10_driver.hooks
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
@@ -71,7 +72,7 @@ class A10Context(object):
             pass
 
         # Create it if not found
-        self.client.system.partition.create(name)
+        self.hooks.partition_create(self.client, self.openstack_context, name)
         self.client.system.partition.active(name)
 
 
@@ -127,6 +128,6 @@ class A10DeleteContextBase(A10WriteContext):
         if n == 0:
             try:
                 name = self.tenant_id[0:13]
-                self.client.system.partition.delete(name)
+                self.hooks.partition_delete(self.client, self.openstack_context, name)
             except Exception:
                 LOG.error("A10Driver: partition cleanup failed; ignoring")
