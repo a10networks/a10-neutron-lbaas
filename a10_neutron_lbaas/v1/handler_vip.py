@@ -209,7 +209,7 @@ class VipHandler(handler_base.HandlerBase):
         # LOG.debug("updateCertificateBindings(): Getting certificates for VIP {}".format(svip))
 
         svip_id = svip["id"]
-
+        template_name = "testm"
         bindings = cert_db.get_certificates_for_vip(context, svip_id)
 
         # LOG.debug("updateCertificateBindings(): Certificates: {}".format(bindings))
@@ -233,21 +233,24 @@ class VipHandler(handler_base.HandlerBase):
 
         # LOG.debug("updateCertificateBindings(): cert_data={0}".format(cert_content))
         # LOG.debug("updateCertificateBindings(): key_data={0}".format(key_content))
-        cert_pass = certificate["password"]
+        cert_pass = certificate["password"] or None
 
         c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
                                action="import", certificate_type="pem")
         c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
                               action="import")
 
-        c.client.slb.template.server_ssl.create('test', cert=cert_filename, key=key_filename, passphrase=cert_pass)
+        if c.client.slb.template.client_ssl.exists(template_name):
+            c.client.slb.template.client_ssl.update(template_name, cert=cert_filename, key=key_filename, passphrase=cert_pass)
+        else:
+            c.client.slb.template.client_ssl.create(template_name, cert=cert_filename, key=key_filename, passphrase=cert_pass)
         vip = c.client.slb.virtual_server.get(svip_id)
 
         for port in vip['virtual-server']['port-list']:
             if port['protocol'] == 'https':
                 c.client.slb.virtual_server.vport.update(
                     svip_id, port["name"], port['protocol'], port['port-number'], port['service-group'],
-                    template_server_ssl='test'
+                    template_server_ssl=template_name
                 )
 
 
