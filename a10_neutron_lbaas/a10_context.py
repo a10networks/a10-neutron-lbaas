@@ -130,4 +130,4 @@ class A10DeleteContextBase(A10WriteContext):
                 name = self.tenant_id[0:13]
                 self.hooks.partition_delete(self.client, self.openstack_context, name)
             except Exception:
-                LOG.error("A10Driver: partition cleanup failed; ignoring")
+                LOG.exception("A10Driver: partition cleanup failed; ignoring")
