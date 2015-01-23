@@ -18,6 +18,7 @@ import unittest
 import mock
 
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
+import a10_neutron_lbaas.plumbing_hooks as hooks
 
 
 class FakeA10OpenstackLBV1(a10_os.A10OpenstackLBV1):
@@ -28,6 +29,7 @@ class FakeA10OpenstackLBV1(a10_os.A10OpenstackLBV1):
     def _get_a10_client(self, device_info):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
+        self.plumbing_hooks = hooks.PlumbingHooks(self)
         return self.last_client
 
     def reset_mocks(self):
@@ -44,6 +46,7 @@ class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
     def _get_a10_client(self, device_info):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
+        self.plumbing_hooks = hooks.PlumbingHooks(self)
         return self.last_client
 
     def reset_mocks(self):

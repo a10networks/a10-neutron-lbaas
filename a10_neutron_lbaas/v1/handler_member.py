@@ -74,6 +74,7 @@ class MemberHandler(handler_base.HandlerBase):
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
             self._create(c, context, member)
+            self.hooks.after_member_create(c, context, member)
 
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
@@ -97,6 +98,8 @@ class MemberHandler(handler_base.HandlerBase):
                 # Adding db relation after the fact
                 self._create(c, context, member)
 
+            self.hooks.after_member_update(c, context, member)
+
     def _delete(self, c, context, member):
         server_ip = self._get_ip(context, member, c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
@@ -115,3 +118,4 @@ class MemberHandler(handler_base.HandlerBase):
     def delete(self, context, member):
         with a10.A10DeleteContext(self, context, member) as c:
             self._delete(c, context, member)
+            self.hooks.after_member_delete(c, context, member)

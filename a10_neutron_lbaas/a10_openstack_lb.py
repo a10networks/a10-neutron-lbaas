@@ -16,6 +16,7 @@ import logging
 
 import a10_config
 import acos_client
+import plumbing_hooks as hooks
 import v1.handler_hm
 import v1.handler_member
 import v1.handler_pool
@@ -32,19 +33,20 @@ LOG = logging.getLogger(__name__)
 
 class A10OpenstackLBBase(object):
 
-    def __init__(self, openstack_driver):
+    def __init__(self, openstack_driver, plumbing_hooks_class=hooks.PlumbingHooks):
         self.openstack_driver = openstack_driver
         self.config = a10_config.A10Config()
-        self.appliance_hash = acos_client.Hash(self.config.devices.keys())
-        if self.config.verify_appliances:
-            self._verify_appliances()
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
 
+        if self.config.verify_appliances:
+            self._verify_appliances()
+
+        self.hooks = plumbing_hooks_class(self)
+
     def _select_a10_device(self, tenant_id):
-        s = self.appliance_hash.get_server(tenant_id)
-        return self.config.devices[s]
+        return self.plumbing_hooks.select_device(tenant_id)
 
     def _get_a10_client(self, device_info):
         d = device_info
