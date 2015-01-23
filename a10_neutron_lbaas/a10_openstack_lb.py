@@ -46,7 +46,7 @@ class A10OpenstackLBBase(object):
         self.hooks = plumbing_hooks_class(self)
 
     def _select_a10_device(self, tenant_id):
-        return self.plumbing_hooks.select_device(tenant_id)
+        return self.hooks.select_device(tenant_id)
 
     def _get_a10_client(self, device_info):
         d = device_info
