@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from a10_neutron.db import certificate_db
 import acos_client as acos
 
 import logging
@@ -75,6 +74,7 @@ class VipHandler(handler_base.HandlerBase):
         return self.meta(vip, 'name', vip['id'])
 
     def create(self, context, vip):
+        # TODO(mdurrant)
         with a10.A10WriteStatusContext(self, context, vip) as c:
             status = c.client.slb.UP
             if not vip['admin_state_up']:
@@ -192,7 +192,7 @@ class VipHandler(handler_base.HandlerBase):
                 c_pers_name=p.c_persistence(),
                 status=status,
                 axapi_args=vport_args)
-            self.updateCertificateBindings(context, vip)
+            self.updateCertificateBindings(context, c, vip)
 
     def _delete(self, c, context, vip):
         c.client.slb.virtual_server.delete(self._meta_name(vip))
@@ -202,38 +202,48 @@ class VipHandler(handler_base.HandlerBase):
         with a10.A10DeleteContext(self, context, vip) as c:
             self._delete(c, context, vip)
 
-    def updateCertificateBindings(self, context, vip):
+    def updateCertificateBindings(self, context, c, svip):
+        from a10_neutron.db import certificate_db
         cert_db = certificate_db.CertificateDbMixin()
-        certificate = None
-        certificates = cert_db.get_certificates_for_vip(context, vip["id"])
-        if len(certificates) == 1:
-            certificate = certificates[0]
+        binding = None
+        LOG.debug("updateCertificateBindings(): Getting certificates for VIP {}".format(svip))
 
-        cert_name = "{0}cert.pem".format(certificate["id"], certificate["name"])
-        key_name =  "{0}key.pem".format(certificate["id"], certificate["name"])
+        svip_id = svip["id"]
 
+        bindings = cert_db.get_certificates_for_vip(context, svip_id)
+
+        LOG.debug("updateCertificateBindings(): Certificates: {}".format(bindings))
+
+        binding = bindings[0]
+        certificate = binding.certificate
+
+        LOG.debug("FIND ME {}".format(certificate))
+
+        cert_name = "{0}".format(certificate["name"])
+        key_name = "{0}".format(certificate["name"])
+
+        cert_filename = "{0}cert.pem".format(cert_name)
+        key_filename = "{0}key.pem".format(key_name)
+
+        LOG.debug("updateCertificateBindings(): cert_name={}".format(cert_name))
         # cert_name = "{0}{1}-cert.pem".format(certificate["id"], certificate["name"])
         # key_name =  "{0}{1}-key.pem".format(certificate["id"], certificate["name"])
         cert_content = certificate["cert_data"]
         key_content = certificate["key_data"]
         cert_pass = certificate["password"]
 
-        # TODO(mmd): Get IP of device... what about authentication?
-        c = acos.Client('172.18.61.174', acos.AXAPI_30, 'admin', 'a10', protocol="http")
-
-        c.file.ssl_cert.create(cert_name, cert_content, len(cert_content),
+        c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
                                action="import", certificate_type="pem")
-        c.file.ssl_key.create(key_name, key_content, len(key_content),
+        c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
                               action="import")
-        c.slb.template.server_ssl.create('test', cert=cert_name, key=key_name, passphrase=cert_pass)
-        vip = c.slb.virtual_server.get('wef')
-        ports = c.slb.virtual_server.vport.all('wef')
+
+        c.client.slb.template.server_ssl.create(svip_id, cert=cert_filename, key=key_filename, passphrase=cert_pass)
+        vip = c.slb.virtual_server.get(svip_id)
 
         for port in vip['virtual-server']['port-list']:
             if port['protocol'] == 'https':
-                print port['protocol'], port['port-number']
                 c.slb.virtual_server.vport.update(
-                    'wef', None, port['protocol'], port['port-number'], port['service-group'],
+                    svip_id, port["name"], port['protocol'], port['port-number'], port['service-group'],
                     template_server_ssl='test'
                 )
 
