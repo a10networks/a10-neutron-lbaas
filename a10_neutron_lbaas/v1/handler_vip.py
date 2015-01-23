@@ -206,18 +206,18 @@ class VipHandler(handler_base.HandlerBase):
         from a10_neutron.db import certificate_db
         cert_db = certificate_db.CertificateDbMixin()
         binding = None
-        LOG.debug("updateCertificateBindings(): Getting certificates for VIP {}".format(svip))
+        # LOG.debug("updateCertificateBindings(): Getting certificates for VIP {}".format(svip))
 
         svip_id = svip["id"]
 
         bindings = cert_db.get_certificates_for_vip(context, svip_id)
 
-        LOG.debug("updateCertificateBindings(): Certificates: {}".format(bindings))
+        # LOG.debug("updateCertificateBindings(): Certificates: {}".format(bindings))
 
         binding = bindings[0]
         certificate = binding.certificate
 
-        LOG.debug("FIND ME {}".format(certificate))
+        # LOG.debug("FIND ME {}".format(certificate))
 
         cert_name = "{0}".format(certificate["name"])
         key_name = "{0}".format(certificate["name"])
@@ -225,11 +225,14 @@ class VipHandler(handler_base.HandlerBase):
         cert_filename = "{0}cert.pem".format(cert_name)
         key_filename = "{0}key.pem".format(key_name)
 
-        LOG.debug("updateCertificateBindings(): cert_name={}".format(cert_name))
+        # LOG.debug("updateCertificateBindings(): cert_name={}".format(cert_name))
         # cert_name = "{0}{1}-cert.pem".format(certificate["id"], certificate["name"])
         # key_name =  "{0}{1}-key.pem".format(certificate["id"], certificate["name"])
         cert_content = certificate["cert_data"]
         key_content = certificate["key_data"]
+
+        # LOG.debug("updateCertificateBindings(): cert_data={0}".format(cert_content))
+        # LOG.debug("updateCertificateBindings(): key_data={0}".format(key_content))
         cert_pass = certificate["password"]
 
         c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
@@ -237,12 +240,12 @@ class VipHandler(handler_base.HandlerBase):
         c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
                               action="import")
 
-        c.client.slb.template.server_ssl.create(svip_id, cert=cert_filename, key=key_filename, passphrase=cert_pass)
-        vip = c.slb.virtual_server.get(svip_id)
+        c.client.slb.template.server_ssl.create('test', cert=cert_filename, key=key_filename, passphrase=cert_pass)
+        vip = c.client.slb.virtual_server.get(svip_id)
 
         for port in vip['virtual-server']['port-list']:
             if port['protocol'] == 'https':
-                c.slb.virtual_server.vport.update(
+                c.client.slb.virtual_server.vport.update(
                     svip_id, port["name"], port['protocol'], port['port-number'], port['service-group'],
                     template_server_ssl='test'
                 )
