@@ -57,4 +57,3 @@ class A10DeleteContext(a10_context.A10DeleteContextBase):
         n += d.listener._total(ctx, self.tenant_id)
         n += d.health_monitor._total(ctx, self.tenant_id)
         return n
-        

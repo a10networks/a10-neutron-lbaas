@@ -138,7 +138,7 @@ class VipHandler(handler_base.HandlerBase):
             except acos_errors.Exists:
                 pass
 
-            i=1
+            i = 1
             for vport in vport_list[1:]:
                 i += 1
                 try:
@@ -155,6 +155,8 @@ class VipHandler(handler_base.HandlerBase):
                         axapi_args=vport_args)
                 except acos_errors.Exists:
                     pass
+
+            self.hooks.after_vip_create(c, context, vip)
 
     def update(self, context, old_vip, vip):
         with a10.A10WriteStatusContext(self, context, vip) as c:
@@ -194,6 +196,8 @@ class VipHandler(handler_base.HandlerBase):
                 axapi_args=vport_args)
             self.updateCertificateBindings(context, c, vip)
 
+            self.hooks.after_vip_update(c, context, vip)
+
     def _delete(self, c, context, vip):
         c.client.slb.virtual_server.delete(self._meta_name(vip))
         PersistHandler(c, context, vip, self._meta_name(vip)).delete()
@@ -201,6 +205,7 @@ class VipHandler(handler_base.HandlerBase):
     def delete(self, context, vip):
         with a10.A10DeleteContext(self, context, vip) as c:
             self._delete(c, context, vip)
+            self.hooks.after_vip_delete(c, context, vip)
 
     def updateCertificateBindings(self, context, c, svip):
         from a10_neutron.db import certificate_db
