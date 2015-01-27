@@ -26,5 +26,5 @@ setup(
         'Topic :: Internet',
     ],
 
-    install_requires = ['acos-client>=1.1.0']
+    install_requires = ['acos-client>=1.2.1']
 )
