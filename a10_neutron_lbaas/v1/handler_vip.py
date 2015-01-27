@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import acos_client as acos
+
 import logging
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -72,6 +74,7 @@ class VipHandler(handler_base.HandlerBase):
         return self.meta(vip, 'name', vip['id'])
 
     def create(self, context, vip):
+        # TODO(mdurrant)
         with a10.A10WriteStatusContext(self, context, vip) as c:
             status = c.client.slb.UP
             if not vip['admin_state_up']:
@@ -191,6 +194,7 @@ class VipHandler(handler_base.HandlerBase):
                 c_pers_name=p.c_persistence(),
                 status=status,
                 axapi_args=vport_args)
+            self.updateCertificateBindings(context, c, vip)
 
             self.hooks.after_vip_update(c, context, vip)
 
@@ -202,6 +206,57 @@ class VipHandler(handler_base.HandlerBase):
         with a10.A10DeleteContext(self, context, vip) as c:
             self._delete(c, context, vip)
             self.hooks.after_vip_delete(c, context, vip)
+
+    def updateCertificateBindings(self, context, c, svip):
+        from a10_neutron.db import certificate_db
+        cert_db = certificate_db.CertificateDbMixin()
+        binding = None
+        # LOG.debug("updateCertificateBindings(): Getting certificates for VIP {}".format(svip))
+
+        svip_id = svip["id"]
+        template_name = "testm"
+        bindings = cert_db.get_certificates_for_vip(context, svip_id)
+
+        # LOG.debug("updateCertificateBindings(): Certificates: {}".format(bindings))
+
+        binding = bindings[0]
+        certificate = binding.certificate
+
+        # LOG.debug("FIND ME {}".format(certificate))
+
+        cert_name = "{0}".format(certificate["name"])
+        key_name = "{0}".format(certificate["name"])
+
+        cert_filename = "{0}cert.pem".format(cert_name)
+        key_filename = "{0}key.pem".format(key_name)
+
+        # LOG.debug("updateCertificateBindings(): cert_name={}".format(cert_name))
+        # cert_name = "{0}{1}-cert.pem".format(certificate["id"], certificate["name"])
+        # key_name =  "{0}{1}-key.pem".format(certificate["id"], certificate["name"])
+        cert_content = certificate["cert_data"]
+        key_content = certificate["key_data"]
+
+        # LOG.debug("updateCertificateBindings(): cert_data={0}".format(cert_content))
+        # LOG.debug("updateCertificateBindings(): key_data={0}".format(key_content))
+        cert_pass = certificate["password"] or None
+
+        c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
+                               action="import", certificate_type="pem")
+        c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
+                              action="import")
+
+        if c.client.slb.template.client_ssl.exists(template_name):
+            c.client.slb.template.client_ssl.update(template_name, cert=cert_filename, key=key_filename, passphrase=cert_pass)
+        else:
+            c.client.slb.template.client_ssl.create(template_name, cert=cert_filename, key=key_filename, passphrase=cert_pass)
+        vip = c.client.slb.virtual_server.get(svip_id)
+
+        for port in vip['virtual-server']['port-list']:
+            if port['protocol'] == 'https':
+                c.client.slb.virtual_server.vport.update(
+                    svip_id, port["name"], port['protocol'], port['port-number'], port['service-group'],
+                    template_server_ssl=template_name
+                )
 
 
 class PersistHandler(object):
