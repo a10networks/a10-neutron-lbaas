@@ -211,7 +211,7 @@ class VipHandler(handler_base.HandlerBase):
         binding = None
 
         svip_id = svip["id"]
-        template_name = "testm"
+        template_name = svip_id
         bindings = cert_db.get_certificates_for_vip(context, svip_id)
 
         binding = bindings[0]
