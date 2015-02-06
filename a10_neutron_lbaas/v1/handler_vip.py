@@ -119,9 +119,9 @@ class VipHandler(handler_base.HandlerBase):
             LOG.debug("VPORT_LIST = %s", vport_list)
             try:
                 if vport_list[0]:
-                    vport_args = {'vport': vport_list[0]}
+                    vport_args = {'port': vport_list[0]}
                 else:
-                    vport_args = {'vport': self.meta(vip, 'vport', {})}
+                    vport_args = {'port': self.meta(vip, 'port', {})}
                 c.client.slb.virtual_server.vport.create(
                     self._meta_name(vip),
                     self._meta_name(vip) + '_VPORT',
@@ -139,7 +139,7 @@ class VipHandler(handler_base.HandlerBase):
             for vport in vport_list[1:]:
                 i += 1
                 try:
-                    vport_args = {'vport': vport}
+                    vport_args = {'port': vport}
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
                         self._meta_name(vip) + '_VPORT' + str(i),
@@ -180,7 +180,7 @@ class VipHandler(handler_base.HandlerBase):
                     '', '', '',
                     axapi_args=args)
 
-            vport_args = {'vport': self.meta(vip, 'vport', {})}
+            vport_args = {'port': self.meta(vip, 'port', {})}
             c.client.slb.virtual_server.vport.update(
                 self._meta_name(vip),
                 self._meta_name(vip) + '_VPORT',
@@ -205,8 +205,8 @@ class VipHandler(handler_base.HandlerBase):
             self.hooks.after_vip_delete(c, context, vip)
 
     def update_certificate_bindings(self, context, c, svip):
-        #TODO(mdurrant) This function is getting too big.  Refactor.
-        #TODO(mdurrant) Exception handling
+        # TODO(mdurrant) This function is getting too big.  Refactor.
+        # TODO(mdurrant) Exception handling
         from a10_openstack.neutron_ext.db import certificate_db
         cert_db = certificate_db.CertificateDbMixin()
         binding = None
@@ -215,7 +215,7 @@ class VipHandler(handler_base.HandlerBase):
         template_name = svip_id
         bindings = cert_db.get_certificates_for_vip(context, svip_id)
 
-        #TODO(mdurrant) Update certificates where appropriate
+        # TODO(mdurrant) Update certificates where appropriate
         if bindings is not None and len(bindings) > 0:
             binding = bindings[0]
             certificate = binding.certificate
@@ -231,19 +231,20 @@ class VipHandler(handler_base.HandlerBase):
 
             cert_pass = certificate["password"] or None
 
-            #TODO(mdurrant) Refactor this to use functino "pointers"
-            if c.client.slb.template.client_ssl.exists(cert_filename):
-                c.client.file.ssl_cert.update(cert_filename, cert_content, len(cert_content),
-                                              action="import", certificate_type="pem")
-            else:
-                c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
-                                      action="import", certificate_type="pem")
+            # TODO(mdurrant) Refactor this to use function "pointers"
+            if c.client.file.ssl_cert.exists(cert_filename):
+                c.client.slb.template.client_ssl.update(template_name,
+                                                        cert=None,
+                                                        key=None)
+                c.client.file.ssl_cert.delete(cert_filename)
+
+            c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
+                                          action="import", certificate_type="pem")
 
             if c.client.file.ssl_key.exists(key_filename):
-                #TODO(mdurrant) Update call
-                pass
-            else:
-                c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
+                c.client.file.ssl_key.delete(key_filename)
+
+            c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
                                          action="import")
 
             if c.client.slb.template.client_ssl.exists(template_name):
@@ -251,7 +252,7 @@ class VipHandler(handler_base.HandlerBase):
                                                         key=key_filename, passphrase=cert_pass)
             else:
                 c.client.slb.template.client_ssl.create(template_name, cert=cert_filename,
-                                                    key=key_filename, passphrase=cert_pass)
+                                                        key=key_filename, passphrase=cert_pass)
 
         vip = c.client.slb.virtual_server.get(svip_id)
 
