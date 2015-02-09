@@ -192,7 +192,6 @@ class VipHandler(handler_base.HandlerBase):
                 status=status,
                 axapi_args=vport_args)
 
-            self.update_certificate_bindings(context, c, vip)
             self.hooks.after_vip_update(c, context, vip)
 
     def _delete(self, c, context, vip):
@@ -203,68 +202,6 @@ class VipHandler(handler_base.HandlerBase):
         with a10.A10DeleteContext(self, context, vip) as c:
             self._delete(c, context, vip)
             self.hooks.after_vip_delete(c, context, vip)
-
-    def update_certificate_bindings(self, context, c, svip):
-        # TODO(mdurrant) This function is getting too big.  Refactor.
-        # TODO(mdurrant) Exception handling
-        from a10_openstack.neutron_ext.db import certificate_db
-        cert_db = certificate_db.CertificateDbMixin()
-        binding = None
-
-        svip_id = svip["id"]
-        template_name = svip_id
-        bindings = cert_db.get_certificates_for_vip(context, svip_id)
-
-        # TODO(mdurrant) Update certificates where appropriate
-        if bindings is not None and len(bindings) > 0:
-            binding = bindings[0]
-            certificate = binding.certificate
-
-            cert_name = "{0}".format(certificate["name"])
-            key_name = "{0}".format(certificate["name"])
-
-            cert_filename = "{0}cert.pem".format(cert_name)
-            key_filename = "{0}key.pem".format(key_name)
-
-            cert_content = certificate["cert_data"]
-            key_content = certificate["key_data"]
-
-            cert_pass = certificate["password"] or None
-
-            # TODO(mdurrant) Refactor this to use function "pointers"
-            if c.client.file.ssl_cert.exists(cert_filename):
-                c.client.slb.template.client_ssl.update(template_name,
-                                                        cert=None,
-                                                        key=None)
-                c.client.file.ssl_cert.delete(cert_filename)
-
-            c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
-                                          action="import", certificate_type="pem")
-
-            if c.client.file.ssl_key.exists(key_filename):
-                c.client.file.ssl_key.delete(key_filename)
-
-            c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
-                                         action="import")
-
-            if c.client.slb.template.client_ssl.exists(template_name):
-                c.client.slb.template.client_ssl.update(template_name, cert=cert_filename,
-                                                        key=key_filename, passphrase=cert_pass)
-            else:
-                c.client.slb.template.client_ssl.create(template_name, cert=cert_filename,
-                                                        key=key_filename, passphrase=cert_pass)
-
-        vip = c.client.slb.virtual_server.get(svip_id)
-
-        for port in vip['virtual-server']['port-list']:
-            if port['protocol'] == 'https':
-                c.client.slb.virtual_server.vport.update(
-                    svip_id, port["name"],
-                    port['protocol'],
-                    port['port-number'],
-                    port['service-group'],
-                    template_server_ssl=template_name
-                )
 
 
 class PersistHandler(object):
