@@ -14,7 +14,6 @@
 
 import acos_client
 import logging
-from a10_openstack.neutron_ext import lbaas_hooks
 
 
 LOG = logging.getLogger(__name__)
@@ -25,7 +24,6 @@ class PlumbingHooks(object):
     def __init__(self, driver):
         self.driver = driver
         self.appliance_hash = acos_client.Hash(self.driver.config.devices.keys())
-        self.certhook = lbaas_hooks.CertificateLbaasHooks()
 
     def select_device(self, tenant_id):
         # Must return device dict from config.py
@@ -51,8 +49,6 @@ class PlumbingHooks(object):
         pass
 
     def after_vip_update(self, client, context, vip):
-        LOG.debug("after_vip_update(): vip={0},client={1}".format(vip, context))
-        self.certhook.vip_update(context, client, vip)
         pass
 
     def after_vip_delete(self, client, context, vip):
