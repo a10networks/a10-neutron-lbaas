@@ -119,9 +119,9 @@ class VipHandler(handler_base.HandlerBase):
             LOG.debug("VPORT_LIST = %s", vport_list)
             try:
                 if vport_list[0]:
-                    vport_args = {'vport': vport_list[0]}
+                    vport_args = {'port': vport_list[0]}
                 else:
-                    vport_args = {'vport': self.meta(vip, 'vport', {})}
+                    vport_args = {'port': self.meta(vip, 'port', {})}
                 c.client.slb.virtual_server.vport.create(
                     self._meta_name(vip),
                     self._meta_name(vip) + '_VPORT',
@@ -139,7 +139,7 @@ class VipHandler(handler_base.HandlerBase):
             for vport in vport_list[1:]:
                 i += 1
                 try:
-                    vport_args = {'vport': vport}
+                    vport_args = {'port': vport}
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
                         self._meta_name(vip) + '_VPORT' + str(i),
@@ -180,7 +180,7 @@ class VipHandler(handler_base.HandlerBase):
                     '', '', '',
                     axapi_args=args)
 
-            vport_args = {'vport': self.meta(vip, 'vport', {})}
+            vport_args = {'port': self.meta(vip, 'port', {})}
             c.client.slb.virtual_server.vport.update(
                 self._meta_name(vip),
                 self._meta_name(vip) + '_VPORT',
