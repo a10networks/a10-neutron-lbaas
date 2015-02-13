@@ -1,1 +1,1 @@
-acos_client>=1.2.2
+acos_client>=1.2.3
