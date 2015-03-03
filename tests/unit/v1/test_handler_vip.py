@@ -74,3 +74,10 @@ class TestVIP(test_base.UnitTestBase):
         self.a.last_client.slb.virtual_server.delete.assert_called_with('id1')
         z = self.a.last_client.slb.template.src_ip_persistence.delete
         z.assert_called_with('id1')
+
+    def test_create_https_returns_https_protocol(self):
+        myvip = self.fake_vip()
+        myvip['protocol'] = 'HTTPS'
+        self.a.vip.create(None, myvip)
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue(myvip['protocol'] in s)
