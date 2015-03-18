@@ -1,5 +1,3 @@
-# Copyright 2014, Doug Wiegley (dougwig), A10 Networks
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -12,11 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from a10_neutron_lbaas import handler_base
 
+class NeutronOpsV2(object):
 
-class HandlerBaseV2(handler_base.HandlerBase):
-
-    def __init__(self, a10_driver, openstack_manager):
-        super(HandlerBaseV2, self).__init__(a10_driver)
-        self.openstack_manager = openstack_manager
+    def __init__(self, openstack_plugin, openstack_context):
+        self.plugin = plugin
+        self.context = context

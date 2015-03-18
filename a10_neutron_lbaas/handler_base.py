@@ -12,11 +12,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from a10_neutron_lbaas import handler_base
+import json
 
 
-class HandlerBaseV2(handler_base.HandlerBase):
+class HandlerBase(object):
 
-    def __init__(self, a10_driver, openstack_manager):
-        super(HandlerBaseV2, self).__init__(a10_driver)
-        self.openstack_manager = openstack_manager
+    def __init__(self, a10_driver):
+        self.a10_driver = a10_driver
+        self.hooks = a10_driver.hooks
+        self.openstack_driver = self.a10_driver.openstack_driver
+
+    def _model_type(self):
+        raise NotImplemented()
+
+    def _name(self, obj):
+        raise NotImplemented()
+
+    def meta(self, lbaas_obj, key, default):
+        raise NotImplemented()
