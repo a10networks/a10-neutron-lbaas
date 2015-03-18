@@ -22,7 +22,7 @@ import v1_context as a10
 LOG = logging.getLogger(__name__)
 
 
-class PoolHandler(handler_base.HandlerBase):
+class PoolHandler(handler_base.HandlerBaseV1):
 
     def _model_type(self):
         return 'pool'

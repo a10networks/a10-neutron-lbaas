@@ -17,7 +17,7 @@ import handler_base
 import v1_context as a10
 
 
-class MemberHandler(handler_base.HandlerBase):
+class MemberHandler(handler_base.HandlerBaseV1):
 
     def _model_type(self):
         return 'member'

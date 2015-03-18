@@ -14,6 +14,16 @@
 #    under the License.
 
 
+def hm_type(c, os_hm_type):
+    hm_map = {
+        'PING': c.client.slb.hm.ICMP,
+        'TCP': c.client.slb.hm.TCP,
+        'HTTP': c.client.slb.hm.HTTP,
+        'HTTPS': c.client.slb.hm.HTTPS
+    }
+    return hm_map[os_hm_type]
+
+
 def service_group_lb_method(c, os_method):
     z = c.client.slb.service_group
     lb_methods = {
@@ -53,7 +63,7 @@ def service_group_protocol(c, os_protocol):
 
 def vip_protocols(c, os_protocol):
     z = c.client.slb.virtual_server.vport
-    protocols {
+    protocols = {
         'TCP': z.TCP,
         'UDP': z.UDP,
         'HTTP': z.HTTP,

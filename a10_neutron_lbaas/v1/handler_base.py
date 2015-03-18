@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 from a10_neutron_lbaas import handler_base
 import neutron_ops
 

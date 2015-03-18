@@ -16,20 +16,15 @@ import acos_client.errors as acos_errors
 import handler_base
 import v1_context as a10
 
+from a10_neutron_lbaas import a10_openstack_map as a10_os
 
-class HealthMonitorHandler(handler_base.HandlerBase):
+
+class HealthMonitorHandler(handler_base.HandlerBaseV1):
 
     def _name(self, hm):
         return hm['id'][0:28]
 
     def _set(self, c, set_method, context, hm):
-        hm_map = {
-            'PING': c.client.slb.hm.ICMP,
-            'TCP': c.client.slb.hm.TCP,
-            'HTTP': c.client.slb.hm.HTTP,
-            'HTTPS': c.client.slb.hm.HTTPS
-        }
-
         hm_name = self._meta_name(hm)
         method = None
         url = None
@@ -41,7 +36,7 @@ class HealthMonitorHandler(handler_base.HandlerBase):
 
         args = self.meta(hm, 'hm', {})
 
-        set_method(hm_name, hm_map[hm['type']],
+        set_method(hm_name, a10_os.hm_type(hm['type']),
                    hm['delay'], hm['timeout'], hm['max_retries'],
                    method=method, url=url, expect_code=expect_code,
                    axapi_args=args)
