@@ -19,7 +19,7 @@ import handler_base
 import v2_context as a10
 
 
-class LoadBalancerHandler(handler_base.HandlerBase):
+class LoadBalancerHandler(handler_base.HandlerBaseV2):
 
     def _set(self, c, set_method, context, load_balancer):
         status = c.client.slb.UP

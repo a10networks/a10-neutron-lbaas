@@ -33,7 +33,7 @@ class MemberHandler(handler_base.HandlerBaseV1):
 
     def _create(self, c, context, member):
         server_ip = self.neutron.member_get_ip(context, member,
-                                 c.device_cfg['use_float'])
+                                               c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
 
         status = c.client.slb.UP
@@ -66,7 +66,7 @@ class MemberHandler(handler_base.HandlerBaseV1):
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
             server_ip = self.neutron.member_get_ip(context, member,
-                                     c.device_cfg['use_float'])
+                                                   c.device_cfg['use_float'])
             server_name = self._meta_name(member, server_ip)
 
             status = c.client.slb.UP

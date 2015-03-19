@@ -13,6 +13,6 @@
 
 class NeutronOpsV2(object):
 
-    def __init__(self, openstack_plugin, openstack_context):
-        self.plugin = plugin
-        self.context = context
+    def __init__(self, handler):
+        self.openstack_driver = handler.openstack_driver
+        self.plugin = self.openstack_driver.plugin

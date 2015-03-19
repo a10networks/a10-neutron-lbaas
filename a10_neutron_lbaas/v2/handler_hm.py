@@ -16,7 +16,7 @@ import handler_base
 import v2_context as a10
 
 
-class HealthMonitorHandler(handler_base.HandlerBase):
+class HealthMonitorHandler(handler_base.HandlerBaseV2):
 
     def _hm_name(self, hm):
         return hm.id[0:28]

@@ -18,7 +18,7 @@ import handler_base
 import v2_context as a10
 
 
-class ListenerHandler(handler_base.HandlerBase):
+class ListenerHandler(handler_base.HandlerBaseV2):
 
     def _protocols(self, c):
         return {

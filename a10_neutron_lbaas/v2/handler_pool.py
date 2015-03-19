@@ -19,7 +19,7 @@ import handler_base
 import v2_context as a10
 
 
-class PoolHandler(handler_base.HandlerBase):
+class PoolHandler(handler_base.HandlerBaseV2):
 
     def _set(self, c, set_method, context, pool):
         lb_methods = {

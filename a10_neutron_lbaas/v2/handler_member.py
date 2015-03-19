@@ -17,7 +17,7 @@ import handler_base
 import v2_context as a10
 
 
-class MemberHandler(handler_base.HandlerBase):
+class MemberHandler(handler_base.HandlerBaseV2):
 
     def _get_ip(self, context, member, use_float=False):
         return self.openstack_manager._get_ip(context, member, use_float)
