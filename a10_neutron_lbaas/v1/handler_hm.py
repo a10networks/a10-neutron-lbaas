@@ -36,7 +36,7 @@ class HealthMonitorHandler(handler_base.HandlerBaseV1):
 
         args = self.meta(hm, 'hm', {})
 
-        set_method(hm_name, a10_os.hm_type(hm['type']),
+        set_method(hm_name, a10_os.hm_type(c, hm['type']),
                    hm['delay'], hm['timeout'], hm['max_retries'],
                    method=method, url=url, expect_code=expect_code,
                    axapi_args=args)

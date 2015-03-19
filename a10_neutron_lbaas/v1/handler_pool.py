@@ -30,10 +30,11 @@ class PoolHandler(handler_base.HandlerBaseV1):
     def _set(self, set_method, c, context, pool):
         args = {'service_group': self.meta(pool, 'service_group', {})}
 
-        set_method(self._meta_name(pool),
-                   protocol=a10_os.service_group_protocol(pool['protocol']),
-                   lb_method=a10_os.service_group_lb_method(pool['lb_method']),
-                   axapi_args=args)
+        set_method(
+            self._meta_name(pool),
+            protocol=a10_os.service_group_protocol(c, pool['protocol']),
+            lb_method=a10_os.service_group_lb_method(c, pool['lb_method']),
+            axapi_args=args)
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:

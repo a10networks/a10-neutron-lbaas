@@ -83,7 +83,7 @@ class VipHandler(handler_base.HandlerBaseV1):
                 c.client.slb.virtual_server.vport.create(
                     self._meta_name(vip),
                     self._meta_name(vip) + '_VPORT',
-                    protocol=a10_os.vip_protocols(vip['protocol']),
+                    protocol=a10_os.vip_protocols(c, vip['protocol']),
                     port=vip['protocol_port'],
                     service_group_name=pool_name,
                     s_pers_name=p.s_persistence(),
@@ -101,7 +101,7 @@ class VipHandler(handler_base.HandlerBaseV1):
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
                         self._meta_name(vip) + '_VPORT' + str(i),
-                        protocol=a10_os.vip_protocols(vip['protocol']),
+                        protocol=a10_os.vip_protocols(c, vip['protocol']),
                         port=vip['protocol_port'],
                         service_group_name=pool_name,
                         s_pers_name=p.s_persistence(),
@@ -142,7 +142,7 @@ class VipHandler(handler_base.HandlerBaseV1):
             c.client.slb.virtual_server.vport.update(
                 self._meta_name(vip),
                 self._meta_name(vip) + '_VPORT',
-                protocol=a10_os.vip_protocols(vip['protocol']),
+                protocol=a10_os.vip_protocols(c, vip['protocol']),
                 port=vip['protocol_port'],
                 service_group_name=pool_name,
                 s_pers_name=p.s_persistence(),
