@@ -13,6 +13,7 @@
 #    under the License.
 
 from a10_neutron_lbaas import handler_base
+import neutron_ops
 
 
 class HandlerBaseV2(handler_base.HandlerBase):
@@ -20,3 +21,4 @@ class HandlerBaseV2(handler_base.HandlerBase):
     def __init__(self, a10_driver, openstack_manager):
         super(HandlerBaseV2, self).__init__(a10_driver)
         self.openstack_manager = openstack_manager
+        self.neutron = neutron_ops.NeutronOpsV2(self)

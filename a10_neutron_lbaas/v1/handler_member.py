@@ -19,9 +19,6 @@ import v1_context as a10
 
 class MemberHandler(handler_base.HandlerBaseV1):
 
-    def _model_type(self):
-        return 'member'
-
     def _get_name(self, member, ip_address):
         tenant_label = member['tenant_id'][:5]
         addr_label = str(ip_address).replace(".", "_", 4)

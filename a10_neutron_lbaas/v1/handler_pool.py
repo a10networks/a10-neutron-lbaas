@@ -24,9 +24,6 @@ LOG = logging.getLogger(__name__)
 
 class PoolHandler(handler_base.HandlerBaseV1):
 
-    def _model_type(self):
-        return 'pool'
-
     def _set(self, set_method, c, context, pool):
         args = {'service_group': self.meta(pool, 'service_group', {})}
 

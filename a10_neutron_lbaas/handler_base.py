@@ -21,10 +21,31 @@ class HandlerBase(object):
         self.openstack_driver = self.a10_driver.openstack_driver
 
     def _model_type(self):
-        raise NotImplemented()
+        return self.__class__.__name__.lower().replace('handler', '')
 
     def _name(self, obj):
-        raise NotImplemented()
+        if isinstance(obj, dict):
+            return obj['id']
+        else:
+            return obj.id
+
+    def _meta_name(self, lbaas_obj):
+        return self.meta(lbaas_obj, 'name', self._name(lbaas_obj))
+
+    def _pool_name(self, context, pool_id=None, pool=None):
+        if not pool:
+            pool = self.neutron.pool_get(context, pool_id)
+        if not pool_id:
+            pool_id = pool.id
+        return self.meta(pool, 'name', pool_id)
 
     def meta(self, lbaas_obj, key, default):
-        raise NotImplemented()
+        if isinstance(lbaas_obj, dict):
+            m = lbaas_obj.get('a10_meta', '{}')
+        else:
+            raise NotSupported("not supported with v2 yet")
+        try:
+            d = json.loads(m)
+        except Exception:
+            return default
+        return d.get(key, default)

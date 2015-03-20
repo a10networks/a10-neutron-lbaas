@@ -12,42 +12,43 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
+import logging
 
+from a10_neutron_lbaas import a10_openstack_map as a10_os
 import acos_client.errors as acos_errors
 import handler_base
 import v2_context as a10
 
+LOG = logging.getLogger(__name__)
+
 
 class PoolHandler(handler_base.HandlerBaseV2):
 
-    def _set(self, c, set_method, context, pool):
-        lb_methods = {
-            'ROUND_ROBIN': c.client.slb.service_group.ROUND_ROBIN,
-            'LEAST_CONNECTIONS': c.client.slb.service_group.LEAST_CONNECTION,
-            'SOURCE_IP': c.client.slb.service_group.WEIGHTED_LEAST_CONNECTION
-        }
-        protocols = {
-            'HTTP': c.client.slb.service_group.TCP,
-            'HTTPS': c.client.slb.service_group.TCP,
-            'TCP': c.client.slb.service_group.TCP,
-            'UDP': c.client.slb.service_group.UDP
-        }
+    def _set(self, set_method, c, context, pool):
+        args = {'service_group': self.meta(pool, 'service_group', {})}
 
-        set_method(pool.id,
-                   protocol=protocols[pool.protocol],
-                   lb_method=lb_methods[pool.lb_algorithm])
-
-        if pool.sessionpersistence:
-            PersistenceHandler(self, c, context, pool).create()
+        set_method(
+            self._meta_name(pool),
+            protocol=a10_os.service_group_protocol(c, pool.protocol),
+            lb_method=a10_os.service_group_lb_method(c, pool.lb_method),
+            axapi_args=args)
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
-            self._set(c, c.client.slb.service_group.create, context, pool)
+
+            p = PersistHandler(c, context, vip, self._meta_name(vip))
+            p.create()
+
+            try:
+                self._set(c.client.slb.service_group.create,
+                          c, context, pool)
+            except acos_errors.Exists:
+                pass
 
     def update(self, context, old_pool, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
-            self._set(c, c.client.slb.service_group.update, context, pool)
+            self._set(c.client.slb.service_group.update,
+                      c, context, pool)
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
@@ -57,54 +58,4 @@ class PoolHandler(handler_base.HandlerBaseV2):
             if pool.healthmonitor:
                 self.a10_driver.hm._delete(c, context, pool.healthmonitor)
 
-            c.client.slb.service_group.delete(pool.id)
-
-            if pool.sessionpersistence:
-                PersistenceHandler(self, c, context, pool).delete()
-
-
-class PersistenceHandler(object):
-
-    def __init__(self, pool_handler, c, context, pool):
-        self.pool_handler = pool_handler
-        self.c = c
-        self.context = context
-        self.pool = pool
-        self.sp = pool.sessionpersistence
-        self.name = pool.id
-
-    def create(self):
-        methods = {
-            'HTTP_COOKIE':
-                self.c.client.slb.template.cookie_persistence.create,
-            'SOURCE_IP':
-                self.c.client.slb.template.src_ip_persistence.create,
-        }
-        if self.sp.type in methods:
-            try:
-                methods[self.sp.type](self.name)
-            except acos_errors.Exists:
-                pass
-        else:
-            raise a10_ex.UnsupportedFeature()
-
-        if self.pool.listener:
-            self.pool_handler.a10_driver.listener._update(self.c, self.context,
-                                                          self.pool.listener)
-
-    def delete(self):
-        methods = {
-            'HTTP_COOKIE':
-                self.c.client.slb.template.cookie_persistence.delete,
-            'SOURCE_IP':
-                self.c.client.slb.template.src_ip_persistence.delete,
-        }
-        if self.sp.type in methods:
-            try:
-                methods[self.sp.type](self.name)
-            except Exception:
-                pass
-
-        if self.pool.listener:
-            self.pool_handler.a10_driver.listener._update(self.c, self.context,
-                                                          self.pool.listener)
+            c.client.slb.service_group.delete(self._meta_name(pool))

@@ -19,12 +19,12 @@ import a10_neutron_lbaas.a10_openstack_map as a10_os
 
 import acos_client.errors as acos_errors
 import handler_base
-import v1_context as a10
+import v2_context as a10
 
 LOG = logging.getLogger(__name__)
 
 
-class VipHandler(handler_base.HandlerBaseV1):
+class LoadbalancerHandler(handler_base.HandlerBaseV2):
 
     def create(self, context, vip):
         with a10.A10WriteStatusContext(self, context, vip) as c:
@@ -158,6 +158,11 @@ class VipHandler(handler_base.HandlerBaseV1):
             self._delete(c, context, vip)
             self.hooks.after_vip_delete(c, context, vip)
 
+    def stats(self, context, lb):
+        pass
+
+    def refresh(self, context, lb):
+        pass
 
 class PersistHandler(object):
 
