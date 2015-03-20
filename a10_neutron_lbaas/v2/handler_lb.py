@@ -14,17 +14,14 @@
 
 import logging
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
-import a10_neutron_lbaas.a10_openstack_map as a10_os
-
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v2
 import v2_context as a10
 
 LOG = logging.getLogger(__name__)
 
 
-class LoadbalancerHandler(handler_base.HandlerBaseV2):
+class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
     def _set(self, set_method, c, context, lb):
         status = c.client.slb.UP
@@ -44,20 +41,20 @@ class LoadbalancerHandler(handler_base.HandlerBaseV2):
             pass
 
     def create(self, context, lb):
-        with a10.A10WriteStatusContext(self, context, vip) as c:
+        with a10.A10WriteStatusContext(self, context, lb) as c:
             self._set(c.client.slb.virtual_server.create, c, context, lb)
-            self.hooks.after_vip_create(c, context, vip)
+            self.hooks.after_vip_create(c, context, lb)
 
     def update(self, context, old_lb, lb):
-        with a10.A10WriteStatusContext(self, context, vip) as c:
+        with a10.A10WriteStatusContext(self, context, lb) as c:
             self._set(c.client.slb.virtual_server.update, c, context, lb)
-            self.hooks.after_vip_update(c, context, vip)
+            self.hooks.after_vip_update(c, context, lb)
 
     def _delete(self, c, context, lb):
         c.client.slb.virtual_server.delete(self._meta_name(lb))
 
     def delete(self, context, lb):
-        with a10.A10DeleteContext(self, context, vip) as c:
+        with a10.A10DeleteContext(self, context, lb) as c:
             self._delete(c, context, lb)
             self.hooks.after_vip_delete(c, context, lb)
 

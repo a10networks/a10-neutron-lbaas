@@ -12,11 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from a10_neutron_lbaas import handler_base
+import a10_neutron_lbaas.handler_base as base
 import neutron_ops
 
 
-class HandlerBaseV2(handler_base.HandlerBase):
+class HandlerBaseV2(base.HandlerBase):
 
     def __init__(self, a10_driver, openstack_manager):
         super(HandlerBaseV2, self).__init__(a10_driver)

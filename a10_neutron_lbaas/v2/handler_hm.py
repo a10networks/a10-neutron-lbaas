@@ -13,13 +13,13 @@
 #    under the License.
 
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v2
 import v2_context as a10
 
 from a10_neutron_lbaas import a10_openstack_map as a10_os
 
 
-class HealthMonitorHandler(handler_base.HandlerBaseV2):
+class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
 
     def _name(self, hm):
         return hm['id'][0:28]

@@ -16,14 +16,14 @@ import logging
 
 from a10_neutron_lbaas import a10_openstack_map as a10_os
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v2
 import handler_persist
 import v2_context as a10
 
 LOG = logging.getLogger(__name__)
 
 
-class PoolHandler(handler_base.HandlerBaseV2):
+class PoolHandler(handler_base_v2.HandlerBaseV2):
 
     def _set(self, set_method, c, context, pool):
         p = handler_persist.PersistHandler(c, context, pool)
@@ -41,10 +41,6 @@ class PoolHandler(handler_base.HandlerBaseV2):
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
-
-            p = PersistHandler(c, context, vip, self._meta_name(vip))
-            p.create()
-
             try:
                 self._set(c.client.slb.service_group.create,
                           c, context, pool)
@@ -66,4 +62,5 @@ class PoolHandler(handler_base.HandlerBaseV2):
 
             c.client.slb.service_group.delete(self._meta_name(pool))
 
-            PersistHandler(c, context, pool, self._meta_name(pool)).delete()
+            handler_persist.PersistHandler(
+                c, context, pool, self._meta_name(pool)).delete()

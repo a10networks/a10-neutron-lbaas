@@ -12,6 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
+import a10_exceptions as a10_ex
+
 
 class HandlerBase(object):
 
@@ -43,7 +47,7 @@ class HandlerBase(object):
         if isinstance(lbaas_obj, dict):
             m = lbaas_obj.get('a10_meta', '{}')
         else:
-            raise NotSupported("not supported with v2 yet")
+            raise a10_ex.UnsupportedFeature()
         try:
             d = json.loads(m)
         except Exception:

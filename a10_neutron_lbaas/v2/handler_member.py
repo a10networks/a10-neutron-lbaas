@@ -13,11 +13,11 @@
 #    under the License.
 
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v2
 import v2_context as a10
 
 
-class MemberHandler(handler_base.HandlerBaseV2):
+class MemberHandler(handler_base_v2.HandlerBaseV2):
 
     def _get_name(self, member, ip_address):
         tenant_label = member.tenant_id[:5]

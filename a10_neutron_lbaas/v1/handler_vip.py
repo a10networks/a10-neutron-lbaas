@@ -18,13 +18,13 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.a10_openstack_map as a10_os
 
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v1
 import v1_context as a10
 
 LOG = logging.getLogger(__name__)
 
 
-class VipHandler(handler_base.HandlerBaseV1):
+class VipHandler(handler_base_v1.HandlerBaseV1):
 
     def create(self, context, vip):
         with a10.A10WriteStatusContext(self, context, vip) as c:

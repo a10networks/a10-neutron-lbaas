@@ -14,12 +14,9 @@
 
 import logging
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
-import a10_neutron_lbaas.a10_openstack_map as a10_os
-
 import acos_client.errors as acos_errors
-import handler_base
-import v2_context as a10
+
+import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 LOG = logging.getLogger(__name__)
 

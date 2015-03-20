@@ -16,13 +16,13 @@ import logging
 
 from a10_neutron_lbaas import a10_openstack_map as a10_os
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v1
 import v1_context as a10
 
 LOG = logging.getLogger(__name__)
 
 
-class PoolHandler(handler_base.HandlerBaseV1):
+class PoolHandler(handler_base_v1.HandlerBaseV1):
 
     def _set(self, set_method, c, context, pool):
         args = {'service_group': self.meta(pool, 'service_group', {})}

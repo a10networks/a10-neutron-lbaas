@@ -14,18 +14,17 @@
 
 import logging
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.a10_openstack_map as a10_os
 
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v2
 import handler_persist
 import v2_context as a10
 
 LOG = logging.getLogger(__name__)
 
 
-class ListenerHandler(handler_base.HandlerBaseV2):
+class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _set(self, set_method, c, context, listener):
         status = c.client.slb.UP
@@ -53,10 +52,11 @@ class ListenerHandler(handler_base.HandlerBaseV2):
                 pass
 
         pool_name = self._pool_name(context, listener.default_pool)
-        persistence = handler_persist.PersistenceCreate(c, context, pool)
+        persistence = handler_persist.PersistenceCreate(
+            c, context, listener.pool)
         vport_args = {'port': self.meta(listener, 'port', {})}
 
-       try:
+        try:
             set_method(
                 self._meta_name(listener),
                 self._meta_name(listener) + '_VPORT',
