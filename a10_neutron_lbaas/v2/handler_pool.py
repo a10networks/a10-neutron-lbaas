@@ -17,6 +17,7 @@ import logging
 from a10_neutron_lbaas import a10_openstack_map as a10_os
 import acos_client.errors as acos_errors
 import handler_base
+import handler_persist
 import v2_context as a10
 
 LOG = logging.getLogger(__name__)
@@ -25,13 +26,18 @@ LOG = logging.getLogger(__name__)
 class PoolHandler(handler_base.HandlerBaseV2):
 
     def _set(self, set_method, c, context, pool):
-        args = {'service_group': self.meta(pool, 'service_group', {})}
+        p = handler_persist.PersistHandler(c, context, pool)
+        p.create()
 
+        args = {'service_group': self.meta(pool, 'service_group', {})}
         set_method(
             self._meta_name(pool),
             protocol=a10_os.service_group_protocol(c, pool.protocol),
             lb_method=a10_os.service_group_lb_method(c, pool.lb_method),
             axapi_args=args)
+
+        # session persistence might need a vport update
+        self.a10_driver.listener._update(c, context, pool.listener)
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
@@ -59,3 +65,5 @@ class PoolHandler(handler_base.HandlerBaseV2):
                 self.a10_driver.hm._delete(c, context, pool.healthmonitor)
 
             c.client.slb.service_group.delete(self._meta_name(pool))
+
+            PersistHandler(c, context, pool, self._meta_name(pool)).delete()

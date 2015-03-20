@@ -16,3 +16,25 @@ class NeutronOpsV2(object):
     def __init__(self, handler):
         self.openstack_driver = handler.openstack_driver
         self.plugin = self.openstack_driver.plugin
+
+    def member_get_ip(self, context, member, use_float=False):
+        ip_address = member.address
+        if use_float:
+            fip_qry = context.session.query(l3_db.FloatingIP)
+            if (fip_qry.filter_by(fixed_ip_address=ip_address).count() > 0):
+                float_address = fip_qry.filter_by(
+                    fixed_ip_address=ip_address).first()
+                ip_address = str(float_address.floating_ip_address)
+        return ip_address
+
+    def member_count(self, context, member):
+        return context.session.query(lb_db.Member).filter_by(
+            tenant_id=member.tenant_id,
+            address=member.address).count()
+
+    def loadbalancer_total(self, context, tenant_id):
+        return context.session.query(lb_db.Loadbalancer).filter_by(
+            tenant_id=tenant_id).count()
+
+    def pool_get(self, context, pool_id):
+        return self.plugin.db.get_pool(context, pool_id)
