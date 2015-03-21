@@ -52,13 +52,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 pass
 
         pool_name = self._pool_name(context, listener.default_pool)
-        persistence = handler_persist.PersistenceCreate(
-            c, context, listener.pool)
+        persistence = handler_persist.PersistHandler(
+            c, context, listener.default_pool)
         vport_args = {'port': self.meta(listener, 'port', {})}
 
         try:
             set_method(
-                self.self.a10_driver.loadbalancer._name(listener.loadbalancer),
+                self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
                 protocol=a10_os.vip_protocols(c, listener.protocol),
                 port=listener.protocol_port,
@@ -83,7 +83,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _delete(self, c, context, listener):
         c.client.slb.virtual_server.vport.delete(
-            self.self.a10_driver.loadbalancer._name(listener.loadbalancer),
+            self.a10_driver.loadbalancer._name(listener.loadbalancer),
             self._meta_name(listener),
             protocol=a10_os.vip_protocols(c, listener.protocol),
             port=listener.protocol_port)

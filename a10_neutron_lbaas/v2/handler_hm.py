@@ -22,7 +22,7 @@ from a10_neutron_lbaas import a10_openstack_map as a10_os
 class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
 
     def _name(self, hm):
-        return hm['id'][0:28]
+        return hm.id[0:28]
 
     def _set(self, c, set_method, context, hm):
         hm_name = self._meta_name(hm)

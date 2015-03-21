@@ -83,6 +83,10 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
             neutron=self.neutron)
 
     @property
+    def loadbalancer(self):
+        return self.lb
+
+    @property
     def listener(self):
         return v2.handler_listener.ListenerHandler(
             self,

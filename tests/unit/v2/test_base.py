@@ -39,7 +39,7 @@ class FakeListener(FakeModel):
         super(FakeListener, self).__init__()
         self.id = 'fake-listen-id-001'
         self.protocol = protocol
-        self.port = port
+        self.protocol_port = port
         self.admin_state_up = admin_state_up
         self.default_pool = pool
         self.loadbalancer = loadbalancer

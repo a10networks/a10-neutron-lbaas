@@ -37,7 +37,8 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
             axapi_args=args)
 
         # session persistence might need a vport update
-        self.a10_driver.listener._update(c, context, pool.listener)
+        if pool.listener:
+            self.a10_driver.listener._update(c, context, pool.listener)
 
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:

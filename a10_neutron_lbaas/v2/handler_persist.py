@@ -23,13 +23,15 @@ LOG = logging.getLogger(__name__)
 
 class PersistHandler(object):
 
-    def __init__(self, c, context, pool):
+    def __init__(self, c, context, pool, deprecated_arg=None):
         self.c = c
         self.context = context
         self.pool = pool
         self.c_pers = None
         self.s_pers = None
-        self.name = pool.id
+
+        if pool:
+            self.name = pool.id
 
         if pool and pool.sessionpersistence:
             self.sp = pool.sessionpersistence
@@ -58,9 +60,9 @@ class PersistHandler(object):
             'SOURCE_IP':
                 self.c.client.slb.template.src_ip_persistence.create,
         }
-        if self.sp['type'] in methods:
+        if self.sp.type in methods:
             try:
-                methods[self.sp['type']](self.name)
+                methods[self.sp.type](self.name)
             except acos_errors.Exists:
                 pass
 
@@ -74,8 +76,8 @@ class PersistHandler(object):
             'SOURCE_IP':
                 self.c.client.slb.template.src_ip_persistence.delete,
         }
-        if self.sp['type'] in methods:
+        if self.sp.type in methods:
             try:
-                methods[self.sp['type']](self.name)
+                methods[self.sp.type](self.name)
             except Exception:
                 pass
