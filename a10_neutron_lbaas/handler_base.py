@@ -46,8 +46,10 @@ class HandlerBase(object):
     def meta(self, lbaas_obj, key, default):
         if isinstance(lbaas_obj, dict):
             m = lbaas_obj.get('a10_meta', '{}')
+        elif hasattr(lbaas_obj, 'a10_meta'):
+            m = lbaas_obj.a10_meta
         else:
-            raise a10_ex.UnsupportedFeature()
+            return default
         try:
             d = json.loads(m)
         except Exception:

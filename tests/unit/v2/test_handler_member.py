@@ -27,15 +27,16 @@ def return_two(*args):
 class TestMembers(test_base.UnitTestBase):
 
     def set_count_1(self):
-        self.a.member.openstack_manager._count = return_one
+        self.a.member.neutron.member_count = return_one
 
     def set_count_2(self):
-        self.a.member.openstack_manager._count = return_two
+        self.a.member.neutron.member_count = return_two
 
     def test_get_ip(self):
         m = test_base.FakeMember(pool=mock.MagicMock())
-        self.a.member._get_ip(None, m, False)
-        self.a.openstack_driver.member._get_ip.assert_called_with(
+        self.a.member.neutron.member_get_ip(None, m, False)
+        self.print_mocks()
+        self.a.neutron.member_get_ip.assert_called_with(
             None, m, False)
 
     def test_get_name(self):

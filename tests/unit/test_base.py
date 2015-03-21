@@ -41,7 +41,9 @@ class FakeA10OpenstackLBV1(a10_os.A10OpenstackLBV1):
 class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
 
     def __init__(self, openstack_driver):
-        super(FakeA10OpenstackLBV2, self).__init__(mock.MagicMock())
+        super(FakeA10OpenstackLBV2, self).__init__(
+            mock.MagicMock(),
+            neutron_hooks_module=mock.MagicMock())
 
     def _get_a10_client(self, device_info):
         self.device_info = device_info

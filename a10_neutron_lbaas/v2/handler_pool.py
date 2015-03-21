@@ -33,7 +33,7 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
         set_method(
             self._meta_name(pool),
             protocol=a10_os.service_group_protocol(c, pool.protocol),
-            lb_method=a10_os.service_group_lb_method(c, pool.lb_method),
+            lb_method=a10_os.service_group_lb_method(c, pool.lb_algorithm),
             axapi_args=args)
 
         # session persistence might need a vport update

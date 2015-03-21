@@ -112,3 +112,7 @@ class UnitTestBase(test_base.UnitTestBase):
     def __init__(self, *args):
         super(UnitTestBase, self).__init__(*args)
         self.version = 'v2'
+
+    def print_mocks(self):
+        super(UnitTestBase, self).print_mocks()
+        print("NEUTRON ", self.a.neutron.mock_calls)

@@ -28,7 +28,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _set(self, set_method, c, context, listener):
         status = c.client.slb.UP
-        if not listener['admin_state_up']:
+        if not listener.admin_state_up:
             status = c.client.slb.DOWN
 
         templates = self.meta(listener, "template", {})
@@ -58,8 +58,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         try:
             set_method(
+                self.self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                self._meta_name(listener) + '_VPORT',
                 protocol=a10_os.vip_protocols(c, listener.protocol),
                 port=listener.protocol_port,
                 service_group_name=pool_name,
@@ -72,17 +72,21 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def create(self, context, listener):
         with a10.A10WriteStatusContext(self, context, listener) as c:
-            self._set(c.client.slb.virtual_server.create, c, context, listener)
+            self._set(c.client.slb.virtual_server.vport.create, c, context, listener)
 
     def _update(self, c, context, listener):
-        self._set(c.client.slb.virtual_server.update, c, context, listener)
+        self._set(c.client.slb.virtual_server.vport.update, c, context, listener)
 
     def update(self, context, old_listener, listener):
         with a10.A10WriteStatusContext(self, context, listener) as c:
             self._update(c, context, listener)
 
     def _delete(self, c, context, listener):
-        c.client.slb.virtual_server.delete(self._meta_name(listener))
+        c.client.slb.virtual_server.vport.delete(
+            self.self.a10_driver.loadbalancer._name(listener.loadbalancer),
+            self._meta_name(listener),
+            protocol=a10_os.vip_protocols(c, listener.protocol),
+            port=listener.protocol_port)
 
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:

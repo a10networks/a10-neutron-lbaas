@@ -109,12 +109,6 @@ class TestListeners(test_base.UnitTestBase):
         self.assertTrue('port=2222' in s)
         self.assertTrue('HTTP' in s)
 
-    def test_delete_no_lb(self):
-        m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
-                                   loadbalancer=None)
-        self.a.listener.delete(None, m)
-        self.assertFalse('delete' in str(self.a.last_client.mock_calls))
-
     def test_delete(self):
         pool = test_base.FakePool('HTTP', 'ROUND_ROBIN', None)
         lb = test_base.FakeLoadBalancer()
@@ -123,6 +117,7 @@ class TestListeners(test_base.UnitTestBase):
 
         self.a.listener.delete(None, m)
 
+        self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.delete' in s)
         self.assertTrue('fake-lb-id-001' in s)
