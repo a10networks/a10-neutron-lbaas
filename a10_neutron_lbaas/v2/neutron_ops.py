@@ -10,9 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.db import l3_db
-from neutron.db.loadbalancer import loadbalancerv2_db as lb_db
-
+# Don't require neutron for unit tests
+try:
+    from neutron.db import l3_db
+    from neutron.db.loadbalancer import loadbalancerv2_db as lb_db
+except:
+    neutron = None
 
 class NeutronOpsV2(object):
 
