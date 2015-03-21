@@ -42,7 +42,7 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
                    axapi_args=args)
 
     def create(self, context, hm):
-        with a10.A10WriteHMStatusContext(self, context, hm) as c:
+        with a10.A10WriteStatusContext(self, context, hm) as c:
             try:
                 self._set(c, c.client.slb.hm.create, context, hm)
             except acos_errors.Exists:
@@ -53,14 +53,20 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
                 health_monitor=self._meta_name(hm))
 
     def update(self, context, old_hm, hm):
-        with a10.A10WriteHMStatusContext(self, context, hm) as c:
+        with a10.A10WriteStatusContext(self, context, hm) as c:
+            if old_hm.pool and not hm.pool:
+                pool_name = self._pool_name(context, pool=old_hm.pool)
+                c.client.slb.service_group.update(pool_name, health_monitor="")
+            elif old_hm.pool != hm.pool:
+                pool_name = self._pool_name(context, pool=hm.pool)
+                c.client.slb.service_group.update(pool_name, health_monitor=self._meta_name(hm))
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
         c.client.slb.hm.delete(self._meta_name(hm))
 
     def delete(self, context, hm):
-        with a10.A10DeleteHMContext(self, context, hm) as c:
+        with a10.A10DeleteContext(self, context, hm) as c:
             pool_name = self._pool_name(context, pool=hm.pool)
             c.client.slb.service_group.update(pool_name, health_monitor="")
             self._delete(c, context, hm)
