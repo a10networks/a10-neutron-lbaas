@@ -28,7 +28,7 @@ class FakeLoadBalancer(FakeModel):
         super(FakeLoadBalancer, self).__init__()
         self.id = 'fake-lb-id-001'
         self.listeners = listeners
-        self.address = '5.5.5.5'
+        self.vip_address = '5.5.5.5'
         self.admin_state_up = True
 
 
@@ -39,7 +39,7 @@ class FakeListener(FakeModel):
         super(FakeListener, self).__init__()
         self.id = 'fake-listen-id-001'
         self.protocol = protocol
-        self.port = port
+        self.protocol_port = port
         self.admin_state_up = admin_state_up
         self.default_pool = pool
         self.loadbalancer = loadbalancer
@@ -112,3 +112,7 @@ class UnitTestBase(test_base.UnitTestBase):
     def __init__(self, *args):
         super(UnitTestBase, self).__init__(*args)
         self.version = 'v2'
+
+    def print_mocks(self):
+        super(UnitTestBase, self).print_mocks()
+        print("NEUTRON ", self.a.neutron.mock_calls)

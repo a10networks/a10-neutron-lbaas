@@ -27,13 +27,13 @@ class A10WriteStatusContext(a10_context.A10WriteContext):
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
-            self.handler.openstack_manager.active(
+            self.handler.openstack_manager.successful_completion(
                 self.openstack_context,
-                self.openstack_lbaas_obj.id)
+                self.openstack_lbaas_obj)
         else:
-            self.handler.openstack_manager.failed(
+            self.handler.openstack_manager.failed_completion(
                 self.openstack_context,
-                self.openstack_lbaas_obj.id)
+                self.openstack_lbaas_obj)
 
         super(A10WriteStatusContext, self).__exit__(exc_type, exc_value,
                                                     traceback)
@@ -43,17 +43,12 @@ class A10DeleteContext(a10_context.A10DeleteContextBase):
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
-            self.handler.openstack_manager.db_delete(
+            self.handler.openstack_manager.successful_completion(
                 self.openstack_context,
-                self.openstack_lbaas_obj.id)
+                self.openstack_lbaas_obj)
 
         super(A10DeleteContext, self).__exit__(exc_type, exc_value, traceback)
 
     def remaining_root_objects(self):
         ctx = self.openstack_context
-        d = self.handler.openstack_driver
-        n = d.pool._total(ctx, self.tenant_id)
-        n += d.load_balancer._total(ctx, self.tenant_id)
-        n += d.listener._total(ctx, self.tenant_id)
-        n += d.health_monitor._total(ctx, self.tenant_id)
-        return n
+        return self.handler.neutron.loadbalancer_total(ctx, self.tenant_id)

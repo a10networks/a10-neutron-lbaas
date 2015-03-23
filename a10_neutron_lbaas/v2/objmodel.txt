@@ -1,0 +1,58 @@
+
+loadbalancer
+  has_one stats
+  has_one provider
+  has_many listeners
+
+listener
+  has_one pool
+  has_one loadbalancer
+
+member
+  has_one pool
+
+pool
+  has_one listener
+  has_one sessionpersistence
+  has_one healthmonitor
+  has_many members
+
+healthmonitor
+  has_one pool
+
+stats
+  has_one loadbalancer
+
+sessionpersistence
+  has_one pool
+
+
+to create tree, do the following:
+
+create_loadbalancer(lb)
+  create loadbalancer
+  for listener in lb.listeners:
+    create_listener
+
+create_listener(lst)
+  create listener
+  create_pool(lst.pool)
+
+create_pool(p):
+  create pool
+  create_healthmonitor(pool.hm)
+  create_sessionpersistence(pool.pers)
+  for member in pool.members:
+    create_member(member)
+
+create_healthmonitor(hm):
+  create health monitor
+
+create sessionpersistence(pers):
+  create session persistence
+
+create_member(m):
+  create member
+
+http://imgur.com/vgGKOVy
+
