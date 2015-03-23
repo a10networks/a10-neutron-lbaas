@@ -34,7 +34,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             }
             set_method(
                 self._meta_name(lb),
-                lb.address,
+                lb.vip_address,
                 status,
                 axapi_args=vip_args)
         except acos_errors.Exists:
