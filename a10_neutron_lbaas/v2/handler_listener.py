@@ -51,7 +51,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             except acos_errors.Exists:
                 pass
 
-        pool_name = self._pool_name(context, listener.default_pool)
+        try:
+            pool_name = self._pool_name(context, listener.default_pool)
+        except Exception:
+            pool_name = None
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
         vport_args = {'port': self.meta(listener, 'port', {})}

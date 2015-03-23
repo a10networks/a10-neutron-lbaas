@@ -11,7 +11,7 @@
 #    under the License.
 
 from neutron.db import l3_db
-from neutron_lbaas.db.loadbalancer import loadbalancer_dbv2 as lb_db
+from neutron_lbaas.db.loadbalancer import models as lb_db
 
 
 class NeutronOpsV2(object):
