@@ -15,61 +15,16 @@
 import logging
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+import a10_neutron_lbaas.a10_openstack_map as a10_os
 
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v1
 import v1_context as a10
 
 LOG = logging.getLogger(__name__)
 
 
-class VipHandler(handler_base.HandlerBase):
-
-    def _model_type(self):
-        return 'vip'
-
-    def _pool_get(self, context, pool_id):
-        return self.openstack_driver.plugin.get_pool(context, pool_id)
-
-    def _pool_name(self, context, pool_id):
-        pool = self._pool_get(context, pool_id)
-        return self.meta(pool, 'name', pool['id'])
-
-    def _protocols(self, c):
-        z = c.client.slb.virtual_server.vport
-        return {
-            'TCP': z.TCP,
-            'UDP': z.UDP,
-            'HTTP': z.HTTP,
-            'HTTPS': z.TCP,
-            'TERMINATED_HTTPS': z.HTTPS,
-            'OTHERS': z.OTHERS,
-            'RTSP': z.RTSP,
-            'FTP': z.FTP,
-            'MMS': z.MMS,
-            'SIP': z.SIP,
-            'FAST_HTTP': z.FAST_HTTP,
-            'GENERIC_PROXY': z.GENERIC_PROXY,
-            'SSL_PROXY': z.SSL_PROXY,
-            'SMTP': z.SMTP,
-            'SIP_TCP': z.SIP_TCP,
-            'SIPS': z.SIPS,
-            'DIAMETER': z.DIAMETER,
-            'DNS_UDP': z.DNS_UDP,
-            'TFTP': z.TFTP,
-            'DNS_TCP': z.DNS_TCP,
-            'RADIUS': z.RADIUS,
-            'MYSQL': z.MYSQL,
-            'MSSQL': z.MSSQL,
-            'FIX': z.FIX,
-            'SMPP_TCP': z.SMPP_TCP,
-            'SPDY': z.SPDY,
-            'SPDYS': z.SPDYS,
-            'FTP_PROXY': z.FTP_PROXY
-        }
-
-    def _meta_name(self, vip):
-        return self.meta(vip, 'name', vip['id'])
+class VipHandler(handler_base_v1.HandlerBaseV1):
 
     def create(self, context, vip):
         with a10.A10WriteStatusContext(self, context, vip) as c:
@@ -125,7 +80,7 @@ class VipHandler(handler_base.HandlerBase):
                 c.client.slb.virtual_server.vport.create(
                     self._meta_name(vip),
                     self._meta_name(vip) + '_VPORT',
-                    protocol=self._protocols(c)[vip['protocol']],
+                    protocol=a10_os.vip_protocols(c, vip['protocol']),
                     port=vip['protocol_port'],
                     service_group_name=pool_name,
                     s_pers_name=p.s_persistence(),
@@ -143,7 +98,7 @@ class VipHandler(handler_base.HandlerBase):
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
                         self._meta_name(vip) + '_VPORT' + str(i),
-                        protocol=self._protocols(c)[vip['protocol']],
+                        protocol=a10_os.vip_protocols(c, vip['protocol']),
                         port=vip['protocol_port'],
                         service_group_name=pool_name,
                         s_pers_name=p.s_persistence(),
@@ -184,7 +139,7 @@ class VipHandler(handler_base.HandlerBase):
             c.client.slb.virtual_server.vport.update(
                 self._meta_name(vip),
                 self._meta_name(vip) + '_VPORT',
-                protocol=self._protocols(c)[vip['protocol']],
+                protocol=a10_os.vip_protocols(c, vip['protocol']),
                 port=vip['protocol_port'],
                 service_group_name=pool_name,
                 s_pers_name=p.s_persistence(),

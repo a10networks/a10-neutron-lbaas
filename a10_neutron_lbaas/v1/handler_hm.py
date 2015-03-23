@@ -13,36 +13,18 @@
 #    under the License.
 
 import acos_client.errors as acos_errors
-import handler_base
+
+import a10_neutron_lbaas.a10_openstack_map as a10_os
+import handler_base_v1
 import v1_context as a10
 
 
-class HealthMonitorHandler(handler_base.HandlerBase):
+class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
 
-    def _hm_name(self, hm):
+    def _name(self, hm):
         return hm['id'][0:28]
 
-    def _hm_binding_count(self, context, hm_id):
-        return self.openstack_driver._hm_binding_count(context, hm_id)
-
-    def _pool_get(self, context, pool_id):
-        return self.openstack_driver.plugin.get_pool(context, pool_id)
-
-    def _pool_name(self, context, pool_id):
-        pool = self._pool_get(context, pool_id)
-        return self.meta(pool, 'name', pool['id'])
-
-    def _meta_name(self, hm):
-        return self.meta(hm, 'name', self._hm_name(hm))
-
     def _set(self, c, set_method, context, hm):
-        hm_map = {
-            'PING': c.client.slb.hm.ICMP,
-            'TCP': c.client.slb.hm.TCP,
-            'HTTP': c.client.slb.hm.HTTP,
-            'HTTPS': c.client.slb.hm.HTTPS
-        }
-
         hm_name = self._meta_name(hm)
         method = None
         url = None
@@ -54,7 +36,7 @@ class HealthMonitorHandler(handler_base.HandlerBase):
 
         args = self.meta(hm, 'hm', {})
 
-        set_method(hm_name, hm_map[hm['type']],
+        set_method(hm_name, a10_os.hm_type(c, hm['type']),
                    hm['delay'], hm['timeout'], hm['max_retries'],
                    method=method, url=url, expect_code=expect_code,
                    axapi_args=args)
@@ -93,7 +75,7 @@ class HealthMonitorHandler(handler_base.HandlerBase):
         h = hm.copy()
         h['pool_id'] = pool_id
         with a10.A10DeleteHMContext(self, context, h) as c:
-            if self._hm_binding_count(context, hm['id']) <= 1:
+            if self.neutron.hm_binding_count(context, hm['id']) <= 1:
                 try:
                     self._delete(c, context, hm)
                 except acos_errors.InUse:

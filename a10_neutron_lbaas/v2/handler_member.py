@@ -13,14 +13,11 @@
 #    under the License.
 
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v2
 import v2_context as a10
 
 
-class MemberHandler(handler_base.HandlerBase):
-
-    def _get_ip(self, context, member, use_float=False):
-        return self.openstack_manager._get_ip(context, member, use_float)
+class MemberHandler(handler_base_v2.HandlerBaseV2):
 
     def _get_name(self, member, ip_address):
         tenant_label = member.tenant_id[:5]
@@ -28,54 +25,83 @@ class MemberHandler(handler_base.HandlerBase):
         server_name = "_%s_%s_neutron" % (tenant_label, addr_label)
         return server_name
 
-    def _count(self, context, member):
-        return self.openstack_manager._count(context, member)
+    def _meta_name(self, member, ip_address):
+        return self.meta(member, 'name', self._get_name(member, ip_address))
+
+    def _create(self, c, context, member):
+        server_ip = self.neutron.member_get_ip(context, member,
+                                               c.device_cfg['use_float'])
+        server_name = self._meta_name(member, server_ip)
+
+        status = c.client.slb.UP
+        if not member.admin_state_up:
+            status = c.client.slb.DOWN
+
+        try:
+            server_args = {'server': self.meta(member, 'server', {})}
+            c.client.slb.server.create(server_name, server_ip,
+                                       axapi_args=server_args)
+        except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
+            pass
+
+        try:
+            member_args = {'member': self.meta(member, 'member', {})}
+            c.client.slb.service_group.member.create(
+                self._pool_name(context, pool=member.pool),
+                server_name,
+                member.protocol_port,
+                status=status,
+                axapi_args=member_args)
+        except acos_errors.Exists:
+            pass
+
+        self.hooks.after_member_create(c, context, member)
 
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
-            server_ip = self._get_ip(context, member,
-                                     c.device_cfg['use_float'])
-            server_name = self._get_name(member, server_ip)
+            self._create(c, context, member)
+
+    def update(self, context, old_member, member):
+        with a10.A10WriteStatusContext(self, context, member) as c:
+            server_ip = self.neutron.member_get_ip(context, member,
+                                                   c.device_cfg['use_float'])
+            server_name = self._meta_name(member, server_ip)
 
             status = c.client.slb.UP
             if not member.admin_state_up:
                 status = c.client.slb.DOWN
 
             try:
-                c.client.slb.server.create(server_name, server_ip)
-            except acos_errors.Exists:
-                pass
+                member_args = {'member': self.meta(member, 'member', {})}
+                c.client.slb.service_group.member.update(
+                    self._pool_name(context, pool=member.pool),
+                    server_name,
+                    member.protocol_port,
+                    status,
+                    axapi_args=member_args)
+            except acos_errors.NotFound:
+                # Adding db relation after the fact
+                self._create(c, context, member)
 
-            c.client.slb.service_group.member.create(member.pool.id,
-                                                     server_name,
-                                                     member.protocol_port,
-                                                     status=status)
-
-    def update(self, context, old_member, member):
-        with a10.A10WriteStatusContext(self, context, member) as c:
-            server_ip = self._get_ip(context, member,
-                                     c.device_cfg['use_float'])
-            server_name = self._get_name(member, server_ip)
-
-            status = c.client.slb.UP
-            if not member.admin_state_up:
-                status = c.client.slb.DOWN
-
-            c.client.slb.service_group.member.update(member.pool.id,
-                                                     server_name,
-                                                     member.protocol_port,
-                                                     status)
+            self.hooks.after_member_update(c, context, member)
 
     def _delete(self, c, context, member):
-        server_ip = self._get_ip(context, member, c.device_cfg['use_float'])
-        server_name = self._get_name(member, server_ip)
+        server_ip = self.neutron.member_get_ip(
+            context, member, c.device_cfg['use_float'])
+        server_name = self._meta_name(member, server_ip)
 
-        if self._count(context, member) > 1:
-            c.client.slb.service_group.member.delete(member.pool.id,
-                                                     server_name,
-                                                     member.protocol_port)
-        else:
-            c.client.slb.server.delete(server_name)
+        try:
+            if self.neutron.member_count(context, member) > 1:
+                c.client.slb.service_group.member.delete(
+                    self._pool_name(context, pool=member.pool),
+                    server_name,
+                    member.protocol_port)
+            else:
+                c.client.slb.server.delete(server_name)
+        except acos_errors.NotFound:
+            pass
+
+        self.hooks.after_member_delete(c, context, member)
 
     def delete(self, context, member):
         with a10.A10DeleteContext(self, context, member) as c:
