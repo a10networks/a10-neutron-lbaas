@@ -36,7 +36,7 @@ class NeutronOpsV2(object):
             address=member.address).count()
 
     def loadbalancer_total(self, context, tenant_id):
-        return context.session.query(lb_db.Loadbalancer).filter_by(
+        return context.session.query(lb_db.LoadBalancer).filter_by(
             tenant_id=tenant_id).count()
 
     def pool_get(self, context, pool_id):
