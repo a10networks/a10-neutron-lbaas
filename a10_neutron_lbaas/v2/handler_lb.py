@@ -12,60 +12,54 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
+import logging
 
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v2
 import v2_context as a10
 
+LOG = logging.getLogger(__name__)
 
-class LoadBalancerHandler(handler_base.HandlerBase):
 
-    def _set(self, c, set_method, context, load_balancer):
+class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
+
+    def _set(self, set_method, c, context, lb):
         status = c.client.slb.UP
-        if not load_balancer.admin_state_up:
+        if not lb.admin_state_up:
             status = c.client.slb.DOWN
 
-        set_method(load_balancer.id, load_balancer.address, status)
+        try:
+            vip_args = {
+                'virtual_server': self.meta(lb, 'virtual_server', {})
+            }
+            set_method(
+                self._meta_name(lb),
+                lb.vip_address,
+                status,
+                axapi_args=vip_args)
+        except acos_errors.Exists:
+            pass
 
-    def create(self, context, load_balancer):
-        with a10.A10WriteStatusContext(self, context, load_balancer) as c:
-            self._set(c, c.client.slb.virtual_server.create, context,
-                      load_balancer)
+    def create(self, context, lb):
+        with a10.A10WriteStatusContext(self, context, lb) as c:
+            self._set(c.client.slb.virtual_server.create, c, context, lb)
+            self.hooks.after_vip_create(c, context, lb)
 
-            for listener in load_balancer.listeners:
-                try:
-                    self.a10_driver.listener._create(c, context, listener)
-                except acos_errors.Exists:
-                    pass
+    def update(self, context, old_lb, lb):
+        with a10.A10WriteStatusContext(self, context, lb) as c:
+            self._set(c.client.slb.virtual_server.update, c, context, lb)
+            self.hooks.after_vip_update(c, context, lb)
 
-    def update(self, context, old_load_balancer, load_balancer):
-        with a10.A10WriteStatusContext(self, context, load_balancer) as c:
-            self._set(c, c.client.slb.virtual_server.update, context,
-                      load_balancer)
+    def _delete(self, c, context, lb):
+        c.client.slb.virtual_server.delete(self._meta_name(lb))
 
-    def delete(self, context, load_balancer):
-        with a10.A10DeleteContext(self, context, load_balancer) as c:
-            c.client.slb.virtual_server.delete(load_balancer.id)
+    def delete(self, context, lb):
+        with a10.A10DeleteContext(self, context, lb) as c:
+            self._delete(c, context, lb)
+            self.hooks.after_vip_delete(c, context, lb)
 
-    def refresh(self, context, lb_obj, force=False):
-        raise a10_ex.UnsupportedFeature()
+    def stats(self, context, lb):
+        pass
 
-    def stats(self, context, lb_obj):
-        with a10.A10Context(self, context, lb_obj) as c:
-            try:
-                r = c.client.slb.virtual_server.stats(lb_obj.id)
-                return {
-                    "bytes_in": r["virtual_server_stat"]["req_bytes"],
-                    "bytes_out": r["virtual_server_stat"]["resp_bytes"],
-                    "active_connections":
-                        r["virtual_server_stat"]["cur_conns"],
-                    "total_connections": r["virtual_server_stat"]["tot_conns"]
-                }
-            except Exception:
-                return {
-                    "bytes_in": 0,
-                    "bytes_out": 0,
-                    "active_connections": 0,
-                    "total_connections": 0
-                }
+    def refresh(self, context, lb):
+        pass

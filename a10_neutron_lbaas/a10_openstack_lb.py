@@ -33,9 +33,12 @@ LOG = logging.getLogger(__name__)
 
 class A10OpenstackLBBase(object):
 
-    def __init__(self, openstack_driver, plumbing_hooks_class=hooks.PlumbingHooks):
+    def __init__(self, openstack_driver,
+                 plumbing_hooks_class=hooks.PlumbingHooks,
+                 neutron_hooks_module=None):
         self.openstack_driver = openstack_driver
         self.config = a10_config.A10Config()
+        self.neutron = neutron_hooks_module
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
@@ -74,31 +77,41 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def lb(self):
-        return v2.handler_lb.LoadBalancerHandler(
+        return v2.handler_lb.LoadbalancerHandler(
             self,
-            self.openstack_driver.load_balancer)
+            self.openstack_driver.load_balancer,
+            neutron=self.neutron)
+
+    @property
+    def loadbalancer(self):
+        return self.lb
 
     @property
     def listener(self):
         return v2.handler_listener.ListenerHandler(
             self,
-            self.openstack_driver.listener)
+            self.openstack_driver.listener,
+            neutron=self.neutron)
 
     @property
     def pool(self):
-        return v2.handler_pool.PoolHandler(self, self.openstack_driver.pool)
+        return v2.handler_pool.PoolHandler(
+            self, self.openstack_driver.pool,
+            neutron=self.neutron)
 
     @property
     def member(self):
         return v2.handler_member.MemberHandler(
             self,
-            self.openstack_driver.member)
+            self.openstack_driver.member,
+            neutron=self.neutron)
 
     @property
     def hm(self):
         return v2.handler_hm.HealthMonitorHandler(
             self,
-            self.openstack_driver.health_monitor)
+            self.openstack_driver.health_monitor,
+            neutron=self.neutron)
 
 
 class A10OpenstackLBV1(A10OpenstackLBBase):

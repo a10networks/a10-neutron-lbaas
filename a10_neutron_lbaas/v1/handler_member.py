@@ -13,24 +13,11 @@
 #    under the License.
 
 import acos_client.errors as acos_errors
-import handler_base
+import handler_base_v1
 import v1_context as a10
 
 
-class MemberHandler(handler_base.HandlerBase):
-
-    def _model_type(self):
-        return 'member'
-
-    def _get_ip(self, context, member, use_float=False):
-        return self.openstack_driver._member_get_ip(context, member, use_float)
-
-    def _pool_get(self, context, pool_id):
-        return self.openstack_driver.plugin.get_pool(context, pool_id)
-
-    def _pool_name(self, context, pool_id):
-        pool = self._pool_get(context, pool_id)
-        return self.meta(pool, 'name', pool['id'])
+class MemberHandler(handler_base_v1.HandlerBaseV1):
 
     def _get_name(self, member, ip_address):
         tenant_label = member['tenant_id'][:5]
@@ -41,12 +28,9 @@ class MemberHandler(handler_base.HandlerBase):
     def _meta_name(self, member, ip_address):
         return self.meta(member, 'name', self._get_name(member, ip_address))
 
-    def _count(self, context, member):
-        return self.openstack_driver._member_count(context, member)
-
     def _create(self, c, context, member):
-        server_ip = self._get_ip(context, member,
-                                 c.device_cfg['use_float'])
+        server_ip = self.neutron.member_get_ip(context, member,
+                                               c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
 
         status = c.client.slb.UP
@@ -78,8 +62,8 @@ class MemberHandler(handler_base.HandlerBase):
 
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
-            server_ip = self._get_ip(context, member,
-                                     c.device_cfg['use_float'])
+            server_ip = self.neutron.member_get_ip(context, member,
+                                                   c.device_cfg['use_float'])
             server_name = self._meta_name(member, server_ip)
 
             status = c.client.slb.UP
@@ -101,11 +85,11 @@ class MemberHandler(handler_base.HandlerBase):
             self.hooks.after_member_update(c, context, member)
 
     def _delete(self, c, context, member):
-        server_ip = self._get_ip(context, member, c.device_cfg['use_float'])
+        server_ip = self.neutron.member_get_ip(context, member, c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
 
         try:
-            if self._count(context, member) > 1:
+            if self.neutron.member_count(context, member) > 1:
                 c.client.slb.service_group.member.delete(
                     self._pool_name(context, member['pool_id']),
                     server_name,
@@ -115,7 +99,8 @@ class MemberHandler(handler_base.HandlerBase):
         except acos_errors.NotFound:
             pass
 
+        self.hooks.after_member_delete(c, context, member)
+
     def delete(self, context, member):
         with a10.A10DeleteContext(self, context, member) as c:
             self._delete(c, context, member)
-            self.hooks.after_member_delete(c, context, member)

@@ -23,14 +23,17 @@ class TestListeners(test_base.UnitTestBase):
     def test_create_no_lb(self):
         m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)
-        self.a.listener.create(None, m)
-        self.assertFalse('create' in str(self.a.last_client.mock_calls))
+        try:
+            self.a.listener.create(None, m)
+        except a10_ex.UnsupportedFeature:
+            pass
 
     def test_create_no_pool(self):
         m = test_base.FakeListener('HTTP', 8080, pool=None,
                                    loadbalancer=test_base.FakeLoadBalancer())
         self.a.listener.create(None, m)
-        self.assertFalse('create' in str(self.a.last_client.mock_calls))
+        self.print_mocks()
+        self.assertTrue('create' in str(self.a.last_client.mock_calls))
 
     def test_create(self):
         admin_states = [True, False]
@@ -85,8 +88,10 @@ class TestListeners(test_base.UnitTestBase):
     def test_update_no_lb(self):
         m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)
-        self.a.listener.update(None, m, m)
-        self.assertFalse('update' in str(self.a.last_client.mock_calls))
+        try:
+            self.a.listener.update(None, m, m)
+        except a10_ex.UnsupportedFeature:
+            pass
 
     def test_update_no_pool(self):
         m = test_base.FakeListener('HTTP', 8080, pool=None,
@@ -102,18 +107,13 @@ class TestListeners(test_base.UnitTestBase):
 
         self.a.listener.update(None, m, m)
 
+        self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
         self.assertTrue('fake-lb-id-001' in s)
         self.assertTrue('fake-listen-id-001' in s)
         self.assertTrue('port=2222' in s)
         self.assertTrue('HTTP' in s)
-
-    def test_delete_no_lb(self):
-        m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
-                                   loadbalancer=None)
-        self.a.listener.delete(None, m)
-        self.assertFalse('delete' in str(self.a.last_client.mock_calls))
 
     def test_delete(self):
         pool = test_base.FakePool('HTTP', 'ROUND_ROBIN', None)
@@ -123,6 +123,7 @@ class TestListeners(test_base.UnitTestBase):
 
         self.a.listener.delete(None, m)
 
+        self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.delete' in s)
         self.assertTrue('fake-lb-id-001' in s)

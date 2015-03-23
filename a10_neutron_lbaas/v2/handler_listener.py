@@ -12,85 +12,85 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
+import logging
 
-import handler_base
+import a10_neutron_lbaas.a10_openstack_map as a10_os
+
+import acos_client.errors as acos_errors
+import handler_base_v2
+import handler_persist
 import v2_context as a10
 
+LOG = logging.getLogger(__name__)
 
-class ListenerHandler(handler_base.HandlerBase):
 
-    def _protocols(self, c):
-        return {
-            'TCP': c.client.slb.virtual_server.vport.TCP,
-            'UDP': c.client.slb.virtual_server.vport.UDP,
-            'HTTP': c.client.slb.virtual_server.vport.HTTP,
-            'HTTPS': c.client.slb.virtual_server.vport.TCP
-        }
+class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
-    def _persistence_get(self, c, context, listener):
-        if (not listener.default_pool or
-           not listener.default_pool.sessionpersistence):
-            return [None, None]
-
-        sp = listener.default_pool.sessionpersistence
-        name = listener.default_pool.id
-        c_pers = None
-        s_pers = None
-
-        if sp.type == 'HTTP_COOKIE':
-            c_pers = name
-        elif sp.type == 'SOURCE_IP':
-            s_pers = name
-        else:
-            raise a10_ex.UnsupportedFeature()
-
-        return [c_pers, s_pers]
-
-    def _set(self, c, set_method, context, listener):
+    def _set(self, set_method, c, context, listener):
         status = c.client.slb.UP
         if not listener.admin_state_up:
             status = c.client.slb.DOWN
 
-        pers = self._persistence_get(c, context, listener)
+        templates = self.meta(listener, "template", {})
 
-        set_method(listener.loadbalancer.id, listener.id,
-                   protocol=self._protocols(c)[listener.protocol],
-                   port=listener.port,
-                   service_group_name=listener.default_pool.id,
-                   s_pers_name=pers[1],
-                   c_pers_name=pers[0],
-                   status=status)
+        if 'client_ssl' in templates:
+            args = {'client_ssl_template': templates['client_ssl']}
+            try:
+                c.client.slb.template.client_ssl.create(
+                    '', '', '',
+                    axapi_args=args)
+            except acos_errors.Exists:
+                pass
 
-    def _create(self, c, context, listener):
-        self._set(c, c.client.slb.virtual_server.vport.create, context,
-                  listener)
+        if 'server_ssl' in templates:
+            args = {'server_ssl_template': templates['server_ssl']}
+            try:
+                c.client.slb.template.server_ssl.create(
+                    '', '', '',
+                    axapi_args=args)
+            except acos_errors.Exists:
+                pass
+
+        try:
+            pool_name = self._pool_name(context, listener.default_pool)
+        except Exception:
+            pool_name = None
+        persistence = handler_persist.PersistHandler(
+            c, context, listener.default_pool)
+        vport_args = {'port': self.meta(listener, 'port', {})}
+
+        try:
+            set_method(
+                self.a10_driver.loadbalancer._name(listener.loadbalancer),
+                self._meta_name(listener),
+                protocol=a10_os.vip_protocols(c, listener.protocol),
+                port=listener.protocol_port,
+                service_group_name=pool_name,
+                s_pers_name=persistence.s_persistence(),
+                c_pers_name=persistence.c_persistence(),
+                status=status,
+                axapi_args=vport_args)
+        except acos_errors.Exists:
+            pass
 
     def create(self, context, listener):
-        if not listener.loadbalancer or not listener.default_pool:
-            return
-
         with a10.A10WriteStatusContext(self, context, listener) as c:
-            self._create(c, context, listener)
+            self._set(c.client.slb.virtual_server.vport.create, c, context, listener)
 
     def _update(self, c, context, listener):
-        self._set(c, c.client.slb.virtual_server.vport.update, context,
-                  listener)
+        self._set(c.client.slb.virtual_server.vport.update, c, context, listener)
 
     def update(self, context, old_listener, listener):
-        if not listener.loadbalancer or not listener.default_pool:
-            return
-
         with a10.A10WriteStatusContext(self, context, listener) as c:
             self._update(c, context, listener)
 
-    def delete(self, context, listener):
-        if not listener.loadbalancer:
-            return
+    def _delete(self, c, context, listener):
+        c.client.slb.virtual_server.vport.delete(
+            self.a10_driver.loadbalancer._name(listener.loadbalancer),
+            self._meta_name(listener),
+            protocol=a10_os.vip_protocols(c, listener.protocol),
+            port=listener.protocol_port)
 
+    def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
-            c.client.slb.virtual_server.vport.delete(
-                listener.loadbalancer.id,
-                listener.id,
-                protocol=self._protocols(c)[listener.protocol],
-                port=listener.port)
+            self._delete(c, context, listener)

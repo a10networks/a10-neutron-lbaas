@@ -27,15 +27,16 @@ def return_two(*args):
 class TestMembers(test_base.UnitTestBase):
 
     def set_count_1(self):
-        self.a.member.openstack_manager._count = return_one
+        self.a.member.neutron.member_count = return_one
 
     def set_count_2(self):
-        self.a.member.openstack_manager._count = return_two
+        self.a.member.neutron.member_count = return_two
 
     def test_get_ip(self):
         m = test_base.FakeMember(pool=mock.MagicMock())
-        self.a.member._get_ip(None, m, False)
-        self.a.openstack_driver.member._get_ip.assert_called_with(
+        self.a.member.neutron.member_get_ip(None, m, False)
+        self.print_mocks()
+        self.a.neutron.member_get_ip.assert_called_with(
             None, m, False)
 
     def test_get_name(self):
@@ -44,38 +45,43 @@ class TestMembers(test_base.UnitTestBase):
         self.assertEqual(z, '_get-o_1_1_1_1_neutron')
 
     def test_count(self):
-        self.a.member._count(None, test_base.FakeMember(pool=mock.MagicMock()))
+        self.a.member.neutron.member_count(
+            None, test_base.FakeMember(pool=mock.MagicMock()))
 
     def test_create(self, admin_state_up=True):
         m = test_base.FakeMember(admin_state_up=admin_state_up,
                                  pool=mock.MagicMock())
-        ip = self.a.member._get_ip(None, m, True)
+        ip = self.a.member.neutron.member_get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
         self.a.member.create(None, m)
 
-        self.a.last_client.slb.server.create.assert_called_with(name, ip)
+        self.a.last_client.slb.server.create.assert_called_with(
+            name, ip,
+            axapi_args={'server': {}})
         if admin_state_up:
             status = self.a.last_client.slb.UP
         else:
             status = self.a.last_client.slb.DOWN
         self.a.last_client.slb.service_group.member.create.assert_called_with(
-            m.pool.id, name, m.protocol_port, status=status)
+            m.pool.id, name, m.protocol_port, status=status,
+            axapi_args={'member': {}})
 
     def test_create_down(self):
         self.test_create(False)
 
     def test_update_down(self):
         m = test_base.FakeMember(False, pool=mock.MagicMock())
-        ip = self.a.member._get_ip(None, m, True)
+        ip = self.a.member.neutron.member_get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
         self.a.member.update(None, m, m)
 
         self.a.last_client.slb.service_group.member.update.assert_called_with(
-            m.pool.id, name, m.protocol_port, self.a.last_client.slb.DOWN)
+            m.pool.id, name, m.protocol_port, self.a.last_client.slb.DOWN,
+            axapi_args={'member': {}})
 
     def test_delete(self):
         m = test_base.FakeMember(False, pool=mock.MagicMock())
-        ip = self.a.member._get_ip(None, m, True)
+        ip = self.a.member.neutron.member_get_ip(None, m, True)
 
         self.set_count_1()
         self.a.member.delete(None, m)
@@ -84,7 +90,7 @@ class TestMembers(test_base.UnitTestBase):
 
     def test_delete_count_gt_one(self):
         m = test_base.FakeMember(False, pool=mock.MagicMock())
-        ip = self.a.member._get_ip(None, m, True)
+        ip = self.a.member.neutron.member_get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
 
         self.set_count_2()

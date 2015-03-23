@@ -62,8 +62,9 @@ class TestA10Context(test_base.UnitTestBase):
     def test_write_status(self):
         with a10.A10WriteStatusContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.openstack_driver.pool.active.assert_called_with(
-            None, 'fake-id-001')
+        self.print_mocks()
+        self.a.openstack_driver.pool.successful_completion.assert_called_with(
+            None, self.m)
 
     def test_write_status_e(self):
         try:
@@ -72,15 +73,16 @@ class TestA10Context(test_base.UnitTestBase):
                 c
                 raise FakeException()
         except FakeException:
-            self.a.openstack_driver.pool.failed.assert_called_with(
-                None, 'fake-id-001')
+            self.a.openstack_driver.pool.failed_completion.assert_called_with(
+                None, self.m)
             pass
 
     def test_delete(self):
         with a10.A10DeleteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.openstack_driver.pool.db_delete.assert_called_with(
-            None, 'fake-id-001')
+        self.print_mocks()
+        self.a.openstack_driver.pool.successful_completion.assert_called_with(
+            None, self.m)
 
     def test_delete_e(self):
         try:
