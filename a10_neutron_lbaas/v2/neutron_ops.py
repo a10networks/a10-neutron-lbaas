@@ -31,7 +31,7 @@ class NeutronOpsV2(object):
         return ip_address
 
     def member_count(self, context, member):
-        return context.session.query(lb_db.Member).filter_by(
+        return context.session.query(lb_db.MemberV2).filter_by(
             tenant_id=member.tenant_id,
             address=member.address).count()
 
