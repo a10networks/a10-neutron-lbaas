@@ -45,7 +45,8 @@ class A10DeleteContext(a10_context.A10DeleteContextBase):
         if exc_type is None:
             self.handler.openstack_manager.successful_completion(
                 self.openstack_context,
-                self.openstack_lbaas_obj)
+                self.openstack_lbaas_obj,
+                delete=True)
 
         super(A10DeleteContext, self).__exit__(exc_type, exc_value, traceback)
 
