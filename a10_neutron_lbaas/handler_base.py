@@ -14,8 +14,6 @@
 
 import json
 
-import a10_exceptions as a10_ex
-
 
 class HandlerBase(object):
 

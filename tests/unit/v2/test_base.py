@@ -28,7 +28,7 @@ class FakeLoadBalancer(FakeModel):
         super(FakeLoadBalancer, self).__init__()
         self.id = 'fake-lb-id-001'
         self.listeners = listeners
-        self.address = '5.5.5.5'
+        self.vip_address = '5.5.5.5'
         self.admin_state_up = True
 
 
