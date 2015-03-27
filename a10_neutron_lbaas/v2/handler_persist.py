@@ -35,7 +35,7 @@ class PersistHandler(object):
 
         if pool and pool.sessionpersistence:
             self.sp = pool.sessionpersistence
-            if self.sp.type == 'HTTP_COOKIE':
+            if self.sp.type == 'HTTP_COOKIE' or self.sp_type == 'APP_COOKIE':
                 self.c_pers = self.name
             elif self.sp.type == 'SOURCE_IP':
                 self.s_pers = self.name
@@ -57,6 +57,8 @@ class PersistHandler(object):
         methods = {
             'HTTP_COOKIE':
                 self.c.client.slb.template.cookie_persistence.create,
+            'APP_COOKIE':
+                self.c.client.slb.template.cookie_persistence.create,
             'SOURCE_IP':
                 self.c.client.slb.template.src_ip_persistence.create,
         }
@@ -72,6 +74,8 @@ class PersistHandler(object):
 
         methods = {
             'HTTP_COOKIE':
+                self.c.client.slb.template.cookie_persistence.delete,
+            'APP_COOKIE':
                 self.c.client.slb.template.cookie_persistence.delete,
             'SOURCE_IP':
                 self.c.client.slb.template.src_ip_persistence.delete,
