@@ -11,7 +11,11 @@
 #    under the License.
 
 from neutron.db import l3_db
-from neutron_lbaas.db.loadbalancer import models as lb_db
+try:
+    from neutron_lbaas.db.loadbalancer import models as lb_db
+except ImportError:
+    # v2 does not exist before Kilo
+    pass
 
 
 class NeutronOpsV2(object):
