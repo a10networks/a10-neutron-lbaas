@@ -80,7 +80,8 @@ class TestListeners(test_base.UnitTestBase):
                         self.assertTrue('c_pers_name=None' not in s)
                         pass
                     elif pers == 'APP_COOKIE':
-                        self.assertTrue(saw_exception)
+                        self.assertTrue('c_pers_name=None' not in s)
+                        pass
                     else:
                         self.assertTrue('c_pers_name=None' in s)
                         self.assertTrue('s_pers_name=None' in s)

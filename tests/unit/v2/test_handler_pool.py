@@ -76,7 +76,9 @@ class TestPools(test_base.UnitTestBase):
                                 cookie_persistence.create.
                                 assert_called_with(pool.id))
                         elif pers == 'APP_COOKIE':
-                            self.assertTrue(saw_exception)
+                            (self.a.last_client.slb.template.
+                                cookie_persistence.create.
+                                assert_called_with(pool.id))
 
     def test_update(self):
         old_pool = test_base.FakePool('TCP', 'LEAST_CONNECTIONS', None, True)

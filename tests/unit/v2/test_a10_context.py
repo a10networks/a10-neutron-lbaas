@@ -82,7 +82,7 @@ class TestA10Context(test_base.UnitTestBase):
             c
         self.print_mocks()
         self.a.openstack_driver.pool.successful_completion.assert_called_with(
-            None, self.m)
+            None, self.m, delete=True)
 
     def test_delete_e(self):
         try:
