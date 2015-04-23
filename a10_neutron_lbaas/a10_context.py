@@ -65,6 +65,9 @@ class A10Context(object):
 
         # Try to make the requested partition active
         name = self.tenant_id[0:13]
+        if not name:
+            return
+
         try:
             self.client.system.partition.active(name)
             return
@@ -128,6 +131,8 @@ class A10DeleteContextBase(A10WriteContext):
         if n == 0:
             try:
                 name = self.tenant_id[0:13]
+                if not name:
+                    return
                 self.hooks.partition_delete(self.client, self.openstack_context, name)
             except Exception:
                 LOG.exception("A10Driver: partition cleanup failed; ignoring")
