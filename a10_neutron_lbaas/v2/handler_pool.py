@@ -40,13 +40,22 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
         if pool.listener:
             self.a10_driver.listener._update(c, context, pool.listener)
 
+    def _create(self, c, context, pool):
+        try:
+            self._set(c.client.slb.service_group.create,
+                      c, context, pool)
+        except acos_errors.Exists:
+            pass
+
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
-            try:
-                self._set(c.client.slb.service_group.create,
-                          c, context, pool)
-            except acos_errors.Exists:
-                pass
+            for i in range(0, 2):
+                try:
+                    self._create(c, context, pool)
+                except acos_errors.NotFound:
+                    self.a10_driver.listener._create(c, context, pool.listener)
+                    continue
+                break
 
     def update(self, context, old_pool, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:

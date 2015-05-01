@@ -40,10 +40,13 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         except acos_errors.Exists:
             pass
 
+    def _create(self, c, context, lb):
+        self._set(c.client.slb.virtual_server.create, c, context, lb)
+        self.hooks.after_vip_create(c, context, lb)
+
     def create(self, context, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:
-            self._set(c.client.slb.virtual_server.create, c, context, lb)
-            self.hooks.after_vip_create(c, context, lb)
+            self._create(c, context, lb)
 
     def update(self, context, old_lb, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:
