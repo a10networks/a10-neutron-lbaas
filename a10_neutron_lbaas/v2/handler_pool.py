@@ -13,6 +13,7 @@
 #    under the License.
 
 import logging
+import copy
 
 from a10_neutron_lbaas import a10_openstack_map as a10_os
 import acos_client.errors as acos_errors
@@ -67,7 +68,9 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
             for member in pool.members:
                 self.a10_driver.member._delete(c, context, member)
 
+            LOG.debug("handler_pool.delete(): Checking pool health monitor...")
             if pool.healthmonitor:
+                LOG.debug("handler_pool.delete(): HM: %s" % (pool.healthmonitor))
                 self.a10_driver.hm._delete(c, context, pool.healthmonitor)
 
             c.client.slb.service_group.delete(self._meta_name(pool))

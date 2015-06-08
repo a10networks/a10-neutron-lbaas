@@ -14,9 +14,12 @@
 
 import acos_client.errors as acos_errors
 import handler_base_v2
+import logging
 import v2_context as a10
 
 from a10_neutron_lbaas import a10_openstack_map as a10_os
+
+LOG = logging.getLogger(__name__)
 
 
 class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
@@ -55,23 +58,31 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
 
             c.client.slb.service_group.update(
                 self._pool_name(context, pool=hm.pool),
-                health_monitor=self._meta_name(hm))
+                health_monitor=self._meta_name(hm), health_monitor_disable=0)
 
     def update(self, context, old_hm, hm):
         with a10.A10WriteStatusContext(self, context, hm) as c:
             if old_hm.pool and not hm.pool:
                 pool_name = self._pool_name(context, pool=old_hm.pool)
-                c.client.slb.service_group.update(pool_name, health_monitor="")
+                c.client.slb.service_group.update(pool_name, 
+                                                  health_monitor="", 
+                                                  health_monitor_disable=1)
             elif old_hm.pool != hm.pool:
                 pool_name = self._pool_name(context, pool=hm.pool)
-                c.client.slb.service_group.update(pool_name, health_monitor=self._meta_name(hm))
+                c.client.slb.service_group.update(pool_name,
+                                                  health_monitor=self._meta_name(hm),
+                                                  health_monitor_disable=0)
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
+        LOG.debug("HealthMonitorHandler.delete(): hm=%s" % (hm))
+        with a10.A10WriteStatusContext(self, context, hm.pool) as wc:
+            LOG.debug("HealthMonitorHandler.delete(): Updating...")
+            pool_name = self._pool_name(context, pool=hm.pool)
+            wc.client.slb.service_group.update(pool_name, health_monitor="",
+                                               health_monitor_disable=1)
         c.client.slb.hm.delete(self._meta_name(hm))
 
     def delete(self, context, hm):
         with a10.A10DeleteContext(self, context, hm) as c:
-            pool_name = self._pool_name(context, pool=hm.pool)
-            c.client.slb.service_group.update(pool_name, health_monitor="")
             self._delete(c, context, hm)
