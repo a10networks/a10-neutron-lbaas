@@ -51,7 +51,7 @@ class TestHM(test_base.UnitTestBase):
         self.a.hm.create(None, m)
         self.assert_hm(m, self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m.pool.id, health_monitor='fake-hm-id-001')
+            m.pool.id, health_monitor='fake-hm-id-001', health_monitor_disable=False)
 
     def test_update_tcp(self, m_old=None, m=None):
         if m_old is None:
@@ -71,14 +71,14 @@ class TestHM(test_base.UnitTestBase):
         self.test_update_tcp(m=m)
         self.print_mocks()
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m.pool.id, health_monitor='fake-hm-id-001')
+            m.pool.id, health_monitor='fake-hm-id-001', health_monitor_disable=False)
 
     def test_update_tcp_delete_pool(self):
         m_old = test_base.FakeHM('TCP', pool=mock.MagicMock())
         self.test_update_tcp(m_old=m_old)
         self.print_mocks()
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m_old.pool.id, health_monitor='')
+            m_old.pool.id, health_monitor='', health_monitor_disable=True)
 
     def test_delete(self):
         m = test_base.FakeHM('HTTP')
