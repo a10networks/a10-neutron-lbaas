@@ -37,12 +37,18 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
             url = hm.url_path
             expect_code = hm.expected_codes
 
+        self._ensure_timeout_does_not_exceed_delay(hm)
+
         args = self.meta(hm, 'hm', {})
 
         set_method(hm_name, a10_os.hm_type(c, hm.type),
                    hm.delay, hm.timeout, hm.max_retries,
                    method=method, url=url, expect_code=expect_code,
                    axapi_args=args)
+
+    def _ensure_timeout_does_not_exceed_delay(self, hm):
+        if hm.delay < hm.timeout and hm.timeout > 0:
+            hm.delay = hm.timeout
 
     def create(self, context, hm):
         with a10.A10WriteStatusContext(self, context, hm) as c:

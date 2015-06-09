@@ -98,7 +98,7 @@ class FakeHM(FakeModel):
         self.id = 'fake-hm-id-001'
         self.name = 'hm1'
         self.type = prot
-        self.delay = 6
+        self.delay = 7
         self.timeout = 7
         self.max_retries = 8
         self.http_method = 'GET'

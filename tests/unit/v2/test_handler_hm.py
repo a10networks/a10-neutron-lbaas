@@ -22,7 +22,16 @@ class TestHM(test_base.UnitTestBase):
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, model)
         self.a.last_client.slb.hm.create.assert_called_with(
-            'fake-hm-id-001', mon_type, 6, 7, 8,
+            'fake-hm-id-001', mon_type, 7, 7, 8,
+            method=method, url=url, expect_code=expect_code, axapi_args={})
+
+    def assert_create_sets_delay_timeout(self, model, mon_type, method, url, expect_code):
+        model.timeout = 10
+        model.delay = 6
+        self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
+            None, model)
+        self.a.last_client.slb.hm.create.assert_called_with(
+            'fake-hm-id-001', mon_type, model.delay, model.timeout, 8,
             method=method, url=url, expect_code=expect_code, axapi_args={})
 
     def test_create_ping(self):
