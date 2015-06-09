@@ -93,5 +93,5 @@ class TestHM(test_base.UnitTestBase):
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, m, delete=True)
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m.pool.id, health_monitor='')
+            m.pool.id, health_monitor='', health_monitor_disabled=True)
         self.a.last_client.slb.hm.delete.assert_called_with('fake-hm-id-001')
