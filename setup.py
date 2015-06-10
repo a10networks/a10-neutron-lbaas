@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "a10-neutron-lbaas",
-    version = "1.3.3",
+    version = "1.3.4",
     packages = find_packages(),
 
     author = "A10 Networks",
@@ -26,5 +26,5 @@ setup(
         'Topic :: Internet',
     ],
 
-    install_requires = ['acos-client>=1.2.4']
+    install_requires = ['acos-client>=1.2.6']
 )

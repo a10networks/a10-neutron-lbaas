@@ -22,7 +22,16 @@ class TestHM(test_base.UnitTestBase):
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, model)
         self.a.last_client.slb.hm.create.assert_called_with(
-            'fake-hm-id-001', mon_type, 6, 7, 8,
+            'fake-hm-id-001', mon_type, 7, 7, 8,
+            method=method, url=url, expect_code=expect_code, axapi_args={})
+
+    def assert_create_sets_delay_timeout(self, model, mon_type, method, url, expect_code):
+        model.timeout = 10
+        model.delay = 6
+        self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
+            None, model)
+        self.a.last_client.slb.hm.create.assert_called_with(
+            'fake-hm-id-001', mon_type, model.delay, model.timeout, 8,
             method=method, url=url, expect_code=expect_code, axapi_args={})
 
     def test_create_ping(self):
@@ -51,7 +60,7 @@ class TestHM(test_base.UnitTestBase):
         self.a.hm.create(None, m)
         self.assert_hm(m, self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m.pool.id, health_monitor='fake-hm-id-001')
+            m.pool.id, health_monitor='fake-hm-id-001', health_monitor_disable=False)
 
     def test_update_tcp(self, m_old=None, m=None):
         if m_old is None:
@@ -71,17 +80,18 @@ class TestHM(test_base.UnitTestBase):
         self.test_update_tcp(m=m)
         self.print_mocks()
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m.pool.id, health_monitor='fake-hm-id-001')
+            m.pool.id, health_monitor='fake-hm-id-001', health_monitor_disable=False)
 
     def test_update_tcp_delete_pool(self):
         m_old = test_base.FakeHM('TCP', pool=mock.MagicMock())
         self.test_update_tcp(m_old=m_old)
         self.print_mocks()
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m_old.pool.id, health_monitor='')
+            m_old.pool.id, health_monitor='', health_monitor_disable=True)
 
     def test_delete(self):
         m = test_base.FakeHM('HTTP')
+        self.a.hm.tenant_id = "tenant-id"
         self.a.hm.delete(None, m)
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, m, delete=True)
@@ -93,5 +103,5 @@ class TestHM(test_base.UnitTestBase):
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, m, delete=True)
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m.pool.id, health_monitor='')
+            m.pool.id, health_monitor='', health_monitor_disable=True)
         self.a.last_client.slb.hm.delete.assert_called_with('fake-hm-id-001')
