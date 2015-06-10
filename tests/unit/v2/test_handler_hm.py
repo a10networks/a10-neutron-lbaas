@@ -91,6 +91,7 @@ class TestHM(test_base.UnitTestBase):
 
     def test_delete(self):
         m = test_base.FakeHM('HTTP')
+        self.a.hm.tenant_id = "tenant-id"
         self.a.hm.delete(None, m)
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, m, delete=True)
@@ -102,5 +103,5 @@ class TestHM(test_base.UnitTestBase):
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, m, delete=True)
         self.a.last_client.slb.service_group.update.assert_called_with(
-            m.pool.id, health_monitor='', health_monitor_disabled=True)
+            m.pool.id, health_monitor='', health_monitor_disable=True)
         self.a.last_client.slb.hm.delete.assert_called_with('fake-hm-id-001')
