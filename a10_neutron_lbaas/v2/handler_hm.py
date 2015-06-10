@@ -51,6 +51,7 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
             hm.delay = hm.timeout
 
     def create(self, context, hm):
+        LOG.debug("HealthMonitorHandler.create(): hm=%s, context=%s" % (dir(hm), context))
         with a10.A10WriteStatusContext(self, context, hm) as c:
             for i in range(0, 2):
                 try:
@@ -81,12 +82,13 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
-        LOG.debug("HealthMonitorHandler.delete(): hm=%s" % (hm))
-        with a10.A10WriteStatusContext(self, context, hm.pool) as wc:
-            LOG.debug("HealthMonitorHandler.delete(): Updating...")
-            pool_name = self._pool_name(context, pool=hm.pool)
-            wc.client.slb.service_group.update(pool_name, health_monitor="",
-                                               health_monitor_disable=True)
+        LOG.debug("HealthMonitorHandler.delete(): hm=%s, context=%s" % (dir(hm), context))
+
+        # with a10.A10WriteContext(self, context, hm.pool) as wc:
+        LOG.debug("HealthMonitorHandler.delete(): Updating...")
+        pool_name = self._pool_name(context, pool=hm.pool)
+        c.client.slb.service_group.update(pool_name, health_monitor="",
+                                          health_monitor_disable=True)
         c.client.slb.hm.delete(self._meta_name(hm))
 
     def delete(self, context, hm):
