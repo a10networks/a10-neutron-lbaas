@@ -98,12 +98,10 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
 
     def _delete(self, c, context, hm):
         LOG.debug("HealthMonitorHandler.delete(): hm=%s, context=%s" % (hm, context))
-
-        with a10.A10WriteContext(self, context, hm.pool) as wc:
-            pool_name = self._pool_name(context, pool=hm.pool)
-            LOG.debug("HealthMonitorHandler.delete(): Updating Pool %s" % (pool_name))
-            wc.client.slb.service_group.update(pool_name, health_monitor="",
-                                               health_check_disable=True)
+        pool_name = self._pool_name(context, pool=hm.pool)
+        LOG.debug("HealthMonitorHandler.delete(): Updating Pool %s" % (pool_name))
+        c.client.slb.service_group.update(pool_name, health_monitor="",
+                                          health_check_disable=True)
         c.client.slb.hm.delete(self._meta_name(hm))
 
     def delete(self, context, hm):
