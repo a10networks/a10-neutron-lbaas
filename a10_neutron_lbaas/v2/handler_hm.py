@@ -50,6 +50,11 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
         if hm.delay < hm.timeout and hm.timeout > 0:
             hm.delay = hm.timeout
 
+    def _disable_health_monitor(self, c, context, hm):
+        c.client.slb.service_group.update(
+            self._pool_name(context, pool=hm.pool),
+            health_monitor="", health_check_disable=True)
+
     def create(self, context, hm):
         LOG.debug("HealthMonitorHandler.create(): hm=%s, context=%s" % (dir(hm), context))
         with a10.A10WriteStatusContext(self, context, hm) as c:
@@ -63,9 +68,14 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
                     continue
                 break
 
+            # Disable any potentially existing health monitor.
             c.client.slb.service_group.update(
                 self._pool_name(context, pool=hm.pool),
-                health_monitor=self._meta_name(hm), health_monitor_disable=False)
+                health_monitor="", health_check_disable=True)
+
+            c.client.slb.service_group.update(
+                self._pool_name(context, pool=hm.pool),
+                health_monitor=self._meta_name(hm), health_check_disable=False)
 
     def update(self, context, old_hm, hm):
         with a10.A10WriteStatusContext(self, context, hm) as c:
@@ -73,22 +83,27 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
                 pool_name = self._pool_name(context, pool=old_hm.pool)
                 c.client.slb.service_group.update(pool_name,
                                                   health_monitor="",
-                                                  health_monitor_disable=True)
+                                                  health_check_disable=True)
             elif old_hm.pool != hm.pool:
                 pool_name = self._pool_name(context, pool=hm.pool)
+
+                # Remove any existing association.  This should be moved into a method.
+                c.client.slb.service_group.update(pool_name,
+                                                  health_monitor="",
+                                                  health_check_disable=True)
                 c.client.slb.service_group.update(pool_name,
                                                   health_monitor=self._meta_name(hm),
-                                                  health_monitor_disable=False)
+                                                  health_check_disable=False)
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
-        LOG.debug("HealthMonitorHandler.delete(): hm=%s, context=%s" % (dir(hm), context))
+        LOG.debug("HealthMonitorHandler.delete(): hm=%s, context=%s" % (hm, context))
 
-        # with a10.A10WriteContext(self, context, hm.pool) as wc:
-        LOG.debug("HealthMonitorHandler.delete(): Updating...")
-        pool_name = self._pool_name(context, pool=hm.pool)
-        c.client.slb.service_group.update(pool_name, health_monitor="",
-                                          health_monitor_disable=True)
+        with a10.A10WriteContext(self, context, hm.pool) as wc:
+            pool_name = self._pool_name(context, pool=hm.pool)
+            LOG.debug("HealthMonitorHandler.delete(): Updating Pool %s" % (pool_name))
+            wc.client.slb.service_group.update(pool_name, health_monitor="",
+                                               health_check_disable=True)
         c.client.slb.hm.delete(self._meta_name(hm))
 
     def delete(self, context, hm):
