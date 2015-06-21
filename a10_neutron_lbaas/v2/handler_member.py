@@ -59,13 +59,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
 
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
-            for i in range(0, 2):
-                try:
-                    self._create(c, context, member)
-                except acos_errors.NotFound:
-                    self.a10_driver.pool._create(c, context, member.pool)
-                    continue
-                break
+            self._create(c, context, member)
 
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
