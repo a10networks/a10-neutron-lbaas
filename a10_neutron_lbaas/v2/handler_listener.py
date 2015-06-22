@@ -79,13 +79,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def create(self, context, listener):
         with a10.A10WriteStatusContext(self, context, listener) as c:
-            for i in range(0, 2):
-                try:
-                    self._create(c, context, listener)
-                except acos_errors.NotFound:
-                    self.a10_driver.loadbalancer._create(c, context, listener.loadbalancer)
-                    continue
-                break
+            self._create(c, context, listener)
 
     def _update(self, c, context, listener):
         self._set(c.client.slb.virtual_server.vport.update, c, context, listener)
