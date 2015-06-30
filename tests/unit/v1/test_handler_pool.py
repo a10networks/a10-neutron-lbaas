@@ -85,7 +85,7 @@ class TestPools(test_base.UnitTestBase):
     def test_stats(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         z = self.a.pool
-        z._get_tenant_id = lambda x, y: 'hello'
+        z.neutron.pool_get_tenant_id = lambda x, y: 'hello'
         z._get_vip_id = lambda x, y: '2.2.2.2'
         z.stats(None, pool['id'])
         self.print_mocks()
