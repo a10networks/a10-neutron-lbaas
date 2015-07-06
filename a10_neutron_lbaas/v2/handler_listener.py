@@ -13,8 +13,11 @@
 #    under the License.
 
 import logging
+import pdb
 
 import a10_neutron_lbaas.a10_openstack_map as a10_os
+from neutron_lbaas.common.cert_manager.barbican_cert_manager import CertManager
+from neutron_lbaas.services.loadbalancer import constants as lb_const
 
 import acos_client.errors as acos_errors
 import handler_base_v2
@@ -33,21 +36,35 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         templates = self.meta(listener, "template", {})
 
+        client_args = {}
+        server_args = {}
+
+        pdb.set_trace()
+
+        if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
+            c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
+            sni_cs = listener.sni_containers if listener.sni_containers else None
+            cert = CertManager.get_cert(c_id, check_only=False)
+            # TODO(mdurrant) Use the container ID and SNI containers to get what
+            # we want from Barbican.
+            LOG.debug("listener _set():c_id=%s, sni_si=%s" % (c_id, sni_cs))
+            pass
+
         if 'client_ssl' in templates:
-            args = {'client_ssl_template': templates['client_ssl']}
+            client_args = {'client_ssl_template': templates['client_ssl']}
             try:
                 c.client.slb.template.client_ssl.create(
                     '', '', '',
-                    axapi_args=args)
+                    axapi_args=client_args)
             except acos_errors.Exists:
                 pass
 
         if 'server_ssl' in templates:
-            args = {'server_ssl_template': templates['server_ssl']}
+            server_args = {'server_ssl_template': templates['server_ssl']}
             try:
                 c.client.slb.template.server_ssl.create(
                     '', '', '',
-                    axapi_args=args)
+                    axapi_args=server_args)
             except acos_errors.Exists:
                 pass
 
