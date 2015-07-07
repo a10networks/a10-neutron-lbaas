@@ -15,8 +15,8 @@
 import logging
 import pdb
 
-import a10_neutron_lbaas.a10_openstack_map as a10_os
-from neutron_lbaas.common.cert_manager.barbican_cert_manager import CertManager
+import a10_neutron_lbaas.a10_openstack_map as a10_osmap
+
 from neutron_lbaas.services.loadbalancer import constants as lb_const
 
 import acos_client.errors as acos_errors
@@ -24,12 +24,21 @@ import handler_base_v2
 import handler_persist
 import v2_context as a10
 
+import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
+
 LOG = logging.getLogger(__name__)
 
 
 class ListenerHandler(handler_base_v2.HandlerBaseV2):
+    def __init__(self, a10_driver, openstack_manager, neutron=None, barbican_client=None):
+        super(ListenerHandler, self).__init__(a10_driver, openstack_manager, neutron)
+        self.barbican_client = barbican_client
 
     def _set(self, set_method, c, context, listener):
+        # This is a terrible solution but I don't want to muck with the existing architecture.
+        if self.barbican_client is None:
+            self.barbican_client = certwrapper.CertManagerWrapper()
+
         status = c.client.slb.UP
         if not listener.admin_state_up:
             status = c.client.slb.DOWN
@@ -39,15 +48,14 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         client_args = {}
         server_args = {}
 
-        pdb.set_trace()
-
         if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
+            # TODO(mdurrant) Use the container ID and SNI containers to get what
+            # we want from Barbican.  I think the below does it... we'll see!
             c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
             sni_cs = listener.sni_containers if listener.sni_containers else None
-            cert = CertManager.get_cert(c_id, check_only=False)
-            # TODO(mdurrant) Use the container ID and SNI containers to get what
-            # we want from Barbican.
-            LOG.debug("listener _set():c_id=%s, sni_si=%s" % (c_id, sni_cs))
+
+            cert = self.barbican_client.get_certificate(c_id, check_only=False)
+            LOG.debug("listener _set():c_id=%s, sni_si=%s, cert=%s" % (c_id, sni_cs, cert))
             pass
 
         if 'client_ssl' in templates:
@@ -80,7 +88,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=a10_os.vip_protocols(c, listener.protocol),
+                protocol=a10_osmap.vip_protocols(c, listener.protocol),
                 port=listener.protocol_port,
                 service_group_name=pool_name,
                 s_pers_name=persistence.s_persistence(),
@@ -109,9 +117,12 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         c.client.slb.virtual_server.vport.delete(
             self.a10_driver.loadbalancer._name(listener.loadbalancer),
             self._meta_name(listener),
-            protocol=a10_os.vip_protocols(c, listener.protocol),
+            protocol=a10_osmap.vip_protocols(c, listener.protocol),
             port=listener.protocol_port)
 
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
             self._delete(c, context, listener)
+
+    def set_certmgr(self, certmgr):
+        self.barbican_client = certmgr

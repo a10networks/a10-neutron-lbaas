@@ -35,10 +35,12 @@ class A10OpenstackLBBase(object):
 
     def __init__(self, openstack_driver,
                  plumbing_hooks_class=hooks.PlumbingHooks,
-                 neutron_hooks_module=None):
+                 neutron_hooks_module=None,
+                 barbican_client=None):
         self.openstack_driver = openstack_driver
         self.config = a10_config.A10Config()
         self.neutron = neutron_hooks_module
+        self.barbican_client = barbican_client
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
@@ -91,7 +93,8 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
         return v2.handler_listener.ListenerHandler(
             self,
             self.openstack_driver.listener,
-            neutron=self.neutron)
+            neutron=self.neutron,
+            barbican_client=self.barbican_client)
 
     @property
     def pool(self):

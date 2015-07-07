@@ -44,6 +44,7 @@ class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
         super(FakeA10OpenstackLBV2, self).__init__(
             mock.MagicMock(),
             neutron_hooks_module=mock.MagicMock())
+        self.certmgr = mock.Mock()
 
     def _get_a10_client(self, device_info):
         self.device_info = device_info

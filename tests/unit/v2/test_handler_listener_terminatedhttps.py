@@ -24,7 +24,7 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 LOG = logging.getLogger(__name__)
 
 
-class TestListeners(test_base.UnitTestBase):
+class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
     def test_create_no_lb(self):
         m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
@@ -136,4 +136,19 @@ class TestListeners(test_base.UnitTestBase):
         self.assertTrue('fake-lb-id-001' in s)
         self.assertTrue('fake-listen-id-001' in s)
         self.assertTrue('port=2222' in s)
+        self.assertTrue('HTTP' in s)
+
+    def test_create_protocol_terminated_https(self):
+        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
+                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
+        lb = test_base.FakeLoadBalancer()
+        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+                                   pool=pool, loadbalancer=lb)
+        pool.listener = m
+        certmgr = mock.Mock()
+
+        self.a.barbican_client = mock.Mock()
+        self.a.listener.set_certmgr(certmgr)
+        self.a.listener.create(None, m)
+        s = str(self.a.last_client.mock_calls)
         self.assertTrue('HTTP' in s)
