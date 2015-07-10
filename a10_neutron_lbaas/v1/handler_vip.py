@@ -163,10 +163,9 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             self._delete(c, context, vip)
             self.hooks.after_vip_delete(c, context, vip)
 
+    # This function should be moved in to a common place where it can be used by v1/v2
     def _set_auto_parameter(self, vport):
         vport["auto"] = self.a10_driver.device_info.get("autosnat", False)
-        # TODO(mdurrant) : MT never responded to me about the precedence flag
-        # vport["precedence"] = self.a10_driver.device_info.get("autosnat", False)
 
 
 class PersistHandler(object):

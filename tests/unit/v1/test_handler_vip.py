@@ -66,12 +66,10 @@ class TestVIP(test_base.UnitTestBase):
         self._test_create_autosnat()
 
     def _test_create_autosnat(self, autosnat=None):
-        auto_expected = "'auto': {0}"
+        auto_expected = None
         if autosnat:
             self.a.device_info["autosnat"] = autosnat
             auto_expected = "'auto': {0}".format(autosnat)
-        else:
-            auto_expected = None
 
         self.a.vip.create(None, self.fake_vip())
         s = str(self.a.last_client.mock_calls)
