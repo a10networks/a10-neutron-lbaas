@@ -56,6 +56,29 @@ class TestVIP(test_base.UnitTestBase):
         except a10_ex.UnsupportedFeature:
             pass
 
+    def test_create_autosnat_false(self):
+        self._test_create_autosnat(False)
+
+    def test_create_autosnat_true(self):
+        self._test_create_autosnat(True)
+
+    def test_create_autosnat_unspecified(self):
+        self._test_create_autosnat()
+
+    def _test_create_autosnat(self, autosnat=None):
+        auto_expected = "'auto': {0}"
+        if autosnat:
+            self.a.device_info["autosnat"] = autosnat
+            auto_expected = "'auto': {0}".format(autosnat)
+        else:
+            auto_expected = None
+
+        self.a.vip.create(None, self.fake_vip())
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('virtual_server.create' in s)
+        if auto_expected is not None:
+            self.assertTrue(auto_expected in s)
+
     def test_update(self):
         self.a.vip.update(None, self.fake_vip(), self.fake_vip())
         self.print_mocks()

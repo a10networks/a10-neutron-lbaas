@@ -21,6 +21,7 @@ import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -74,9 +75,12 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             LOG.debug("VPORT_LIST = %s", vport_list)
             try:
                 if vport_list[0]:
+                    self._set_auto_parameter(vport_list[0])
                     vport_args = {'port': vport_list[0]}
                 else:
-                    vport_args = {'port': self.meta(vip, 'port', {})}
+                    vport_meta = self.meta(vip, 'port', {})
+                    self._set_auto_parameter(vport_meta)
+                    vport_args = {'port': vport_meta}
                 c.client.slb.virtual_server.vport.create(
                     self._meta_name(vip),
                     self._meta_name(vip) + '_VPORT',
@@ -94,6 +98,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             for vport in vport_list[1:]:
                 i += 1
                 try:
+                    self._set_auto_parameter(vport)
                     vport_args = {'port': vport}
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
@@ -157,6 +162,11 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
         with a10.A10DeleteContext(self, context, vip) as c:
             self._delete(c, context, vip)
             self.hooks.after_vip_delete(c, context, vip)
+
+    def _set_auto_parameter(self, vport):
+        vport["auto"] = self.a10_driver.device_info.get("autosnat", False)
+        # TODO(mdurrant) : MT never responded to me about the precedence flag
+        # vport["precedence"] = self.a10_driver.device_info.get("autosnat", False)
 
 
 class PersistHandler(object):
