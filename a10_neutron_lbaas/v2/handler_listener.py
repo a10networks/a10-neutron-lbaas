@@ -47,20 +47,28 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         client_args = {}
         server_args = {}
+        cert = None
 
         if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
             # TODO(mdurrant) Use the container ID and SNI containers to get what
             # we want from Barbican.  I think the below does it... we'll see!
+            # This can actually happen one of two ways:
+            # We can have a default TLS container ID and pass that to barbican...
+            # Or we have a default TLS container ID AND a list for other containers
+            # And this whole thing needs to get hacked up and moved in to a class
+            # so it's not coupled to this handler.
+
             c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
             sni_cs = listener.sni_containers if listener.sni_containers else None
+            pdb.set_trace()
 
             cert = self.barbican_client.get_certificate(c_id, check_only=False)
             LOG.debug("listener _set():c_id=%s, sni_si=%s, cert=%s" % (c_id, sni_cs, cert))
-            pass
 
         if 'client_ssl' in templates:
             client_args = {'client_ssl_template': templates['client_ssl']}
             try:
+                # TODO(mdurrant) Populate client args with certificate data
                 c.client.slb.template.client_ssl.create(
                     '', '', '',
                     axapi_args=client_args)
@@ -70,6 +78,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         if 'server_ssl' in templates:
             server_args = {'server_ssl_template': templates['server_ssl']}
             try:
+                # TODO(mdurrant) Populate server args with certificate data
                 c.client.slb.template.server_ssl.create(
                     '', '', '',
                     axapi_args=server_args)

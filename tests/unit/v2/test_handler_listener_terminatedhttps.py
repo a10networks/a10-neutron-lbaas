@@ -15,7 +15,6 @@
 import logging
 import mock
 import test_base
-import pdb
 
 import neutron_lbaas.services.loadbalancer.constants as lbaas_const
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -123,9 +122,9 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertTrue('HTTP' in s)
 
     def test_delete(self):
-        pool = test_base.FakePool('HTTP', 'ROUND_ROBIN', None)
+        pool = test_base.FakePool('HTTPS', 'ROUND_ROBIN', None)
         lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener('HTTP', 2222, pool=pool, loadbalancer=lb)
+        m = test_base.FakeListener('HTTPS', 2222, pool=pool, loadbalancer=lb)
         pool.listener = m
 
         self.a.listener.delete(None, m)

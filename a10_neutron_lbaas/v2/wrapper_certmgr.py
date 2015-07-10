@@ -21,5 +21,17 @@ class CertManagerWrapper(object):
         else:
             self.certmgr = bcm.CertManager()
 
-    def get_certificate(self, cert_id, **kwargs):
-        return self.certmgr.get_cert(cert_id, **kwargs)
+    def get_certificate(self, container_id, **kwargs):
+        return self.certmgr.get_cert(container_id, **kwargs)
+
+    def store_cert(self, certificate, private_key, intermediates=None,
+                   private_key_passphrase=None, expiration=None,
+                   name='Octavia TLS Cert', **kwargs):
+        return self.certmgr.store_cert(certificate, private_key, intermediates=intermediates,
+                                       private_key_passphrase=private_key_passphrase,
+                                       expiration=expiration, name=name, kwargs=kwargs)
+
+    def delete_cert(self, cert_ref, service_name='Octavia', resource_ref=None,
+                    **kwargs):
+        return self.certmgr.delete_cert(cert_ref, service_name=service_name,
+                                        resource_ref=resource_ref, kwargs=kwargs)
