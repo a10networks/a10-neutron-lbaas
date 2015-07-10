@@ -91,6 +91,41 @@ class TestListeners(test_base.UnitTestBase):
                         self.assertTrue('c_pers_name=None' in s)
                         self.assertTrue('s_pers_name=None' in s)
 
+    def test_create_autosnat_false(self):
+        self._test_create_autosnat(False)
+
+    def test_create_autosnat_true(self):
+        self._test_create_autosnat(True)
+
+    def test_create_autosnat_unspecified(self):
+        self._test_create_autosnat()
+
+    def _test_create_autosnat(self, autosnat=None):
+        saw_exception = False
+
+        p = 'TCP'
+        lb = test_base.FakeLoadBalancer()
+        pool = test_base.FakePool(p, 'ROUND_ROBIN', None)
+        m = test_base.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+
+        auto_expected = None
+        if autosnat:
+            self.a.device_info["autosnat"] = autosnat
+            auto_expected = "'auto': {0}".format(autosnat)
+
+        try:
+            self.a.listener.create(None, m)
+        except Exception as e:
+            saw_exception = True
+            raise e
+
+        if not saw_exception:
+            s = str(self.a.last_client.mock_calls)
+            self.assertTrue('vport.create' in s)
+            if auto_expected is not None:
+                self.assertTrue(auto_expected in s)
+
     def test_update_no_lb(self):
         m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)

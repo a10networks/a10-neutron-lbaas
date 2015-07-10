@@ -86,7 +86,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             pool_name = None
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
-        vport_args = {'port': self.meta(listener, 'port', {})}
+        vport_meta = self.meta(listener, 'port', {})
+        self._set_auto_parameter(vport_meta)
+        vport_args = {'port': vport_meta}
 
         try:
             set_method(
@@ -175,3 +177,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
             self._delete(c, context, listener)
+
+    # This function should be moved in to a common place where it can be used vy v1/v2
+    def _set_auto_parameter(self, vport):
+        vport["auto"] = self.a10_driver.device_info.get("autosnat", False)
