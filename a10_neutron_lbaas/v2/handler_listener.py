@@ -48,6 +48,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         client_args = {}
         server_args = {}
         cert = None
+        
+        pdb.set_trace()
 
         if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
             # TODO(mdurrant) Use the container ID and SNI containers to get what
@@ -60,10 +62,42 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
             c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
             sni_cs = listener.sni_containers if listener.sni_containers else None
-            pdb.set_trace()
 
-            cert = self.barbican_client.get_certificate(c_id, check_only=False)
+            container = self.barbican_client.get_certificate(c_id, check_only=True)
+            base_name = container._cert_container.name if container._cert_container is not None else ""
+
+            cert_content = container.get_certificate()
+            key_content = container.get_private_key()
+            cert_pass = container.get_private_key_passphrase()
+
+            template_name = listener.id
+
+            cert_filename = "{0}cert.pem".format(base_name)
+            key_filename = "{0}key.pem".format(base_name)
+
             LOG.debug("listener _set():c_id=%s, sni_si=%s, cert=%s" % (c_id, sni_cs, cert))
+            
+            # TODO(mdurrant) Refactor this to encapsulate differences
+            # if c.client.file.ssl_cert.exists(cert_filename):
+            #     c.client.file.ssl_cert.update(cert_filename, cert_content, len(cert_content),
+            #                                   action="import", certificate_type="pem")
+            # else:
+            #     c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
+            #                                   action="import", certificate_type="pem")
+
+            # if c.client.file.ssl_key.exists(key_filename):
+            #     c.client.file.ssl_key.update(key_filename, key_content, len(key_content),
+            #                                  action="import")
+            # else:
+            #     c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
+            #                                  action="import")
+
+            # if c.client.slb.template.client_ssl.exists(template_name):
+            #     c.client.slb.template.client_ssl.update(template_name, cert=cert_filename,
+            #                                             key=key_filename, passphrase=cert_pass)
+            # else:
+            #     c.client.slb.template.client_ssl.create(template_name, cert=cert_filename,
+            #                                             key=key_filename, passphrase=cert_pass)
 
         if 'client_ssl' in templates:
             client_args = {'client_ssl_template': templates['client_ssl']}
