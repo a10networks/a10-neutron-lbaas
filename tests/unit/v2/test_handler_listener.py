@@ -15,10 +15,9 @@
 import logging
 import mock
 import test_base
-import pdb
 
-import neutron_lbaas.services.loadbalancer.constants as lbaas_const
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+import neutron_lbaas.services.loadbalancer.constants as lbaas_const
 
 
 LOG = logging.getLogger(__name__)

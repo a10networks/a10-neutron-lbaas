@@ -16,8 +16,8 @@ import logging
 import mock
 import test_base
 
-import neutron_lbaas.services.loadbalancer.constants as lbaas_const
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+import neutron_lbaas.services.loadbalancer.constants as lbaas_const
 
 
 LOG = logging.getLogger(__name__)
@@ -131,11 +131,12 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
+        LOG.debug("DELETE RESULT %s" % s)
         self.assertTrue('vport.delete' in s)
         self.assertTrue('fake-lb-id-001' in s)
         self.assertTrue('fake-listen-id-001' in s)
         self.assertTrue('port=2222' in s)
-        self.assertTrue('HTTP' in s)
+        self.assertTrue('TCP' in s)
 
     def test_create_protocol_terminated_https(self):
         pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
@@ -144,10 +145,27 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         pool.listener = m
-        certmgr = mock.Mock()
+        certmgr = FakeCertManager()
 
-        self.a.barbican_client = mock.Mock()
+        self.a.barbican_client = certmgr
         self.a.listener.set_certmgr(certmgr)
         self.a.listener.create(None, m)
         s = str(self.a.last_client.mock_calls)
-        self.assertTrue('HTTP' in s)
+        self.assertTrue('HTTPS' in s)
+
+
+class FakeCertManager(object):
+    def __init__(self):
+        self.mock_cert = mock.Mock(return_value="")
+        self.mock_key = mock.Mock(return_value="")
+        self.mock_passphrase = mock.Mock(return_value="")
+        self.mock_cert_container = mock.Mock()
+        self.mock_cert_container.configure_mock(name="tls-container")
+
+        self.mock_certificate_result = mock.Mock(return_value=mock.Mock(
+                                                 get_certificate=self.mock_cert,
+                                                 get_private_key=self.mock_key,
+                                                 get_private_key_passphrase=self.mock_passphrase,
+                                                 _cert_container=self.mock_cert_container))
+
+        self.get_certificate = self.mock_certificate_result

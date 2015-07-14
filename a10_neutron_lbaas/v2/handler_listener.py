@@ -13,7 +13,6 @@
 #    under the License.
 
 import logging
-import pdb
 
 import a10_neutron_lbaas.a10_openstack_map as a10_osmap
 
@@ -35,7 +34,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         self.barbican_client = barbican_client
 
     def _set(self, set_method, c, context, listener):
-        # This is a terrible solution but I don't want to muck with the existing architecture.
         if self.barbican_client is None:
             self.barbican_client = certwrapper.CertManagerWrapper()
 
@@ -47,64 +45,24 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         client_args = {}
         server_args = {}
-        cert = None
-        
-        pdb.set_trace()
+        cert_data = dict()
+
+        # pdb.set_trace()
 
         if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
-            # TODO(mdurrant) Use the container ID and SNI containers to get what
-            # we want from Barbican.  I think the below does it... we'll see!
-            # This can actually happen one of two ways:
-            # We can have a default TLS container ID and pass that to barbican...
-            # Or we have a default TLS container ID AND a list for other containers
-            # And this whole thing needs to get hacked up and moved in to a class
-            # so it's not coupled to this handler.
+            self._set_terminated_https_values(listener, c, cert_data)
 
-            c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
-            sni_cs = listener.sni_containers if listener.sni_containers else None
-
-            container = self.barbican_client.get_certificate(c_id, check_only=True)
-            base_name = container._cert_container.name if container._cert_container is not None else ""
-
-            cert_content = container.get_certificate()
-            key_content = container.get_private_key()
-            cert_pass = container.get_private_key_passphrase()
-
-            template_name = listener.id
-
-            cert_filename = "{0}cert.pem".format(base_name)
-            key_filename = "{0}key.pem".format(base_name)
-
-            LOG.debug("listener _set():c_id=%s, sni_si=%s, cert=%s" % (c_id, sni_cs, cert))
-            
-            # TODO(mdurrant) Refactor this to encapsulate differences
-            # if c.client.file.ssl_cert.exists(cert_filename):
-            #     c.client.file.ssl_cert.update(cert_filename, cert_content, len(cert_content),
-            #                                   action="import", certificate_type="pem")
-            # else:
-            #     c.client.file.ssl_cert.create(cert_filename, cert_content, len(cert_content),
-            #                                   action="import", certificate_type="pem")
-
-            # if c.client.file.ssl_key.exists(key_filename):
-            #     c.client.file.ssl_key.update(key_filename, key_content, len(key_content),
-            #                                  action="import")
-            # else:
-            #     c.client.file.ssl_key.create(key_filename, key_content, len(key_content),
-            #                                  action="import")
-
-            # if c.client.slb.template.client_ssl.exists(template_name):
-            #     c.client.slb.template.client_ssl.update(template_name, cert=cert_filename,
-            #                                             key=key_filename, passphrase=cert_pass)
-            # else:
-            #     c.client.slb.template.client_ssl.create(template_name, cert=cert_filename,
-            #                                             key=key_filename, passphrase=cert_pass)
+        template_name = cert_data.get('template_name', '')
+        cert_content = cert_data.get('cert_content', '')
+        key_content = cert_data.get('key_content', '')
 
         if 'client_ssl' in templates:
             client_args = {'client_ssl_template': templates['client_ssl']}
             try:
-                # TODO(mdurrant) Populate client args with certificate data
                 c.client.slb.template.client_ssl.create(
-                    '', '', '',
+                    template_name,
+                    cert_content,
+                    key_content,
                     axapi_args=client_args)
             except acos_errors.Exists:
                 pass
@@ -112,9 +70,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         if 'server_ssl' in templates:
             server_args = {'server_ssl_template': templates['server_ssl']}
             try:
-                # TODO(mdurrant) Populate server args with certificate data
                 c.client.slb.template.server_ssl.create(
-                    '', '', '',
+                    template_name,
+                    cert_content,
+                    key_content,
                     axapi_args=server_args)
             except acos_errors.Exists:
                 pass
@@ -140,6 +99,53 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 axapi_args=vport_args)
         except acos_errors.Exists:
             pass
+
+    def _set_terminated_https_values(self, listener, c, cert_data):
+            # TODO(mdurrant) Use the container ID and SNI containers to get what
+            # we want from Barbican.  I think the below does it... we'll see!
+            # This can actually happen one of two ways:
+            # We can have a default TLS container ID and pass that to barbican...
+            # Or we have a default TLS container ID AND a list for other containers
+            # And this whole thing needs to get hacked up and moved in to a class
+            # so it's not coupled to this handler.
+
+            c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
+
+            container = self.barbican_client.get_certificate(c_id, check_only=True)
+            if container:
+                base_name = (container._cert_container.name if container._cert_container is not None
+                             else "")
+
+                cert_data["cert_content"] = container.get_certificate()
+                cert_data["key_content"] = container.get_private_key()
+                cert_data["cert_pass"] = container.get_private_key_passphrase()
+
+                cert_data["template_name"] = listener.id
+
+                cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
+                cert_data["key_filename"] = "{0}key.pem".format(base_name)
+
+                if c.client.file.ssl_cert.exists(cert_data["cert_filename"]):
+                    c.client.file.ssl_cert.update(cert_data["cert_filename"],
+                                                  cert_data["cert_content"],
+                                                  len(cert_data["cert_content"]),
+                                                  action="import", certificate_type="pem")
+                else:
+                    c.client.file.ssl_cert.create(cert_data["cert_filename"],
+                                                  cert_data["cert_content"],
+                                                  len(cert_data["cert_content"]),
+                                                  action="import", certificate_type="pem")
+
+                if c.client.file.ssl_key.exists(cert_data["key_filename"]):
+                    c.client.file.ssl_key.update(cert_data["key_filename"],
+                                                 cert_data["key_content"],
+                                                 len(cert_data["key_content"]),
+                                                 action="import")
+                else:
+                    c.client.file.ssl_key.create(cert_data["key_filename"],
+                                                 cert_data["key_content"],
+                                                 len(cert_data["key_content"]),
+                                                 action="import")
 
     def _create(self, c, context, listener):
         self._set(c.client.slb.virtual_server.vport.create,
