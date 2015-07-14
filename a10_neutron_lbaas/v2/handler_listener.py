@@ -18,14 +18,12 @@ import a10_neutron_lbaas.a10_openstack_map as a10_osmap
 
 from neutron_lbaas.services.loadbalancer import constants as lb_const
 
+import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
 import acos_client.errors as acos_errors
 import handler_base_v2
 import handler_persist
 import v2_context as a10
 
-import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
-
-import pdb
 
 LOG = logging.getLogger(__name__)
 
@@ -45,11 +43,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         templates = self.meta(listener, "template", {})
 
-        # client_args = {}
         server_args = {}
         cert_data = dict()
-
-        pdb.set_trace()
 
         if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
             self._set_terminated_https_values(listener, c, cert_data)
@@ -61,7 +56,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             key_filename = str(cert_data.get('key_filename', ''))
 
         if 'client_ssl' in templates:
-            client_args = {'client_ssl_template': templates['client_ssl']}
             try:
                 c.client.slb.template.client_ssl.create(
                     template_name,
@@ -121,27 +115,23 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
             cert_data["key_filename"] = "{0}key.pem".format(base_name)
 
-            if c.client.file.ssl_cert.exists(cert_data["cert_filename"]):
-                c.client.file.ssl_cert.update(cert_data["cert_filename"],
-                                              cert_data["cert_content"],
-                                              len(cert_data["cert_content"]),
-                                              action="import", certificate_type="pem")
-            else:
-                c.client.file.ssl_cert.create(cert_data["cert_filename"],
-                                              cert_data["cert_content"],
-                                              len(cert_data["cert_content"]),
-                                              action="import", certificate_type="pem")
+            self._acos_create_or_update(c.client.file.ssl_cert,
+                                        file=cert_data["cert_filename"],
+                                        cert=cert_data["cert_content"],
+                                        size=len(cert_data["cert_content"]),
+                                        action="import", certificate_type="pem")
 
-            if c.client.file.ssl_key.exists(cert_data["key_filename"]):
-                c.client.file.ssl_key.update(cert_data["key_filename"],
-                                             cert_data["key_content"],
-                                             len(cert_data["key_content"]),
-                                             action="import")
-            else:
-                c.client.file.ssl_key.create(cert_data["key_filename"],
-                                             cert_data["key_content"],
-                                             len(cert_data["key_content"]),
-                                             action="import")
+            self._acos_create_or_update(c.client.file.ssl_key,
+                                        file=cert_data["key_filename"],
+                                        cert=cert_data["key_content"],
+                                        size=len(cert_data["key_content"]),
+                                        action="import")
+
+    def _acos_create_or_update(self, acos_obj, **args):
+        if acos_obj.exists(args["file"]):
+            acos_obj.update(args)
+        else:
+            acos_obj.create(args)
 
     def _create(self, c, context, listener):
         self._set(c.client.slb.virtual_server.vport.create,
