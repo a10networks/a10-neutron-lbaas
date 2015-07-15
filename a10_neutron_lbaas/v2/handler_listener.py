@@ -23,7 +23,7 @@ import acos_client.errors as acos_errors
 import handler_base_v2
 import handler_persist
 import v2_context as a10
-import pdb
+
 
 LOG = logging.getLogger(__name__)
 
@@ -47,13 +47,12 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         cert_data = dict()
 
         if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
-            self._set_terminated_https_values(listener, c, cert_data)
-            templates["client_ssl"] = {}
-
-            template_name = str(cert_data.get('template_name', ''))
-            key_passphrase = str(cert_data.get('cert_pass', ''))
-            cert_filename = str(cert_data.get('cert_filename', ''))
-            key_filename = str(cert_data.get('key_filename', ''))
+            if self._set_terminated_https_values(listener, c, cert_data):
+                templates["client_ssl"] = {}
+                template_name = str(cert_data.get('template_name', ''))
+                key_passphrase = str(cert_data.get('cert_pass', ''))
+                cert_filename = str(cert_data.get('cert_filename', ''))
+                key_filename = str(cert_data.get('key_filename', ''))
 
         if 'client_ssl' in templates:
             try:
@@ -99,33 +98,45 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             pass
 
     def _set_terminated_https_values(self, listener, c, cert_data):
+        is_success = False
         c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
 
-        container = self.barbican_client.get_certificate(c_id, check_only=True)
-        if container:
-            base_name = (container._cert_container.name if container._cert_container is not None
-                         else "")
+        if c_id:
+            try:
+                container = self.barbican_client.get_certificate(c_id, check_only=True)
+            except Exception as ex:
+                container = None
+                LOG.error("Exception encountered retrieving TLS Container %s" % c_id)
+                LOG.exception(ex)
 
-            cert_data["cert_content"] = container.get_certificate()
-            cert_data["key_content"] = container.get_private_key()
-            cert_data["cert_pass"] = container.get_private_key_passphrase()
+            if container:
+                base_name = (container._cert_container.name if container._cert_container is not None
+                             else "")
 
-            cert_data["template_name"] = listener.id
+                cert_data["cert_content"] = container.get_certificate()
+                cert_data["key_content"] = container.get_private_key()
+                cert_data["cert_pass"] = container.get_private_key_passphrase()
 
-            cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
-            cert_data["key_filename"] = "{0}key.pem".format(base_name)
+                cert_data["template_name"] = listener.id
 
-            self._acos_create_or_update(c.client.file.ssl_cert,
-                                        file=cert_data["cert_filename"],
-                                        cert=cert_data["cert_content"],
-                                        size=len(cert_data["cert_content"]),
-                                        action="import", certificate_type="pem")
+                cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
+                cert_data["key_filename"] = "{0}key.pem".format(base_name)
 
-            self._acos_create_or_update(c.client.file.ssl_key,
-                                        file=cert_data["key_filename"],
-                                        cert=cert_data["key_content"],
-                                        size=len(cert_data["key_content"]),
-                                        action="import")
+                self._acos_create_or_update(c.client.file.ssl_cert,
+                                            file=cert_data["cert_filename"],
+                                            cert=cert_data["cert_content"],
+                                            size=len(cert_data["cert_content"]),
+                                            action="import", certificate_type="pem")
+
+                self._acos_create_or_update(c.client.file.ssl_key,
+                                            file=cert_data["key_filename"],
+                                            cert=cert_data["key_content"],
+                                            size=len(cert_data["key_content"]),
+                                            action="import")
+                is_success = True
+        else:
+            LOG.error("default_tls_container_id unspecified for listener. Cannot create listener.")
+        return is_success
 
     def _acos_create_or_update(self, acos_obj, **args):
         if acos_obj.exists(args["file"]):

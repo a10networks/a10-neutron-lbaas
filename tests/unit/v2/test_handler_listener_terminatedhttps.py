@@ -1,4 +1,4 @@
-# Copyright 2014, Doug Wiegley (dougwig), A10 Networks
+# Copyright 2015 A10 Networks
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -88,7 +88,9 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         lb = test_base.FakeLoadBalancer()
         m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
+        m.default_tls_container_id = "CONTAINERID"
         pool.listener = m
+
         certmgr = FakeCertManager()
 
         self.a.barbican_client = certmgr
@@ -98,20 +100,56 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
     @mock.patch('a10_neutron_lbaas.v2.handler_listener.certwrapper')
     def test_barbican_client_not_null(self, certmgr):
-        self.a.listener.barbican_client = None
+        """This tests that the barbican_client dependency is always there."""
+        handler = self.a.listener
+        handler.barbican_client = None
         pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
                                   lbaas_const.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
         m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         pool.listener = m
-        # certmgr = FakeCertManager()
-        import pdb
-        pdb.set_trace()
-        self.a.listener.create(None, m)
-        self.assertTrue(self.a.listener.barbican_client is not None)
+        handler.create(None, m)
+        self.assertTrue(handler.barbican_client is not None)
 
-        self.assertTrue(True)
+    def _tls_container_shared(self):
+        certmgr = FakeCertManager()
+        certmgr.certificate = "CERTDATA"
+        certmgr.private_key = "PRIVATEKEY"
+        certmgr.private_key_passphrase = "SECRETPASSWORD"
+
+        handler = self.a.listener
+        handler.barbican_client = certmgr
+        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
+                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
+        lb = test_base.FakeLoadBalancer()
+        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+                                   pool=pool, loadbalancer=lb)
+        return (certmgr, m, pool, handler)
+
+    def test_create_tls_container_positive(self):
+        """Test that cert data is passed to handler when data is available"""
+        certmgr, listener, pool, handler = self._tls_container_shared()
+        listener.default_tls_container_id = "CONTAINERID"
+
+        pool.listener = listener
+        handler.create(None, listener)
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue(certmgr.certificate in s)
+        self.assertTrue(certmgr.private_key in s)
+        self.assertTrue(certmgr.private_key_passphrase in s)
+
+    def test_create_tls_container_negative(self):
+        """Test that cert data is not passed to handler"""
+
+        certmgr, listener, pool, handler = self._tls_container_shared()
+        listener.default_tls_container_id = None
+
+        pool.listener = listener
+        handler.create(None, listener)
+        s = str(self.a.last_client.mock_calls)
+        self.assertFalse("cert=" in s)
+        self.assertFalse("key=" in s)
 
 
 class FakeCertManager(object):
@@ -123,9 +161,9 @@ class FakeCertManager(object):
         self.set_mocks()
 
     def set_mocks(self):
-        self.mock_cert = mock.Mock(return_value=self.get_private_key_value)
-        self.mock_key = mock.Mock(return_value=self.get_private_key_value)
-        self.mock_passphrase = mock.Mock(return_value=self.get_private_key_passphrase_value)
+        self.mock_cert = mock.Mock(return_value=self.certificate)
+        self.mock_key = mock.Mock(return_value=self.private_key)
+        self.mock_passphrase = mock.Mock(return_value=self.private_key_passphrase)
         self.mock_cert_container = mock.Mock()
         self.mock_cert_container.configure_mock(name=self.container_name)
 
@@ -137,11 +175,26 @@ class FakeCertManager(object):
 
         self.get_certificate = self.mock_certificate_result
 
-    def set_private_key(self, value):
-        self.get_private_key_value = value
+    @property
+    def private_key(self):
+        return self.get_private_key_value
 
-    def set_certificate(self, value):
-        self.get_certificate_value = value
+    @private_key.setter
+    def private_key(self, value):
+        self.mock_key.return_value = value
 
-    def set_private_key_passphrase(self, value):
-        self.get_private_key_passphrase_value = value
+    @property
+    def certificate(self):
+        return self.get_certificate_value
+
+    @certificate.setter
+    def certificate(self, value):
+        self.mock_cert.return_value = value
+
+    @property
+    def private_key_passphrase(self):
+        return self.get_private_key_passphrase_value
+
+    @private_key_passphrase.setter
+    def private_key_passphrase(self, value):
+        self.mock_passphrase.return_value = value
