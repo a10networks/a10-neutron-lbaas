@@ -165,11 +165,18 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
 class FakeCertManager(object):
     def __init__(self):
-        self.mock_cert = mock.Mock(return_value="")
-        self.mock_key = mock.Mock(return_value="")
-        self.mock_passphrase = mock.Mock(return_value="")
+        self.get_private_key_value = ""
+        self.get_certificate_value = ""
+        self.get_private_key_passphrase_value = ""
+        self.container_name = "tls-container"
+        self.set_mocks()
+
+    def set_mocks(self):
+        self.mock_cert = mock.Mock(return_value=self.get_private_key_value)
+        self.mock_key = mock.Mock(return_value=self.get_private_key_value)
+        self.mock_passphrase = mock.Mock(return_value=self.get_private_key_passphrase_value)
         self.mock_cert_container = mock.Mock()
-        self.mock_cert_container.configure_mock(name="tls-container")
+        self.mock_cert_container.configure_mock(name=self.container_name)
 
         self.mock_certificate_result = mock.Mock(return_value=mock.Mock(
                                                  get_certificate=self.mock_cert,
@@ -178,3 +185,12 @@ class FakeCertManager(object):
                                                  _cert_container=self.mock_cert_container))
 
         self.get_certificate = self.mock_certificate_result
+
+    def set_private_key(self, value):
+        self.get_private_key_value = value
+
+    def set_certificate(self, value):
+        self.get_certificate_value = value
+
+    def set_private_key_passphrase(self, value):
+        self.get_private_key_passphrase_value = value
