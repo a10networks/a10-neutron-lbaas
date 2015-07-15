@@ -106,9 +106,16 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 
     def test_update(self):
-        pool = test_base.FakePool('HTTP', 'ROUND_ROBIN', None)
+        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
+                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener('HTTP', 2222, pool=pool, loadbalancer=lb)
+        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+                                   pool=pool, loadbalancer=lb)
+        certmgr = FakeCertManager()
+
+        self.a.barbican_client = certmgr
+        # self.a.listener.set_certmgr(certmgr)
+
         pool.listener = m
 
         self.a.listener.update(None, m, m)
@@ -119,12 +126,15 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertTrue('fake-lb-id-001' in s)
         self.assertTrue('fake-listen-id-001' in s)
         self.assertTrue('port=2222' in s)
-        self.assertTrue('HTTP' in s)
+        self.assertTrue('HTTPS' in s)
 
     def test_delete(self):
-        pool = test_base.FakePool('HTTPS', 'ROUND_ROBIN', None)
+        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
+                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener('HTTPS', 2222, pool=pool, loadbalancer=lb)
+        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+                                   pool=pool, loadbalancer=lb)
+
         pool.listener = m
 
         self.a.listener.delete(None, m)
@@ -136,7 +146,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertTrue('fake-lb-id-001' in s)
         self.assertTrue('fake-listen-id-001' in s)
         self.assertTrue('port=2222' in s)
-        self.assertTrue('TCP' in s)
+        self.assertTrue('HTTPS' in s)
 
     def test_create_protocol_terminated_https(self):
         pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
@@ -148,7 +158,6 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         certmgr = FakeCertManager()
 
         self.a.barbican_client = certmgr
-        self.a.listener.set_certmgr(certmgr)
         self.a.listener.create(None, m)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('HTTPS' in s)

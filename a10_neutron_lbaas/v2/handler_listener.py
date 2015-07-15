@@ -158,6 +158,3 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
             self._delete(c, context, listener)
-
-    def set_certmgr(self, certmgr):
-        self.barbican_client = certmgr
