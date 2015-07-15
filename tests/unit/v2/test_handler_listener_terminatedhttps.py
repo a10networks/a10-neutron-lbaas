@@ -96,6 +96,23 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('HTTPS' in s)
 
+    @mock.patch('a10_neutron_lbaas.v2.handler_listener.certwrapper')
+    def test_barbican_client_not_null(self, certmgr):
+        self.a.listener.barbican_client = None
+        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
+                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
+        lb = test_base.FakeLoadBalancer()
+        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+                                   pool=pool, loadbalancer=lb)
+        pool.listener = m
+        # certmgr = FakeCertManager()
+        import pdb
+        pdb.set_trace()
+        self.a.listener.create(None, m)
+        self.assertTrue(self.a.listener.barbican_client is not None)
+
+        self.assertTrue(True)
+
 
 class FakeCertManager(object):
     def __init__(self):
