@@ -73,7 +73,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                     key_filename,
                     axapi_args=server_args)
             except acos_errors.Exists:
-                pass
+                c.client.slb.template.server_ssl.update(template_name,
+                                                        cert_filename,
+                                                        key_filename,
+                                                        axapi_args=server_args)
 
         try:
             pool_name = self._pool_name(context, listener.default_pool)
