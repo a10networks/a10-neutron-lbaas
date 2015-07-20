@@ -53,6 +53,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 key_passphrase = str(cert_data.get('cert_pass', ''))
                 cert_filename = str(cert_data.get('cert_filename', ''))
                 key_filename = str(cert_data.get('key_filename', ''))
+            else:
+                LOG.error("Could not created terminated HTTPS endpoint.")
 
         if 'client_ssl' in templates:
             try:
@@ -141,11 +143,12 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             LOG.error("default_tls_container_id unspecified for listener. Cannot create listener.")
         return is_success
 
-    def _acos_create_or_update(self, acos_obj, **args):
-        if acos_obj.exists(args["file"]):
-            acos_obj.update(args)
+    def _acos_create_or_update(self, acos_obj, **kwargs):
+        # pdb.set_trace()
+        if acos_obj.exists(kwargs["file"]):
+            acos_obj.update(**kwargs)
         else:
-            acos_obj.create(args)
+            acos_obj.create(**kwargs)
 
     def _create(self, c, context, listener):
         self._set(c.client.slb.virtual_server.vport.create,
