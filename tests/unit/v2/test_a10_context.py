@@ -13,7 +13,7 @@
 #    under the License.
 
 import a10_neutron_lbaas.v2.v2_context as a10
-
+import mock
 import test_base
 
 
@@ -23,10 +23,17 @@ class FakeException(Exception):
 
 class TestA10Context(test_base.UnitTestBase):
 
+    def _build_openstack_context(self):
+        admin_context = {
+            "tenant_id": "ADMIN"
+        }
+
+        return mock.Mock(get_admin_context=mock.Mock(return_value=admin_context))
+
     def setUp(self):
         super(TestA10Context, self).setUp()
         self.handler = self.a.pool
-        self.ctx = None
+        self.ctx = self._build_openstack_context()
         self.m = test_base.FakeModel()
 
     def test_context(self):
@@ -64,7 +71,7 @@ class TestA10Context(test_base.UnitTestBase):
             c
         self.print_mocks()
         self.a.openstack_driver.pool.successful_completion.assert_called_with(
-            None, self.m)
+            self.ctx, self.m)
 
     def test_write_status_e(self):
         try:
@@ -74,7 +81,7 @@ class TestA10Context(test_base.UnitTestBase):
                 raise FakeException()
         except FakeException:
             self.a.openstack_driver.pool.failed_completion.assert_called_with(
-                None, self.m)
+                self.ctx, self.m)
             pass
 
     def test_delete(self):
@@ -82,7 +89,7 @@ class TestA10Context(test_base.UnitTestBase):
             c
         self.print_mocks()
         self.a.openstack_driver.pool.successful_completion.assert_called_with(
-            None, self.m, delete=True)
+            self.ctx, self.m, delete=True)
 
     def test_delete_e(self):
         try:

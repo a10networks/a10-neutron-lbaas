@@ -94,8 +94,7 @@ devices = {
         "password": "a10",
         "protocol": "https",
         "v_method": "ADP",
-        "alternate_shared_partition": "mypart"
-
+        "alternate_shared_partition": "mypart",
     },
     "axadp-noalt": {
         "host": "10.10.100.24",
