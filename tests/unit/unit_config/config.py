@@ -87,5 +87,20 @@ devices = {
         "max_instance": 5000,
         "use_float": True,
     },
+    "adpax-alt": {
+        "host": "10.10.100.24",
+        "username": "admin",
+        "password": "a10",
+        "protocol": "https",
+        "v_method": "ADP",
+        "alternate_shared_partition": "mypart"
 
+    },
+    "adpax-noalt": {
+        "host": "10.10.100.24",
+        "username": "admin",
+        "password": "a10",
+        "protocol": "https",
+        "v_method": "ADP"
+    }
 }

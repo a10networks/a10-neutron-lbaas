@@ -30,6 +30,7 @@ class A10Context(object):
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
+        self.use_alternate_partition = kwargs.get('use_alternate_partition', False)
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
 
     def __enter__(self):
@@ -52,6 +53,9 @@ class A10Context(object):
         if exc_type is not None:
             return False
 
+    def _has_alternate_partition(self, device):
+        return device.get("v_method", "").lower() == "adp" and device.get("alternate_shared_partition", None)
+
     def get_tenant_id(self):
         if hasattr(self.openstack_lbaas_obj, 'tenant_id'):
             self.tenant_id = self.openstack_lbaas_obj.tenant_id
@@ -62,9 +66,16 @@ class A10Context(object):
         # If we are not using appliance partitions, we are done.
         if self.device_cfg['v_method'].lower() != 'adp':
             return
-
+        # import pdb
+        # pdb.set_trace()
         # Try to make the requested partition active
         name = self.tenant_id[0:13]
+
+        if self.use_alternate_partition:
+            admin_id = self.openstack_context.admin_context["tenant_id"]
+            if admin_id == self.tenant_id and self._has_alternate_partition(self.device_cfg):
+                name = self.device_cfg["alternate_shared_partition"]
+
         if not name:
             return
 
