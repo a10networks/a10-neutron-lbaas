@@ -108,6 +108,25 @@ class TestA10ContextADP(TestA10Context):
         for k, v in self.a.config.devices.items():
             v['v_method'] = val
 
+    def _test_alternate_partition(self, use_alternate=False):
+        expected = self.a.config.devices["axadp-alt"].get("alternate_shared_partition",
+                                                          None)
+
+        self.m.tenant_id = expected if use_alternate else "get-off-my-lawn"
+        with a10.A10Context(self.handler, self.ctx, self.m,
+                            use_alternate_partition=use_alternate) as c:
+            c
+            active_mock = self.a.last_client.system.partition.active
+            self.assertEqual(use_alternate, expected in str(active_mock.mock_calls))
+
+        self.empty_close_mocks()
+
+    def test_use_alternate_partition_positive(self):
+        self._test_alternate_partition(use_alternate=True)
+
+    def test_use_alternate_partition_negative(self):
+        self._test_alternate_partition()
+
     def empty_mocks(self):
         self.print_mocks()
         self.assertEqual(0, len(self.a.openstack_driver.mock_calls))

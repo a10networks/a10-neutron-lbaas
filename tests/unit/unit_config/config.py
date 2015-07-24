@@ -67,6 +67,7 @@ devices = {
             }
         ]
     },
+<<<<<<< HEAD
     "axxv21": {
         "host": "10.10.100.29",
         "protocol": "http",
@@ -87,7 +88,7 @@ devices = {
         "max_instance": 5000,
         "use_float": True,
     },
-    "adpax-alt": {
+    "axadp-alt": {
         "host": "10.10.100.24",
         "username": "admin",
         "password": "a10",
@@ -96,7 +97,7 @@ devices = {
         "alternate_shared_partition": "mypart"
 
     },
-    "adpax-noalt": {
+    "axadp-noalt": {
         "host": "10.10.100.24",
         "username": "admin",
         "password": "a10",

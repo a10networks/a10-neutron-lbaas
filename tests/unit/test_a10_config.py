@@ -38,4 +38,4 @@ class TestA10Config(test_base.UnitTestBase):
             self.assertEqual('LSI', v['v_method'].upper())
 
     def test_alternate_shared_partition(self):
-        self.assertTrue(self.a.config.devices['adpax-alt']['alternate_shared_partition'])
+        self.assertTrue(self.a.config.devices['axadp-alt']['alternate_shared_partition'])
