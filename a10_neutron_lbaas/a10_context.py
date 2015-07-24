@@ -54,8 +54,7 @@ class A10Context(object):
 
     def _has_alternate_partition(self, device):
         # Parens to cheat line length restrictions
-        return (device.get("v_method", "").lower() == "adp"
-                and device.get("alternate_shared_partition", None))
+        return device.get("alternate_shared_partition", None)
 
     def get_tenant_id(self):
         if hasattr(self.openstack_lbaas_obj, 'tenant_id'):
@@ -65,8 +64,7 @@ class A10Context(object):
 
     def select_appliance_partition(self):
         # If we are not using appliance partitions, we are done.
-        import pdb
-        pdb.set_trace()
+
         if self.device_cfg['v_method'].lower() != 'adp':
             return
 
@@ -74,6 +72,7 @@ class A10Context(object):
         name = self.tenant_id[0:13]
 
         if self._has_alternate_partition(self.device_cfg):
+            # This could be improved by adding users that would share the partition, etc.
             if self.openstack_context.is_admin and self._has_alternate_partition(self.device_cfg):
                 name = self.device_cfg["alternate_shared_partition"]
 
