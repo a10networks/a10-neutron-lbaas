@@ -57,9 +57,6 @@ class TestVIP(test_base.UnitTestBase):
         except a10_ex.UnsupportedFeature:
             pass
 
-    # def test_create_autosnat_false(self):
-    #     self._test_create_autosnat(False)
-
     def test_create_autosnat_false_v21(self):
         self._test_create_autosnat("2.1", False)
 
@@ -71,9 +68,6 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_create_autosnat_false_v30(self):
         self._test_create_autosnat("3.0", False)
-
-    # def test_create_autosnat_unspecified(self):
-    #     self._test_create_autosnat()
 
     def _test_create_autosnat(self, api_ver=None, autosnat=None):
         auto_expected = None
@@ -101,10 +95,8 @@ class TestVIP(test_base.UnitTestBase):
 
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
-        print "S: %s" % s
         self.assertTrue('virtual_server.create' in s)
         if auto_expected is not None:
-            print "Value of S: %s" % s
             self.assertTrue(auto_expected in s)
 
     def test_update(self):
