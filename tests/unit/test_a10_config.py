@@ -21,7 +21,7 @@ class TestA10Config(test_base.UnitTestBase):
         self.assertTrue(self.a.config.verify_appliances)
 
     def test_num_appliances(self):
-        self.assertEqual(3, len(self.a.config.devices))
+        self.assertEqual(5, len(self.a.config.devices))
 
     def test_expected_ports(self):
         self.assertEqual(8443, self.a.config.devices['ax1']['port'])

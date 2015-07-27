@@ -14,6 +14,7 @@
 
 import test_base
 
+from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
@@ -56,25 +57,54 @@ class TestVIP(test_base.UnitTestBase):
         except a10_ex.UnsupportedFeature:
             pass
 
-    def test_create_autosnat_false(self):
-        self._test_create_autosnat(False)
+    # def test_create_autosnat_false(self):
+    #     self._test_create_autosnat(False)
 
-    def test_create_autosnat_true(self):
-        self._test_create_autosnat(True)
+    def test_create_autosnat_false_v21(self):
+        self._test_create_autosnat("2.1", False)
 
-    def test_create_autosnat_unspecified(self):
-        self._test_create_autosnat()
+    def test_create_autosnat_true_v21(self):
+        self._test_create_autosnat("2.1", True)
 
-    def _test_create_autosnat(self, autosnat=None):
+    def test_create_autosnat_true_v30(self):
+        self._test_create_autosnat("3.0", True)
+
+    def test_create_autosnat_false_v30(self):
+        self._test_create_autosnat("3.0", False)
+
+    # def test_create_autosnat_unspecified(self):
+    #     self._test_create_autosnat()
+
+    def _test_create_autosnat(self, api_ver=None, autosnat=None):
         auto_expected = None
-        if autosnat:
-            self.a.device_info["autosnat"] = autosnat
-            auto_expected = "'auto': {0}".format(autosnat)
+        key = None
+        transform = None
 
-        self.a.vip.create(None, self.fake_vip())
+        """
+        Due to how the config is pulled in, we can't override the config
+        version here and just expect it to work.
+        """
+
+        for k, v in self.a.config.devices.items():
+            v['api_version'] = api_ver
+            v['autosnat'] = autosnat
+
+        expected_tuple = a10_common.auto_dictionary.get(api_ver, None)
+
+        vip = self.fake_vip()
+        if expected_tuple is not None:
+            key = expected_tuple[0]
+            transform = expected_tuple[1]
+
+        if autosnat and key is not None and transform is not None:
+            auto_expected = "'{0}': {1}".format(key, transform(autosnat))
+
+        self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
+        print "S: %s" % s
         self.assertTrue('virtual_server.create' in s)
         if auto_expected is not None:
+            print "Value of S: %s" % s
             self.assertTrue(auto_expected in s)
 
     def test_update(self):

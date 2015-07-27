@@ -14,8 +14,9 @@
 
 import logging
 
+from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_openstack_map as a10_osmap
-
+import a10_neutron_lbaas.a10_openstack_map as a10_os
 from neutron_lbaas.services.loadbalancer import constants as lb_const
 
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
@@ -87,7 +88,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
         vport_meta = self.meta(listener, 'port', {})
-        self._set_auto_parameter(vport_meta)
+        a10_common._set_auto_parameter(vport_meta, self.a10_driver.device_info)
         vport_args = {'port': vport_meta}
 
         try:
@@ -177,7 +178,3 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
             self._delete(c, context, listener)
-
-    # This function should be moved in to a common place where it can be used vy v1/v2
-    def _set_auto_parameter(self, vport):
-        vport["auto"] = self.a10_driver.device_info.get("autosnat", False)

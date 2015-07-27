@@ -67,4 +67,25 @@ devices = {
             }
         ]
     },
+    "axxv21": {
+        "host": "10.10.100.29",
+        "protocol": "http",
+        "username": "admin",
+        "password": "a10",
+        "status": True,
+        "api_version": "2.1",
+        "max_instance": 5000,
+        "use_float": True,
+    },
+    "axv30": {
+        "host": "10.10.100.30",
+        "protocol": "http",
+        "username": "admin",
+        "password": "a10",
+        "status": True,
+        "api_version": "3.0",
+        "max_instance": 5000,
+        "use_float": True,
+    },
+
 }

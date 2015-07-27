@@ -14,6 +14,7 @@
 
 import logging
 
+from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.a10_openstack_map as a10_os
 
@@ -75,11 +76,11 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             LOG.debug("VPORT_LIST = %s", vport_list)
             try:
                 if vport_list[0]:
-                    self._set_auto_parameter(vport_list[0])
+                    a10_common._set_auto_parameter(vport_list[0], self.a10_driver.device_info)
                     vport_args = {'port': vport_list[0]}
                 else:
                     vport_meta = self.meta(vip, 'port', {})
-                    self._set_auto_parameter(vport_meta)
+                    a10_common._set_auto_parameter(vport_meta, self.a10_driver.device_info)
                     vport_args = {'port': vport_meta}
                 c.client.slb.virtual_server.vport.create(
                     self._meta_name(vip),
@@ -98,7 +99,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             for vport in vport_list[1:]:
                 i += 1
                 try:
-                    self._set_auto_parameter(vport)
+                    a10_common._set_auto_parameter(vport, self.a10_device.device_info)
                     vport_args = {'port': vport}
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
@@ -162,10 +163,6 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
         with a10.A10DeleteContext(self, context, vip) as c:
             self._delete(c, context, vip)
             self.hooks.after_vip_delete(c, context, vip)
-
-    # This function should be moved in to a common place where it can be used by v1/v2
-    def _set_auto_parameter(self, vport):
-        vport["auto"] = self.a10_driver.device_info.get("autosnat", False)
 
 
 class PersistHandler(object):
