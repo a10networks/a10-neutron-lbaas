@@ -68,7 +68,9 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def stats(self, context, lb):
         with a10.A10Context(self, context, lb) as c:
             try:
-                name = self.meta(lb, 'id', lb.id)
+                vip_id = lb.vip_port_id
+                vip = self.neutron.vip_get(context, vip_id)
+                name = self.meta(vip, 'vip_name', vip['id'])
                 r = c.client.slb.virtual_server.stats(name)
 
                 return {
