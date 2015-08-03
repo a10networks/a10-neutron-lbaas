@@ -66,12 +66,6 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             self.hooks.after_vip_delete(c, context, lb)
 
     def stats(self, context, lb):
-        # cribbed from v1
-        import pdb
-        pdb.set_trace()
-        
-        # tenant_id = self.neutron.pool_get_tenant_id(context, pool_id)
-
         with a10.A10Context(self, context, lb) as c:
             try:
                 vip_id = lb.vip_port_id
