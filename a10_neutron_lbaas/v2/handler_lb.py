@@ -66,7 +66,32 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             self.hooks.after_vip_delete(c, context, lb)
 
     def stats(self, context, lb):
-        pass
+        # cribbed from v1
+        import pdb
+        pdb.set_trace()
+        
+        # tenant_id = self.neutron.pool_get_tenant_id(context, pool_id)
+
+        with a10.A10Context(self, context, lb) as c:
+            try:
+                vip_id = lb.vip_port_id
+                vip = self.neutron.vip_get(context, vip_id)
+                name = self.meta(vip, 'vip_name', vip['id'])
+                r = c.client.slb.virtual_server.stats(name)
+                return {
+                    "bytes_in": r["virtual_server_stat"]["req_bytes"],
+                    "bytes_out": r["virtual_server_stat"]["resp_bytes"],
+                    "active_connections":
+                        r["virtual_server_stat"]["cur_conns"],
+                    "total_connections": r["virtual_server_stat"]["tot_conns"]
+                }
+            except Exception:
+                return {
+                    "bytes_in": 0,
+                    "bytes_out": 0,
+                    "active_connections": 0,
+                    "total_connections": 0
+                }
 
     def refresh(self, context, lb):
         pass
