@@ -124,6 +124,8 @@ class TestLB(test_base.UnitTestBase):
             pass
 
     def test_stats(self):
+        # import pdb
+        # pdb.set_trace()
         test_lb = test_base.FakeLoadBalancer()
         self.a.lb.stats(None, test_lb)
 
