@@ -119,7 +119,10 @@ class TestLB(test_base.UnitTestBase):
             pass
 
     def test_stats(self):
-        self.a.lb.stats(None, test_base.FakeLoadBalancer())
+        test_lb = test_base.FakeLoadBalancer()
+        self.a.lb.stats(None, test_lb)
+
         self.print_mocks()
-        # self.a.last_client.slb.virtual_server.stats.assert_called_with(
-        #     'fake-id-001')
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('call.slb.virtual_server.stats' in s)
