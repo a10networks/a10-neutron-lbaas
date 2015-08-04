@@ -37,6 +37,9 @@ class TestA10Config(test_base.UnitTestBase):
         self.assertEqual('http', self.a.config.devices['ax3']['protocol'])
         self.assertEqual('https', self.a.config.devices['ax4']['protocol'])
 
+    def test_enable_host_binding(self):
+        self.assertEqual(True, self.a.config.devices["axhost"]["enable_host_binding"])
+
     def test_v_method(self):
         for k, v in self.a.config.devices.items():
             self.assertEqual('LSI', v['v_method'].upper())
