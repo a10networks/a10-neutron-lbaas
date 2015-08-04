@@ -14,6 +14,16 @@
 
 import mock
 import test_base
+import mock
+from mock import Mock, MagicMock, patch
+
+# with patch.dict('sys.modules', {'neutron.db.db_base_plugin_v2': MagicMock()}):
+#     from neutron.db import db_base_plugin_v2
+#     db_base_plugin_v2.NeutronDbPluginV2 = MagicMock()
+#     # from neutron.db.db_base_plugin_v2 import NeutronDbPluginV2
+
+with patch.dict("sys.modules", {"neutron_db.NeutronDBV1": MagicMock()}):
+    from a10_neutron_lbaas.v1.neutron_db import NeutronDBV1
 
 from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -32,6 +42,7 @@ class TestVIP(test_base.UnitTestBase):
             'address': '1.1.1.1',
             'protocol_port': '80',
             'pool_id': 'pool1',
+            'port_id': 'port1'
         }
         if pers:
             h['session_persistence'] = {'type': pers}
@@ -211,3 +222,20 @@ class TestVIP(test_base.UnitTestBase):
         self.a.last_client.slb.virtual_server.delete.assert_called_with('id1')
         z = self.a.last_client.slb.template.src_ip_persistence.delete
         z.assert_called_with('id1')
+
+    def test_create_calls_portbindingport_create(self):
+        vip = self.fake_vip()
+        # If you don't do this, you get a new copy of the handler
+        # everytime you hit the property
+        handler = self.a.vip
+        context = MagicMock()
+        context.__enter__ = Mock(return_value=MagicMock())
+        context.__exit__ = Mock(return_value=False)
+        handler.neutrondb = MagicMock(portbindingport_create_or_update=Mock())
+        # import pdb
+        # pdb.set_trace()
+
+        handler.create(context, vip)
+        handler.neutrondb.portbindingport_create_or_update.assert_called(mock.ANY, mock.ANY)
+        # _with(
+        #     vip["port_id"], mock.ANY)

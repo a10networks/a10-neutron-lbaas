@@ -16,10 +16,12 @@ import test_base
 
 
 class TestA10Config(test_base.UnitTestBase):
-
     def test_verify_appliances(self):
         self.assertTrue(self.a.config.verify_appliances)
 
+    # Is this test needed?  We're testing that Python
+    # returns the length of an array/the JSON is good.
+    # Is that not accomplished by verify_appliances?
     def test_num_appliances(self):
         # Everytime we update the test config, this test has to be updated
         # A better test would seem to be be parsing the JSON structure found in the file
@@ -36,9 +38,6 @@ class TestA10Config(test_base.UnitTestBase):
         self.assertEqual('https', self.a.config.devices['ax1']['protocol'])
         self.assertEqual('http', self.a.config.devices['ax3']['protocol'])
         self.assertEqual('https', self.a.config.devices['ax4']['protocol'])
-
-    def test_enable_host_binding(self):
-        self.assertEqual(True, self.a.config.devices["axhost"]["enable_host_binding"])
 
     def test_v_method(self):
         for k, v in self.a.config.devices.items():
