@@ -9,6 +9,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
+import neutron.db.db_base_plugin_v2 as neutrondb
 
 
 class NeutronOpsV1(object):
@@ -16,6 +18,37 @@ class NeutronOpsV1(object):
     def __init__(self, handler):
         self.openstack_driver = handler.openstack_driver
         self.plugin = self.openstack_driver.plugin
+        # self.ndbplugin = neutrondb.NeutronDbPluginV2()
+
+    # This stuff should be moved into a DB class.
+    # Neutron does not expose creation of port/host bindings so it's gotta go somewhere
+    def _get_portbindingport(self, context, port_id):
+        with context.session.begin():
+            port_binding = (context.session.query(PortBindingPort)
+                            .filter_by(port_id=port_id).first())
+            return port_binding
+
+    def _create_or_update_portbindingport(self, context, port_id, host):
+        port_binding = None
+        with context.session.begin():
+            port_binding = self._get_portbindingport(context, port_id)
+            if port_binding:
+                port_binding.host = host
+                port_binding.update()
+            else:
+                port_binding = self._create_portbindingport(port_id, host)
+        return port_binding
+
+    def _create_portbindingport(self, context, port_id, host):
+        port_binding = PortBindingPort()
+        port_binding.port_id = port_id
+        port_binding.host = host
+        with context.session.begin(subtransactions=True):
+            context.session.add(port_binding)
+        return port_binding
+
+    def _get_port(self, context, port_id):
+        return self.ndbplugin.get_port(context, port_id)
 
     def hm_binding_count(self, context, hm_id):
         return self.openstack_driver._hm_binding_count(context, hm_id)
@@ -43,3 +76,11 @@ class NeutronOpsV1(object):
 
     def vip_get_id(self, context, pool_id):
         return self.openstack_driver._pool_get_vip_id(context, pool_id)
+
+    def portbindingport_create_or_update(self, context, pool_id, host):
+        return self._create_or_update_portbindingport(context, pool_id, host)
+
+    def portbindingport_create_or_update_from_vip_id(self, context, vip_id, host):
+        vip = self.vip_get(context, vip_id)
+        port_id = vip.port_id
+        return self._create_or_update_portbindingport(context, port_id, host)
