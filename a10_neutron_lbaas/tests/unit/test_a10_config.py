@@ -20,6 +20,9 @@ class TestA10Config(test_base.UnitTestBase):
     def test_verify_appliances(self):
         self.assertTrue(self.a.config.get('verify_appliances'))
 
+    # Is this test needed?  We're testing that Python
+    # returns the length of an array/the JSON is good.
+    # Is that not accomplished by verify_appliances?
     def test_num_appliances(self):
         # Everytime we update the test config, this test has to be updated
         # A better test would seem to be be parsnig the JSON structure found in the file
@@ -94,3 +97,7 @@ class TestA10ConfigProvider(test_base.UnitTestBase):
         v = self.a.config.get_vthunder_config()
         self.assertEqual(v['api_version'], '9.9')
         self.assertEqual(v['nova_flavor'], 'acos.min')
+
+    def test_enabled_host_binding(self):
+        for k, v in self.a.config.devices.items():
+            self.assertTrue("enable_host_binding" in v)

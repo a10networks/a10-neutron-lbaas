@@ -19,10 +19,14 @@ import acos_client.errors as acos_errors
 import handler_base_v2
 import v2_context as a10
 
+
 LOG = logging.getLogger(__name__)
 
 
 class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
+
+    def __init__(self, a10_driver, openstack_manager, neutron=None):
+        super(LoadbalancerHandler, self).__init__(a10_driver, openstack_manager, neutron)
 
     def _set(self, set_method, c, context, lb):
         status = c.client.slb.UP
@@ -47,6 +51,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def create(self, context, lb):
         with a10.A10WriteStatusContext(self, context, lb, action='create') as c:
             self._create(c, context, lb)
+            self._create_portbinding(c, context, lb)
             self.hooks.after_vip_create(c, context, lb)
 
     def update(self, context, old_lb, lb):
@@ -59,6 +64,12 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             c.client.slb.virtual_server.delete(self._meta_name(lb))
         except acos_errors.NotFound:
             pass
+
+        if c.openstack_driver.device_info["enable_host_binding"]:
+            try:
+                self.neutron.portbindingport_delete(context, lb.vip_port["id"])
+            except Exception as ex:
+                LOG.exception(ex)
 
     def delete(self, context, lb):
         with a10.A10DeleteContext(self, context, lb) as c:
@@ -89,3 +100,11 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")
         # Ensure all elements associated with this LB exist on the device.
+        pass
+
+    def _create_portbinding(self, c, context, lb):
+        hostname = c.a10_driver.device_info["name"] or ""
+        if c.openstack_driver.device_info["enable_host_binding"]:
+            self.neutron.portbindingport_create_or_update_from_vip_id(context,
+                                                                      lb.vip_port["id"],
+                                                                      hostname)

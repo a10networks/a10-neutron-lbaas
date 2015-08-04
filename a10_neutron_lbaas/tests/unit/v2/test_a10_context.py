@@ -40,14 +40,14 @@ class TestA10Context(test_base.UnitTestBase):
         self.m = fake_objs.FakeLoadBalancer()
 
     def test_context(self):
-        with a10.A10Context(self.handler, self.ctx, self.m) as c:
+        with a10.A10Context(self.handler, self.ctx, self.m, device_name="ax4") as c:
             self.empty_mocks()
             c
         self.empty_close_mocks()
 
     def test_context_e(self):
         try:
-            with a10.A10Context(self.handler, self.ctx, self.m) as c:
+            with a10.A10Context(self.handler, self.ctx, self.m, device_name="ax4") as c:
                 self.empty_mocks()
                 c
                 raise FakeException()
@@ -131,6 +131,27 @@ class TestA10ContextADP(TestA10Context):
     def reset_v_method(self, val):
         for k, v in self.a.config.get_devices().items():
             v['v_method'] = val
+
+    def _test_alternate_partition(self, use_alternate=False):
+        expected = self.a.config.devices["axadp-alt"].get("shared_partition",
+                                                          "shared")
+
+        self.m.tenant_id = expected if use_alternate else "get-off-my-lawn"
+        with a10.A10Context(self.handler, self.ctx, self.m,
+                            use_alternate_partition=use_alternate,
+                            device_name="axadp-alt") as c:
+            c
+            active_mock = self.a.last_client.system.partition.active
+            self.assertEqual(use_alternate, expected in str(active_mock.mock_calls))
+
+        self.empty_close_mocks()
+
+    def test_use_alternate_partition_positive(self):
+        self._test_alternate_partition(use_alternate=True)
+
+    def test_use_alternate_partition_negative(self):
+        self.ctx.is_admin = False
+        self._test_alternate_partition()
 
     def empty_mocks(self):
         self.print_mocks()

@@ -20,8 +20,32 @@ import test_base
 
 
 class TestVIP(test_base.UnitTestBase):
+
     def __init__(self, *args):
         super(TestVIP, self).__init__(*args)
+
+    @mock.patch('a10_neutron_lbaas.v1.handler_vip.neutron_db')
+    @mock.patch('neutron.db.db_base_plugin_v2')
+    def setUp(self, ndbv2, ndb):
+        super(TestVIP, self).setUp()
+        self.context = self._get_context()
+        self.handler = self.a.vip
+        self.handler.neutrondb.reset_mock()
+
+    def fake_vip(self, pers=None):
+        h = {
+            'tenant_id': 'ten1',
+            'id': 'id1',
+            'protocol': 'HTTP',
+            'admin_state_up': True,
+            'address': '1.1.1.1',
+            'protocol_port': '80',
+            'pool_id': 'pool1',
+            'port_id': 'port1'
+        }
+        if pers:
+            h['session_persistence'] = {'type': pers}
+        return h.copy()
 
     def test_create(self):
         self.a.vip.create(None, fake_objs.FakeVIP())
@@ -32,7 +56,7 @@ class TestVIP(test_base.UnitTestBase):
         self.assertTrue('id1' in s)
         self.assertTrue('UP' in s)
         self.a.openstack_driver.plugin.get_pool.assert_called_with(
-            None, 'pool1')
+            self.context, 'pool1')
         self.assertTrue('HTTP' in s)
 
     def test_create_pers(self):
@@ -42,6 +66,8 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_create_adds_slb(self):
         self.a.vip.create(None, fake_objs.FakeVIP())
+        added_id = self.a.db_operations_mock.add.call_args[0][0].vip_id
+        self.assertEqual('id1', added_id)
 
     def test_create_unsupported(self):
         try:
@@ -62,7 +88,6 @@ class TestVIP(test_base.UnitTestBase):
         self._test_create_autosnat("3.0", False, "auto")
 
     def _test_create_autosnat(self, api_ver=None, autosnat=None, key="auto"):
-
         """
         Due to how the config is pulled in, we can't override the config
         version here and just expect it to work.
@@ -73,7 +98,7 @@ class TestVIP(test_base.UnitTestBase):
 
         vip = fake_objs.FakeVIP()
 
-        self.a.vip.create(None, vip)
+        self.handler.create(None, vip)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('virtual_server.create' in s)
         self.assertIn('autosnat=%s' % autosnat, s)
@@ -91,7 +116,6 @@ class TestVIP(test_base.UnitTestBase):
         self._test_create_default_vrid("3.0", 7)
 
     def _test_create_default_vrid(self, api_ver=None, default_vrid=None):
-
         """
         Due to how the config is pulled in, we override the config
         for all of the devices.
@@ -150,7 +174,7 @@ class TestVIP(test_base.UnitTestBase):
         self.assertTrue('id1' in s)
         self.assertTrue('UP' in s)
         self.a.openstack_driver.plugin.get_pool.assert_called_with(
-            None, 'pool1')
+            self.context, 'pool1')
         self.assertTrue('HTTP' in s)
 
     def test_update_delete_pers(self):
@@ -193,3 +217,48 @@ class TestVIP(test_base.UnitTestBase):
         self.a.last_client.slb.virtual_server.delete.assert_called_with(vip_id)
         z = self.a.last_client.slb.template.src_ip_persistence.delete
         z.assert_called_with(vip_id)
+
+    def test_create_calls_portbindingport_create_positive(self):
+        vip = self.fake_vip()
+        self.handler.neutrondb.reset_mock()
+        self.a.openstack_driver.device_info = {"enable_host_binding": True}
+
+        self.handler.create(self.context, vip)
+        hostname = self.a.device_info.get("name", self.a.device_info.get("host", None))
+
+        call_args = self.handler.neutrondb.portbindingport_create_or_update.call_args[0]
+
+        self.assertTrue(self.handler.neutrondb.portbindingport_create_or_update.called)
+        self.assertTrue(self.context in call_args)
+        self.assertTrue(vip["port_id"] in call_args)
+        self.assertTrue(hostname in call_args)
+
+    def test_create_calls_portbindingport_create_negative(self):
+        vip = self.fake_vip()
+        self.handler.neutrondb.portbindingport_create_or_update = mock.Mock()
+
+        self.a.openstack_driver.device_info = {"enable_host_binding": False}
+
+        self.handler.create(self.context, vip)
+        self.assertFalse(self.handler.neutrondb.portbindingport_create_or_update.called)
+
+    def test_delete_calls_portbinding_delete_positive(self):
+        vip = self.fake_vip()
+        self.handler.neutrondb.reset_mock()
+        self.a.openstack_driver.device_info = {"enable_host_binding": True}
+
+        self.handler.delete(self.context, vip)
+
+        call_args = self.handler.neutrondb.portbindingport_delete.call_args[0]
+
+        self.assertTrue(self.handler.neutrondb.portbindingport_delete.called)
+        self.assertTrue(self.context in call_args)
+        self.assertTrue(vip["port_id"] in call_args)
+
+    def test_delete_calls_portbinding_delete_negative(self):
+        vip = self.fake_vip()
+        self.handler.neutrondb.portbindingport_delete = mock.Mock()
+        self.a.openstack_driver.device_info = {"enable_host_binding": False}
+
+        self.handler.delete(self.context, vip)
+        self.assertFalse(self.handler.neutrondb.portbindingport_delete.called)

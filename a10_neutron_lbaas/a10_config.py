@@ -28,6 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 class ConfigModule(object):
+
     def __init__(self, d, provider=None):
         self.__dict__.update(d)
 
@@ -49,6 +50,16 @@ class ConfigModule(object):
 
 
 class A10Config(object):
+    DEVICE_DEFAULTS = {
+        "status": True,
+        "autosnat": True,
+        "api_version": "2.1",
+        "v_method": "LSI",
+        "max_instance": 5000,
+        "use_float": False,
+        "method": "hash",
+        "enable_host_binding": False
+    }
 
     def __init__(self, config_dir=None, config=None, provider=None):
         if config is not None:
