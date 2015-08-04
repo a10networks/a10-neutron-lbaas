@@ -95,6 +95,15 @@ devices = {
         "v_method": "ADP",
         "shared_partition": "mypart",
     },
+    "axhost": {
+        "host": "10.10.100.24",
+        "username": "admin",
+        "password": "a10",
+        "protocol": "https",
+        "v_method": "ADP",
+        "shared_partition": "mypart",
+        "enable_port_binding": True
+    },
     "axadp-noalt": {
         "host": "10.10.100.24",
         "username": "admin",

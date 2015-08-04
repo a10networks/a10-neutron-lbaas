@@ -21,6 +21,7 @@ import a10_neutron_lbaas.a10_openstack_map as a10_os
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
+from neutron_db import NeutronDBV1
 
 
 LOG = logging.getLogger(__name__)
@@ -33,7 +34,8 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             status = c.client.slb.UP
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
-
+            ndb = NeutronDBV1()
+            ndb.portbindingport_create_or_update(context, vip['port_id'], c.device_name)
             pool_name = self._pool_name(context, vip['pool_id'])
 
             p = PersistHandler(c, context, vip, self._meta_name(vip))
