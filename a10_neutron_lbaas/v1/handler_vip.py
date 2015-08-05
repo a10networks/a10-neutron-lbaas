@@ -14,19 +14,14 @@
 
 import logging
 
-<<<<<<< HEAD
 from a10_neutron_lbaas import a10_common
-=======
 from a10_neutron_lbaas.v1 import neutron_db
->>>>>>> vip tests only fail now - fixing mock
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.a10_openstack_map as a10_os
-from neutron.db import db_base_plugin_v2
 
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
-from neutron_db import NeutronDBV1
 
 
 LOG = logging.getLogger(__name__)
@@ -35,7 +30,7 @@ LOG = logging.getLogger(__name__)
 class VipHandler(handler_base_v1.HandlerBaseV1):
     def __init__(self, a10_driver):
         super(VipHandler, self).__init__(a10_driver)
-        self.neutrondb = neutron_db.NeutronDBV1(self.neutron, db_base_plugin_v2.NeutronDbPluginV2())
+        self.neutrondb = neutron_db.NeutronDBV1(self.neutron)
 
     def create(self, context, vip):
         with a10.A10WriteStatusContext(self, context, vip) as c:
@@ -44,8 +39,8 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 status = c.client.slb.DOWN
             # TODO: Move this into an init function so this is set via composition.
             # This will make life easier.
-            ndb = NeutronDBV1()
-            ndb.portbindingport_create_or_update(context, vip['port_id'], c.device_name)
+
+            self.neutrondb.portbindingport_create_or_update(context, vip['port_id'], c.device_name)
             pool_name = self._pool_name(context, vip['pool_id'])
 
             p = PersistHandler(c, context, vip, self._meta_name(vip))
