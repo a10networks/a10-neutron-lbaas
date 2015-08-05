@@ -12,6 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from mock import MagicMock
+from mock import Mock
+
 import tests.unit.test_base as test_base
 
 
@@ -20,3 +23,13 @@ class UnitTestBase(test_base.UnitTestBase):
     def __init__(self, *args):
         super(UnitTestBase, self).__init__(*args)
         self.version = 'v1'
+
+    def _get_context(self):
+        context = MagicMock()
+        context.session = MagicMock()
+        context.__enter__ = Mock(return_value=MagicMock())
+        context.__exit__ = Mock(return_value=False)
+        return context
+
+    def _get_neutrondb(self):
+        return MagicMock(portbindingport_create_or_update=Mock())
