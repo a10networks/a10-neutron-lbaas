@@ -13,9 +13,10 @@
 #    under the License.
 
 import mock
-import test_base
-import mock
 from mock import MagicMock
+from mock import Mock
+import test_base
+
 
 from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -39,9 +40,8 @@ class TestVIP(test_base.UnitTestBase):
     @mock.patch('neutron.db.db_base_plugin_v2')
     def setUp(self, ndbv2, ndb):
         super(TestVIP, self).setUp()
-        ndbv2 = MagicMock(NeutronDbPluginV2=MagicMock())
-        ndb = MagicMock(NeutronDBV1=MagicMock())
-        ndb.NeutronDBV1.portbindingport_create_or_update = MagicMock(return_value=MagicMock())
+        ndb = MagicMock(NeutronDBV1=MagicMock(portbindingport_create_or_update=Mock()))
+
         self.context = self._get_context()
         self.handler = self.a.vip
         self.handler.neutrondb = ndb
@@ -240,12 +240,15 @@ class TestVIP(test_base.UnitTestBase):
         vip = self.fake_vip()
         # If you don't do this, you get a new copy of the handler
         # everytime you hit the property
-        # import pdb
-        # pdb.set_trace()
+
         handler = self.handler
         handler.neutrondb = self._get_neutrondb()
-        # import pdb
-        # pdb.set_trace()
         handler.create(self.context, vip)
+        hostname = self.a.device_info["name"]
 
-        # handler.neutrondb.portbindingport_create_or_update.assert_called(mock.ANY, mock.ANY)
+        call_args = handler.neutrondb.portbindingport_create_or_update.call_args[0]
+
+        self.assertTrue(handler.neutrondb.portbindingport_create_or_update.called)
+        self.assertTrue(self.context in call_args)
+        self.assertTrue(vip["port_id"] in call_args)
+        self.assertTrue(hostname in call_args)

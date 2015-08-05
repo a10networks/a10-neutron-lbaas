@@ -10,11 +10,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
 from neutron.db import db_base_plugin_v2
+from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
 
 
 class NeutronDBV1(object):
+
+    """T
+
+    his class exposes the portbindingports table in the DB as neutron_ops
+    doesn't provide direct access.
+    """
+
     def __init__(self, neutron_ops=None):
         self.ndbplugin = db_base_plugin_v2.NeutronDbPluginV2()
         self.neutron_ops = neutron_ops
