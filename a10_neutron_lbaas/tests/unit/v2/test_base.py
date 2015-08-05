@@ -125,7 +125,7 @@ class UnitTestBase(test_base.UnitTestBase):
     def setUp(self):
         super(UnitTestBase, self).setUp()
         self.context = self._get_context()
-        self.neutrondb = MagicMock()
+        # self.neutrondb = MagicMock()
 
     def print_mocks(self):
         super(UnitTestBase, self).print_mocks()

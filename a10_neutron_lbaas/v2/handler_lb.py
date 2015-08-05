@@ -52,13 +52,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def create(self, context, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:
             self._create(c, context, lb)
-            # To get around arbitrary line limits...
-            # import pdb
-            # pdb.set_trace()
-            hostname = c.a10_driver.device_info["name"] or ""
-            self.neutron.portbindingport_create_or_update_from_vip_id(context,
-                                                                      lb.vip_port["id"],
-                                                                      hostname)
+            self._create_portbinding(c, context, lb)
 
     def update(self, context, old_lb, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:
@@ -82,3 +76,9 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
     def refresh(self, context, lb):
         pass
+
+    def _create_portbinding(self, c, context, lb):
+        hostname = c.a10_driver.device_info["name"] or ""
+        self.neutron.portbindingport_create_or_update_from_vip_id(context,
+                                                                  lb.vip_port["id"],
+                                                                  hostname)
