@@ -19,6 +19,7 @@ from a10_neutron_lbaas.v1 import neutron_db
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.a10_openstack_map as a10_os
 
+
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
@@ -37,10 +38,11 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             status = c.client.slb.UP
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
-            # TODO: Move this into an init function so this is set via composition.
-            # This will make life easier.
 
-            self.neutrondb.portbindingport_create_or_update(context, vip['port_id'], c.device_name)
+            self.neutrondb.portbindingport_create_or_update(context,
+                                                            vip['port_id'],
+                                                            c.a10_driver.device_info["name"])
+
             pool_name = self._pool_name(context, vip['pool_id'])
 
             p = PersistHandler(c, context, vip, self._meta_name(vip))
