@@ -13,8 +13,6 @@
 #    under the License.
 
 import mock
-from mock import MagicMock
-from mock import Mock
 import test_base
 
 
@@ -40,11 +38,8 @@ class TestVIP(test_base.UnitTestBase):
     @mock.patch('neutron.db.db_base_plugin_v2')
     def setUp(self, ndbv2, ndb):
         super(TestVIP, self).setUp()
-        ndb = MagicMock(NeutronDBV1=MagicMock(portbindingport_create_or_update=Mock()))
-
         self.context = self._get_context()
         self.handler = self.a.vip
-        self.handler.neutrondb = ndb
 
     def fake_vip(self, pers=None):
         h = {

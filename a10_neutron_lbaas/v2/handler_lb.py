@@ -20,10 +20,14 @@ import acos_client.errors as acos_errors
 import handler_base_v2
 import v2_context as a10
 
+
 LOG = logging.getLogger(__name__)
 
 
 class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
+    def __init__(self, a10_driver, openstack_manager, neutron=None):
+        super(LoadbalancerHandler, self).__init__(a10_driver, openstack_manager, neutron)
+        # self.neutrondb = neutron_db.NeutronDBV1()
 
     def _set(self, set_method, c, context, lb):
         status = c.client.slb.UP
@@ -48,6 +52,13 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def create(self, context, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:
             self._create(c, context, lb)
+            # To get around arbitrary line limits...
+            # import pdb
+            # pdb.set_trace()
+            hostname = c.a10_driver.device_info["name"] or ""
+            self.neutron.portbindingport_create_or_update_from_vip_id(context,
+                                                                      lb.vip_port["id"],
+                                                                      hostname)
 
     def update(self, context, old_lb, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:
