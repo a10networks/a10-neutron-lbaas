@@ -16,9 +16,8 @@ from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
 
 class NeutronDBV1(object):
 
-    """This class exposes the portbindingports table in the DB as neutron_ops
-    doesn't provide direct access.
-    """
+    # This class exposes the portbindingports table in the DB as neutron_ops
+    # doesn't provide direct access.
 
     def __init__(self, neutron_ops=None):
         self.ndbplugin = db_base_plugin_v2.NeutronDbPluginV2()
@@ -58,6 +57,6 @@ class NeutronDBV1(object):
         return self._create_or_update_portbindingport(context, pool_id, host)
 
     def portbindingport_create_or_update_from_vip_id(self, context, vip_id, host):
-        vip = self.beutron_ops.vip_get(context, vip_id)
+        vip = self.neutron_ops.vip_get(context, vip_id)
         port_id = vip.port_id
         return self._create_or_update_portbindingport(context, port_id, host)

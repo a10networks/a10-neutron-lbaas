@@ -19,10 +19,15 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
 class TestLB(test_base.UnitTestBase):
+    def setUp(self):
+        super(TestLB, self).setUp()
+        self.handler = self.a.lb
+        self.handler.neutrondb = self.neutrondb
 
     def test_create(self):
         m = test_base.FakeLoadBalancer()
-        self.a.lb.create(None, m)
+
+        self.handler.create(None, m)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.create' in s)
         self.assertTrue('fake-lb-id-001' in s)
@@ -81,7 +86,7 @@ class TestLB(test_base.UnitTestBase):
     #         z = test_base.FakeListener('TCP', 2222+x, pool=pool,
     #                                    loadbalancer=m)
     #         m.listeners.append(z)
-    #     self.a.lb.create(None, m)
+    #     self.handler.create(None, m)
     #     s = str(self.a.last_client.mock_calls)
     #     self.assertTrue('call.slb.virtual_server.create' in s)
     #     self.assertTrue('fake-lb-id-001' in s)
@@ -94,7 +99,7 @@ class TestLB(test_base.UnitTestBase):
     def test_update_down(self):
         m = test_base.FakeLoadBalancer()
         m.admin_state_up = False
-        self.a.lb.update(None, m, m)
+        self.handler.update(None, m, m)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.update' in s)
         self.assertTrue('fake-lb-id-001' in s)
@@ -103,19 +108,32 @@ class TestLB(test_base.UnitTestBase):
 
     def test_delete(self):
         m = test_base.FakeLoadBalancer()
-        self.a.lb.delete(None, m)
+        self.handler.delete(None, m)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.delete' in s)
         self.assertTrue('fake-lb-id-001' in s)
 
     def test_refresh(self):
         try:
-            self.a.lb.refresh(None, test_base.FakeModel())
+            self.handler.refresh(None, test_base.FakeModel())
         except a10_ex.UnsupportedFeature:
             pass
 
     def test_stats(self):
-        self.a.lb.stats(None, test_base.FakeModel())
+        self.handler.stats(None, test_base.FakeModel())
         self.print_mocks()
         # self.a.last_client.slb.virtual_server.stats.assert_called_with(
         #     'fake-id-001')
+
+    def test_create_calls_portbindingport_create(self):
+        m = test_base.FakeLoadBalancer()
+
+        self.handler.create(self.context, m)
+        hostname = self.a.device_info["name"]
+
+        call_args = self.handler.neutron.portbindingport_create_or_update_from_vip_id.call_args[0]
+
+        self.assertTrue(self.handler.neutron.portbindingport_create_or_update_from_vip_id.called)
+        self.assertTrue(self.context in call_args)
+        self.assertTrue(m.vip_port["id"] in call_args)
+        self.assertTrue(hostname in call_args)

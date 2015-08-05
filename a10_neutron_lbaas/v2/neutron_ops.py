@@ -12,6 +12,8 @@
 
 from neutron.db import l3_db
 try:
+    from neutron.db import db_base_plugin_v2
+    from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
     from neutron_lbaas.db.loadbalancer import models as lb_db
 except ImportError:
     # v2 does not exist before Kilo
@@ -23,6 +25,7 @@ class NeutronOpsV2(object):
     def __init__(self, handler):
         self.openstack_driver = handler.openstack_driver
         self.plugin = self.openstack_driver.plugin
+        self.ndbplugin = db_base_plugin_v2.NeutronDbPluginV2()
 
     def member_get_ip(self, context, member, use_float=False):
         ip_address = member.address
@@ -45,3 +48,39 @@ class NeutronOpsV2(object):
 
     def pool_get(self, context, pool_id):
         return self.plugin.db.get_pool(context, pool_id)
+
+    def _get_portbindingport(self, context, port_id):
+        with context.session.begin():
+            port_binding = (context.session.query(PortBindingPort)
+                            .filter_by(port_id=port_id).first())
+            return port_binding
+
+    def _create_or_update_portbindingport(self, context, port_id, host):
+        port_binding = None
+        with context.session.begin():
+            port_binding = self._get_portbindingport(context, port_id)
+            if port_binding:
+                port_binding.host = host
+                port_binding.update()
+            else:
+                port_binding = self._create_portbindingport(port_id, host)
+        return port_binding
+
+    def _create_portbindingport(self, context, port_id, host):
+        port_binding = PortBindingPort()
+        port_binding.port_id = port_id
+        port_binding.host = host
+        with context.session.begin(subtransactions=True):
+            context.session.add(port_binding)
+        return port_binding
+
+    def _get_port(self, context, port_id):
+        return self.ndbplugin.get_port(context, port_id)
+
+    def portbindingport_create_or_update(self, context, pool_id, host):
+        return self._create_or_update_portbindingport(context, pool_id, host)
+
+    def portbindingport_create_or_update_from_vip_id(self, context, vip_id, host):
+        vip = self.neutron_ops.vip_get(context, vip_id)
+        port_id = vip.port_id
+        return self._create_or_update_portbindingport(context, port_id, host)
