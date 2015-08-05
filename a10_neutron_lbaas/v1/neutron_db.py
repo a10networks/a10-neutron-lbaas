@@ -16,9 +16,7 @@ from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
 
 class NeutronDBV1(object):
 
-    """T
-
-    his class exposes the portbindingports table in the DB as neutron_ops
+    """This class exposes the portbindingports table in the DB as neutron_ops
     doesn't provide direct access.
     """
 
