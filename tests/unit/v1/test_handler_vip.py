@@ -202,17 +202,17 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_create_calls_portbindingport_create(self):
         vip = self.fake_vip()
-        # If you don't do this, you get a new copy of the handler
-        # everytime you hit the property
-
-        handler = self.handler
-        handler.neutrondb = self._get_neutrondb()
-        handler.create(self.context, vip)
+        
+        self.handler.create(self.context, vip)
         hostname = self.a.device_info["name"]
 
-        call_args = handler.neutrondb.portbindingport_create_or_update.call_args[0]
+        call_args = self.handler.neutrondb.portbindingport_create_or_update.call_args[0]
 
-        self.assertTrue(handler.neutrondb.portbindingport_create_or_update.called)
+        self.assertTrue(self.handler.neutrondb.portbindingport_create_or_update.called)
         self.assertTrue(self.context in call_args)
         self.assertTrue(vip["port_id"] in call_args)
         self.assertTrue(hostname in call_args)
+
+    def test_delete_calls_portbinding_delete(self):
+        vip = self.fake_vip()
+
