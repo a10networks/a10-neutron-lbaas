@@ -22,7 +22,7 @@ class TestLB(test_base.UnitTestBase):
     def setUp(self):
         super(TestLB, self).setUp()
         self.handler = self.a.lb
-        self.handler.neutrondb = self.neutrondb
+        # self.handler.neutrondb = self.neutrondb
 
     def test_create(self):
         m = test_base.FakeLoadBalancer()
