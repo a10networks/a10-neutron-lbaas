@@ -11,11 +11,12 @@
 #    under the License.
 
 from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
+from neutron.db import db_base_plugin_v2
 
 
 class NeutronDBV1(object):
-    def __init__(self, neutron_ops=None, ndbplugin=None):
-        self.ndbplugin = ndbplugin
+    def __init__(self, neutron_ops=None):
+        self.ndbplugin = db_base_plugin_v2.NeutronDbPluginV2()
         self.neutron_ops = neutron_ops
 
     # This stuff should be moved into a DB class.
