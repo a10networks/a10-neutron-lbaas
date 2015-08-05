@@ -15,15 +15,6 @@
 import mock
 import test_base
 import mock
-from mock import Mock, MagicMock, patch
-
-# with patch.dict('sys.modules', {'neutron.db.db_base_plugin_v2': MagicMock()}):
-#     from neutron.db import db_base_plugin_v2
-#     db_base_plugin_v2.NeutronDbPluginV2 = MagicMock()
-#     # from neutron.db.db_base_plugin_v2 import NeutronDbPluginV2
-
-with patch.dict("sys.modules", {"neutron_db.NeutronDBV1": MagicMock()}):
-    from a10_neutron_lbaas.v1.neutron_db import NeutronDBV1
 
 from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -32,6 +23,11 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 class TestVIP(test_base.UnitTestBase):
     def __init__(self, *args):
         super(TestVIP, self).__init__(*args)
+
+    def setUp(self):
+        super(TestVIP, self).setUp()
+        self.context = self._get_context()
+        self.a.vip.neutrondb = self._get_neutrondb()
 
     def fake_vip(self, pers=None):
         h = {
@@ -49,7 +45,7 @@ class TestVIP(test_base.UnitTestBase):
         return h.copy()
 
     def test_create(self):
-        self.a.vip.create(None, self.fake_vip())
+        self.a.vip.create(self.context, self.fake_vip())
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('virtual_server.create' in s)
         self.assertTrue('1.1.1.1' in s)
@@ -57,11 +53,11 @@ class TestVIP(test_base.UnitTestBase):
         self.assertTrue('id1' in s)
         self.assertTrue('UP' in s)
         self.a.openstack_driver.plugin.get_pool.assert_called_with(
-            None, 'pool1')
+            self.context, 'pool1')
         self.assertTrue('HTTP' in s)
 
     def test_create_pers(self):
-        self.a.vip.create(None, self.fake_vip('HTTP_COOKIE'))
+        self.a.vip.create(self.context, self.fake_vip('HTTP_COOKIE'))
         s = str(self.a.last_client.mock_calls)
         self.assertTrue("c_pers_name='id1'" in s)
 
@@ -72,7 +68,7 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_create_unsupported(self):
         try:
-            self.a.vip.create(None, self.fake_vip('APP_COOKIE'))
+            self.a.vip.create(self.context, self.fake_vip('APP_COOKIE'))
         except a10_ex.UnsupportedFeature:
             pass
 
@@ -199,14 +195,14 @@ class TestVIP(test_base.UnitTestBase):
         self._test_create_ipinip(api_ver="2.1")
 
     def test_update(self):
-        self.a.vip.update(None, self.fake_vip(), self.fake_vip())
+        self.a.vip.update(self.context, self.fake_vip(), self.fake_vip())
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
         self.assertTrue('id1' in s)
         self.assertTrue('UP' in s)
         self.a.openstack_driver.plugin.get_pool.assert_called_with(
-            None, 'pool1')
+            self.context, 'pool1')
         self.assertTrue('HTTP' in s)
 
     def test_delete(self):
@@ -227,15 +223,11 @@ class TestVIP(test_base.UnitTestBase):
         vip = self.fake_vip()
         # If you don't do this, you get a new copy of the handler
         # everytime you hit the property
-        handler = self.a.vip
-        context = MagicMock()
-        context.__enter__ = Mock(return_value=MagicMock())
-        context.__exit__ = Mock(return_value=False)
-        handler.neutrondb = MagicMock(portbindingport_create_or_update=Mock())
+
         # import pdb
         # pdb.set_trace()
-
+        handler = self.a.vip
+        context = self._get_context()
+        handler.neutrondb = self._get_neutrondb()
         handler.create(context, vip)
         handler.neutrondb.portbindingport_create_or_update.assert_called(mock.ANY, mock.ANY)
-        # _with(
-        #     vip["port_id"], mock.ANY)

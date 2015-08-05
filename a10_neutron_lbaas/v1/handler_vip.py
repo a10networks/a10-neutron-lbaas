@@ -42,6 +42,9 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             status = c.client.slb.UP
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
+            # TODO: Move this into an init function so this is set via composition.  
+            # This will make life easier.
+
             ndb = NeutronDBV1()
             ndb.portbindingport_create_or_update(context, vip['port_id'], c.device_name)
             pool_name = self._pool_name(context, vip['pool_id'])
