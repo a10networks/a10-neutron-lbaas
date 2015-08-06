@@ -53,3 +53,7 @@ class TestA10Config(test_base.UnitTestBase):
             if "ip_in_ip" in v:
                 actual = v['ip_in_ip']
                 self.assertEqual(expected, actual)
+
+    def test_enabled_host_binding(self):
+        for k, v in self.a.config.devices.items():
+            self.assertTrue("enable_host_binding" in v)
