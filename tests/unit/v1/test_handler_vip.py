@@ -216,3 +216,10 @@ class TestVIP(test_base.UnitTestBase):
     def test_delete_calls_portbinding_delete(self):
         vip = self.fake_vip()
 
+        self.handler.delete(self.context, vip)
+
+        call_args = self.handler.neutrondb.portbindingport_delete.call_args[0]
+
+        self.assertTrue(self.handler.neutrondb.portbindingport_delete.called)
+        self.assertTrue(self.context in call_args)
+        self.assertTrue(vip["port_id"] in call_args)

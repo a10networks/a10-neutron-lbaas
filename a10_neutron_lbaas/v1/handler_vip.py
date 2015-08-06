@@ -174,6 +174,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
 
     def _delete(self, c, context, vip):
         c.client.slb.virtual_server.delete(self._meta_name(vip))
+        self.neutrondb.portbindingport_delete(context, vip["port_id"])
         PersistHandler(c, context, vip, self._meta_name(vip)).delete()
 
     def delete(self, context, vip):
