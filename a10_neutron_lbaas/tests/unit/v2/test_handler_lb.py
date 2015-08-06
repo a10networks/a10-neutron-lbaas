@@ -22,8 +22,7 @@ class TestLB(test_base.UnitTestBase):
     def setUp(self):
         super(TestLB, self).setUp()
         self.handler = self.a.lb
-        # self.handler.neutrondb = self.neutrondb
-
+        
     def test_create(self):
         m = test_base.FakeLoadBalancer()
 
@@ -142,3 +141,14 @@ class TestLB(test_base.UnitTestBase):
         self.assertTrue(self.context in call_args)
         self.assertTrue(m.vip_port["id"] in call_args)
         self.assertTrue(hostname in call_args)
+
+    def test_delete_calls_portbinding_delete(self):
+        m = test_base.FakeLoadBalancer()
+
+        self.handler.delete(self.context, m)
+
+        call_args = self.handler.neutron.portbindingport_delete.call_args[0]
+
+        self.assertTrue(self.handler.neutron.portbindingport_delete.called)
+        self.assertTrue(self.context in call_args)
+        self.assertTrue(m.vip_port["id"] in call_args)
