@@ -28,7 +28,8 @@ class A10Config(object):
         "v_method": "LSI",
         "max_instance": 5000,
         "use_float": False,
-        "method": "hash"
+        "method": "hash",
+        "enable_host_binding": True
     }
 
     def __init__(self):
