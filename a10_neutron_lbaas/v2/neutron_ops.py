@@ -77,6 +77,12 @@ class NeutronOpsV2(object):
     def _get_port(self, context, port_id):
         return self.ndbplugin.get_port(context, port_id)
 
+    def _delete_portbinding(self, context, port_id):
+        with context.session.begin(subtransactions=True):
+            binding = self._get_portbindingport(context, port_id)
+            if binding:
+                context.session.delete(binding)
+
     def portbindingport_create_or_update(self, context, pool_id, host):
         return self._create_or_update_portbindingport(context, pool_id, host)
 
@@ -84,3 +90,6 @@ class NeutronOpsV2(object):
         vip = self.neutron_ops.vip_get(context, vip_id)
         port_id = vip.port_id
         return self._create_or_update_portbindingport(context, port_id, host)
+
+    def portbindingport_delete(self, context, port_id):
+        return self._delete_portbinding(port_id)

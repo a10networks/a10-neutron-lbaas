@@ -27,7 +27,6 @@ LOG = logging.getLogger(__name__)
 class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def __init__(self, a10_driver, openstack_manager, neutron=None):
         super(LoadbalancerHandler, self).__init__(a10_driver, openstack_manager, neutron)
-        # self.neutrondb = neutron_db.NeutronDBV1()
 
     def _set(self, set_method, c, context, lb):
         status = c.client.slb.UP
@@ -64,6 +63,10 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
     def _delete(self, c, context, lb):
         c.client.slb.virtual_server.delete(self._meta_name(lb))
+        try:
+            self.neutron.portbindingport_delete(context, lb.vip_port["id"])
+        except Exception as ex:
+            LOG.exception(ex)
 
     def delete(self, context, lb):
         with a10.A10DeleteContext(self, context, lb) as c:
