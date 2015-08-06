@@ -202,7 +202,7 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_create_calls_portbindingport_create(self):
         vip = self.fake_vip()
-        
+
         self.handler.create(self.context, vip)
         hostname = self.a.device_info["name"]
 
