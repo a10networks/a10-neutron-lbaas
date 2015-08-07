@@ -14,42 +14,71 @@
 
 import logging
 
-import a10_neutron_lbaas.a10_openstack_map as a10_os
+import a10_neutron_lbaas.a10_openstack_map as a10_osmap
 
+from neutron_lbaas.services.loadbalancer import constants as lb_const
+
+import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
 import acos_client.errors as acos_errors
 import handler_base_v2
 import handler_persist
 import v2_context as a10
 
+
 LOG = logging.getLogger(__name__)
 
 
 class ListenerHandler(handler_base_v2.HandlerBaseV2):
+    def __init__(self, a10_driver, openstack_manager, neutron=None, barbican_client=None):
+        super(ListenerHandler, self).__init__(a10_driver, openstack_manager, neutron)
+        self.barbican_client = barbican_client
 
     def _set(self, set_method, c, context, listener):
+        if self.barbican_client is None:
+            self.barbican_client = certwrapper.CertManagerWrapper()
+
         status = c.client.slb.UP
         if not listener.admin_state_up:
             status = c.client.slb.DOWN
 
         templates = self.meta(listener, "template", {})
 
+        server_args = {}
+        cert_data = dict()
+
+        if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
+            if self._set_terminated_https_values(listener, c, cert_data):
+                templates["client_ssl"] = {}
+                template_name = str(cert_data.get('template_name', ''))
+                key_passphrase = str(cert_data.get('cert_pass', ''))
+                cert_filename = str(cert_data.get('cert_filename', ''))
+                key_filename = str(cert_data.get('key_filename', ''))
+            else:
+                LOG.error("Could not created terminated HTTPS endpoint.")
+
         if 'client_ssl' in templates:
-            args = {'client_ssl_template': templates['client_ssl']}
             try:
                 c.client.slb.template.client_ssl.create(
-                    '', '', '',
-                    axapi_args=args)
+                    template_name,
+                    cert=cert_filename,
+                    key=key_filename)
             except acos_errors.Exists:
-                pass
+                c.client.slb.template.client_ssl.update(template_name, cert=cert_filename,
+                                                        key=key_filename, passphrase=key_passphrase)
 
         if 'server_ssl' in templates:
-            args = {'server_ssl_template': templates['server_ssl']}
+            server_args = {'server_ssl_template': templates['server_ssl']}
             try:
                 c.client.slb.template.server_ssl.create(
-                    '', '', '',
-                    axapi_args=args)
+                    template_name,
+                    cert_filename,
+                    key_filename,
+                    axapi_args=server_args)
             except acos_errors.Exists:
-                pass
+                c.client.slb.template.server_ssl.update(template_name,
+                                                        cert_filename,
+                                                        key_filename,
+                                                        axapi_args=server_args)
 
         try:
             pool_name = self._pool_name(context, listener.default_pool)
@@ -63,7 +92,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=a10_os.vip_protocols(c, listener.protocol),
+                protocol=a10_osmap.vip_protocols(c, listener.protocol),
                 port=listener.protocol_port,
                 service_group_name=pool_name,
                 s_pers_name=persistence.s_persistence(),
@@ -72,6 +101,54 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 axapi_args=vport_args)
         except acos_errors.Exists:
             pass
+
+    def _set_terminated_https_values(self, listener, c, cert_data):
+        is_success = False
+        c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
+
+        if c_id:
+            try:
+                container = self.barbican_client.get_certificate(c_id, check_only=True)
+            except Exception as ex:
+                container = None
+                LOG.error("Exception encountered retrieving TLS Container %s" % c_id)
+                LOG.exception(ex)
+
+            if container:
+                base_name = (container._cert_container.name if container._cert_container is not None
+                             else "")
+
+                cert_data["cert_content"] = container.get_certificate()
+                cert_data["key_content"] = container.get_private_key()
+                cert_data["cert_pass"] = container.get_private_key_passphrase()
+
+                cert_data["template_name"] = listener.id
+
+                cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
+                cert_data["key_filename"] = "{0}key.pem".format(base_name)
+
+                self._acos_create_or_update(c.client.file.ssl_cert,
+                                            file=cert_data["cert_filename"],
+                                            cert=cert_data["cert_content"],
+                                            size=len(cert_data["cert_content"]),
+                                            action="import", certificate_type="pem")
+
+                self._acos_create_or_update(c.client.file.ssl_key,
+                                            file=cert_data["key_filename"],
+                                            cert=cert_data["key_content"],
+                                            size=len(cert_data["key_content"]),
+                                            action="import")
+                is_success = True
+        else:
+            LOG.error("default_tls_container_id unspecified for listener. Cannot create listener.")
+        return is_success
+
+    def _acos_create_or_update(self, acos_obj, **kwargs):
+        # pdb.set_trace()
+        if acos_obj.exists(kwargs["file"]):
+            acos_obj.update(**kwargs)
+        else:
+            acos_obj.create(**kwargs)
 
     def _create(self, c, context, listener):
         self._set(c.client.slb.virtual_server.vport.create,
@@ -92,7 +169,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         c.client.slb.virtual_server.vport.delete(
             self.a10_driver.loadbalancer._name(listener.loadbalancer),
             self._meta_name(listener),
-            protocol=a10_os.vip_protocols(c, listener.protocol),
+            protocol=a10_osmap.vip_protocols(c, listener.protocol),
             port=listener.protocol_port)
 
     def delete(self, context, listener):

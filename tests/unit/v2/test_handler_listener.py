@@ -12,10 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
 import mock
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+import neutron_lbaas.services.loadbalancer.constants as lbaas_const
+
+
+LOG = logging.getLogger(__name__)
 
 
 class TestListeners(test_base.UnitTestBase):
@@ -69,7 +74,7 @@ class TestListeners(test_base.UnitTestBase):
                         self.assertTrue('fake-listen-id-001' in s)
                         self.assertTrue('port=2222' in s)
                         test_prot = p
-                        if p == 'HTTPS':
+                        if p in ('HTTPS', lbaas_const.PROTOCOL_TERMINATED_HTTPS):
                             test_prot = 'TCP'
                         self.assertTrue(test_prot in s)
 
