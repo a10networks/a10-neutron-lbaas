@@ -63,10 +63,11 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
     def _delete(self, c, context, lb):
         c.client.slb.virtual_server.delete(self._meta_name(lb))
-        try:
-            self.neutron.portbindingport_delete(context, lb.vip_port["id"])
-        except Exception as ex:
-            LOG.exception(ex)
+        if c.openstack_driver.device_info["enable_host_binding"]:
+            try:
+                self.neutron.portbindingport_delete(context, lb.vip_port["id"])
+            except Exception as ex:
+                LOG.exception(ex)
 
     def delete(self, context, lb):
         with a10.A10DeleteContext(self, context, lb) as c:
@@ -81,6 +82,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
     def _create_portbinding(self, c, context, lb):
         hostname = c.a10_driver.device_info["name"] or ""
-        self.neutron.portbindingport_create_or_update_from_vip_id(context,
-                                                                  lb.vip_port["id"],
-                                                                  hostname)
+        if c.openstack_driver.device_info["enable_host_binding"]:
+            self.neutron.portbindingport_create_or_update_from_vip_id(context,
+                                                                      lb.vip_port["id"],
+                                                                      hostname)
