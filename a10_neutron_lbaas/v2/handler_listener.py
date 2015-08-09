@@ -16,7 +16,6 @@ import logging
 
 from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_openstack_map as a10_osmap
-import a10_neutron_lbaas.a10_openstack_map as a10_os
 from neutron_lbaas.services.loadbalancer import constants as lb_const
 
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
