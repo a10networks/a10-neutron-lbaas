@@ -31,7 +31,7 @@ class A10Config(object):
         "max_instance": 5000,
         "use_float": False,
         "method": "hash",
-        "enable_host_binding": True
+        "enable_host_binding": False
     }
 
     def __init__(self):

@@ -49,10 +49,12 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            if c.a10_driver.device_info["enable_host_binding"]:
+            import pdb
+            pdb.set_trace()
+            if c.openstack_driver.device_info["enable_host_binding"]:
                 self.neutrondb.portbindingport_create_or_update(context,
                                                                 vip['port_id'],
-                                                                c.a10_driver.device_info["name"])
+                                                                c.device_cfg["name"])
 
             pool_name = self._pool_name(context, vip['pool_id'])
 
@@ -160,8 +162,10 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             self.hooks.after_vip_update(c, context, vip)
 
     def _delete(self, c, context, vip):
+        # import pdb
+        # pdb.set_trace()
         c.client.slb.virtual_server.delete(self._meta_name(vip))
-        if c.a10_driver.device_info["enable_host_binding"]:
+        if c.openstack_driver.device_info["enable_host_binding"]:
             self.neutrondb.portbindingport_delete(context, vip["port_id"])
 
         PersistHandler(c, context, vip, self._meta_name(vip)).delete()
