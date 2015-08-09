@@ -129,9 +129,9 @@ class TestLB(test_base.UnitTestBase):
         # self.a.last_client.slb.virtual_server.stats.assert_called_with(
         #     'fake-id-001')
 
-    def test_create_calls_portbindingport_create(self):
+    def test_create_calls_portbindingport_create_positive(self):
         m = test_base.FakeLoadBalancer()
-
+        self.a.openstack_driver.device_info = {"enable_host_binding": True}
         self.handler.create(self.context, m)
         hostname = self.a.device_info["name"]
 
@@ -142,13 +142,30 @@ class TestLB(test_base.UnitTestBase):
         self.assertTrue(m.vip_port["id"] in call_args)
         self.assertTrue(hostname in call_args)
 
-    def test_delete_calls_portbinding_delete(self):
+    def test_create_calls_portbindingport_create_negative(self):
         m = test_base.FakeLoadBalancer()
+        self.handler.neutron.portbindingport_create_or_update_from_vip_id.reset_mock()
+        self.a.openstack_driver.device_info = {"enable_host_binding": False}
+        self.handler.create(self.context, m)
+        
+        self.assertFalse(self.handler.neutron.portbindingport_create_or_update_from_vip_id.called)
 
+    def test_delete_calls_portbinding_delete_positive(self):
+        m = test_base.FakeLoadBalancer()
+        self.a.openstack_driver.device_info = {"enable_host_binding": True}
         self.handler.delete(self.context, m)
-
+        
         call_args = self.handler.neutron.portbindingport_delete.call_args[0]
 
         self.assertTrue(self.handler.neutron.portbindingport_delete.called)
         self.assertTrue(self.context in call_args)
         self.assertTrue(m.vip_port["id"] in call_args)
+
+    def test_delete_calls_portbinding_delete_negative(self):
+        m = test_base.FakeLoadBalancer()
+        self.a.openstack_driver.device_info = {"enable_host_binding": False}
+        self.handler.neutron.portbindingport_create_or_update_from_vip_id.reset_mock()
+
+        self.handler.delete(self.context, m)
+
+        self.assertFalse(self.handler.neutron.portbindingport_delete.called)
