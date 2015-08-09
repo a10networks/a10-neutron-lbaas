@@ -37,6 +37,7 @@ class TestVIP(test_base.UnitTestBase):
         super(TestVIP, self).setUp()
         self.context = self._get_context()
         self.handler = self.a.vip
+        self.handler.neutrondb.reset_mock()
 
     def fake_vip(self, pers=None):
         h = {
@@ -203,7 +204,7 @@ class TestVIP(test_base.UnitTestBase):
     def test_create_calls_portbindingport_create_positive(self):
         vip = self.fake_vip()
         self.handler.neutrondb.reset_mock()
-        self.a.openstack_driver.device_info["enable_host_binding"] = True
+        self.a.openstack_driver.device_info = {"enable_host_binding": True}
 
         self.handler.create(self.context, vip)
         hostname = self.a.device_info["name"]
@@ -217,15 +218,17 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_create_calls_portbindingport_create_negative(self):
         vip = self.fake_vip()
-        self.handler.neutrondb.reset_mock()
-        self.a.openstack_driver.device_info["enable_host_binding"] = False
+        self.handler.neutrondb.portbindingport_create_or_update = mock.Mock()
+
+        self.a.openstack_driver.device_info = {"enable_host_binding": False}
+
         self.handler.create(self.context, vip)
         self.assertFalse(self.handler.neutrondb.portbindingport_create_or_update.called)
 
     def test_delete_calls_portbinding_delete_positive(self):
         vip = self.fake_vip()
         self.handler.neutrondb.reset_mock()
-        self.a.openstack_driver.device_info["enable_host_binding"] = True
+        self.a.openstack_driver.device_info = {"enable_host_binding": True}
 
         self.handler.delete(self.context, vip)
 
@@ -237,8 +240,8 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_delete_calls_portbinding_delete_negative(self):
         vip = self.fake_vip()
-        self.handler.neutrondb.reset_mock()
-        self.a.openstack_driver.device_info["enable_host_binding"] = False
+        self.handler.neutrondb.portbindingport_delete = mock.Mock()
+        self.a.openstack_driver.device_info = {"enable_host_binding": False}
 
         self.handler.delete(self.context, vip)
         self.assertFalse(self.handler.neutrondb.portbindingport_delete.called)
