@@ -49,8 +49,6 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            import pdb
-            pdb.set_trace()
             if c.openstack_driver.device_info["enable_host_binding"]:
                 self.neutrondb.portbindingport_create_or_update(context,
                                                                 vip['port_id'],
