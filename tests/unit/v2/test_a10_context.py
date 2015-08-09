@@ -25,7 +25,7 @@ class TestA10Context(test_base.UnitTestBase):
 
     def _build_openstack_context(self):
         admin_context = {
-            "tenant_id": "ADMIN"
+            "tenant_id": "admin"
         }
 
         return mock.Mock(get_admin_context=mock.Mock(return_value=admin_context))
@@ -116,8 +116,8 @@ class TestA10ContextADP(TestA10Context):
             v['v_method'] = val
 
     def _test_alternate_partition(self, use_alternate=False):
-        expected = self.a.config.devices["axadp-alt"].get("alternate_shared_partition",
-                                                          None)
+        expected = self.a.config.devices["axadp-alt"].get("shared_partition",
+                                                          "shared")
 
         self.m.tenant_id = expected if use_alternate else "get-off-my-lawn"
         with a10.A10Context(self.handler, self.ctx, self.m,
@@ -132,6 +132,7 @@ class TestA10ContextADP(TestA10Context):
         self._test_alternate_partition(use_alternate=True)
 
     def test_use_alternate_partition_negative(self):
+        self.ctx.is_admin = False
         self._test_alternate_partition()
 
     def empty_mocks(self):

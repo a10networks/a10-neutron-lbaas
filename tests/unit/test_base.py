@@ -23,7 +23,7 @@ import a10_neutron_lbaas.plumbing_hooks as hooks
 
 def _build_openstack_context():
     admin_context = {
-        "tenant_id": "ADMIN"
+        "tenant_id": "admin"
     }
 
     return mock.Mock(admin_context=admin_context)
@@ -69,6 +69,8 @@ class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
 
 
 class UnitTestBase(unittest.TestCase):
+    def _build_openstack_context(self):
+        return _build_openstack_context()
 
     def setUp(self):
         unit_dir = os.path.dirname(__file__)

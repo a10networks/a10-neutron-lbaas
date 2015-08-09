@@ -52,10 +52,6 @@ class A10Context(object):
         if exc_type is not None:
             return False
 
-    def _has_alternate_partition(self, device):
-        # Parens to cheat line length restrictions
-        return device.get("alternate_shared_partition", None)
-
     def get_tenant_id(self):
         if hasattr(self.openstack_lbaas_obj, 'tenant_id'):
             self.tenant_id = self.openstack_lbaas_obj.tenant_id
@@ -71,10 +67,10 @@ class A10Context(object):
         # Try to make the requested partition active
         name = self.tenant_id[0:13]
 
-        if self._has_alternate_partition(self.device_cfg):
-            # This could be improved by adding users that would share the partition, etc.
-            if self.openstack_context.is_admin and self._has_alternate_partition(self.device_cfg):
-                name = self.device_cfg["alternate_shared_partition"]
+        # This could be improved by adding users that would share the partition, etc.
+        if (self.openstack_context.is_admin
+                and not self.device_cfg.get("shared_partition", "shared") == "shared"):
+            name = self.device_cfg["shared_partition"]
 
         if not name:
             return
