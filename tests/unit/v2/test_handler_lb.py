@@ -142,14 +142,14 @@ class TestLB(test_base.UnitTestBase):
         self.handler.neutron.portbindingport_create_or_update_from_vip_id.reset_mock()
         self.a.openstack_driver.device_info = {"enable_host_binding": False}
         self.handler.create(self.context, m)
-        
+
         self.assertFalse(self.handler.neutron.portbindingport_create_or_update_from_vip_id.called)
 
     def test_delete_calls_portbinding_delete_positive(self):
         m = test_base.FakeLoadBalancer()
         self.a.openstack_driver.device_info = {"enable_host_binding": True}
         self.handler.delete(self.context, m)
-        
+
         call_args = self.handler.neutron.portbindingport_delete.call_args[0]
 
         self.assertTrue(self.handler.neutron.portbindingport_delete.called)
