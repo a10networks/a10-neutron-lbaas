@@ -67,7 +67,6 @@ devices = {
             }
         ]
     },
-<<<<<<< HEAD
     "axxv21": {
         "host": "10.10.100.29",
         "protocol": "http",
