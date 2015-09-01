@@ -15,19 +15,8 @@
 import mock
 import test_base
 
-
 from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-
-
-# mock_patches = {
-#     "a10_neutron_lbaas.v1.handler_vip.neutron_db": MagicMock(NeutronDBV1=MagicMock()),
-#     "a10_neutron_lbaas.v1.handler_vip.db_base_plugin_v2": MagicMock(NeutronDBPluginV2=MagicMock())
-# }
-
-# with mock.patch.dict("sys.modules", mock_patches):
-#     from a10_neutron_lbaas.v1 import neutron_db
-#     from neutron.db import db_base_plugin_v2
 
 
 class TestVIP(test_base.UnitTestBase):
@@ -121,7 +110,7 @@ class TestVIP(test_base.UnitTestBase):
             auto_format = "'{0}': {1}"
             auto_expected = auto_format.format(key, transform(autosnat))
 
-        self.a.vip.create(None, vip)
+        self.handler.create(None, vip)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('virtual_server.create' in s)
 
