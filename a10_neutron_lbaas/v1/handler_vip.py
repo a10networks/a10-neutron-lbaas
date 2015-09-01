@@ -15,10 +15,9 @@
 import logging
 
 from a10_neutron_lbaas import a10_common
-from a10_neutron_lbaas.v1 import neutron_db
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.a10_openstack_map as a10_os
-
+from a10_neutron_lbaas.v1 import neutron_db
 
 import acos_client.errors as acos_errors
 import handler_base_v1
@@ -174,8 +173,6 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             self.hooks.after_vip_update(c, context, vip)
 
     def _delete(self, c, context, vip):
-        # import pdb
-        # pdb.set_trace()
         c.client.slb.virtual_server.delete(self._meta_name(vip))
         if c.openstack_driver.device_info["enable_host_binding"]:
             self.neutrondb.portbindingport_delete(context, vip["port_id"])
