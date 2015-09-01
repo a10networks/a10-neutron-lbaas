@@ -14,8 +14,8 @@
 
 import logging
 
+from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_openstack_map as a10_osmap
-
 from neutron_lbaas.services.loadbalancer import constants as lb_const
 
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
@@ -86,7 +86,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             pool_name = None
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
-        vport_args = {'port': self.meta(listener, 'port', {})}
+        vport_meta = self.meta(listener, 'port', {})
+        a10_common._set_auto_parameter(vport_meta, self.a10_driver.device_info)
+        vport_args = {'port': vport_meta}
 
         try:
             set_method(
