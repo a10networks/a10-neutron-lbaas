@@ -83,13 +83,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                                         axapi_args=server_args)
 
         try:
-            pool_name = self._pool_name(context, listener.default_pool)
+            pool_name = self._pool_name(context, pool_id=listener.default_pool_id)
         except Exception:
             pool_name = None
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
         vport_meta = self.meta(listener, 'port', {})
-        a10_common._set_auto_parameter(vport_meta, self.a10_driver.device_info)
+        a10_common._set_auto_parameter(vport_meta, self.a10_driver.config)
         vport_args = {'port': vport_meta}
 
         try:
