@@ -41,7 +41,8 @@ class FakeListener(FakeModel):
         self.protocol = protocol
         self.protocol_port = port
         self.admin_state_up = admin_state_up
-        self.default_pool = pool
+        self.default_pool = pool or FakePool('HTTP', 'ROUND_ROBIN', None)
+        self.default_pool_id = self.default_pool.id
         self.loadbalancer = loadbalancer
         self.default_tls_container_id = container_id
         self.sni_containers = containers

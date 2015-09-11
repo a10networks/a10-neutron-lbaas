@@ -34,8 +34,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         self.barbican_client = barbican_client
 
     def _set(self, set_method, c, context, listener):
-        import pdb
-        pdb.set_trace()
         if self.barbican_client is None:
             self.barbican_client = certwrapper.CertManagerWrapper()
 
@@ -89,7 +87,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
         vport_meta = self.meta(listener, 'port', {})
-        a10_common._set_auto_parameter(vport_meta, self.a10_driver.config)
+        a10_common._set_auto_parameter(vport_meta, c.device_cfg)
         vport_args = {'port': vport_meta}
 
         try:
