@@ -34,6 +34,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         self.barbican_client = barbican_client
 
     def _set(self, set_method, c, context, listener):
+        import pdb
+        pdb.set_trace()
         if self.barbican_client is None:
             self.barbican_client = certwrapper.CertManagerWrapper()
 

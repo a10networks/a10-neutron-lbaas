@@ -37,6 +37,8 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
             axapi_args=args)
 
         # session persistence might need a vport update
+        import pdb
+        pdb.set_trace()
         if pool.listener:
             self.a10_driver.listener._update(c, context, pool.listener)
 
