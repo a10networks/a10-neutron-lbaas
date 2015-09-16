@@ -40,6 +40,7 @@ class FakeLoadBalancer(FakeModel):
         self.id = 'fake-lb-id-001'
         self.listeners = listeners
         self.vip_port_id = str(uuid.uuid4())
+        self.vip_port = FakePort()
         self.vip_address = '5.5.5.5'
         self.admin_state_up = True
         self.vip_port = {"id": "vip-id-001", "tenant_id": "tenant_id", "name": "vip-id-001"}
