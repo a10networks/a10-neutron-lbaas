@@ -68,10 +68,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def stats(self, context, lb):
         with a10.A10Context(self, context, lb) as c:
             try:
-<<<<<<< HEAD
-                vip_id = lb.vip_port_id
-                vip = self.neutron.vip_get(context, vip_id)
-                name = self.meta(vip, 'vip_name', vip['id'])
+                name = self.meta(lb, 'id', lb.id)
                 r = c.client.slb.virtual_server.stats(name)
 
                 return {
@@ -81,19 +78,6 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                         r["virtual_server_stat"]["cur_conns"],
                     "total_connections": r["virtual_server_stat"]["tot_conns"]
                 }
-=======
-                if lb.vip_port:
-                    name = self.meta(lb, 'id', lb.id)
-                    r = c.client.slb.virtual_server.stats(name)
-
-                    return {
-                        "bytes_in": r["virtual_server_stat"]["req_bytes"],
-                        "bytes_out": r["virtual_server_stat"]["resp_bytes"],
-                        "active_connections":
-                            r["virtual_server_stat"]["cur_conns"],
-                        "total_connections": r["virtual_server_stat"]["tot_conns"]
-                    }
->>>>>>> Pre PR Stats cleanup
             except Exception:
                 return {
                     "bytes_in": 0,
