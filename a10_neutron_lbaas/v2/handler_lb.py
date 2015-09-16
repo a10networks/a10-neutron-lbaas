@@ -68,17 +68,16 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def stats(self, context, lb):
         with a10.A10Context(self, context, lb) as c:
             try:
-                if lb.vip_port:
-                    name = self.meta(lb, 'id', lb.id)
-                    r = c.client.slb.virtual_server.stats(name)
+                name = self.meta(lb, 'id', lb.id)
+                r = c.client.slb.virtual_server.stats(name)
 
-                    return {
-                        "bytes_in": r["virtual_server_stat"]["req_bytes"],
-                        "bytes_out": r["virtual_server_stat"]["resp_bytes"],
-                        "active_connections":
-                            r["virtual_server_stat"]["cur_conns"],
-                        "total_connections": r["virtual_server_stat"]["tot_conns"]
-                    }
+                return {
+                    "bytes_in": r["virtual_server_stat"]["req_bytes"],
+                    "bytes_out": r["virtual_server_stat"]["resp_bytes"],
+                    "active_connections":
+                        r["virtual_server_stat"]["cur_conns"],
+                    "total_connections": r["virtual_server_stat"]["tot_conns"]
+                }
             except Exception:
                 return {
                     "bytes_in": 0,
