@@ -87,8 +87,6 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 }
 
     def refresh(self, context, lb):
-        import pdb
-        pdb.set_trace()
         LOG.debug("LB Refresh called.")
         # Ensure all elements associated with this LB exist on the device.
 
