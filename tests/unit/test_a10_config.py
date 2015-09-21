@@ -21,7 +21,10 @@ class TestA10Config(test_base.UnitTestBase):
         self.assertTrue(self.a.config.verify_appliances)
 
     def test_num_appliances(self):
-        self.assertEqual(5, len(self.a.config.devices))
+        # Everytime we update the test config, this test has to be updated
+        # A better test would seem to be be parsing the JSON structure found in the file
+        # and comparing that against what we get in devices.
+        self.assertEqual(6, len(self.a.config.devices))
 
     def test_expected_ports(self):
         self.assertEqual(8443, self.a.config.devices['ax1']['port'])
@@ -36,3 +39,11 @@ class TestA10Config(test_base.UnitTestBase):
     def test_v_method(self):
         for k, v in self.a.config.devices.items():
             self.assertEqual('LSI', v['v_method'].upper())
+
+    def test_ip_in_ip(self):
+        expected = True
+        actual = False
+        for k, v in self.a.config.devices.items():
+            if "ip_in_ip" in v:
+                actual = v['ip_in_ip']
+                self.assertEqual(expected, actual)
