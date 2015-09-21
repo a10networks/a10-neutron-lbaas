@@ -95,6 +95,7 @@ devices = {
         "status": True,
         "api_version": "2.1",
         "max_instance": 5000,
-        "use_float": True
+        "use_float": True,
+        "ipinip": True
     },
 }
