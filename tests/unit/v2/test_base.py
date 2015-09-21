@@ -23,13 +23,14 @@ class FakeModel(object):
 
 
 class FakeLoadBalancer(FakeModel):
-
     def __init__(self, listeners=[]):
         super(FakeLoadBalancer, self).__init__()
         self.id = 'fake-lb-id-001'
         self.listeners = listeners
         self.vip_address = '5.5.5.5'
         self.admin_state_up = True
+        self.vip_port = {"id": "vip-id-001", "tenant_id": "tenant_id", "name": "vip-id-001"}
+        self.vip_port_id = self.vip_port["id"]
 
 
 class FakeListener(FakeModel):
