@@ -160,7 +160,7 @@ class TestListeners(test_base.UnitTestBase):
 
     def _test_create_ipinip(self, ip_in_ip=False):
         for k, v in self.a.config.devices.items():
-            v['ip_in_ip'] = ip_in_ip
+            v['ipinip'] = ip_in_ip
 
         p = 'TCP'
         lb = test_base.FakeLoadBalancer()
@@ -171,7 +171,7 @@ class TestListeners(test_base.UnitTestBase):
         self.a.listener.create(None, m)
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
-        self.assertEqual(ip_in_ip, "ip_in_ip" in s)
+        self.assertEqual(ip_in_ip, "ipinip" in s)
 
     def test_create_ip_in_ip_positive(self):
         self._test_create_ipinip(True)
