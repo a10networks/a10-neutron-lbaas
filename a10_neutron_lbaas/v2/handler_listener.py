@@ -87,7 +87,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
         vport_meta = self.meta(listener, 'port', {})
-        a10_common._set_auto_parameter(vport_meta, self.a10_driver.device_info)
+        a10_common._set_auto_parameter(vport_meta, c.device_cfg)
         vport_args = {'port': vport_meta}
 
         try:
