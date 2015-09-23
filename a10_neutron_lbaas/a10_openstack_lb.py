@@ -21,11 +21,14 @@ import v1.handler_hm
 import v1.handler_member
 import v1.handler_pool
 import v1.handler_vip
-import v2.handler_hm
-import v2.handler_lb
-import v2.handler_listener
-import v2.handler_member
-import v2.handler_pool
+try:
+    import v2.handler_hm
+    import v2.handler_lb
+    import v2.handler_listener
+    import v2.handler_member
+    import v2.handler_pool
+except ImportError:
+    pass
 import version
 
 LOG = logging.getLogger(__name__)

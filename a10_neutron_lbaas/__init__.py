@@ -14,5 +14,8 @@
 # flake8: noqa
 
 from a10_openstack_lb import A10OpenstackLBV1
-from a10_openstack_lb import A10OpenstackLBV2
+try:
+    from a10_openstack_lb import A10OpenstackLBV2
+except ImportError:
+    pass
 from version import VERSION
