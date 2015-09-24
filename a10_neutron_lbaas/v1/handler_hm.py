@@ -19,6 +19,9 @@ import handler_base_v1
 import v1_context as a10
 
 
+import pdb
+
+
 class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
 
     def _name(self, hm):
@@ -69,6 +72,17 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
+        # pdb.set_trace()
+        pools = hm.get("pools", [])
+
+        for pool in pools:
+            pool_id = pool.get("pool_id")
+            pool_name = self._pool_name(context, pool_id)
+            c.client.slb.service_group.update(pool_name, health_monitor="",
+                                              health_monitor_disabled=True)
+
+        pool_id = hm.get('pool_id', None)
+
         if self.neutron.hm_binding_count(context, hm['id']) <= 1:
             try:
                 c.client.slb.hm.delete(self._meta_name(hm))
@@ -79,7 +93,6 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
         pool_id = hm.get('pool_id', None)
         pool_name = self._pool_name(context, pool_id)
         c.client.slb.service_group.update(pool_name, health_monitor="")
-
 
     def delete(self, context, hm, pool_id):
         h = hm.copy()
