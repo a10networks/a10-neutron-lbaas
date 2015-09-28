@@ -85,12 +85,9 @@ class TestHM(test_base.UnitTestBase):
             axapi_args={})
 
     def test_delete(self):
-        import pdb
-
         expected = test_base.FakePool()
         fakehm = test_base.FakeHM()
         fakehm.pools.append(expected)
-        pdb.set_trace()
 
         self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
         self.a.hm.openstack_driver._hm_binding_count.return_value = 1
