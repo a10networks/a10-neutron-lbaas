@@ -81,7 +81,7 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
             c.client.slb.service_group.update(pool_name, health_monitor="",
                                               health_monitor_disabled=True)
 
-        if self.neutron.hm_binding_count(context, hm['id']) < 1:
+        if self.neutron.hm_binding_count(context, hm['id']) <= 1:
             try:
                 c.client.slb.hm.delete(self._meta_name(hm))
             except acos_errors.InUse:
