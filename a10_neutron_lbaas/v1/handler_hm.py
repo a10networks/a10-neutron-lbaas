@@ -13,13 +13,14 @@
 #    under the License.
 
 import acos_client.errors as acos_errors
+import logging
 
 import a10_neutron_lbaas.a10_openstack_map as a10_os
 import handler_base_v1
 import v1_context as a10
 
 
-import pdb
+LOG = logging.getLogger(__name__)
 
 
 class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
@@ -72,7 +73,6 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
-        # pdb.set_trace()
         pools = hm.get("pools", [])
 
         for pool in pools:
@@ -81,18 +81,15 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
             c.client.slb.service_group.update(pool_name, health_monitor="",
                                               health_monitor_disabled=True)
 
-        pool_id = hm.get('pool_id', None)
-
-        if self.neutron.hm_binding_count(context, hm['id']) <= 1:
+        if self.neutron.hm_binding_count(context, hm['id']) < 1:
             try:
                 c.client.slb.hm.delete(self._meta_name(hm))
             except acos_errors.InUse:
                 pass
             except acos_errors.NotFound:
                 pass
-        pool_id = hm.get('pool_id', None)
-        pool_name = self._pool_name(context, pool_id)
-        c.client.slb.service_group.update(pool_name, health_monitor="")
+        else:
+            LOG.error("Cannot delete a health monitor with existing associations")
 
     def delete(self, context, hm, pool_id):
         h = hm.copy()
