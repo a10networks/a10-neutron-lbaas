@@ -38,6 +38,7 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
 
         # session persistence might need a vport update
         if pool.listener:
+            pool.listener.default_pool_id = pool.listener.default_pool_id or pool.id
             self.a10_driver.listener._update(c, context, pool.listener)
 
     def _create(self, c, context, pool):

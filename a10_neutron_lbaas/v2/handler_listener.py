@@ -81,7 +81,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                                         axapi_args=server_args)
 
         try:
-            pool_name = self._pool_name(context, listener.default_pool)
+            pool_name = self._pool_name(context, pool_id=listener.default_pool_id)
         except Exception:
             pool_name = None
         persistence = handler_persist.PersistHandler(
