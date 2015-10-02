@@ -21,6 +21,9 @@ import v1.handler_hm
 import v1.handler_member
 import v1.handler_pool
 import v1.handler_vip
+
+LOG = logging.getLogger(__name__)
+
 try:
     import v2.handler_hm
     import v2.handler_lb
@@ -28,7 +31,7 @@ try:
     import v2.handler_member
     import v2.handler_pool
 except ImportError:
-    pass
+    LOG.error("Could not import A10OpenstackLBaaSV2 driver as neutron-lbaas could not be found.")
 import version
 
 LOG = logging.getLogger(__name__)
