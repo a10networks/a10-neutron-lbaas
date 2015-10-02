@@ -12,10 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 # flake8: noqa
+import logging
+
+LOG = logging.getLogger(__name__)
 
 from a10_openstack_lb import A10OpenstackLBV1
 try:
     from a10_openstack_lb import A10OpenstackLBV2
 except ImportError:
-    pass
+    LOG.error("Could not import A10OpenstackLBaaSV2 driver as neutron-lbaas could not be found.")    
 from version import VERSION
