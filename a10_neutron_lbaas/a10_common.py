@@ -13,18 +13,8 @@
 # under the License.
 
 auto_dictionary = {
-    "2.1": ("snat_auto", lambda x: _bool_to_on_off(x)),
+    "2.1": ("source_nat_auto", lambda x: int(x)),
     "3.0": ("auto", lambda x: int(x))
-}
-
-on_off_boolean = {
-    "off": False,
-    "on": True
-}
-
-boolean_on_off = {
-    False: "off",
-    True: "on"
 }
 
 

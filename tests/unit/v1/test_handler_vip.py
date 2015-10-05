@@ -91,12 +91,7 @@ class TestVIP(test_base.UnitTestBase):
             transform = expected_tuple[1]
 
         if autosnat and key is not None and transform is not None:
-            # Terrible 2.1 special handling due to string escaping
-            if api_ver == "2.1":
-                auto_format = "\'{0}\': \'{1}\'"
-            else:
-                auto_format = "'{0}': {1}"
-
+            auto_format = "'{0}': {1}"
             auto_expected = auto_format.format(key, transform(autosnat))
 
         self.a.vip.create(None, vip)
