@@ -146,7 +146,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         return is_success
 
     def _acos_create_or_update(self, acos_obj, **kwargs):
-        # pdb.set_trace()
         if acos_obj.exists(kwargs["file"]):
             acos_obj.update(**kwargs)
         else:
