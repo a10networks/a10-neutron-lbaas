@@ -13,8 +13,18 @@
 # under the License.
 
 auto_dictionary = {
-    "2.1": ("source_nat_auto", lambda x: int(x)),
+    "2.1": ("snat_auto", lambda x: _bool_to_on_off(x)),
     "3.0": ("auto", lambda x: int(x))
+}
+
+on_off_boolean = {
+    "off": False,
+    "on": True
+}
+
+boolean_on_off = {
+    False: "off",
+    True: "on"
 }
 
 
@@ -46,3 +56,19 @@ def _set_ipinip_parameter(vport, device_info):
     ipinip = device_info.get(key, False)
     if ipinip:
         vport[key] = int(ipinip)
+
+
+def _on_off_to_bool(strval):
+    retval = False
+    if strval is not None and len(strval) > 0:
+        lstr = strval.lower()
+        if lstr in on_off_boolean:
+            retval = on_off_boolean[lstr]
+    return retval
+
+
+def _bool_to_on_off(boolval):
+    if boolval in boolean_on_off:
+        return '"{0}"'.format(boolean_on_off[boolval])
+    else:
+        raise Exception("Input value must be boolean %s or %s" % (True, False))
