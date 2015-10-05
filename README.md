@@ -59,6 +59,8 @@ Open `/etc/neutron/neutron_lbaas.conf` in your preferred text editor.
 In the list of `service_provider` settings, ensure there is only a single entry for LOADBALANCERV2 (you can comment out existing entries) enabled:
 `service_provider = LOADBALANCERV2:A10Networks:neutron_lbaas.drivers.a10networks.driver_v2.ThunderDriver:default`
 
+##### Device configuration
+
 After installation, you will need to provide configuration for the driver so the driver is aware of the appliances you have configured.  The configuration is a standard JSON structure stored in `/etc/a10/config.py`.  Below is a sample to show options and formatting:
 ```python
 devices = {
@@ -69,6 +71,7 @@ devices = {
         "username": "admin",
         "password": "a10",
         "status": True,
+        "default_virtual_server_vrid": 1,
         "autosnat": False,
         "api_version": "3.0",
         "v_method": "ADP",
