@@ -119,3 +119,27 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
     def delete(self, context, member):
         with a10.A10DeleteContext(self, context, member) as c:
             self._delete(c, context, member)
+
+    def stats(self, context, member):
+        retval = {
+            "servers_up": 0,
+            "servers_down": 0,
+            "servers_disable": 0,
+            "servers_total": 0
+        }
+
+        try:
+            with a10.A10Context(self, context, member) as c:
+                server_ip = self.neutron.member_get_ip(context, member,
+                                                       c.device_cfg['use_float'])
+                server_name = self._meta_name(member, server_ip)
+
+                stats = c.client.slb.service_group.member.stats(name=server_name)
+                retval = stats
+
+        except Exception as ex:
+            LOG.exception(ex)
+        finally:
+            pass
+
+        return retval
