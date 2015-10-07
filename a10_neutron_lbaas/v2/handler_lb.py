@@ -14,6 +14,8 @@
 
 import logging
 
+from a10_neutron_lbaas import a10_common
+
 import acos_client.errors as acos_errors
 import handler_base_v2
 import v2_context as a10
@@ -29,8 +31,10 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             status = c.client.slb.DOWN
 
         try:
+            vip_meta = self.meta(lb, 'virtual_server', {})
+            a10_common._set_vrid_parameter(vip_meta, c.device_cfg)
             vip_args = {
-                'virtual_server': self.meta(lb, 'virtual_server', {})
+                'virtual_server': vip_meta
             }
             set_method(
                 self._meta_name(lb),

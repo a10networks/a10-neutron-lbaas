@@ -61,8 +61,10 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
 
             vport_list = [{}]
             try:
+                vip_meta = self.meta(vip, 'virtual_server', {})
+                a10_common._set_vrid_parameter(vip_meta, c.device_cfg)
                 vip_args = {
-                    'virtual_server': self.meta(vip, 'virtual_server', {})
+                    'virtual_server': vip_meta
                 }
                 vport_list = vip_args['virtual_server'].pop('vport_list', [{}])
                 c.client.slb.virtual_server.create(

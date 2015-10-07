@@ -32,3 +32,10 @@ def _set_auto_parameter(vport, device_info):
     if vport_key is not None:
         cfg_value = device_info.get("autosnat", False)
         vport[vport_key] = vport_transform(cfg_value)
+
+
+def _set_vrid_parameter(virtual_server, device_info):
+    vrid = device_info.get("default_virtual_server_vrid", None)
+
+    if vrid is not None:
+        virtual_server['vrid'] = vrid
