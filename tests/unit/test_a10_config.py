@@ -21,7 +21,7 @@ class TestA10Config(test_base.UnitTestBase):
         self.assertTrue(self.a.config.verify_appliances)
 
     def test_num_appliances(self):
-        self.assertEqual(5, len(self.a.config.devices))
+        self.assertEqual(7, len(self.a.config.devices))
 
     def test_expected_ports(self):
         self.assertEqual(8443, self.a.config.devices['ax1']['port'])
@@ -36,3 +36,6 @@ class TestA10Config(test_base.UnitTestBase):
     def test_v_method(self):
         for k, v in self.a.config.devices.items():
             self.assertEqual('LSI', v['v_method'].upper())
+
+    def test_alternate_shared_partition(self):
+        self.assertTrue(self.a.config.devices['axadp-alt']['shared_partition'])

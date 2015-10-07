@@ -21,10 +21,19 @@ import a10_neutron_lbaas.a10_openstack_lb as a10_os
 import a10_neutron_lbaas.plumbing_hooks as hooks
 
 
+def _build_openstack_context():
+    admin_context = {
+        "tenant_id": "admin"
+    }
+
+    return mock.Mock(admin_context=admin_context)
+
+
 class FakeA10OpenstackLBV1(a10_os.A10OpenstackLBV1):
 
     def __init__(self, openstack_driver):
         super(FakeA10OpenstackLBV1, self).__init__(mock.MagicMock())
+        self.openstack_context = _build_openstack_context()
 
     def _get_a10_client(self, device_info):
         self.device_info = device_info
@@ -45,6 +54,7 @@ class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
             mock.MagicMock(),
             neutron_hooks_module=mock.MagicMock())
         self.certmgr = mock.Mock()
+        self.openstack_context = _build_openstack_context()
 
     def _get_a10_client(self, device_info):
         self.device_info = device_info
@@ -59,6 +69,8 @@ class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
 
 
 class UnitTestBase(unittest.TestCase):
+    def _build_openstack_context(self):
+        return _build_openstack_context()
 
     def setUp(self):
         unit_dir = os.path.dirname(__file__)
