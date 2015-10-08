@@ -25,14 +25,14 @@ Installation of A10's LBaaS implementation for Neutron is simple.  Install, conf
 
 ##### Installation from pypi
 ```sh
-pip install a10-neutron-lbaas
+sudo pip install a10-neutron-lbaas
 ```
 
 ##### Installation from cloned git repository.
 ```sh
 git clone https://github.com/a10networks/a10-neutron-lbaas.git
 cd a10-neutron-lbaas
-pip install -e .
+sudo pip install -e .
 ```
 
 
@@ -93,6 +93,34 @@ devices = {
     },
 }
 ```
+
+##### Essential device configuration
+
+###### `host` (required)
+
+The ip address or host name of the A10 appliance. For a virtual chassis configuration, this should be the floating host or ip address of the master.
+
+###### `port` (default `443`)
+
+Port that the AXAPI is exposed on
+
+###### `username` and `password` (required)
+
+Authentication credentials to control the A10 appliance via the AXAPI.
+
+###### `api_version` (default `"2.1"`)
+
+Version of the A10 appliance's AXAPI. `"2.1"` for 2.X.X series ACOS versions, `"3.0"` for 4.X versions.
+
+##### Virtual server configuration
+
+###### `autosnat`
+
+Set to `True` to use the automatic source NAT pool. Corresponds to configuring `vitual-server` `port`s with `source-nat auto`. Currently only supported on devices with `"api_version": "3.0"`.
+
+###### `default_virtual_server_vrid`
+
+Virtual router number for new virtual servers. Setting it to a number `X` corresponds to configuring `vitual-server`s with `vrid X`. 
 
 ## Restart necessary services
 Restart the `q-svc` and `q-lbaas2` services after configuration updates.
