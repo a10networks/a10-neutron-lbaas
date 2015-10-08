@@ -87,14 +87,11 @@ class TestPools(test_base.UnitTestBase):
         pool['members'] = [test_handler_member._fake_member()]
         pool['health_monitors_status'] = [{'monitor_id': 'hm1'}]
         self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = test_base.FakeHM()
-        fakepool = test_base.FakePool()
-        self.a.pool.neutron.plugin.get_pool.return_value = fakepool
+
         self._test_delete(pool)
 
         (self.a.last_client.slb.service_group.delete.
             assert_called_with(pool['id']))
-        self.a.last_client.slb.service_group.update.assert_called_with(fakepool.id,
-                                                                       health_monitor='')
 
     def test_delete_without_health_monitor(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')

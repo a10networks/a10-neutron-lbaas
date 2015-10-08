@@ -87,6 +87,8 @@ class TestHM(test_base.UnitTestBase):
     def test_delete(self):
         expected = test_base.FakePool()
         fakehm = test_base.FakeHM()
+        fakehm['tenant_id'] = 'tenv1'
+        fakehm['id'] = 'fedcba'
         fakehm.pools.append(expected)
 
         self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
@@ -96,4 +98,4 @@ class TestHM(test_base.UnitTestBase):
         self.a.hm.delete(None, fakehm, 'p01')
 
         self.a.last_client.slb.service_group.update.assert_called_with(
-            pool_name, health_monitor='')
+            pool_name, health_monitor='', health_monitor_disabled=True)
