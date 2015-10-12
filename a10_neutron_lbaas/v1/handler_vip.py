@@ -79,10 +79,8 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             try:
                 if vport_list[0]:
                     a10_common._set_auto_parameter(vport_list[0], c.device_cfg)
-
                     a10_common._set_ipinip_parameter(vport_list[0], c.device_cfg)
                     vport_args = {'vport': vport_list[0]}
-
                 else:
                     vport_meta = self.meta(vip, 'vport', {})
                     a10_common._set_auto_parameter(vport_meta, c.device_cfg)
