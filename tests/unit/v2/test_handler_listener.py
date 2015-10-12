@@ -144,7 +144,8 @@ class TestListeners(test_base.UnitTestBase):
             transform = None
 
         if autosnat and key is not None and transform is not None:
-            auto_expected = "'{0}': {1}".format(key, transform(autosnat))
+            auto_format = "'{0}': {1}"
+            auto_expected = auto_format.format(key, transform(autosnat))
 
         try:
             self.a.listener.create(None, m)

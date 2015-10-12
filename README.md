@@ -116,7 +116,7 @@ Version of the A10 appliance's AXAPI. `"2.1"` for 2.X.X series ACOS versions, `"
 
 ###### `autosnat`
 
-Set to `True` to use the automatic source NAT pool. Corresponds to configuring `vitual-server` `port`s with `source-nat auto`. Currently only supported on devices with `"api_version": "3.0"`.
+Set to `True` to use the automatic source NAT pool. Corresponds to configuring `virtual-server` `port`s with `source-nat auto`. This functionality is only supported on devices with ACOS version 2.7.2 P3 or newer.
 
 ###### `default_virtual_server_vrid`
 

@@ -79,7 +79,6 @@ class TestVIP(test_base.UnitTestBase):
         Due to how the config is pulled in, we can't override the config
         version here and just expect it to work.
         """
-
         for k, v in self.a.config.devices.items():
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
@@ -92,11 +91,13 @@ class TestVIP(test_base.UnitTestBase):
             transform = expected_tuple[1]
 
         if autosnat and key is not None and transform is not None:
-            auto_expected = "'{0}': {1}".format(key, transform(autosnat))
+            auto_format = "'{0}': {1}"
+            auto_expected = auto_format.format(key, transform(autosnat))
 
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('virtual_server.create' in s)
+
         if auto_expected is not None:
             self.assertTrue(auto_expected in s)
 
