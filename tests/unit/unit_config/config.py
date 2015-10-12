@@ -87,7 +87,6 @@ devices = {
         "max_instance": 5000,
         "use_float": True,
     },
-<<<<<<< HEAD
     "axadp-alt": {
         "host": "10.10.100.24",
         "username": "admin",
@@ -102,8 +101,7 @@ devices = {
         "password": "a10",
         "protocol": "https",
         "v_method": "ADP"
-    }
-=======
+    },
     "axipinip": {
         "host": "10.48.5.219",
         "protocol": "https",
@@ -115,5 +113,4 @@ devices = {
         "use_float": True,
         "ipinip": True
     },
->>>>>>> Meh implementation of ipinip + basic test coverage.
 }
