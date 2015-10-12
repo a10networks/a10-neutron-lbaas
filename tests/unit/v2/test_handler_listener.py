@@ -158,6 +158,27 @@ class TestListeners(test_base.UnitTestBase):
             if auto_expected is not None:
                 self.assertTrue(auto_expected in s)
 
+    def _test_create_ipinip(self, ip_in_ip=False):
+        for k, v in self.a.config.devices.items():
+            v['ipinip'] = ip_in_ip
+
+        p = 'TCP'
+        lb = test_base.FakeLoadBalancer()
+        pool = test_base.FakePool(p, 'ROUND_ROBIN', None)
+        m = test_base.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+
+        self.a.listener.create(None, m)
+        self.print_mocks()
+        s = str(self.a.last_client.mock_calls)
+        self.assertEqual(ip_in_ip, "ipinip" in s)
+
+    def test_create_ip_in_ip_positive(self):
+        self._test_create_ipinip(True)
+
+    def test_create_ip_in_ip_negative(self):
+        self._test_create_ipinip()
+
     def test_update_no_lb(self):
         m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)

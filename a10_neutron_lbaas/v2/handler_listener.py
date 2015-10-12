@@ -86,8 +86,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             pool_name = None
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
-        vport_meta = self.meta(listener, 'port', {})
+
+        vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
         a10_common._set_auto_parameter(vport_meta, c.device_cfg)
+        a10_common._set_ipinip_parameter(vport_meta, c.device_cfg)
         vport_args = {'port': vport_meta}
 
         try:
@@ -146,7 +148,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         return is_success
 
     def _acos_create_or_update(self, acos_obj, **kwargs):
-        # pdb.set_trace()
         if acos_obj.exists(kwargs["file"]):
             acos_obj.update(**kwargs)
         else:

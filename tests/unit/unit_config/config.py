@@ -101,5 +101,16 @@ devices = {
         "password": "a10",
         "protocol": "https",
         "v_method": "ADP"
-    }
+    },
+    "axipinip": {
+        "host": "10.48.5.219",
+        "protocol": "https",
+        "user": "admin",
+        "password": "a10",
+        "status": True,
+        "api_version": "2.1",
+        "max_instance": 5000,
+        "use_float": True,
+        "ipinip": True
+    },
 }

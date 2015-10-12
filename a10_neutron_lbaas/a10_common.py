@@ -39,3 +39,10 @@ def _set_vrid_parameter(virtual_server, device_info):
 
     if vrid is not None:
         virtual_server['vrid'] = vrid
+
+
+def _set_ipinip_parameter(vport, device_info):
+    key = "ipinip"
+    ipinip = device_info.get(key, False)
+    if ipinip:
+        vport[key] = int(ipinip)

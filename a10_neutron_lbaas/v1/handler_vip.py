@@ -79,10 +79,12 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             try:
                 if vport_list[0]:
                     a10_common._set_auto_parameter(vport_list[0], c.device_cfg)
+                    a10_common._set_ipinip_parameter(vport_list[0], c.device_cfg)
                     vport_args = {'port': vport_list[0]}
                 else:
                     vport_meta = self.meta(vip, 'port', {})
                     a10_common._set_auto_parameter(vport_meta, c.device_cfg)
+                    a10_common._set_ipinip_parameter(vport_meta, c.device_cfg)
                     vport_args = {'port': vport_meta}
                 c.client.slb.virtual_server.vport.create(
                     self._meta_name(vip),
@@ -102,6 +104,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 i += 1
                 try:
                     a10_common._set_auto_parameter(vport, c.device_cfg)
+                    a10_common._set_ipinip_parameter(vport, c.device_cfg)
                     vport_args = {'port': vport}
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
