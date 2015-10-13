@@ -37,7 +37,8 @@ class TestA10Context(test_base.UnitTestBase):
 
     def test_context_e(self):
         try:
-            with a10.A10Context(self.handler, self.ctx, self.m) as c:
+            with a10.A10Context(self.handler, self.ctx, self.m,
+                                device_name='ax4') as c:
                 self.empty_mocks()
                 c
                 raise FakeException()
