@@ -87,6 +87,7 @@ class TestVIP(test_base.UnitTestBase):
         Due to how the config is pulled in, we can't override the config
         version here and just expect it to work.
         """
+
         for k, v in self.a.config.devices.items():
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
@@ -133,7 +134,7 @@ class TestVIP(test_base.UnitTestBase):
             v['default_virtual_server_vrid'] = default_vrid
 
         vip = self.fake_vip()
-        self.a.vip.create(None, vip)
+        self.handler.create(None, vip)
 
         create = self.a.last_client.slb.virtual_server.create
         create.assert_has_calls([mock.ANY])
@@ -159,7 +160,7 @@ class TestVIP(test_base.UnitTestBase):
             v['ipinip'] = ip_in_ip
 
         vip = self.fake_vip()
-        self.a.vip.create(None, vip)
+        self.handler.create(None, vip)
         s = str(self.a.last_client.mock_calls)
         self.assertEqual(ip_in_ip, "ipinip" in s)
 
@@ -196,7 +197,7 @@ class TestVIP(test_base.UnitTestBase):
         self.a.openstack_driver.device_info = {"enable_host_binding": True}
 
         self.handler.create(self.context, vip)
-        hostname = self.a.device_info["name"]
+        hostname = self.a.device_info.get("name", self.a.device_info.get("host", None))
 
         call_args = self.handler.neutrondb.portbindingport_create_or_update.call_args[0]
 

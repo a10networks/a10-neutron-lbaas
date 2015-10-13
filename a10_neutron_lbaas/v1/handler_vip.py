@@ -39,9 +39,10 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 status = c.client.slb.DOWN
 
             if c.openstack_driver.device_info["enable_host_binding"]:
+                hostname = c.device_cfg.get("name", c.device_cfg.get("host", None))
                 self.neutrondb.portbindingport_create_or_update(context,
                                                                 vip['port_id'],
-                                                                c.device_cfg["name"])
+                                                                hostname)
 
             pool_name = self._pool_name(context, vip['pool_id'])
 

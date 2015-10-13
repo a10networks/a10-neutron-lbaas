@@ -37,14 +37,14 @@ class TestA10Context(test_base.UnitTestBase):
         self.m = test_base.FakeModel()
 
     def test_context(self):
-        with a10.A10Context(self.handler, self.ctx, self.m) as c:
+        with a10.A10Context(self.handler, self.ctx, self.m, device_name="ax4") as c:
             self.empty_mocks()
             c
         self.empty_close_mocks()
 
     def test_context_e(self):
         try:
-            with a10.A10Context(self.handler, self.ctx, self.m) as c:
+            with a10.A10Context(self.handler, self.ctx, self.m, device_name="ax4") as c:
                 self.empty_mocks()
                 c
                 raise FakeException()
@@ -121,7 +121,8 @@ class TestA10ContextADP(TestA10Context):
 
         self.m.tenant_id = expected if use_alternate else "get-off-my-lawn"
         with a10.A10Context(self.handler, self.ctx, self.m,
-                            use_alternate_partition=use_alternate) as c:
+                            use_alternate_partition=use_alternate,
+                            device_name="axadp-alt") as c:
             c
             active_mock = self.a.last_client.system.partition.active
             self.assertEqual(use_alternate, expected in str(active_mock.mock_calls))

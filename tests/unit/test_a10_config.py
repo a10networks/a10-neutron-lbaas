@@ -27,7 +27,7 @@ class TestA10Config(test_base.UnitTestBase):
         # A better test would seem to be be parsing the JSON structure found in the file
         # and comparing that against what we get in devices.
         # This actually tests the number of devices with status == True
-        self.assertEqual(8, len(self.a.config.devices))
+        self.assertEqual(9, len(self.a.config.devices))
 
     def test_expected_ports(self):
         self.assertEqual(8443, self.a.config.devices['ax1']['port'])
