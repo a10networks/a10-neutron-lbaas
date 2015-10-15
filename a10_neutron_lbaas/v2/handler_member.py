@@ -12,15 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 import binascii
+import logging
 import re
 
 import acos_client.errors as acos_errors
 import handler_base_v2
 import v2_context as a10
-
 # tenant names allow some funky characters; we do not, as of 4.1.0
 non_alpha = re.compile('[^0-9a-zA-Z_-]')
+
+LOG = logging.getLogger(__name__)
 
 
 class MemberHandler(handler_base_v2.HandlerBaseV2):
