@@ -18,6 +18,11 @@ auto_dictionary = {
     "3.0": ("auto", lambda x: int(x))
 }
 
+ipinip_dictionary = {
+    "2.1": ("ip_in_ip", lambda x: int(x)),
+    "3.0": ("ipinip", lambda x: int(x))
+}
+
 
 vport_dictionary = {
     "2.1": "vport",
@@ -53,10 +58,20 @@ def _set_vrid_parameter(virtual_server, device_info):
 
 
 def _set_ipinip_parameter(vport, device_info):
-    key = "ipinip"
+    config_key = "ipinip"
+    api_ver = device_info.get("api_version", None)
+    ipinip_tuple = ipinip_dictionary.get(api_ver, None)
+    key = None
     ipinip = device_info.get(key, False)
-    if ipinip:
-        vport[key] = int(ipinip)
+
+    transform = lambda x: x
+    if ipinip_tuple:
+        key = ipinip_tuple[0]
+        transform = ipinip_tuple[1]
+
+    if key is not None:
+        cfg_value = device_info.get(config_key, False)
+        vport[key] = transform(cfg_value)
 
 
 def _vport(vport_meta, device_info):
