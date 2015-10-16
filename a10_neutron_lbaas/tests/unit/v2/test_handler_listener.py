@@ -166,10 +166,10 @@ class TestListeners(test_base.UnitTestBase):
 
         for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
+            v['api_version'] = api_ver
 
         if expected_tuple is not None:
-            key = expected_tuple[0]
-            transform = expected_tuple[1]
+            key, transform = expected_tuple
         else:
             key = None
             transform = None
