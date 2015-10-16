@@ -62,16 +62,16 @@ def _set_ipinip_parameter(vport, device_info):
     api_ver = device_info.get("api_version", None)
     ipinip_tuple = ipinip_dictionary.get(api_ver, None)
     key = None
-    ipinip = device_info.get(key, False)
 
     transform = lambda x: x
+
     if ipinip_tuple:
         key = ipinip_tuple[0]
         transform = ipinip_tuple[1]
 
     if key is not None:
-        cfg_value = device_info.get(config_key, False)
-        vport[key] = transform(cfg_value)
+        ipinip = device_info.get(config_key, False)
+        vport[key] = transform(ipinip)
 
 
 def _vport(vport_meta, device_info):
