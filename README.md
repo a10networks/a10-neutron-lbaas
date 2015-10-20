@@ -84,7 +84,6 @@ devices = {
         "peer_mgmt_port": "",
         "vlan": 0,
         "gateway_mode": 1,
-        ],
     },
     "ax4": {
         "host": "10.10.100.23",
