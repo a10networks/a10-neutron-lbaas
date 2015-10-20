@@ -12,7 +12,33 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import tests.unit.test_base as test_base
+import a10_neutron_lbaas.tests.unit.test_base as test_base
+
+
+class FakeModel(dict, object):
+    def __getitem__(self, key, default=None):
+        attr = getattr(self, key, default)
+        return attr
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
+    # def copy(self):
+    #     import copy
+    #     return copy.deepcopy(self)
+
+
+class FakeHM(FakeModel):
+    def __init__(self, id="hm01", name="hm01"):
+        self.id = id
+        self.name = name
+        self.pools = []
+
+
+class FakePool(FakeModel):
+    def __init__(self, id="p01", name="p01"):
+        self.id = id
+        self.name = name
 
 
 class UnitTestBase(test_base.UnitTestBase):

@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import tests.unit.test_base as test_base
+import a10_neutron_lbaas.tests.unit.test_base as test_base
 
 
 class FakeModel(object):
