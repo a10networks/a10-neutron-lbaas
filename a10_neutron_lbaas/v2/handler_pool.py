@@ -109,3 +109,14 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
         # didn't exist, doesn't exist
         # did exist, does exist, didn't change
         return
+
+    def stats(self, context, pool):
+        result = {"stats": {}, "members": {}}
+        with a10.A10Context(self, context, pool) as c:
+            name = pool.id
+            if name is not None:
+                stats = c.client.slb.service_group.stats(name)
+                result["stats"] = stats.get("stats", {})
+                result["members"] = stats.get("members", {})
+
+        return result
