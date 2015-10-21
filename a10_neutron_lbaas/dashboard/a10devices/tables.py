@@ -64,3 +64,5 @@ class A10ImageTable(tables.DataTable):
         verbose_name = _("A10 Images")
         table_actions = (AddImageAction,)
         row_actions = ()
+=======
+>>>>>>> Squashed iss112

@@ -19,6 +19,9 @@ import uuid
 from django.utils.translation import ugettext_lazy as _
 
 import a10_neutron_lbaas.a10_config as a10_config
+
+from django.utils.translation import ugettext_lazy as _
+
 import a10_neutron_lbaas.instance_manager as im
 
 import horizon.forms as forms
