@@ -12,27 +12,39 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""${message}
+"""lbaasv1 slb table
 
-Revision ID: ${up_revision}
-Revises: ${down_revision | comma,n}
-Create Date: ${create_date}
+Revision ID: 38bfe6f0fe53
+Revises: 160acaaa552e
+Create Date: 2015-10-21 21:34:36.510767
 
 """
 
 # revision identifiers, used by Alembic.
-revision = ${repr(up_revision)}
-down_revision = ${repr(down_revision)}
-branch_labels = ${repr(branch_labels)}
-depends_on = ${repr(depends_on)}
+revision = '38bfe6f0fe53'
+down_revision = '160acaaa552e'
+branch_labels = None
+depends_on = '3f3f44eb3cd3'
 
 from alembic import op
 import sqlalchemy as sa
-${imports if imports else ""}
+
 
 def upgrade():
-    ${upgrades if upgrades else "pass"}
+    op.create_table(
+        'a10_slb_v1',
+        sa.Column('id',
+                  sa.String(36),
+                  sa.ForeignKey('a10_slb.id'),
+                  primary_key=True,
+                  nullable=False),
+        sa.Column('vip_id',
+                  sa.String(36),
+                  sa.ForeignKey('vips.id'),
+                  unique=True,
+                  nullable=False)
+    )
 
 
 def downgrade():
-    ${downgrades if downgrades else "pass"}
+    op.drop_table('a10_slb_v1')
