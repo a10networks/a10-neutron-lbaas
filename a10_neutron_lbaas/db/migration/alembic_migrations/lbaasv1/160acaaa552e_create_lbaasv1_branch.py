@@ -12,27 +12,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""${message}
+"""create lbaasv1 branch
 
-Revision ID: ${up_revision}
-Revises: ${down_revision | comma,n}
-Create Date: ${create_date}
+Revision ID: 160acaaa552e
+Revises:
+Create Date: 2015-10-21 21:26:36.331391
 
 """
 
 # revision identifiers, used by Alembic.
-revision = ${repr(up_revision)}
-down_revision = ${repr(down_revision)}
-branch_labels = ${repr(branch_labels)}
-depends_on = ${repr(depends_on)}
+revision = '160acaaa552e'
+down_revision = None
+branch_labels = ('lbaasv1',)
+depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
-${imports if imports else ""}
+# from alembic import op
+# import sqlalchemy as sa
+
 
 def upgrade():
-    ${upgrades if upgrades else "pass"}
+    pass
 
 
 def downgrade():
-    ${downgrades if downgrades else "pass"}
+    pass
