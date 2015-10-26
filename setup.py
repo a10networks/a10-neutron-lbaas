@@ -26,5 +26,9 @@ setup(
         'Topic :: Internet',
     ],
 
+    entry_points = {
+        'console_scripts': ['a10-neutron-lbaas-db-manage=a10_neutron_lbaas.db.migration.cli:main']
+    },
+
     install_requires = ['acos-client>=1.2.6']
 )
