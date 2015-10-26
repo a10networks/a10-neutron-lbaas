@@ -14,7 +14,7 @@
 
 from __future__ import with_statement
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 
 VERSION_TABLE = 'alembic_version_a10_neutron_lbaas'
@@ -66,9 +66,8 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix='sqlalchemy.',
+    connectable = create_engine(
+        config.neutron_config.database.connection,
         poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
