@@ -49,6 +49,7 @@ class A10Config(object):
                 if 'status' in v and not v['status']:
                     LOG.debug("status is False, skipping dev: %s", v)
                 else:
+                    v['key'] = k
                     self.devices[k] = v
 
                     # Figure out port and protocol
