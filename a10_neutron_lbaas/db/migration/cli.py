@@ -16,14 +16,12 @@
 
 import os
 
+import a10_neutron_lbaas.db.migration.mocks as mocks
 from alembic import command as alembic_command
 from alembic import config as alembic_config
-from alembic import script as alembic_script
 from alembic import util as alembic_util
 from oslo.config import cfg
 
-# Import neutron configuration declarations.
-# Tgese modify cfg.CONF
 import neutron.services.service_base as service_base
 
 SCRIPT_LOCATION = 'a10_neutron_lbaas.db.migration:alembic_migrations'
@@ -111,12 +109,18 @@ CONF.register_cli_opt(command_opt)
 class Drivers(object):
     def __init__(self):
         self.drivers = dict()
+        self.plugin = mocks.UncallableMock(name='mock_neutron_plugin_base_v2')
 
     def __getitem__(self, key):
         try:
             return self.drivers[key]
-        except Exception:
-            self.drivers[key] = service_base.load_drivers(key, None)
+        except KeyError:
+            try:
+                self.drivers[key] = service_base.load_drivers(key, self.plugin)
+            except BaseException:
+                # Catch BaseException because load_drivers throws SystemExit
+                # Pass becasue we'd just raise KeyError and the nexe line does that
+                pass
             return self.drivers[key]
 
 
