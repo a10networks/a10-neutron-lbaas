@@ -14,12 +14,40 @@
 
 from neutron.db import model_base
 import sqlalchemy as sa
+from sqlalchemy.inspection import inspect
+import uuid
+
+
+def default(cls, **kw):
+    instance = cls(**kw)
+    populate(instance)
+    return instance
+
+
+def populate(instance):
+    for key, column in inspect(instance.__class__).columns.items():
+        if getattr(instance, key) is None and column.default is not None:
+            arg = column.default.arg
+            column_default = arg if callable(arg) else lambda: arg
+            setattr(instance, key, column_default(instance))
+
+
+def summon(session, cls, **kw):
+    existing = session.query(cls).filter_by(**kw).first()
+    if existing is None:
+        existing = default(cls, **kw)
+        session.add(existing)
+    return existing
+
+
+def uuid_str():
+    return str(uuid.uuid4())
 
 
 class A10ApplianceSLB(model_base.BASEV2):
     __tablename__ = u'a10_appliances_slb'
 
-    id = sa.Column(sa.String(36), primary_key=True, nullable=False)
+    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=uuid_str)
     type = sa.Column(sa.String(50), nullable=False)
 
     __mapper_args__ = {
@@ -34,8 +62,12 @@ class A10ApplianceConfigured(A10ApplianceSLB):
     id = sa.Column(sa.String(36),
                    sa.ForeignKey(u'a10_appliances_slb.id'),
                    primary_key=True,
+                   default=uuid_str,
                    nullable=False)
     device_key = sa.Column(sa.String(255), nullable=False)
+
+    def device(self, context):
+        return context.a10_driver.config.devices[self.device_key]
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__
@@ -45,7 +77,7 @@ class A10ApplianceConfigured(A10ApplianceSLB):
 class A10SLB(model_base.BASEV2):
     __tablename__ = u'a10_slb'
 
-    id = sa.Column(sa.String(36), primary_key=True, nullable=False)
+    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=uuid_str)
     type = sa.Column(sa.String(50), nullable=False)
     a10_appliance_id = sa.Column(sa.String(36),
                                  sa.ForeignKey('a10_appliances_slb.id'),
@@ -63,9 +95,10 @@ class A10SLBV1(A10SLB):
     id = sa.Column(sa.String(36),
                    sa.ForeignKey(u'a10_slb.id'),
                    primary_key=True,
+                   default=uuid_str,
                    nullable=False)
     vip_id = sa.Column(sa.String(36),
-                       sa.ForeignKey(u'vip.id'),
+                       sa.ForeignKey(u'vips.id'),
                        unique=True,
                        nullable=False)
 
@@ -80,9 +113,10 @@ class A10SLBV2(A10SLB):
     id = sa.Column(sa.String(36),
                    sa.ForeignKey(u'a10_slb.id'),
                    primary_key=True,
+                   default=uuid_str,
                    nullable=False)
     lbaas_loadbalancer_id = sa.Column(sa.String(36),
-                                      sa.ForeignKey(u'lbaas_loadbalancer.id'),
+                                      sa.ForeignKey(u'lbaas_loadbalancers.id'),
                                       unique=True,
                                       nullable=False)
 
