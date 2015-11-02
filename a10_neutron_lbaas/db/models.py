@@ -15,6 +15,7 @@
 from neutron.db import model_base
 import sqlalchemy as sa
 from sqlalchemy.inspection import inspect
+from sqlalchemy.orm import relationship
 import uuid
 
 
@@ -82,6 +83,7 @@ class A10SLB(model_base.BASEV2):
     a10_appliance_id = sa.Column(sa.String(36),
                                  sa.ForeignKey('a10_appliances_slb.id'),
                                  nullable=False)
+    a10_appliance = relationship(A10ApplianceSLB)
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__,

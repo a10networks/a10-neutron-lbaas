@@ -59,6 +59,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
     def _delete(self, c, context, lb):
         c.client.slb.virtual_server.delete(self._meta_name(lb))
+        c.db_operations.delete_slb_v2(lb.id)
 
     def delete(self, context, lb):
         with a10.A10DeleteContext(self, context, lb) as c:

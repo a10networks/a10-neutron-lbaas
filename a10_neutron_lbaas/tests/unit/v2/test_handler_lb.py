@@ -108,6 +108,11 @@ class TestLB(test_base.UnitTestBase):
         self.assertTrue('call.slb.virtual_server.delete' in s)
         self.assertTrue('fake-lb-id-001' in s)
 
+    def test_delete_removes_slb(self):
+        m = test_base.FakeLoadBalancer()
+        self.a.lb.delete(None, m)
+        self.a.db_operations_mock.delete_slb_v2.assert_called_with(m.id)
+
     def test_refresh(self):
         try:
             self.a.lb.refresh(None, test_base.FakeModel())
