@@ -38,10 +38,12 @@ class A10Context(object):
         self.get_tenant_id()
         if self.device_name:
             d = self.a10_driver.config.devices[self.device_name]
+            appliance = self.db_operations.summon_appliance_configured(d['key'])
         else:
             appliance = self.inventory.find(self.openstack_lbaas_obj)
             d = appliance.device(self)
         self.device_cfg = d
+        self.appliance = appliance
         self.client = self.a10_driver._get_a10_client(self.device_cfg)
         self.select_appliance_partition()
         return self

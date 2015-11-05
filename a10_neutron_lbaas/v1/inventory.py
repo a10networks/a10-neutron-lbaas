@@ -12,25 +12,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
+import a10_neutron_lbaas.db.models as models
 import a10_neutron_lbaas.inventory as inventory
 
 
 class InventoryV1(inventory.InventoryBase):
-    pass
-    # def root_vip_id(self, openstack_context, openstack_lbaas_obj):
-    #     """Returns the vip_id the passed object is part of"""
-    #     pass
 
-    # def find(self, openstack_lbaas_obj):
-    #     vip_id = self.root_vip_id(openstack_lbaas_obj)
-    #     slb = a10_context.db_operations.get_slb_v1(vip_id)
-    #     if slb is None:
-    #         # Assign this vip to an appliance
-    #         appliance = a10_context.select_appliance()
-    #         slb = models.default(
-    #             models.A10SLBV1,
-    #             vip_id=vip_id,
-    #             a10_appliance=appliance)
-    #         a10_context.db_operations.add(slb)
+    def find(self, openstack_lbaas_obj):
+        # Puts all of a tenant's v1 objects on the same appliance
+        tenant_id = self.a10_context.tenant_id
+        tenant = self.db_operations.get_tenant_appliance(tenant_id)
+        if tenant is None:
+            # Assign this tenant to an appliance
+            appliance = self.select_appliance()
+            tenant = models.default(
+                models.A10TenantAppliance,
+                tenant_id=tenant_id,
+                a10_appliance=appliance)
+            self.db_operations.add(tenant)
 
-    #     return slb
+        return tenant.a10_appliance
