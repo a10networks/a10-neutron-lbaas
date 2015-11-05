@@ -121,5 +121,22 @@ Set to `True` to use the automatic source NAT pool. Corresponds to configuring `
 
 Virtual router number for new virtual servers. Setting it to a number `X` corresponds to configuring `vitual-server`s with `vrid X`. 
 
+## Install database migrations
+
+Run 
+
+```
+a10-neutron-lbaas-db-manage intall
+```
+
+The `core` migration and the migration for the lbaas version you are using should both be `UPGRADED`. For example, the following is a successful installation of the database migrations for lbaas version 1.
+
+```
+Summary
+core     UPGRADED  At 28a984ff83e1
+lbaasv1  UPGRADED  At 4657b284f454
+lbaasv2  ERROR     'LOADBALANCERV2'
+```
+
 ## Restart necessary services
 Restart the `q-svc` and `q-lbaas2` services after configuration updates.
