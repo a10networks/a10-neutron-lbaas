@@ -125,3 +125,15 @@ class A10SLBV2(A10SLB):
     __mapper_args__ = {
         'polymorphic_identity': __tablename__
     }
+
+
+class A10TenantAppliance(model_base.BASEV2):
+    __tablename__ = u'a10_tenant_appliance'
+
+    tenant_id = sa.Column(sa.String(255),
+                          primary_key=True,
+                          nullable=False)
+    a10_appliance_id = sa.Column(sa.String(36),
+                                 sa.ForeignKey('a10_appliances_slb.id'),
+                                 nullable=False)
+    a10_appliance = relationship(A10ApplianceSLB)

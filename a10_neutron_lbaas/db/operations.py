@@ -46,6 +46,10 @@ class Operations(object):
         return self.session.query(models.A10SLBV2).\
             filter_by(lbaas_loadbalancer_id=loadbalancer_id).delete()
 
+    def get_tenant_appliance(self, tenant_id):
+        return self.session.query(models.A10TenantAppliance).\
+            filter_by(tenant_id=tenant_id).first()
+
     def add(self, obj):
         # print 'add({0})'.format(repr(obj))
         return self.session.add(obj)
