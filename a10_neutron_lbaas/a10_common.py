@@ -12,26 +12,37 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 auto_dictionary = {
     "2.1": ("source_nat_auto", lambda x: int(x)),
     "3.0": ("auto", lambda x: int(x))
 }
 
 
-def _set_auto_parameter(vport, device_info):
-    api_ver = device_info.get("api_version", None)
-    auto_tuple = auto_dictionary.get(api_ver, None)
+vport_dictionary = {
+    "2.1": "vport",
+    "3.0": "port"
+}
 
-    vport_key = None
-    vport_transform = lambda x: x
+
+def _api_ver(device_info):
+    api_ver = device_info.get("api_version", None)
+    if api_ver is None:
+        api_ver = "2.1"
+    return api_ver
+
+
+def _set_auto_parameter(vport, device_info):
+    api_ver = _api_ver(device_info)
+    auto_tuple = auto_dictionary.get(api_ver, None)
 
     if auto_tuple:
         vport_key = auto_tuple[0]
         vport_transform = auto_tuple[1]
 
-    if vport_key is not None:
-        cfg_value = device_info.get("autosnat", False)
-        vport[vport_key] = vport_transform(cfg_value)
+        cfg_value = device_info.get("autosnat", None)
+        if cfg_value is not None:
+            vport[vport_key] = vport_transform(cfg_value)
 
 
 def _set_vrid_parameter(virtual_server, device_info):
@@ -46,3 +57,21 @@ def _set_ipinip_parameter(vport, device_info):
     ipinip = device_info.get(key, False)
     if ipinip:
         vport[key] = int(ipinip)
+
+
+def _vport(vport_meta, device_info):
+    api_ver = _api_ver(device_info)
+
+    _set_auto_parameter(vport_meta, device_info)
+    _set_ipinip_parameter(vport_meta, device_info)
+
+    key = vport_dictionary[api_ver]
+    vport = {key: vport_meta}
+    return vport
+
+
+def _virtual_server(virtual_server_meta, device_info):
+    _set_vrid_parameter(virtual_server_meta, device_info)
+
+    virtual_server = {'virtual_server': virtual_server_meta}
+    return virtual_server

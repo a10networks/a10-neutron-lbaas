@@ -32,10 +32,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
         try:
             vip_meta = self.meta(lb, 'virtual_server', {})
-            a10_common._set_vrid_parameter(vip_meta, c.device_cfg)
-            vip_args = {
-                'virtual_server': vip_meta
-            }
+            vip_args = a10_common._virtual_server(vip_meta, c.device_cfg)
             set_method(
                 self._meta_name(lb),
                 lb.vip_address,
