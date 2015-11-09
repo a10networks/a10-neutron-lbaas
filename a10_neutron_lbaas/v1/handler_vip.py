@@ -148,7 +148,11 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             self.hooks.after_vip_update(c, context, vip)
 
     def _delete(self, c, context, vip):
-        c.client.slb.virtual_server.delete(self._meta_name(vip))
+        try:
+            c.client.slb.virtual_server.delete(self._meta_name(vip))
+        except acos_errors.NotFound:
+            pass
+
         PersistHandler(c, context, vip, self._meta_name(vip)).delete()
         c.db_operations.delete_slb_v1(vip['id'])
 

@@ -71,7 +71,10 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
                 LOG.debug("handler_pool.delete(): HM: %s" % (pool.healthmonitor))
                 self.a10_driver.hm._delete(c, context, pool.healthmonitor)
 
-            c.client.slb.service_group.delete(self._meta_name(pool))
+            try:
+                c.client.slb.service_group.delete(self._meta_name(pool))
+            except (acos_errors.NotFound, acos_errors.NoSuchServiceGroup):
+                pass
 
             handler_persist.PersistHandler(
                 c, context, pool, self._meta_name(pool)).delete()

@@ -167,11 +167,14 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             self._update(c, context, listener)
 
     def _delete(self, c, context, listener):
-        c.client.slb.virtual_server.vport.delete(
-            self.a10_driver.loadbalancer._name(listener.loadbalancer),
-            self._meta_name(listener),
-            protocol=a10_osmap.vip_protocols(c, listener.protocol),
-            port=listener.protocol_port)
+        try:
+            c.client.slb.virtual_server.vport.delete(
+                self.a10_driver.loadbalancer._name(listener.loadbalancer),
+                self._meta_name(listener),
+                protocol=a10_osmap.vip_protocols(c, listener.protocol),
+                port=listener.protocol_port)
+        except acos_errors.NotFound:
+            pass
 
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
