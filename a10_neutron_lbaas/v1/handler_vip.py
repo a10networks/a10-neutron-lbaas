@@ -28,6 +28,13 @@ LOG = logging.getLogger(__name__)
 
 class VipHandler(handler_base_v1.HandlerBaseV1):
 
+    def vport_meta(self, vip):
+        """Get the vport meta, no matter which name was used"""
+        vport_meta = self.meta(vip, 'vport', None)
+        if vport_meta is None:
+            vport_meta = self.meta(vip, 'port', {})
+        return vport_meta
+
     def create(self, context, vip):
         with a10.A10WriteStatusContext(self, context, vip) as c:
             status = c.client.slb.UP
@@ -59,14 +66,11 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 except acos_errors.Exists:
                     pass
 
-            vport_list = [{}]
+            vport_list = None
             try:
                 vip_meta = self.meta(vip, 'virtual_server', {})
-                a10_common._set_vrid_parameter(vip_meta, c.device_cfg)
-                vip_args = {
-                    'virtual_server': vip_meta
-                }
-                vport_list = vip_args['virtual_server'].pop('vport_list', [{}])
+                vport_list = vip_meta.pop('vport_list', None)
+                vip_args = a10_common._virtual_server(vip_meta, c.device_cfg)
                 c.client.slb.virtual_server.create(
                     self._meta_name(vip),
                     vip['address'],
@@ -76,42 +80,15 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 pass
 
             LOG.debug("VPORT_LIST = %s", vport_list)
-            try:
-                if vport_list[0]:
-                    a10_common._set_auto_parameter(vport_list[0], c.device_cfg)
-                    a10_common._set_ipinip_parameter(vport_list[0], c.device_cfg)
-                    vport_args = {'vport': vport_list[0]}
-                else:
-                    vport_meta = self.meta(vip, 'vport', {})
-                    a10_common._set_auto_parameter(vport_meta, c.device_cfg)
-                    a10_common._set_ipinip_parameter(vport_meta, c.device_cfg)
-                    vport_args = {'vport': vport_meta}
-
-                c.client.slb.virtual_server.vport.create(
-                    self._meta_name(vip),
-                    self._meta_name(vip) + '_VPORT',
-                    protocol=a10_os.vip_protocols(c, vip['protocol']),
-                    port=vip['protocol_port'],
-                    service_group_name=pool_name,
-                    s_pers_name=p.s_persistence(),
-                    c_pers_name=p.c_persistence(),
-                    status=status,
-                    axapi_args=vport_args)
-            except acos_errors.Exists:
-                pass
-
-            i = 1
-            for vport in vport_list[1:]:
-                i += 1
+            if vport_list is None:
+                vport_list = [self.vport_meta(vip)]
+            for vport, i in zip(vport_list, range(len(vport_list))):
                 try:
-                    a10_common._set_auto_parameter(vport, c.device_cfg)
-                    a10_common._set_ipinip_parameter(vport, c.device_cfg)
-
-                    vport_args = {'vport': vport}
-
+                    vport_name = str(i) if i else ''
+                    vport_args = a10_common._vport(vport, c.device_cfg)
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
-                        self._meta_name(vip) + '_VPORT' + str(i),
+                        self._meta_name(vip) + '_VPORT' + vport_name,
                         protocol=a10_os.vip_protocols(c, vip['protocol']),
                         port=vip['protocol_port'],
                         service_group_name=pool_name,
@@ -149,7 +126,8 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                     '', '', '',
                     axapi_args=args)
 
-            vport_args = {'port': self.meta(vip, 'port', {})}
+            vport_meta = self.vport_meta(vip)
+            vport_args = a10_common._vport(vport_meta, c.device_cfg)
             c.client.slb.virtual_server.vport.update(
                 self._meta_name(vip),
                 self._meta_name(vip) + '_VPORT',

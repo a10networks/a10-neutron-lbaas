@@ -88,9 +88,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             c, context, listener.default_pool)
 
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
-        a10_common._set_auto_parameter(vport_meta, c.device_cfg)
-        a10_common._set_ipinip_parameter(vport_meta, c.device_cfg)
-        vport_args = {'port': vport_meta}
+        vport_args = a10_common._vport(vport_meta, c.device_cfg)
 
         try:
             set_method(
