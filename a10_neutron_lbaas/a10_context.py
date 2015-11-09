@@ -30,15 +30,20 @@ class A10Context(object):
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
+        self.db_operations = self.a10_driver.db_operations_class(self.openstack_context)
+        self.inventory = self.a10_driver.inventory_class(self)
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
 
     def __enter__(self):
         self.get_tenant_id()
         if self.device_name:
             d = self.a10_driver.config.devices[self.device_name]
+            appliance = self.db_operations.summon_appliance_configured(d['key'])
         else:
-            d = self.a10_driver._select_a10_device(self.tenant_id)
+            appliance = self.inventory.find(self.openstack_lbaas_obj)
+            d = appliance.device(self)
         self.device_cfg = d
+        self.appliance = appliance
         self.client = self.a10_driver._get_a10_client(self.device_cfg)
         self.select_appliance_partition()
         return self

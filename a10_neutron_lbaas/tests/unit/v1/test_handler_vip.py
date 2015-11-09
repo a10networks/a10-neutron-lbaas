@@ -52,6 +52,11 @@ class TestVIP(test_base.UnitTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertTrue("c_pers_name='id1'" in s)
 
+    def test_create_adds_slb(self):
+        self.a.vip.create(None, self.fake_vip())
+        added_id = self.a.db_operations_mock.add.call_args[0][0].vip_id
+        self.assertEqual('id1', added_id)
+
     def test_create_unsupported(self):
         try:
             self.a.vip.create(None, self.fake_vip('APP_COOKIE'))
@@ -175,6 +180,10 @@ class TestVIP(test_base.UnitTestBase):
     def test_delete(self):
         self.a.vip.delete(None, self.fake_vip())
         self.a.last_client.slb.virtual_server.delete.assert_called_with('id1')
+
+    def test_delete_removes_slb(self):
+        self.a.vip.delete(None, self.fake_vip())
+        self.a.db_operations_mock.delete_slb_v1.assert_called_with('id1')
 
     def test_delete_pers(self):
         self.a.vip.delete(None, self.fake_vip('SOURCE_IP'))

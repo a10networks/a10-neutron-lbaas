@@ -29,31 +29,43 @@ def _build_openstack_context():
     return mock.Mock(admin_context=admin_context)
 
 
-class FakeA10OpenstackLBV1(a10_os.A10OpenstackLBV1):
+def _build_class_instance_mock():
+    instance_mock = mock.MagicMock()
+    class_mock = mock.MagicMock()
+    class_mock.return_value = instance_mock
 
-    def __init__(self, openstack_driver):
-        super(FakeA10OpenstackLBV1, self).__init__(mock.MagicMock())
-        self.openstack_context = _build_openstack_context()
-
-    def _get_a10_client(self, device_info):
-        self.device_info = device_info
-        self.last_client = mock.MagicMock()
-        self.plumbing_hooks = hooks.PlumbingHooks(self)
-        return self.last_client
-
-    def reset_mocks(self):
-        self.openstack_driver = mock.MagicMock()
-        self.last_client = self._get_a10_client(self.device_info)
-        return self.last_client
+    return (class_mock, instance_mock)
 
 
-class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
+def _build_inventory_mock():
+    (inventory_class, inventory_mock) = _build_class_instance_mock()
 
-    def __init__(self, openstack_driver):
-        super(FakeA10OpenstackLBV2, self).__init__(
+    def find(openstack_lbaas_obj):
+        print (inventory_class.call_args)
+        ((a10_context,), _) = inventory_class.call_args
+        device = a10_context.a10_driver._select_a10_device(a10_context.tenant_id)
+        appliance = mock.MagicMock()
+        appliance.device.return_value = device
+        return appliance
+
+    inventory_mock.find.side_effect = find
+    return (inventory_class, inventory_mock)
+
+
+class FakeA10OpenstackLB(object):
+
+    def __init__(self, openstack_driver, **kw):
+        (inventory_class, inventory_mock) = _build_inventory_mock()
+        self.inventory_mock = inventory_mock
+
+        (db_operations_class, db_operations_mock) = _build_class_instance_mock()
+        self.db_operations_mock = db_operations_mock
+
+        super(FakeA10OpenstackLB, self).__init__(
             mock.MagicMock(),
-            neutron_hooks_module=mock.MagicMock())
-        self.certmgr = mock.Mock()
+            db_operations_class=db_operations_class,
+            inventory_class=inventory_class,
+            **kw)
         self.openstack_context = _build_openstack_context()
 
     def _get_a10_client(self, device_info):
@@ -66,6 +78,20 @@ class FakeA10OpenstackLBV2(a10_os.A10OpenstackLBV2):
         self.openstack_driver = mock.MagicMock()
         self.last_client = self._get_a10_client(self.device_info)
         return self.last_client
+
+
+class FakeA10OpenstackLBV1(FakeA10OpenstackLB, a10_os.A10OpenstackLBV1):
+    pass
+
+
+class FakeA10OpenstackLBV2(FakeA10OpenstackLB, a10_os.A10OpenstackLBV2):
+
+    def __init__(self, openstack_driver, **kw):
+        super(FakeA10OpenstackLBV2, self).__init__(
+            openstack_driver,
+            neutron_hooks_module=mock.MagicMock(),
+            **kw)
+        self.certmgr = mock.Mock()
 
 
 class UnitTestBase(unittest.TestCase):
@@ -76,6 +102,7 @@ class UnitTestBase(unittest.TestCase):
         unit_dir = os.path.dirname(__file__)
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
+
         if not hasattr(self, 'version') or self.version == 'v2':
             self.a = FakeA10OpenstackLBV2(None)
         else:
