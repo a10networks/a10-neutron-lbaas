@@ -24,7 +24,7 @@ from alembic import migration as alembic_migration
 from alembic.runtime.environment import EnvironmentContext
 from alembic import script as alembic_script
 from alembic import util as alembic_util
-from oslo.config import cfg
+from oslo_config import cfg
 
 import neutron.services.service_base as service_base
 
@@ -278,7 +278,7 @@ class Drivers(object):
             return self.drivers[key]
 
 
-def main():
+def run(drivers, **conf_args):
     config = alembic_config.Config(
         os.path.join(os.path.dirname(__file__), 'alembic.ini')
     )
@@ -286,10 +286,15 @@ def main():
                            SCRIPT_LOCATION)
     # attach the Neutron conf to the Alembic conf
     config.neutron_config = CONF
-    config.drivers = Drivers()
+    config.drivers = drivers
 
-    CONF(project='neutron')
-    CONF.command.func(config, CONF.command.name)
+    CONF(**conf_args)
+    return CONF.command.func(config, CONF.command.name)
+
+
+def main():
+    run(Drivers(), project='neutron')
+
 
 if __name__ == "__main__":
     main()

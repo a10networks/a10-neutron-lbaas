@@ -31,12 +31,17 @@ assert neutron_lbaas.db.loadbalancer.loadbalancer_db
 assert neutron_lbaas.db.loadbalancer.models
 
 
-def fake_session():
+def fake_connection(tables=None):
     # Don't pool connections, use a clean memory database each time
     engine = create_engine('sqlite://', poolclass=NullPool)
     # Reuse a single connection so that the created tables exist in the session
     connection = engine.connect()
-    model_base.BASEV2.metadata.create_all(connection)
+    model_base.BASEV2.metadata.create_all(connection, tables=tables)
+    return connection
+
+
+def fake_session(tables=None):
+    connection = fake_connection(tables)
     Session = sessionmaker(bind=connection)
 
     def make_session():
@@ -47,3 +52,13 @@ def fake_session():
         return session
 
     return (make_session, connection.close)
+
+
+def fake_migration_connection():
+    a10_neutron_lbaas_tables = [model.__tablename__
+                                for model in model_base.BASEV2._decl_class_registry.values()
+                                if model.__module__.startswith('a10_neutron_lbaas.')]
+    other_tables = [table
+                    for table in model_base.BASEV2.metadata.sorted_tables
+                    if table.name not in a10_neutron_lbaas_tables]
+    return fake_connection(other_tables)
