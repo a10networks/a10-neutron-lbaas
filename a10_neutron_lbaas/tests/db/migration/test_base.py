@@ -15,12 +15,14 @@
 import unittest
 
 import a10_neutron_lbaas.tests.db.session as session
+import sqlalchemy.orm
 
 
 class UnitTestBase(unittest.TestCase):
 
     def setUp(self):
         self.connection = session.fake_migration_connection()
+        self.Session = sqlalchemy.orm.sessionmaker(bind=self.connection)
 
     def tearDown(self):
         self.connection.close()

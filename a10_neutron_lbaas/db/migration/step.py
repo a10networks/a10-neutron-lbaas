@@ -39,7 +39,6 @@ def initialize_a10_appliances_configured(conn, config):
             id = str(uuid.uuid4())
             insert_slb = a10_appliances_slb.insert().\
                 values(id=id, type=a10_appliances_configured.name)
-            print(insert_slb)
             conn.execute(insert_slb)
             insert_conf = a10_appliances_configured.insert().\
                 values(id=id, device_key=device_key)
