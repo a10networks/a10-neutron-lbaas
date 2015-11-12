@@ -16,6 +16,8 @@ import logging
 import os
 import sys
 
+import a10_neutron_lbaas.install.blank_config as blank_config
+
 LOG = logging.getLogger(__name__)
 
 
@@ -42,8 +44,13 @@ class A10Config(object):
         real_sys_path = sys.path
         sys.path = [self.config_dir]
         try:
-            import config
-            self.config = config
+            try:
+                import config
+                self.config = config
+            except ImportError:
+                LOG.error("A10Config couldn't find config.py in %s", self.config_dir)
+                self.config = blank_config
+
             self.devices = {}
             for k, v in self.config.devices.items():
                 if 'status' in v and not v['status']:

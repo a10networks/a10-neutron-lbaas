@@ -26,7 +26,9 @@ from alembic import script as alembic_script
 from alembic import util as alembic_util
 from oslo_config import cfg
 
+import neutron.db.servicetype_db as servicetype_db
 import neutron.services.service_base as service_base
+import neutron_lbaas.services.loadbalancer.plugin as neutron_lbaas_plugin
 
 SCRIPT_LOCATION = 'a10_neutron_lbaas.db.migration:alembic_migrations'
 
@@ -38,7 +40,10 @@ _db_opts = [
 ]
 
 CONF = cfg.CONF
-CONF.register_opts(_db_opts, 'database')
+try:
+    CONF.register_opts(_db_opts, 'database')
+except cfg.DuplicateOptError:
+    pass
 
 
 def do_alembic_command(config, cmd, *args, **kwargs):
@@ -260,6 +265,18 @@ command_opt = cfg.SubCommandOpt('command',
 CONF.register_cli_opt(command_opt)
 
 
+def add_provider_configuration(type_manager, service_type):
+    """Add provider configuration for neutron_lbaas service to the type_manager
+
+    Only neutron versions liberty and newer require or support this
+    """
+
+    try:
+        neutron_lbaas_plugin.add_provider_configuration(type_manager, service_type)
+    except AttributeError:
+        pass
+
+
 class Drivers(object):
     def __init__(self):
         self.drivers = dict()
@@ -270,10 +287,12 @@ class Drivers(object):
             return self.drivers[key]
         except KeyError:
             try:
+                service_type_manager = servicetype_db.ServiceTypeManager.get_instance()
+                add_provider_configuration(service_type_manager, key)
                 self.drivers[key] = service_base.load_drivers(key, self.plugin)
             except BaseException:
                 # Catch BaseException because load_drivers throws SystemExit
-                # Pass becasue we'd just raise KeyError and the nexe line does that
+                # Pass becasue we'd just raise KeyError and the next line does that
                 pass
             return self.drivers[key]
 
