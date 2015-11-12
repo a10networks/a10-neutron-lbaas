@@ -18,6 +18,11 @@ auto_dictionary = {
     "3.0": ("auto", lambda x: int(x))
 }
 
+ipinip_dictionary = {
+    "2.1": ("ip_in_ip", lambda x: int(x)),
+    "3.0": ("ipinip", lambda x: int(x))
+}
+
 
 vport_dictionary = {
     "2.1": "vport",
@@ -37,26 +42,35 @@ def _set_auto_parameter(vport, device_info):
     auto_tuple = auto_dictionary.get(api_ver, None)
 
     if auto_tuple:
-        vport_key = auto_tuple[0]
-        vport_transform = auto_tuple[1]
+        (vport_key, vport_transform) = auto_tuple
 
-        cfg_value = device_info.get("autosnat", None)
-        if cfg_value is not None:
-            vport[vport_key] = vport_transform(cfg_value)
+    if vport_key is not None:
+        cfg_value = device_info.get("autosnat", False) or False
+        vport[vport_key] = vport_transform(cfg_value)
 
 
 def _set_vrid_parameter(virtual_server, device_info):
-    vrid = device_info.get("default_virtual_server_vrid", None)
+    vrid = device_info.get("default_virtual_server_vrid")
 
     if vrid is not None:
         virtual_server['vrid'] = vrid
 
 
 def _set_ipinip_parameter(vport, device_info):
-    key = "ipinip"
-    ipinip = device_info.get(key, False)
-    if ipinip:
-        vport[key] = int(ipinip)
+    config_key = "ipinip"
+    api_ver = device_info.get("api_version", None)
+    ipinip_tuple = ipinip_dictionary.get(api_ver, None)
+    key = None
+
+    transform = lambda x: x
+
+    if ipinip_tuple:
+        (key, transform) = ipinip_tuple
+
+    ipinip = device_info.get(config_key, False) or False
+
+    if key is not None and ipinip:
+        vport[key] = transform(ipinip)
 
 
 def _vport(vport_meta, device_info):

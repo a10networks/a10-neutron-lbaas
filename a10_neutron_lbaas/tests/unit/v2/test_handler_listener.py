@@ -159,9 +159,24 @@ class TestListeners(test_base.UnitTestBase):
             if auto_expected is not None:
                 self.assertTrue(auto_expected in s)
 
-    def _test_create_ipinip(self, ip_in_ip=False):
+    def _test_create_ipinip(self, api_ver="3.0", ip_in_ip=False):
+        ipinip_expected = None
+        expected_tuple = a10_common.ipinip_dictionary.get(api_ver)
+        saw_exception = False
+
         for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
+            v['api_version'] = api_ver
+
+        if expected_tuple is not None:
+            key, transform = expected_tuple
+        else:
+            key = None
+            transform = None
+
+        if ip_in_ip and key and transform:
+            ipinip_format = "'{0}': {1}"
+            ipinip_expected = ipinip_format.format(key, transform(ip_in_ip))
 
         p = 'TCP'
         lb = test_base.FakeLoadBalancer()
@@ -171,14 +186,24 @@ class TestListeners(test_base.UnitTestBase):
 
         self.a.listener.create(None, m)
         self.print_mocks()
-        s = str(self.a.last_client.mock_calls)
-        self.assertEqual(ip_in_ip, "ipinip" in s)
 
-    def test_create_ip_in_ip_positive(self):
-        self._test_create_ipinip(True)
+        if not saw_exception:
+            s = str(self.a.last_client.mock_calls)
+            self.assertIn("vport.create", s)
+            if ipinip_expected is not None:
+                self.assertIn(ipinip_expected, s)
 
-    def test_create_ip_in_ip_negative(self):
-        self._test_create_ipinip()
+    def test_create_ip_in_ip_positive_v21(self):
+        self._test_create_ipinip(api_ver="2.1", ip_in_ip=True)
+
+    def test_create_ip_in_ip_negative_v21(self):
+        self._test_create_ipinip(api_ver="2.1")
+
+    def test_create_ip_in_ip_positive_v30(self):
+        self._test_create_ipinip(ip_in_ip=True)
+
+    def test_create_ip_in_ip_negative_v30(self):
+        self._test_create_ipinip("3.0")
 
     def test_update_no_lb(self):
         m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),

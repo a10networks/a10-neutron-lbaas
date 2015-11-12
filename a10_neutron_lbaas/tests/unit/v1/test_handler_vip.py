@@ -20,6 +20,8 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
 class TestVIP(test_base.UnitTestBase):
+    def __init__(self, *args):
+        super(TestVIP, self).__init__(*args)
 
     def fake_vip(self, pers=None):
         h = {
@@ -146,20 +148,39 @@ class TestVIP(test_base.UnitTestBase):
                 foundVrid,
                 'Expected to find no vrid in {0}'.format(str(calls)))
 
-    def _test_create_ipinip(self, ip_in_ip=False):
+    def _test_create_ipinip(self, ip_in_ip=False, api_ver="3.0"):
+        vip = self.fake_vip()
+        expected = None
+
+        expected_tuple = a10_common.ipinip_dictionary.get(api_ver, None)
         for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
+            v['api_version'] = api_ver
 
-        vip = self.fake_vip()
+        if expected_tuple is not None:
+            (key, transform) = expected_tuple
+
+        if ip_in_ip and key and transform:
+            ipinip_format = "'{0}': {1}"
+            expected = ipinip_format.format(key, transform(ip_in_ip))
+
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
-        self.assertEqual(ip_in_ip, "ipinip" in s)
+        self.assertIn('vport.create', s)
+        if expected:
+            self.assertIn(expected, s)
 
-    def test_create_ip_in_ip_positive(self):
+    def test_create_ip_in_ip_positive_v30(self):
         self._test_create_ipinip(True)
 
-    def test_create_ip_in_ip_negative(self):
+    def test_create_ip_in_ip_negative_v30(self):
         self._test_create_ipinip()
+
+    def test_create_ip_in_ip_positive_v21(self):
+        self._test_create_ipinip(True, api_ver="2.1")
+
+    def test_create_ip_in_ip_negative_v21(self):
+        self._test_create_ipinip(api_ver="2.1")
 
     def test_update(self):
         self.a.vip.update(None, self.fake_vip(), self.fake_vip())
