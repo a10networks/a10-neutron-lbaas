@@ -132,7 +132,7 @@ class TestCLI(test_base.UnitTestBase):
         pra = models.default(
             servicetype_db.ProviderResourceAssociation,
             provider_name=provider,
-            resource_id=vip.id)
+            resource_id=pool.id)
         session.add(pra)
         session.commit()
 

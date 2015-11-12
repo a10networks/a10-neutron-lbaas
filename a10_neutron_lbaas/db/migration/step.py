@@ -58,9 +58,10 @@ def initialize_a10_slb_v1(conn, provider, a10):
         column('id'),
         column('vip_id'))
     select_vips = text(
-        "SELECT vips.id, vips.tenant_id "
-        "FROM vips, providerresourceassociations p "
-        "WHERE vips.id = p.resource_id "
+        "SELECT vips.id, pools.tenant_id "
+        "FROM vips, pools, providerresourceassociations p "
+        "WHERE vips.pool_id = pools.id "
+        "AND pools.id = p.resource_id "
         "AND p.provider_name = :provider "
         "AND vips.id NOT IN (SELECT vip_id FROM a10_slb_v1)")
     select_vips = select_vips.bindparams(provider=provider)
