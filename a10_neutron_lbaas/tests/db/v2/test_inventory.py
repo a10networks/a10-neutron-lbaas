@@ -35,6 +35,7 @@ class TestInventory(test_base.UnitTestBase):
     def test_find_selects_appliance(self):
         target = self.inventory()
         appliance = target.db_operations.summon_appliance_configured('fake-device-key')
+        target.a10_context.tenant_id = 'fake-tenant-id'
         target.a10_context.a10_driver._select_a10_device.return_value = {'key': 'fake-device-key'}
 
         openstack_lbaas_object = mock.MagicMock(root_loadbalancer=mock.MagicMock(id='fake-lb-id'))
@@ -45,6 +46,7 @@ class TestInventory(test_base.UnitTestBase):
     def test_find_creates_slb(self):
         target = self.inventory()
         appliance = target.db_operations.summon_appliance_configured('fake-device-key')
+        target.a10_context.tenant_id = 'fake-tenant-id'
         target.a10_context.a10_driver._select_a10_device.return_value = {'key': 'fake-device-key'}
 
         openstack_lbaas_object = mock.MagicMock(root_loadbalancer=mock.MagicMock(id='fake-lb-id'))
@@ -56,6 +58,7 @@ class TestInventory(test_base.UnitTestBase):
 
     def test_find_finds_slb(self):
         target1 = self.inventory()
+        target1.a10_context.tenant_id = 'fake-tenant-id'
         target1.a10_context.a10_driver._select_a10_device.return_value = {'key': 'fake-device-key'}
 
         openstack_lbaas_object = mock.MagicMock(root_loadbalancer=mock.MagicMock(id='fake-lb-id'))
@@ -64,5 +67,24 @@ class TestInventory(test_base.UnitTestBase):
 
         target2 = self.inventory()
         found_appliance = target2.find(openstack_lbaas_object)
+
+        self.assertEqual('fake-device-key', found_appliance.device_key)
+
+    def test_find_remembers_tenant_appliance(self):
+        target1 = self.inventory()
+        target1.a10_context.tenant_id = 'fake-tenant-id'
+        target1.a10_context.a10_driver._select_a10_device.return_value = {'key': 'fake-device-key'}
+
+        openstack_lbaas_object1 = mock.MagicMock(root_loadbalancer=mock.MagicMock(id='fake-lb-id'))
+        target1.find(openstack_lbaas_object1)
+        target1.db_operations.session.commit()
+
+        target2 = self.inventory()
+        target2.a10_context.tenant_id = 'fake-tenant-id'
+
+        openstack_lbaas_object2 = mock.MagicMock(root_loadbalancer=mock.MagicMock(id='other-lb-id'))
+        found_appliance = target2.find(openstack_lbaas_object2)
+
+        target2.a10_context.a10_driver._select_a10_device.assert_not_called()
 
         self.assertEqual('fake-device-key', found_appliance.device_key)
