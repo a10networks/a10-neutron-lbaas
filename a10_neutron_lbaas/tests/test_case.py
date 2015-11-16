@@ -20,10 +20,20 @@ def assertIn(expected, actual):
         raise Exception("Expected to find {0} in {1}".format(expected, actual))
 
 
+def assertIsNot(a, b):
+    if a is b:
+        raise Exception("Expected {0} to not be {1}".format(a, b))
+
+
 class TestCase(unittest.TestCase):
     """unittest.TestCase with portable or custom assertions"""
 
     def __init__(self, *args):
         super(TestCase, self).__init__(*args)
-        if not hasattr(self, "assertIn"):
-            setattr(self, "assertIn", assertIn)
+
+        self._patch("assertIn", assertIn)
+        self._patch("assertIsNot", assertIsNot)
+
+    def _patch(self, key, value):
+        if not hasattr(self, key):
+            setattr(self, key, value)
