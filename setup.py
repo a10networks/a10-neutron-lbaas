@@ -31,6 +31,12 @@ setup(
     ]},
     include_package_data=True,
 
+    entry_points = {
+        'neutronclient.extension': [
+            'a10_appliance=a10_neutron_lbaas.neutron_ext.api.a10_appliance'
+        ]
+    },
+
     scripts=['scripts/a10-manage', 'scripts/a10-neutron-lbaas-db-manage'],
 
     install_requires = ['acos-client>=1.3.2']
