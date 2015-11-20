@@ -23,8 +23,17 @@ from neutron.services import service_base
 
 import six
 
+
+def singular(plural):
+    singulars = resource_helper.build_plural_mappings({}, {plural: {}})
+    return singulars[plural]
+
+
+A10_APPLIANCE_RESOURCES = 'a10_appliances'
+A10_APPLIANCE_RESOURCE = singular(A10_APPLIANCE_RESOURCES)
+
 RESOURCE_ATTRIBUTE_MAP = {
-    'a10_appliance': {
+    A10_APPLIANCE_RESOURCES: {
         'id': {
             'allow_post': False,
             'allow_put': True,
@@ -33,6 +42,12 @@ RESOURCE_ATTRIBUTE_MAP = {
             },
             'is_visible': True,
             'primary_key': True
+        },
+        'tenant_id': {
+            'allow_post': True,
+            'allow_put': False,
+            'required_by_policy': True,
+            'is_visible': True
         },
         'name': {
             'allow_post': True,
@@ -87,7 +102,6 @@ RESOURCE_ATTRIBUTE_MAP = {
     }
 }
 
-print ("----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 
 class A10Appliance(extensions.ExtensionDescriptor):
 
