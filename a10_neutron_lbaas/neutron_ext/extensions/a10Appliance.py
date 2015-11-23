@@ -19,6 +19,7 @@ import abc
 from neutron.api import extensions
 from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
+from neutron.common import exceptions
 from neutron.services import service_base
 
 import six
@@ -148,6 +149,19 @@ class A10Appliance(extensions.ExtensionDescriptor):
             return RESOURCE_ATTRIBUTE_MAP
         else:
             return {}
+
+
+class A10ApplianceNotFoundError(exceptions.NotFound):
+    def __init__(self, a10_appliance_id):
+        self.msg = _("A10 Appliance {} could not be found.")
+        super(A10ApplianceNotFoundError, self).__init__()
+
+
+class A10ApplianceInUseError(exceptions.InUse):
+    def __init__(self, a10_appliance_id):
+        self.message = _("A10 Appliance is in use and cannot be deleted.")
+        self.msg = self.message
+        super(A10ApplianceInUseError, self).__init__()
 
 
 @six.add_metaclass(abc.ABCMeta)
