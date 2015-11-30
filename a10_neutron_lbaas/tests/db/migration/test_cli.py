@@ -15,6 +15,7 @@
 import mock
 import os
 
+import a10_neutron_lbaas.tests.db.session as session
 import oslo_config
 import oslo_config.fixture
 import test_base
@@ -86,6 +87,74 @@ class TestCLI(test_base.UnitTestBase):
         self.assertEqual('UPGRADED', status['core'].status)
         self.assertEqual('ERROR', status['lbaasv1'].status)
         self.assertEqual('UPGRADED', status['lbaasv2'].status)
+
+    def test_install_schema_matches_model_schema(self):
+        self.run_cli('install')
+
+        a10_models = session.a10_neutron_lbaas_models()
+
+        inspection = sqlalchemy.inspect(self.connection)
+        tables = inspection.get_table_names()
+
+        missing_tables = [model.__tablename__ for model in a10_models if
+                          model.__tablename__ not in tables]
+        self.assertEqual([], missing_tables,
+                         "The following tables weren't created by installing {0}".
+                         format(missing_tables))
+
+        for model in a10_models:
+            columns = inspection.get_columns(model.__tablename__)
+
+            actual_columns = sorted([
+                {
+                    'primary_key': True if c['primary_key'] else False,
+                    'nullable': c['nullable'],
+                    'default': c['default'],
+                    'autoincrement': c['autoincrement'],
+                    'type': c['type'].compile(dialect=self.connection.dialect),
+                    'name': unicode(c['name'])
+                }
+                for c in columns],
+                key=lambda x: x['name'])
+
+            mapper = sqlalchemy.inspect(model)
+
+            expected_columns = sorted([
+                {
+                    'primary_key': c.primary_key,
+                    'nullable': c.nullable,
+                    'default': c.server_default,
+                    'autoincrement': c.autoincrement,
+                    'type': c.type.compile(dialect=self.connection.dialect),
+                    'name': unicode(c.name)
+                }
+                for c in mapper.columns
+                if c.table.name == model.__tablename__],
+                key=lambda x: x['name'])
+
+            if (actual_columns != expected_columns):
+                print ("The model and installed columns for {0} don't match".
+                       format(model.__tablename__))
+                print ("Model columns    ", [c['name'] for c in expected_columns])
+                print ("Installed columns", [c['name'] for c in actual_columns])
+            self.assertEqual(expected_columns, actual_columns)
+
+    # Tests that upgrade order doesn't matter
+    def test_upgrade_core_lbaasv1(self):
+        self.run_cli('upgrade', 'core@head')
+        self.run_cli('upgrade', 'lbaasv1@head')
+
+    def test_upgrade_lbaasv1_core(self):
+        self.run_cli('upgrade', 'lbaasv1@head')
+        self.run_cli('upgrade', 'core@head')
+
+    def test_upgrade_core_lbaasv2(self):
+        self.run_cli('upgrade', 'core@head')
+        self.run_cli('upgrade', 'lbaasv2@head')
+
+    def test_upgrade_lbaasv2_core(self):
+        self.run_cli('upgrade', 'lbaasv2@head')
+        self.run_cli('upgrade', 'core@head')
 
     def test_upgrade_heads_downgrade_base(self):
         self.run_cli('upgrade', 'heads')
