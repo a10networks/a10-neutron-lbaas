@@ -12,17 +12,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
-import a10_neutron_lbaas.tests.test_case as test_case
+from neutron.plugins.common import constants as nconstants
 
-import a10_neutron_lbaas.tests.db.session as session
-import sqlalchemy.orm
+A10_APPLIANCE_EXT = 'a10-appliance'
 
+A10_APPLIANCE = "A10_APPLIANCE"
 
-class UnitTestBase(test_case.TestCase):
-
-    def setUp(self):
-        self.connection = session.fake_migration_connection()
-        self.Session = sqlalchemy.orm.sessionmaker(bind=self.connection)
-
-    def tearDown(self):
-        self.connection.close()
+nconstants.EXT_TO_SERVICE_MAPPING[A10_APPLIANCE_EXT] = A10_APPLIANCE
+try:
+    nconstants.ALLOWED_SERVICES.append(A10_APPLIANCE)
+    nconstants.COMMON_PREFIXES[A10_APPLIANCE] = ""
+except AttributeError:
+    # In Liberty and later, ALLOWED_SERVICES is derived from EXT_TO_SERVICE_MAPPING
+    # COMMON_PREFIXES are instead gotten from plugin.path_prefix
+    pass

@@ -31,7 +31,7 @@ class UncallableMock(object):
         try:
             return self.__dict[key]
         except KeyError:
-            self.__dict[key] = UncallableMock(name='{0}.[{1}]'.format(self.__name, repr(key)))
+            self.__dict[key] = UncallableMock(name='{0}[{1}]'.format(self.__name, repr(key)))
             return self.__dict[key]
 
     def __str__(self):
