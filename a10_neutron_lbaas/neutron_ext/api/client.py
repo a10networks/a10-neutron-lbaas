@@ -14,10 +14,12 @@
 
 from neutronclient.v2_0 import client as clientbase
 
+import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
+
 
 class Client(clientbase.Client):
-    a10_appliances_path = "/a10-appliances"
-    a10_appliance_path = "/a10-appliances/%s"
+    a10_appliances_path = "/%s" % a10Appliance.A10_APPLIANCE_RESOURCE
+    a10_appliance_path = "/%s/%%s" % a10Appliance.A10_APPLIANCE_RESOURCE
 
     @clientbase.APIParamsCall
     def list_a10_appliances(self, **_params):

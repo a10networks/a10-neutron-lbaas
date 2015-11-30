@@ -81,7 +81,7 @@ class CreateA10Appliance(extension.ClientExtensionCreate, A10ApplianceExtension)
         return _args2body(parsed_args)
 
 
-class UpdateA10Appliance(extension.ClientExtensionCreate, A10ApplianceExtension):
+class UpdateA10Appliance(extension.ClientExtensionUpdate, A10ApplianceExtension):
     """Update A10 appliance"""
 
     shell_command = 'a10-appliance-update'
@@ -91,7 +91,7 @@ class UpdateA10Appliance(extension.ClientExtensionCreate, A10ApplianceExtension)
     def add_known_arguments(self, parser):
         _add_known_arguments(
             parser,
-            ['id'],
+            [],
             lambda attr: attr.get('allow_put'))
 
     def args2body(self, parsed_args):
