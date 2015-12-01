@@ -31,7 +31,8 @@ setup(
             'a10-neutron-lbaas-db-manage=a10_neutron_lbaas.db.migration.cli:main'
         ],
         'neutronclient.extension': [
-            'a10_appliance=a10_neutron_lbaas.neutron_ext.api.a10_appliance'
+            'a10_appliance=a10_neutron_lbaas.neutron_ext.api.a10_appliance',
+            'a10_image=a10_neutron_lbaas.neutron_ext.api.a10_image'
         ]
     },
 
