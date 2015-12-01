@@ -18,7 +18,7 @@ import neutronclient.neutron.v2_0 as neutronV20
 import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
 
 
-_NEUTRON_OPTIONS = ['tenant_id']
+_NEUTRON_OPTIONS = ['id', 'tenant_id']
 
 
 def _arg_name(name):
@@ -39,7 +39,7 @@ def _add_known_arguments(parser, required, where):
 def _args2body(parsed_args):
     attributes = a10Appliance.RESOURCE_ATTRIBUTE_MAP[a10Appliance.A10_APPLIANCE_RESOURCES]
     body = {}
-    neutronV20.update_dict(parsed_args, body, attributes)
+    neutronV20.update_dict(parsed_args, body, [a for a in attributes if a != 'id'])
     return {a10Appliance.A10_APPLIANCE_RESOURCE: body}
 
 
