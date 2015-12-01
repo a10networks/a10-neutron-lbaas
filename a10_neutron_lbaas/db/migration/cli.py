@@ -32,6 +32,13 @@ import neutron_lbaas.services.loadbalancer.plugin as neutron_lbaas_plugin
 
 SCRIPT_LOCATION = 'a10_neutron_lbaas.db.migration:alembic_migrations'
 
+# Neutron is finicky. Sometimes _ is defined, sometimes it isn't
+try:
+    _
+except NameError:
+    _ = lambda x: x
+
+
 _db_opts = [
     cfg.StrOpt('connection',
                deprecated_name='sql_connection',

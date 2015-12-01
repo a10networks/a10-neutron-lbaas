@@ -69,7 +69,10 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
-        c.client.slb.hm.delete(self._meta_name(hm))
+        try:
+            c.client.slb.hm.delete(self._meta_name(hm))
+        except acos_errors.NotFound:
+            pass
 
     def delete(self, context, hm, pool_id):
         h = hm.copy()

@@ -23,7 +23,7 @@ class InventoryV2(inventory.InventoryBase):
         slb = self.db_operations.get_slb_v2(loadbalancer.id)
         if slb is None:
             # Assign this loadbalancer to an appliance
-            appliance = self.select_appliance()
+            appliance = self.select_appliance(openstack_lbaas_obj)
             slb = models.default(
                 models.A10SLBV2,
                 lbaas_loadbalancer_id=loadbalancer.id,

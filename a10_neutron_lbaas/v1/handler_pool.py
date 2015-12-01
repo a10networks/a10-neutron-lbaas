@@ -60,7 +60,10 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
                 vip = self.neutron.vip_get(context, pool['vip_id'])
                 self.a10_driver.vip._delete(c, context, vip)
 
-            c.client.slb.service_group.delete(self._meta_name(pool))
+            try:
+                c.client.slb.service_group.delete(self._meta_name(pool))
+            except (acos_errors.NotFound, acos_errors.NoSuchServiceGroup):
+                pass
 
     def stats(self, context, pool_id):
         tenant_id = self.neutron.pool_get_tenant_id(context, pool_id)
