@@ -89,11 +89,12 @@ class TestPools(test_base.UnitTestBase):
     def test_delete_with_hm_dissociates_hm(self):
         import pdb; pdb.set_trace()
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
-        pool['members'] = [test_handler_member._fake_member()]
-        pool['health_monitors_status'] = [{'monitor_id': 'hm1'}]
         fake_hm = test_base.FakeHM()
-        fake_hm.pools = [pool]
-        self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = test_base.FakeHM()
+        fake_hm["pools"] = [self.fake_pool('TCP', 'LEAST_CONNECTIONS')]
+        pool['members'] = [test_handler_member._fake_member()]
+        pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools":[self.fake_pool("TCP", "LEAST_CONNECTIONS")]}]
+        
+        self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = fake_hm
         self._test_delete(pool)
         self.a.last_client.slb.service_group.update.assert_called_with(pool.get("id"), 
                                                                        health_monitor="", 
