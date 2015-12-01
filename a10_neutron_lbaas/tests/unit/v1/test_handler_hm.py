@@ -29,6 +29,7 @@ class TestHM(test_base.UnitTestBase):
         hm = {
             'tenant_id': 'tenv1',
             'id': 'abcdef',
+            'name': 'abcdef',
             'type': type,
             'delay': '5',
             'timeout': 5,
@@ -85,6 +86,20 @@ class TestHM(test_base.UnitTestBase):
             axapi_args={})
 
     def test_delete(self):
+        expected = test_base.FakePool()
+        fakehm = test_base.FakeHM()
+        fakehm['tenant_id'] = 'tenv1'
+        fakehm['id'] = 'fedcba'
+        fakehm.pools.append(expected)
+
+        self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
+        self.a.hm.openstack_driver._hm_binding_count.return_value = 1
+
+        pool_name = self.a.hm._pool_name(None, 'p01')
+        self.a.hm.delete(None, fakehm, 'p01')
+        self.a.last_client.slb.hm.delete.assert_called_with(fakehm["id"])
+
+    def test_delete_updates_pool_health_monitor(self):
         expected = test_base.FakePool()
         fakehm = test_base.FakeHM()
         fakehm['tenant_id'] = 'tenv1'
