@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
+import a10_neutron_lbaas.db.models as models
+
 
 class InventoryBase(object):
     def __init__(self, a10_context):
@@ -19,12 +21,37 @@ class InventoryBase(object):
         self.a10_driver = self.a10_context.a10_driver
         self.db_operations = self.a10_context.db_operations
 
-    def select_appliance(self):
-        """Chooses an appliance for a new loadbalancer"""
+    def tenant_appliance(self):
+        """Chooses the appliance a tenant is already on, or assigns it"""
+        tenant_id = self.a10_context.tenant_id
+        tenant = self.db_operations.get_tenant_appliance(tenant_id)
+        if tenant is None:
+            # Assign this tenant to an appliance
+            appliance = self.select_tenant_appliance()
+            tenant = models.default(
+                models.A10TenantAppliance,
+                tenant_id=tenant_id,
+                a10_appliance=appliance)
+            self.db_operations.add(tenant)
+
+        return tenant.a10_appliance
+
+    def select_tenant_appliance(self):
+        """Chooses an appliance affinity for a new tenant"""
         device = self.a10_driver._select_a10_device(self.a10_context.tenant_id)
         appliance = self.db_operations.summon_appliance_configured(device['key'])
         return appliance
 
-    def find(self, obenstack_lbaas_ojb):
+    def select_appliance(self, openstack_lbaas_obj):
+        """Chooses an appliance for a new loadbalancer
+
+        When we add scheduling hooks, this will delegate the choice to the scheduler.
+        For now, it always chooses based on tenant affinity.
+        """
+        return self.tenant_appliance()
+
+    def find(self, openstack_lbaas_obj):
         """Find or select the appliance the openstack_lbaas_obj lives on"""
-        return self.select_appliance()
+
+        # The default, safe implementation puts all of a tenant's objects on the same appliance
+        return self.tenant_appliance()
