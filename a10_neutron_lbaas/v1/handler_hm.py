@@ -73,7 +73,6 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
             self._set(c, c.client.slb.hm.update, context, hm)
 
     def _delete(self, c, context, hm):
-        import pdb; pdb.set_trace()
         pools = hm.get("pools", [])
 
         for pool in pools:
