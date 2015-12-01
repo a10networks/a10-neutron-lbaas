@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 import test_base
 
 
@@ -84,7 +85,17 @@ class TestHM(test_base.UnitTestBase):
             axapi_args={})
 
     def test_delete(self):
-        self.a.hm.delete(None, self.fake_hm('HTTP'), 'p01')
+        expected = test_base.FakePool()
+        fakehm = test_base.FakeHM()
+        fakehm['tenant_id'] = 'tenv1'
+        fakehm['id'] = 'fedcba'
+        fakehm.pools.append(expected)
+
+        self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
+        self.a.hm.openstack_driver._hm_binding_count.return_value = 1
+
         pool_name = self.a.hm._pool_name(None, 'p01')
+        self.a.hm.delete(None, fakehm, 'p01')
+
         self.a.last_client.slb.service_group.update.assert_called_with(
-            pool_name, health_monitor='')
+            pool_name, health_monitor='', health_monitor_disabled=True)
