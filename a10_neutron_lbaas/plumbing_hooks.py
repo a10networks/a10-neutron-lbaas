@@ -71,20 +71,20 @@ class PlumbingHooks(object):
     def partition_delete(self, client, context, partition_name):
         client.system.partition.delete(partition_name)
 
-    def after_member_create(self, client, context, member):
+    def after_member_create(self, a10_context, context, member):
         pass
 
-    def after_member_update(self, client, context, member):
+    def after_member_update(self, a10_context, context, member):
         pass
 
-    def after_member_delete(self, client, context, member):
+    def after_member_delete(self, a10_context, context, member):
         pass
 
-    def after_vip_create(self, client, context, vip):
+    def after_vip_create(self, a10_context, context, vip):
         pass
 
-    def after_vip_update(self, client, context, vip):
+    def after_vip_update(self, a10_context, context, vip):
         pass
 
-    def after_vip_delete(self, client, context, vip):
+    def after_vip_delete(self, a10_context, context, vip):
         pass
