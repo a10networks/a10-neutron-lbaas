@@ -107,6 +107,7 @@ class TestHM(test_base.UnitTestBase):
         fakehm['pools'] = []
         fakehm['pools'].append(expected)
 
+        self.a.hm.openstack_driver._pool_get_hm.return_value = fakehm
         self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
         self.a.hm.openstack_driver._hm_binding_count.return_value = 1
 

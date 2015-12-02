@@ -17,6 +17,22 @@ import test_handler_member
 
 
 class TestPools(test_base.UnitTestBase):
+    def fake_hm(self, type):
+        hm = {
+            'tenant_id': 'tenv1',
+            'id': 'abcdef',
+            'name': 'abcdef',
+            'type': type,
+            'delay': '5',
+            'timeout': 5,
+            'max_retries': '5',
+            'pools': [],
+        }
+        if type in ['HTTP', 'HTTPS']:
+            hm['http_method'] = 'GET'
+            hm['url_path'] = '/'
+            hm['expected_codes'] = '200'
+        return hm.copy()
 
     def fake_pool(self, protocol, method):
         return {
@@ -87,16 +103,19 @@ class TestPools(test_base.UnitTestBase):
             assert_called_with(pool['id']))
 
     def test_delete_with_hm_dissociates_hm(self):
-        import pdb; pdb.set_trace()
-        pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
-        fake_hm = test_base.FakeHM()
-        fake_hm["pools"] = [self.fake_pool('TCP', 'LEAST_CONNECTIONS')]
-        pool['members'] = [test_handler_member._fake_member()]
-        pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools":[self.fake_pool("TCP", "LEAST_CONNECTIONS")]}]
         
-        self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = fake_hm
+        pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
+        hm = self.fake_hm("TCP")
+        hm["pools"].append(self.fake_pool('TCP', 'LEAST_CONNECTIONS'))
+        pool['members'] = [test_handler_member._fake_member()]
+        pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools":[pool]}]
+        
+        # self.a.pool.openstack_driver.plugin.get_pool.return_value = pool
+        self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = hm
+        
+        import pdb; pdb.set_trace()
         self._test_delete(pool)
-        self.a.last_client.slb.service_group.update.assert_called_with(pool.get("id"), 
+        self.a.last_client.slb.service_group.update.assert_called_with(self.a.pool.neutron.plugin.get_pool.return_value.id, 
                                                                        health_monitor="", 
                                                                        health_monitor_disabled=True)
 
