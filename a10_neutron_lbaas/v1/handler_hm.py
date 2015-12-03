@@ -72,24 +72,35 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
         with a10.A10WriteHMStatusContext(self, context, h) as c:
             self._set(c, c.client.slb.hm.update, context, hm)
 
+    def _dissociate(self, c, context, pool, hm):
+        pool_id = pool.get("pool_id")
+        pool_name = self._pool_name(context, pool_id)
+        c.client.slb.service_group.update(pool_name, health_monitor="",
+                                          health_monitor_disabled=True)
+
+    def dissociate(self, c, context, pool, hm):
+        self._dissociate(c, context, pool, hm)
+        pool_id = pool.get("pool_id")
+        pools = hm.get("pools", [])
+        if not any(p for p in pools if p.get("pool_id") != pool_id):
+            self._delete_unused(c, context, hm)
+
     def _delete(self, c, context, hm):
         pools = hm.get("pools", [])
 
         for pool in pools:
-            pool_id = pool.get("pool_id")
-            pool_name = self._pool_name(context, pool_id)
-            c.client.slb.service_group.update(pool_name, health_monitor="",
-                                              health_monitor_disabled=True)
+            self._dissociate(c, context, pool, hm)
 
-        if self.neutron.hm_binding_count(context, hm['id']) <= 1:
-            try:
-                c.client.slb.hm.delete(self._meta_name(hm))
-            except acos_errors.InUse:
-                pass
-            except acos_errors.NotFound:
-                pass
-        else:
+        self._delete_unused(c, context, hm)
+
+    def _delete_unused(self, c, context, hm):
+        try:
+            c.client.slb.hm.delete(self._meta_name(hm))
+        except acos_errors.InUse:
             LOG.error("Cannot delete a health monitor with existing associations")
+            raise
+        except acos_errors.NotFound:
+            pass
 
     def delete(self, context, hm, pool_id):
         h = hm.copy()

@@ -55,7 +55,7 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
 
             for hm in pool['health_monitors_status']:
                 z = self.neutron.hm_get(context, hm['monitor_id'])
-                self.a10_driver.hm._delete(c, context, z)
+                self.a10_driver.hm.dissociate(c, context, pool, z)
 
             if 'vip_id' in pool and pool['vip_id'] is not None:
                 vip = self.neutron.vip_get(context, pool['vip_id'])
