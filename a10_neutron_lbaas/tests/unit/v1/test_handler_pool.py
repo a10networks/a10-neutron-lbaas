@@ -113,7 +113,6 @@ class TestPools(test_base.UnitTestBase):
         # self.a.pool.openstack_driver.plugin.get_pool.return_value = pool
         self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = hm
         
-        import pdb; pdb.set_trace()
         self._test_delete(pool)
         self.a.last_client.slb.service_group.update.assert_called_with(self.a.pool.neutron.plugin.get_pool.return_value.id, 
                                                                        health_monitor="", 
