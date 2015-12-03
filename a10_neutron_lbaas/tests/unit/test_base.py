@@ -12,13 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-
 import a10_neutron_lbaas.tests.test_case as test_case
+import a10_neutron_lbaas.tests.unit.unit_config as unit_config
 import mock
 
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
-import a10_neutron_lbaas.plumbing_hooks as hooks
 
 
 def _build_openstack_context():
@@ -48,7 +46,6 @@ class FakeA10OpenstackLB(object):
     def _get_a10_client(self, device_info):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
-        self.plumbing_hooks = hooks.PlumbingHooks(self)
         return self.last_client
 
     def reset_mocks(self):
@@ -77,9 +74,7 @@ class UnitTestBase(test_case.TestCase):
         return _build_openstack_context()
 
     def setUp(self):
-        unit_dir = os.path.dirname(__file__)
-        unit_config = os.path.join(unit_dir, "unit_config")
-        os.environ['A10_CONFIG_DIR'] = unit_config
+        unit_config.setUp()
 
         if not hasattr(self, 'version') or self.version == 'v2':
             self.a = FakeA10OpenstackLBV2(None)

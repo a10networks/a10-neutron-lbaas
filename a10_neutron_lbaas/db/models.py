@@ -65,6 +65,13 @@ def _get_date():
 
 #     __tablename__ = u'a10_appliances_db'
 
+#    def device(self, context):
+#        config_device = context.a10_driver.config.devices[self.device_key]
+#        device = config_device.copy()
+#        device['appliance'] = self
+#        return device
+
+
 #     id = sa.Column(sa.String(36),
 #                    sa.ForeignKey(u'a10_appliances_slb.id'),
 #                    primary_key=True,
@@ -95,6 +102,15 @@ def _get_date():
 #                                  sa.ForeignKey('a10_appliances_slb.id'),
 #                                  nullable=False)
 #     a10_appliance = relationship(A10ApplianceSLB)
+
+#    def device(self, context):
+#        return {
+#            'appliance': self,
+#            'host': self.host,
+#            'api_version': self.api_version,
+#            'username': self.username,
+#            'password': self.password
+#        }
 
 #     __mapper_args__ = {
 #         'polymorphic_identity': __tablename__,
