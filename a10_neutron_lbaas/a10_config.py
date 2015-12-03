@@ -101,6 +101,10 @@ class A10Config(object):
             if self._config.use_database and self._config.database_connection is None:
                 self._config.database_connection = self._get_neutron_db_string()
 
+            # TODO(dougwig) -- vet these
+            self.image_defaults = {}
+            self._populate_image_defaults()
+
         finally:
             sys.path = real_sys_path
 
@@ -136,3 +140,7 @@ class A10Config(object):
 
     def get_devices(self):
         return self._devices
+
+    def _populate_image_defaults(self):
+        for k, v in self.config.image_defaults.items():
+            self.image_defaults[k] = v
