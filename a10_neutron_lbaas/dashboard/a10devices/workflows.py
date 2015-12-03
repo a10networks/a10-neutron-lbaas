@@ -103,3 +103,60 @@ class AddAppliance(workflows.Workflow):
 
         LOG.debug("Instance: {0}".format(instance_data))
         return True
+
+
+class AddImageAction(workflows.Action):
+    name = forms.CharField(max_length=80, label=_("Name"))
+    location = forms.CharField(label=_("Image URL"))
+    image = forms.FileField(label=_("Image Data"))
+    username = forms.CharField(label=_("Username"))
+    password = forms.CharField(label=_("Password"))
+
+
+    def __init__(self, request, *args, **kwargs):
+        super(AddImageAction, self).__init__(request, *args, **kwargs)
+        self.tenant_id = request.user.tenant_id
+
+     
+    class Meta(object):
+        name = _("Add Image")
+        permissions = ('openstack.services.network',)
+        help_text_template = '_create_image_help.html'
+
+
+
+class AddImageStep(workflows.Step):
+    action_class = AddImageAction
+    contributes = ("name", "url", "username", "password", "api_version")
+
+    def contribute(self, data, context):
+        context = super(AddImageStep, self).contribute(data, context)
+        if data:
+            return context
+
+
+class AddImage(workflows.Workflow):
+    slug = "addimage"
+    name = _("Add Image")
+    finalize_button_name = _("Add")
+    success_message = _('Added image "%s".')
+    failure_message = _('Unable to add image "%s".')
+    success_url = "horizon:project:a10appliances:index"
+    default_steps = (AddImageStep,)
+
+    def format_status_message(self, message):
+        name = self.context.get('name')
+        return message % name
+
+    def handle(self, request, context):
+        # Tell glance to create the image.
+        # We need to attach this info.
+        image_data = self._merge_defaults(context)
+        created = glance_api.image_create(**context)
+
+        LOG.debug("Image: {0}".format(instance_data))
+        return True
+
+    def _merge_defaults(self, context):
+        """Merge the data specified by the user with our defaults."""
+        return context

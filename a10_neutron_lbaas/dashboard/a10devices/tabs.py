@@ -21,6 +21,21 @@ from horizon import tabs
 # from openstack_dashboard import api
 import a10_neutron_lbaas.dashboard.a10devices.tables as p_tables
 
+class A10ImagesTab(tabs.TableTab):
+    table_classes = (p_tables.A10ImageTable, )
+    name = _("A10 Images")
+    slug = "a10imagestab"
+    template_name = "horizon/common/_detail_table.html"
+
+    def get_a10imagestable_data(self):
+        result = []
+        try:
+            # TODO(mdurrant) - Wire in image retrieval
+            pass
+        except Exception:
+            pass
+        return result
+
 
 class A10AppliancesTab(tabs.TableTab):
     table_classes = (p_tables.A10ApplianceTable,)
@@ -43,5 +58,5 @@ class A10AppliancesTab(tabs.TableTab):
 
 class A10Tabs(tabs.TabGroup):
     slug = "a10tabs"
-    tabs = (A10AppliancesTab,)
+    tabs = (A10AppliancesTab,A10ImagesTab,)
     sticky = True
