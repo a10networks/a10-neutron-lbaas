@@ -215,7 +215,7 @@ class TestCLI(test_base.UnitTestBase):
             name='mock_a10',
             spec=a10_neutron_lbaas.A10OpenstackLBV1,
             config=mock_config,
-            hooks=mock_hooks)
+            _plumbing_hooks=mock_hooks)
         mock_driver = mock.MagicMock(
             name='mock_driver',
             a10=mock_a10)
@@ -271,7 +271,7 @@ class TestCLI(test_base.UnitTestBase):
             name='mock_a10',
             spec=a10_neutron_lbaas.A10OpenstackLBV2,
             config=mock_config,
-            hooks=mock_hooks)
+            _plumbing_hooks=mock_hooks)
         mock_driver = mock.MagicMock(
             name='mock_driver',
             a10=mock_a10)

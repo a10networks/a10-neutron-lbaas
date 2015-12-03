@@ -74,7 +74,7 @@ def initialize_a10_slb_v1(conn, provider, a10):
         column('a10_appliance_id'))
     for vip in vips:
         id = str(uuid.uuid4())
-        device = a10.hooks.select_device(vip['tenant_id'])
+        device = a10._plumbing_hooks.select_device(vip['tenant_id'])
         appliance = appliance_lookup[device['key']]
         insert_slb = a10_slb.insert().\
             values(id=id, type=a10_slb_v1.name, a10_appliance_id=appliance)
@@ -109,7 +109,7 @@ def initialize_a10_slb_v2(conn, provider, a10):
         column('a10_appliance_id'))
     for lb in lbs:
         id = str(uuid.uuid4())
-        device = a10.hooks.select_device(lb['tenant_id'])
+        device = a10._plumbing_hooks.select_device(lb['tenant_id'])
         appliance = appliance_lookup[device['key']]
         insert_slb = a10_slb.insert().\
             values(id=id, type=a10_slb_v2.name, a10_appliance_id=appliance)

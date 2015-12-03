@@ -70,7 +70,10 @@ class A10ApplianceConfigured(A10ApplianceSLB):
     device_key = sa.Column(sa.String(255), nullable=False)
 
     def device(self, context):
-        return context.a10_driver.config.devices[self.device_key]
+        config_device = context.a10_driver.config.devices[self.device_key]
+        device = config_device.copy()
+        device['appliance'] = self
+        return device
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__
@@ -96,7 +99,13 @@ class A10ApplianceDB(A10ApplianceSLB):
     password = sa.Column(sa.String(255), nullable=False)
 
     def device(self, context):
-        return context.a10_driver.config.devices[self.device_key]
+        return {
+            'appliance': self,
+            'host': self.host,
+            'api_version': self.api_version,
+            'username': self.username,
+            'password': self.password
+        }
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__

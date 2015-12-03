@@ -16,6 +16,7 @@ import mock
 
 import test_base
 
+import a10_neutron_lbaas.db.models as models
 import a10_neutron_lbaas.db.operations as db_operations
 
 
@@ -47,3 +48,36 @@ class TestOperations(test_base.UnitTestBase):
         operations2.session.commit()
 
         self.assertNotEqual(appliance1.id, appliance2.id)
+
+    def test_get_shared_appliances_configured(self):
+        operations = self.operations()
+        appliance = operations.summon_appliance_configured('fake-device-key')
+        shared = operations.get_shared_appliances('fake-tenant')
+
+        self.assertEqual([appliance], shared)
+
+    def test_get_shared_appliances_db_same_tenant(self):
+        operations = self.operations()
+        appliance = models.default(models.A10ApplianceDB,
+                                   tenant_id='fake-tenant',
+                                   host='fake-host',
+                                   api_version='fake-version',
+                                   username='fake-username',
+                                   password='fake-password')
+        operations.add(appliance)
+        shared = operations.get_shared_appliances('fake-tenant')
+
+        self.assertEqual([appliance], shared)
+
+    def test_get_shared_appliances_db_other_tenant(self):
+        operations = self.operations()
+        appliance = models.default(models.A10ApplianceDB,
+                                   tenant_id='other-tenant',
+                                   host='fake-host',
+                                   api_version='fake-version',
+                                   username='fake-username',
+                                   password='fake-password')
+        operations.add(appliance)
+        shared = operations.get_shared_appliances('fake-tenant')
+
+        self.assertEqual([], shared)
