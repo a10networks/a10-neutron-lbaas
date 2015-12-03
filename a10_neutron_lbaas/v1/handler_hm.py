@@ -72,24 +72,29 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
         with a10.A10WriteHMStatusContext(self, context, h) as c:
             self._set(c, c.client.slb.hm.update, context, hm)
 
-    def _dissociate(self, c, context, pool, hm):
-        pool_id = pool.get("pool_id")
+    def _dissociate(self, c, context, hm, pool_id):
+        """Remove a pool association"""
+
         pool_name = self._pool_name(context, pool_id)
         c.client.slb.service_group.update(pool_name, health_monitor="",
                                           health_monitor_disabled=True)
 
-    def dissociate(self, c, context, pool, hm):
-        self._dissociate(c, context, pool, hm)
-        pool_id = pool.get("pool_id")
+    def dissociate(self, c, context, hm, pool_id):
+        """Remove a pool association, and the healthmonitor if its the last one"""
+
+        self._dissociate(c, context, hm, pool_id)
         pools = hm.get("pools", [])
         if not any(p for p in pools if p.get("pool_id") != pool_id):
             self._delete_unused(c, context, hm)
 
     def _delete(self, c, context, hm):
+        """Delete a healthmonitor and ALL its pool associations"""
+
         pools = hm.get("pools", [])
 
         for pool in pools:
-            self._dissociate(c, context, pool, hm)
+            pool_id = pool.get("pool_id")
+            self._dissociate(c, context, hm, pool_id)
 
         self._delete_unused(c, context, hm)
 
@@ -106,4 +111,9 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
         h = hm.copy()
         h['pool_id'] = pool_id
         with a10.A10DeleteHMContext(self, context, h) as c:
-            self._delete(c, context, hm)
+            if pool_id is None:
+                # Delete the whole healthmonitor
+                self._delete(c, context, hm)
+            else:
+                # Disassociate this pool
+                self.dissociate(c, context, hm, pool_id)

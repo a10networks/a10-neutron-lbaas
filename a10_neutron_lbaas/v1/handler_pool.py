@@ -48,14 +48,17 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
                       c, context, pool)
 
     def delete(self, context, pool):
+        # import pdb; pdb.set_trace()
         with a10.A10DeleteContext(self, context, pool) as c:
+            pool_id = pool.get("id")
+
             for member in pool['members']:
                 m = self.neutron.member_get(context, member)
                 self.a10_driver.member._delete(c, context, m)
 
             for hm in pool['health_monitors_status']:
                 z = self.neutron.hm_get(context, hm['monitor_id'])
-                self.a10_driver.hm.dissociate(c, context, pool, z)
+                self.a10_driver.hm.dissociate(c, context, z, pool_id)
 
             if 'vip_id' in pool and pool['vip_id'] is not None:
                 vip = self.neutron.vip_get(context, pool['vip_id'])
