@@ -95,7 +95,6 @@ class TestHM(test_base.UnitTestBase):
         self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
         self.a.hm.openstack_driver._hm_binding_count.return_value = 1
 
-        pool_name = self.a.hm._pool_name(None, 'p01')
         self.a.hm.delete(None, fakehm, 'p01')
         self.a.last_client.slb.hm.delete.assert_called_with(fakehm["id"])
 

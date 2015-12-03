@@ -103,20 +103,19 @@ class TestPools(test_base.UnitTestBase):
             assert_called_with(pool['id']))
 
     def test_delete_with_hm_dissociates_hm(self):
-        
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         hm = self.fake_hm("TCP")
         hm["pools"].append(self.fake_pool('TCP', 'LEAST_CONNECTIONS'))
         pool['members'] = [test_handler_member._fake_member()]
-        pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools":[pool]}]
-        
-        # self.a.pool.openstack_driver.plugin.get_pool.return_value = pool
+        pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools": [pool]}]
+
         self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = hm
-        
+
         self._test_delete(pool)
-        self.a.last_client.slb.service_group.update.assert_called_with(self.a.pool.neutron.plugin.get_pool.return_value.id, 
-                                                                       health_monitor="", 
-                                                                       health_monitor_disabled=True)
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            self.a.pool.neutron.plugin.get_pool.return_value.id,
+            health_monitor="",
+            health_monitor_disabled=True)
 
     def test_delete_without_health_monitor(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')

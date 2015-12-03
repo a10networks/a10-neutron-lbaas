@@ -48,7 +48,6 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
                       c, context, pool)
 
     def delete(self, context, pool):
-        # import pdb; pdb.set_trace()
         with a10.A10DeleteContext(self, context, pool) as c:
             pool_id = pool.get("id")
 
