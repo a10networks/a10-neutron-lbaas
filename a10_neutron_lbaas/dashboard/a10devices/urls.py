@@ -22,31 +22,7 @@ from a10_neutron_lbaas.dashboard.a10devices import views
 urlpatterns = patterns(
     'a10_neutron_lbaas.dashboard.a10devices.views',
     url(r'^$', views.IndexView.as_view(), name='index'),
-    url(r'^addappliance$', views.AddApplianceView.as_view(), name='addappliance')
+    url(r'^addappliance$', views.AddApplianceView.as_view(), name='addappliance'),
+    url(r'^addimage$', views.AddImageView.as_view(), name="addimage")
+    # url(r'^deleteimage/(?P<image_id>[^/]+)/$', views.DeleteImageView.as_view(), name="deleteimage")
 )
-
-# url(r'^addpool$', views.AddPoolView.as_view(), name='addpool'),
-# url(r'^updatepool/(?P<pool_id>[^/]+)/$',
-#     views.UpdatePoolView.as_view(), name='updatepool'),
-# url(r'^addvip/(?P<pool_id>[^/]+)/$',
-#     views.AddVipView.as_view(), name='addvip'),
-# url(r'^updatevip/(?P<vip_id>[^/]+)/$',
-#     views.UpdateVipView.as_view(), name='updatevip'),
-# url(r'^addmember$', views.AddMemberView.as_view(), name='addmember'),
-# url(r'^updatemember/(?P<member_id>[^/]+)/$',
-#     views.UpdateMemberView.as_view(), name='updatemember'),
-# url(r'^addmonitor$', views.AddMonitorView.as_view(), name='addmonitor'),
-# url(r'^updatemonitor/(?P<monitor_id>[^/]+)/$',
-#     views.UpdateMonitorView.as_view(), name='updatemonitor'),
-# url(r'^association/add/(?P<pool_id>[^/]+)/$',
-#     views.AddPMAssociationView.as_view(), name='addassociation'),
-# url(r'^association/delete/(?P<pool_id>[^/]+)/$',
-#     views.DeletePMAssociationView.as_view(), name='deleteassociation'),
-# url(r'^pool/(?P<pool_id>[^/]+)/$',
-#     views.PoolDetailsView.as_view(), name='pooldetails'),
-# url(r'^vip/(?P<vip_id>[^/]+)/$',
-#     views.VipDetailsView.as_view(), name='vipdetails'),
-# url(r'^member/(?P<member_id>[^/]+)/$',
-#     views.MemberDetailsView.as_view(), name='memberdetails'),
-# url(r'^monitor/(?P<monitor_id>[^/]+)/$',
-#     views.MonitorDetailsView.as_view(), name='monitordetails'))

@@ -41,3 +41,7 @@ class IndexView(tabs.TabbedTableView):
 
 class AddApplianceView(workflows.WorkflowView):
     workflow_class = p_workflows.AddAppliance
+
+
+class AddImageView(workflows.WorkflowView):
+	workflow_class = p_workflows.AddImage
