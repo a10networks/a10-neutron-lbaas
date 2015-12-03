@@ -70,10 +70,17 @@ class A10Config(object):
                     for dk, dv in self.DEVICE_DEFAULTS.items():
                         if dk not in self.devices[k]:
                             self.devices[k][dk] = dv
+        
+            self.image_defaults = {}
+            self._populate_image_defaults()
         finally:
             sys.path = real_sys_path
 
         LOG.debug("A10Config, devices=%s", self.devices)
+
+    def _populate_image_defaults(self):
+        for k, v in self.config.image_defaults.items():
+            self.image_defaults[k] = v
 
     @property
     def verify_appliances(self):

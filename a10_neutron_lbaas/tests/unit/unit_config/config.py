@@ -92,7 +92,7 @@ devices = {
         "username": "admin",
         "password": "a10",
         "protocol": "https",
-        "v_method": "ADP",
+        "v_method": "LSI",
         "shared_partition": "mypart",
     },
     "axadp-noalt": {
@@ -100,7 +100,7 @@ devices = {
         "username": "admin",
         "password": "a10",
         "protocol": "https",
-        "v_method": "ADP"
+        "v_method": "LSI"
     },
     "axipinip": {
         "host": "10.48.5.219",
@@ -113,4 +113,17 @@ devices = {
         "use_float": True,
         "ipinip": True
     },
+}
+
+image_defaults = {
+    "name": None,
+    "id": None,
+    "visibility": "private",
+    "tags": ["a10"],
+    "properties": '{"username": "dude", "password": "password", "api_version": "api_version"}',
+    "container_format": "bare",
+    "disk_format": "qcow2",
+    "min_disk": 10,
+    "min_ram": 4096,
+    "protected": False
 }
