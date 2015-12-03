@@ -113,7 +113,7 @@ class TestPools(test_base.UnitTestBase):
 
         self._test_delete(pool)
         self.a.last_client.slb.service_group.update.assert_called_with(
-            self.a.pool.neutron.plugin.get_pool.return_value.id,
+            "id1",
             health_monitor="",
             health_monitor_disabled=True)
 
