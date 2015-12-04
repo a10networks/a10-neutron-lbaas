@@ -16,6 +16,7 @@ import logging
 
 from django.utils.translation import ugettext_lazy as _
 
+import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.instance_manager as im
 
 import horizon.forms as forms
@@ -111,11 +112,13 @@ class AddImageAction(workflows.Action):
     image = forms.FileField(label=_("Image Data"))
     username = forms.CharField(label=_("Username"))
     password = forms.CharField(label=_("Password"))
-
+    api_version = forms.ChoiceField(label=_("API Version"))
 
     def __init__(self, request, *args, **kwargs):
         super(AddImageAction, self).__init__(request, *args, **kwargs)
         self.tenant_id = request.user.tenant_id
+        api_versions = [("2.1", "2.1"), ("3.0", "3.0")]
+        self.fields["api_version"].choices = api_versions
 
      
     class Meta(object):
@@ -130,6 +133,7 @@ class AddImageStep(workflows.Step):
     contributes = ("name", "url", "username", "password", "api_version")
 
     def contribute(self, data, context):
+        # TODO(mdurrant) - This is where property manipulation should happen.
         context = super(AddImageStep, self).contribute(data, context)
         if data:
             return context
@@ -151,12 +155,30 @@ class AddImage(workflows.Workflow):
     def handle(self, request, context):
         # Tell glance to create the image.
         # We need to attach this info.
+        image_props = self._build_properties(context)
         image_data = self._merge_defaults(context)
-        created = glance_api.image_create(**context)
-
-        LOG.debug("Image: {0}".format(instance_data))
+        image_data["properties"] = image_props
+        LOG.debug("<ImageCreating> {0}".format(image_data))
+        created = glance_api.image_create(request, **image_data)
+        LOG.debug("</ImageCreating> {0}".format(created))
         return True
 
+    def _build_properties(self, context):
+        result = {"username": None, 
+                   "password": None,
+                   "api_version": None
+                 }
+
+        for x in result.keys():
+            result[x] = context.get(x, "")
+        return result
+
     def _merge_defaults(self, context):
-        """Merge the data specified by the user with our defaults."""
+        """Merge the data specified by the user with our defaults  stored in config.py."""
+        config = a10_config.A10Config()
+        image_defaults = config.image_defaults
+        for k,v in image_defaults:
+            # If the value isn't already specified, use the default.
+            if k not in context:
+                context[k] = v
         return context
