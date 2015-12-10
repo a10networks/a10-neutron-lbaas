@@ -152,7 +152,7 @@ class AddImageStep(workflows.Step):
             image_props = self._build_properties(data)
             image_data = self._merge_defaults(data)
             self._clean_image_data(image_data)
-            # image_data["properties"] = json.dumps(image_props)
+            image_data["properties"] = json.dumps(image_props)
             image_data["location"] = str(image_data.get("location"))
             image_data["name"] = str(image_data.get("name"))
             image_data["id"] = str(uuid.uuid4())
