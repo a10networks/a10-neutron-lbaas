@@ -22,8 +22,8 @@ import keystoneclient.session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
 
+import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -171,6 +171,7 @@ class InstanceManager(object):
         flavor_filter = (lambda x: x is not None and
                          ((hasattr(x, "name") and x.name == identifier)
                           or (hasattr(x, "id") and x.id == identifier)))
+
         filtered = filter(flavor_filter, self._nova_api.flavors.list())
         # TODO(mdurrant): What if we accidentally hit multiple flavors?
         if filtered and len(filtered) > 0:
@@ -222,6 +223,7 @@ class InstanceManager(object):
 
         id_func = (lambda x: x.get("net-id",
                    x.get("uuid", x.get("id", None))) if x is not None else None)
+
         net_filter = lambda x: id_func(x) in networks
 
         filtered = filter(net_filter, net_list)
