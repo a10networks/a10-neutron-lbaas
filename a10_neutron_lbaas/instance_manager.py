@@ -13,6 +13,7 @@
 #    under the License.
 
 import logging
+import pprint
 
 import glanceclient.client as glance_client
 import keystoneclient.auth.identity.generic as auth_plugin
@@ -21,8 +22,8 @@ import keystoneclient.session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 
+import a10_neutron_lbaas.a10_exceptions as a10_ex
 
-import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -142,14 +143,14 @@ class InstanceManager(object):
 
         networks = self.get_networks(context, net_ids)
         if image is None:
-            raise Exception(MISSING_ERR_FORMAT.format("Image", image_id))
+            raise a10_ex.ImageNotFoundError(MISSING_ERR_FORMAT.format("Image", image_id))
 
         if flavor is None:
-            raise Exception(MISSING_ERR_FORMAT.format("Flavor", flavor_id))
+            raise a10_ex.FlavorNotFoundError(MISSING_ERR_FORMAT.format("Flavor", flavor_id))
 
         if networks is None:
             msg = map(lambda x: MISSING_ERR_FORMAT.format("Network", x), net_ids)
-            raise Exception(msg)
+            raise a10_ex.NetworksNotFoundError(msg)
 
         server["image"] = image.id
         server["flavor"] = flavor.id
@@ -165,8 +166,11 @@ class InstanceManager(object):
     def get_flavor(self, context, identifier=None):
         result = None
         if identifier is None:
-            raise Exception("Parameter identifier must specify flavor id or name")
-        flavor_filter = lambda x: x.name == identifier or x.id == identifier
+            raise a10_ex.IdentifierUnspecifiedError(
+                "Parameter identifier must specify flavor id or name")
+        flavor_filter = (lambda x: x is not None and
+                         ((hasattr(x, "name") and x.name == identifier)
+                          or (hasattr(x, "id") and x.id == identifier)))
         filtered = filter(flavor_filter, self._nova_api.flavors.list())
         # TODO(mdurrant): What if we accidentally hit multiple flavors?
         if filtered and len(filtered) > 0:
@@ -177,12 +181,16 @@ class InstanceManager(object):
         result = None
         images = []
         if identifier is None:
-            raise Exception("Parameter identifier must specify image id or name")
-        img_filter = lambda x: x.name == identifier or x.id == identifier
+            raise a10_ex.IdentifierUnspecifiedError(
+                "Parameter identifier must specify image id or name")
+        img_filter = (lambda x: x is not None and
+                      ((hasattr(x, "name") and x.name == identifier)
+                       or (hasattr(x, "id") and x.id == identifier)))
         try:
             images = self._nova_api.images.list()
-        except Exception:
-            LOG.exception("Unable to retrieve images from nova")
+        except Exception as ex:
+            raise a10_ex.ImageNotFoundError(
+                "Unable to retrieve images from nova.  Error %s" % (ex))
         filtered = filter(img_filter, images)
         if filtered:
             result = filtered[0]
@@ -200,14 +208,20 @@ class InstanceManager(object):
         network_list = {"networks": []}
         net_list = []
 
+        if networks is None or len(networks) < 1:
+            raise a10_ex.IdentifierUnspecifiedError(
+                "Parameter networks must be specified.")
+
         try:
             network_list = self._neutron_api.list_networks()
             net_list = network_list.get("networks", [])
         # TODO(mdurrant) - Create specific exceptions.
-        except Exception:
-            LOG.exception("Unable to retrieve networks from neutron.")
+        except Exception as ex:
+            LOG.exception(
+                "Unable to retrieve networks from neutron.\nError %s" % (ex))
 
-        id_func = lambda x: x.get("net-id", x.get("uuid", x.get("id", None)))
+        id_func = (lambda x: x.get("net-id",
+                   x.get("uuid", x.get("id", None))) if x is not None else None)
         net_filter = lambda x: id_func(x) in networks
 
         filtered = filter(net_filter, net_list)
@@ -215,7 +229,8 @@ class InstanceManager(object):
         not_found = map(id_func, filter(lambda x: x not in filtered, net_list))
 
         if not filtered_ids or len(filtered_ids) < 1:
-            LOG.exception(Exception("Unable to retrieve specified networks."))
+            raise a10_ex.NetworksNotFoundError(
+                "Unable to retrieve specified networks.")
         if not_found:
             self._handle_missing_networks(not_found)
         return filtered_ids
