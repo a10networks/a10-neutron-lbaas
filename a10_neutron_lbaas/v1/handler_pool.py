@@ -19,6 +19,7 @@ import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -48,13 +49,15 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
+            pool_id = pool.get("id")
+
             for member in pool['members']:
                 m = self.neutron.member_get(context, member)
                 self.a10_driver.member._delete(c, context, m)
 
             for hm in pool['health_monitors_status']:
                 z = self.neutron.hm_get(context, hm['monitor_id'])
-                self.a10_driver.hm._delete(c, context, z)
+                self.a10_driver.hm.dissociate(c, context, z, pool_id)
 
             if 'vip_id' in pool and pool['vip_id'] is not None:
                 vip = self.neutron.vip_get(context, pool['vip_id'])
