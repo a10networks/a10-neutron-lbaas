@@ -18,6 +18,8 @@ import test_base
 import mocks
 import sys
 
+import a10_neutron_lbaas.a10_exceptions as a10_ex
+
 # Figure out why this is necessary to make the mock work correctly.
 
 log_mock = mock.MagicMock()
@@ -157,46 +159,50 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.assertIsNotNone(self.target._nova_api)
 
     def test_create_instance_image_not_available_throws_exception(self):
-        self.nova_api.images.list.return_value = [None]
-        # TODO(mdurrant) - This needs a more specific exception type.  ArgumentError?
+        self.nova_api.images.list.return_value = None
+        self.nova_api.images.list.side_effect = a10_ex.ImageNotFoundError()
         fake_instance = self.fake_instance
-        with self.assertRaises(Exception):
+        with self.assertRaises(a10_ex.ImageNotFoundError):
             self.target.create_instance(self.os_context, fake_instance)
 
     def test_create_instance_flavor_not_available_throws_exception(self):
         self.nova_api.flavors.list.return_value = [None]
         fake_instance = self.fake_instance
-        with self.assertRaises(Exception):
+        with self.assertRaises(a10_ex.FlavorNotFoundError):
             self.target.create_instance(self.os_context, fake_instance)
 
     def test_create_instance_network_not_available_throws_exception(self):
         self.neutron_api.list_networks.return_value = {"networks": [None]}
+        self.neutron_api.list_networks.side_effect = a10_ex.NetworksNotFoundError()
         fake_instance = self.fake_instance
         fake_instance["networks"] = ["fakenet"]
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(a10_ex.NetworksNotFoundError):
             self.target.create_instance(self.os_context, fake_instance)
 
     def test_get_network_throws_exception_for_unspecified_identifier(self):
-        with self.assertRaises(Exception):
-            self.target.get_network(self.os_context, identifier=None)
+        with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
+            self.target.get_networks(self.os_context, networks={})
 
     def test_get_image_throws_exception_for_unspecified_identifier(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
             self.target.get_image(self.os_context, identifier=None)
 
     def test_get_image_throws_exception_for_missing_image(self):
         self.nova_api.images.list.return_value = [None]
-        with self.assertRaises(Exception):
+        with self.assertRaises(a10_ex.ImageNotFoundError):
+            self.nova_api.images.list.return_value = None
+            self.nova_api.images.list.side_effect = a10_ex.ImageNotFoundError()
             self.target.get_image(self.os_context, identifier="invalidimage")
 
     def test_get_flavor_throws_exception_for_unspecified_identifier(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
             self.target.get_flavor(self.os_context, identifier=None)
 
     def test_get_flavor_throws_exception_for_missing_flavor(self):
         self.nova_api.flavors.list.return_value = [None]
-        with self.assertRaises(Exception):
+        self.nova_api.flavors.list.side_effect = a10_ex.FlavorNotFoundError
+        with self.assertRaises(a10_ex.FlavorNotFoundError):
             self.target.get_flavor(self.os_context, identifier="invalidflavor")
 
     def test_token_missing_endpoints_logs_exception(self):
@@ -205,14 +211,8 @@ class TestInstanceManager(test_base.UnitTestBase):
         log_mock.exception.assert_called()
 
     def test_get_networks_failure_returns_exception(self):
-        self.neutron_api.list_networks.side_effect = Exception
+        self.neutron_api.list_networks.side_effect = a10_ex.ServiceUnavailableError()
         self.neutron_api.list_networks.return_value = {"networks": []}
 
-        with self.assertRaises(Exception):
-            self.target.get_networks(self.os_context, identifier="network")
-
-    def test_get_networks_failure_logs_exception(self):
-        self.neutron_api.list_networks.side_effect = Exception
-        # self.neutron_api.list_networks.return_value = {"networks": []}
-        self.target.get_networks(self.os_context, networks=[{"badnet"}])
-        log_mock.exception.assert_called_with(mock.ANY)
+        with self.assertRaises(a10_ex.NetworksNotFoundError):
+            self.target.get_networks(self.os_context, networks=[{"network"}])
