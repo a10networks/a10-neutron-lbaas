@@ -12,10 +12,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
-import a10_neutron_lbaas.inventory as inventory
+from neutron.plugins.common import constants as nconstants
 
+A10_APPLIANCE_EXT = 'a10-appliance'
 
-class InventoryV1(inventory.InventoryBase):
-    # The default implementation of find in InventoryBase
-    # puts all of a tenant's v1 objects on the same appliance
+A10_APPLIANCE = "A10_APPLIANCE"
+
+nconstants.EXT_TO_SERVICE_MAPPING[A10_APPLIANCE_EXT] = A10_APPLIANCE
+try:
+    nconstants.ALLOWED_SERVICES.append(A10_APPLIANCE)
+    nconstants.COMMON_PREFIXES[A10_APPLIANCE] = ""
+except AttributeError:
+    # In Liberty and later, ALLOWED_SERVICES is derived from EXT_TO_SERVICE_MAPPING
+    # COMMON_PREFIXES are instead gotten from plugin.path_prefix
     pass

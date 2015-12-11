@@ -13,17 +13,12 @@
 #    under the License.
 
 import os
-import unittest
 
+import a10_neutron_lbaas.tests.test_case as test_case
 import mock
 
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
 import a10_neutron_lbaas.plumbing_hooks as hooks
-
-
-def assertIn(expected, actual):
-    if expected not in actual:
-        raise Exception("Expected to find {0} in {1}".format(expected, actual))
 
 
 def _build_openstack_context():
@@ -99,11 +94,7 @@ class FakeA10OpenstackLBV2(FakeA10OpenstackLB, a10_os.A10OpenstackLBV2):
         self.certmgr = mock.Mock()
 
 
-class UnitTestBase(unittest.TestCase):
-    def __init__(self, *args):
-        super(UnitTestBase, self).__init__(*args)
-        if not hasattr(self, "assertIn"):
-            setattr(self, "assertIn", assertIn)
+class UnitTestBase(test_case.TestCase):
 
     def _build_openstack_context(self):
         return _build_openstack_context()

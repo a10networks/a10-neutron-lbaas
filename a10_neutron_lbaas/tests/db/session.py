@@ -54,10 +54,14 @@ def fake_session(tables=None):
     return (make_session, connection.close)
 
 
+def a10_neutron_lbaas_models():
+    return [model
+            for model in model_base.BASEV2._decl_class_registry.values()
+            if model.__module__.startswith('a10_neutron_lbaas.')]
+
+
 def fake_migration_connection():
-    a10_neutron_lbaas_tables = [model.__tablename__
-                                for model in model_base.BASEV2._decl_class_registry.values()
-                                if model.__module__.startswith('a10_neutron_lbaas.')]
+    a10_neutron_lbaas_tables = [model.__tablename__ for model in a10_neutron_lbaas_models()]
     other_tables = [table
                     for table in model_base.BASEV2.metadata.sorted_tables
                     if table.name not in a10_neutron_lbaas_tables]

@@ -55,7 +55,10 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             self.hooks.after_vip_update(c, context, lb)
 
     def _delete(self, c, context, lb):
-        c.client.slb.virtual_server.delete(self._meta_name(lb))
+        try:
+            c.client.slb.virtual_server.delete(self._meta_name(lb))
+        except acos_errors.NotFound:
+            pass
         c.db_operations.delete_slb_v2(lb.id)
 
     def delete(self, context, lb):

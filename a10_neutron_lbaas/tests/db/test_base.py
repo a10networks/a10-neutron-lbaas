@@ -12,12 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
-import unittest
+import a10_neutron_lbaas.tests.test_case as test_case
 
 import session
 
 
-class UnitTestBase(unittest.TestCase):
+class UnitTestBase(test_case.TestCase):
 
     def setUp(self):
         (open_session, close_session) = session.fake_session()
