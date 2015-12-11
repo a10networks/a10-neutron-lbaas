@@ -126,7 +126,7 @@ Virtual router number for new virtual servers. Setting it to a number `X` corres
 Run 
 
 ```
-a10-neutron-lbaas-db-manage intall
+a10-neutron-lbaas-db-manage install
 ```
 
 The `core` migration and the migration for the lbaas version you are using should both be `UPGRADED`. For example, the following is a successful installation of the database migrations for lbaas version 1.
