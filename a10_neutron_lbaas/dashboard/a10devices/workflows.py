@@ -168,6 +168,11 @@ class AddImageStep(workflows.Step):
             if x in image_data:
                 del(image_data[x])
 
+    def _build_metadata(self, data):
+        meta_props = ["is_public", "protected", "disk_format",
+                      "container_format", "min_disk", "min_ram", 
+                      "name", "properties"]
+
     def _merge_defaults(self, context):
         """Merge the data specified by the user with our defaults  stored in config.py."""
         config = a10_config.A10Config()
