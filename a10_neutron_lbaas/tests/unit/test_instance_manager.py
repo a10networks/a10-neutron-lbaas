@@ -164,14 +164,14 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.images.list.side_effect = a10_ex.ImageNotFoundError()
         fake_instance = self.fake_instance
         with self.assertRaises(a10_ex.ImageNotFoundError):
-           self.target.create_instance(self.os_context, fake_instance)
+            self.target.create_instance(self.os_context, fake_instance)
 
     def test_create_instance_flavor_not_available_throws_exception(self):
         self.nova_api.flavors.list.return_value = [None]
         fake_instance = self.fake_instance
 
         with self.assertRaises(a10_ex.FlavorNotFoundError):
-           self.target.create_instance(self.os_context, fake_instance)
+            self.target.create_instance(self.os_context, fake_instance)
 
     def test_create_instance_network_not_available_throws_exception(self):
         self.neutron_api.list_networks.return_value = {"networks": [None]}
@@ -188,7 +188,7 @@ class TestInstanceManager(test_base.UnitTestBase):
 
     def test_get_image_throws_exception_for_unspecified_identifier(self):
         with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
-           self.target.get_image(self.os_context, identifier=None)
+            self.target.get_image(self.os_context, identifier=None)
 
     def test_get_image_throws_exception_for_missing_image(self):
         self.nova_api.images.list.return_value = [None]
@@ -199,13 +199,13 @@ class TestInstanceManager(test_base.UnitTestBase):
 
     def test_get_flavor_throws_exception_for_unspecified_identifier(self):
         with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
-           self.target.get_flavor(self.os_context, identifier=None)
+            self.target.get_flavor(self.os_context, identifier=None)
 
     def test_get_flavor_throws_exception_for_missing_flavor(self):
         self.nova_api.flavors.list.return_value = [None]
         self.nova_api.flavors.list.side_effect = a10_ex.FlavorNotFoundError
         with self.assertRaises(a10_ex.FlavorNotFoundError):
-           self.target.get_flavor(self.os_context, identifier="invalidflavor")
+            self.target.get_flavor(self.os_context, identifier="invalidflavor")
 
     def test_token_missing_endpoints_logs_exception(self):
         self.token.serviceCatalog = []
