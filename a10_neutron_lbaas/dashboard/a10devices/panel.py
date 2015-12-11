@@ -13,8 +13,7 @@
 #    under the License.
 
 import logging
-
-# from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _
 
 import horizon
 
