@@ -28,8 +28,6 @@ class A10ImagesTab(tabs.TableTab):
     template_name = "horizon/common/_detail_table.html"
 
     def get_a10imagestable_data(self):
-        import pdb; 
-        pdb.set_trace()
         result = []
         filters = {
             "filters":
@@ -57,7 +55,6 @@ class A10AppliancesTab(tabs.TableTab):
         result = []
         try:
             pass
-            # tenant_id = self.request.user.tenant_id
             # TODO(mdurrant) - Replace with call to our DB API.
         except Exception:
             result = []
