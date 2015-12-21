@@ -65,15 +65,27 @@ def do_query(config, cmd):
                        verbose=CONF.command.verbose)
 
 
-def do_upgrade_downgrade(config, cmd):
+def do_upgrade(config, cmd):
     if not CONF.command.revision and not CONF.command.delta:
         raise SystemExit(_('You must provide a revision or relative delta'))
 
-    revision = CONF.command.revision
+    if CONF.command.delta:
+        revision = '+' + str(CONF.command.delta)
+    else:
+        revision = CONF.command.revision
+
+    if CONF.command.sql:
+        do_alembic_command(config, cmd, revision, sql=CONF.command.sql)
+    else:
+        _install(config, revision)
+
+
+def do_downgrade(config, cmd):
+    if not CONF.command.revision and not CONF.command.delta:
+        raise SystemExit(_('You must provide a revision or relative delta'))
 
     if CONF.command.delta:
-        sign = '+' if CONF.command.name == 'upgrade' else '-'
-        revision = sign + str(CONF.command.delta)
+        revision = '-' + str(CONF.command.delta)
     else:
         revision = CONF.command.revision
 
@@ -241,12 +253,17 @@ def add_command_parsers(subparsers):
         parser.add_argument('--verbose', action='store_true')
         parser.set_defaults(func=do_query)
 
-    for name in ['upgrade', 'downgrade']:
-        parser = subparsers.add_parser(name)
-        parser.add_argument('--delta', type=int)
-        parser.add_argument('--sql', action='store_true')
-        parser.add_argument('revision', nargs='?')
-        parser.set_defaults(func=do_upgrade_downgrade)
+    parser = subparsers.add_parser('upgrade')
+    parser.add_argument('--delta', type=int)
+    parser.add_argument('--sql', action='store_true')
+    parser.add_argument('revision', nargs='?')
+    parser.set_defaults(func=do_upgrade)
+
+    parser = subparsers.add_parser('downgrade')
+    parser.add_argument('--delta', type=int)
+    parser.add_argument('--sql', action='store_true')
+    parser.add_argument('revision', nargs='?')
+    parser.set_defaults(func=do_downgrade)
 
     parser = subparsers.add_parser('stamp')
     parser.add_argument('--sql', action='store_true')

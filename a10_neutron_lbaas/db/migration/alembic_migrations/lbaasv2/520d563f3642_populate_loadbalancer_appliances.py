@@ -26,23 +26,13 @@ down_revision = '3f6b367e2485'
 branch_labels = None
 depends_on = None
 
-from alembic import context
-from alembic import op
-
-from a10_neutron_lbaas import A10OpenstackLBV2
-from a10_neutron_lbaas.db.migration.step import initialize_a10_slb_v2
-import neutron.plugins.common.constants as constants
-
 
 def upgrade():
-    for provider, driver in context.config.drivers[constants.LOADBALANCERV2][0].items():
-        if hasattr(driver, 'a10') and isinstance(driver.a10, A10OpenstackLBV2):
-            upgrade_driver(provider, driver.a10)
+    """This step moved to populate loadbalancer, tenant appliances
+    to also populate the a10_tenant_appliance table
+    """
 
-
-def upgrade_driver(provider, a10):
-    conn = op.get_bind()
-    initialize_a10_slb_v2(conn, provider, a10)
+    pass
 
 
 def downgrade():
