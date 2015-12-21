@@ -15,7 +15,7 @@
 import neutronclient.common.extension as extension
 import neutronclient.neutron.v2_0 as neutronV20
 
-import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
+import a10_neutron_lbaas.neutron_ext.extensions.a10Image as a10Image
 
 
 _NEUTRON_OPTIONS = ['id', 'tenant_id']
@@ -27,7 +27,7 @@ def _arg_name(name):
 
 
 def _add_known_arguments(parser, required, where):
-    attributes = a10Appliance.RESOURCE_ATTRIBUTE_MAP[a10Appliance.A10_APPLIANCE_RESOURCES]
+    attributes = a10Image.RESOURCE_ATTRIBUTE_MAP[a10Image.A10_IMAGE_RESOURCES]
     for name in required:
         parser.add_argument(name)
     for name, attr in attributes.items():
@@ -37,56 +37,56 @@ def _add_known_arguments(parser, required, where):
 
 
 def _args2body(parsed_args):
-    attributes = a10Appliance.RESOURCE_ATTRIBUTE_MAP[a10Appliance.A10_APPLIANCE_RESOURCES]
+    attributes = a10Image.RESOURCE_ATTRIBUTE_MAP[a10Image.A10_IMAGE_RESOURCES]
     body = {}
     neutronV20.update_dict(parsed_args, body, [a for a in attributes if a != 'id'])
-    return {a10Appliance.A10_APPLIANCE_RESOURCE: body}
+    return {a10Image.A10_IMAGE_RESOURCE: body}
 
 
-class A10ApplianceExtension(extension.NeutronClientExtension):
+class A10ImageExtension(extension.NeutronClientExtension):
     """Define required variables for resource operations."""
 
-    resource = a10Appliance.A10_APPLIANCE_RESOURCE
-    resource_plural = a10Appliance.A10_APPLIANCE_RESOURCES
+    resource = a10Image.A10_IMAGE_RESOURCE
+    resource_plural = a10Image.A10_IMAGE_RESOURCES
 
     object_path = '/%s' % resource_plural
     resource_path = '/%s/%%s' % resource_plural
     versions = ['2.0']
 
 
-class ListA10Appliance(extension.ClientExtensionList, A10ApplianceExtension):
-    """List A10 appliances"""
+class ListA10Image(extension.ClientExtensionList, A10ImageExtension):
+    """List A10 images"""
 
-    shell_command = 'a10-appliance-list'
+    shell_command = 'a10-image-list'
 
-    list_columns = ['id', 'name', 'host', 'api_version', 'description']
+    list_columns = ['id', 'name', 'image_id', 'api_version', 'description']
     pagination_support = True
     sorting_support = True
 
 
-class CreateA10Appliance(extension.ClientExtensionCreate, A10ApplianceExtension):
-    """Create A10 appliance"""
+class CreateA10Image(extension.ClientExtensionCreate, A10ImageExtension):
+    """Create A10 image"""
 
-    shell_command = 'a10-appliance-create'
+    shell_command = 'a10-image-create'
 
-    list_columns = ['id', 'name', 'host', 'api_version', 'description']
+    list_columns = ['id', 'name', 'image_id', 'api_version', 'description']
 
     def add_known_arguments(self, parser):
         _add_known_arguments(
             parser,
-            ['host', 'api_version', 'username', 'password'],
+            ['image_id', 'api_version', 'username', 'password'],
             lambda attr: attr.get('allow_post'))
 
     def args2body(self, parsed_args):
         return _args2body(parsed_args)
 
 
-class UpdateA10Appliance(extension.ClientExtensionUpdate, A10ApplianceExtension):
-    """Update A10 appliance"""
+class UpdateA10Image(extension.ClientExtensionUpdate, A10ImageExtension):
+    """Update A10 image"""
 
-    shell_command = 'a10-appliance-update'
+    shell_command = 'a10-image-update'
 
-    list_columns = ['id', 'name', 'host', 'api_version', 'description']
+    list_columns = ['id', 'name', 'image_id', 'api_version', 'description']
 
     def add_known_arguments(self, parser):
         _add_known_arguments(
@@ -98,13 +98,13 @@ class UpdateA10Appliance(extension.ClientExtensionUpdate, A10ApplianceExtension)
         return _args2body(parsed_args)
 
 
-class DeleteA10Appliance(extension.ClientExtensionDelete, A10ApplianceExtension):
-    """Delete A10 appliance"""
+class DeleteA10Image(extension.ClientExtensionDelete, A10ImageExtension):
+    """Delete A10 image"""
 
-    shell_command = 'a10-appliance-delete'
+    shell_command = 'a10-image-delete'
 
 
-class ShowA10Appliance(extension.ClientExtensionShow, A10ApplianceExtension):
-    """Show A10 appliance"""
+class ShowA10Image(extension.ClientExtensionShow, A10ImageExtension):
+    """Show A10 image"""
 
-    shell_command = 'a10-appliance-show'
+    shell_command = 'a10-image-show'

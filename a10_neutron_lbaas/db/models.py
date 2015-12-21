@@ -165,3 +165,20 @@ class A10TenantAppliance(model_base.BASEV2):
                                  sa.ForeignKey('a10_appliances_slb.id'),
                                  nullable=False)
     a10_appliance = relationship(A10ApplianceSLB)
+
+
+class A10Image(model_base.BASEV2):
+    """An a10 appliance defined in the database"""
+
+    __tablename__ = u'a10_images'
+
+    id = sa.Column(sa.String(36),
+                   primary_key=True,
+                   nullable=False)
+    tenant_id = sa.Column(sa.String(255), nullable=True)
+    name = sa.Column(sa.String(255), nullable=True)
+    description = sa.Column(sa.String(255), nullable=True)
+    image_id = sa.Column(sa.String(36), nullable=False)
+    api_version = sa.Column(sa.String(12), nullable=False)
+    username = sa.Column(sa.String(255), nullable=False)
+    password = sa.Column(sa.String(255), nullable=False)
