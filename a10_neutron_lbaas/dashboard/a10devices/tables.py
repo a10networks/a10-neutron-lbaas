@@ -32,14 +32,14 @@ class AddApplianceAction(tables.LinkAction):
 class AddImageAction(tables.LinkAction):
     name = "addimage"
     verbose_name = _("Add Image")
-    url = "horizon:project:a10images:addimage"
+    url = "horizon:project:a10appliances:addimage"
     icon = "plus"
 
 
 class DeleteImageAction(tables.LinkAction):
     name = "deleteimage"
     verbose_name = _("Delete Image")
-    url = "horizon:project:a10images:deleteimage"
+    url = "horizon:project:a10appliances:deleteimage"
 
 
 class A10ApplianceTable(tables.DataTable):
@@ -57,7 +57,6 @@ class A10ApplianceTable(tables.DataTable):
 class A10ImageTable(tables.DataTable):
     id = tables.Column("id", verbose_name=_("ID"), hidden=True)
     name = tables.Column("name", verbose_name=_("Name"))
-    filename = tables.Column("filename", verbose_name=_("Filename"))
 
     class Meta(object):
         name = "a10imagestable"
