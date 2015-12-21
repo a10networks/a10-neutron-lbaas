@@ -145,7 +145,6 @@ class AddImageStep(workflows.Step):
             return result
 
     def contribute(self, data, context):
-        import pdb; pdb.set_trace()
         image_data = {}
         
         if data:
