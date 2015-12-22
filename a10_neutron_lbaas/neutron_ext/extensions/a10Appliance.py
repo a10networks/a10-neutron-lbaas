@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
+import a10_neutron_lbaas.localization as localization
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
 
 import abc
@@ -23,6 +24,9 @@ from neutron.common import exceptions
 from neutron.services import service_base
 
 import six
+
+# Neutron is finicky. Sometimes _ is defined, sometimes it isn't
+localization.install()
 
 
 def singular(plural):
