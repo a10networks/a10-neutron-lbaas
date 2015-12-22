@@ -70,7 +70,7 @@ class A10Config(object):
                     for dk, dv in self.DEVICE_DEFAULTS.items():
                         if dk not in self.devices[k]:
                             self.devices[k][dk] = dv
-        
+
             self.image_defaults = {}
             self._populate_image_defaults()
         finally:

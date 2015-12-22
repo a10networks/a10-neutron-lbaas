@@ -44,4 +44,4 @@ class AddApplianceView(workflows.WorkflowView):
 
 
 class AddImageView(workflows.WorkflowView):
-	workflow_class = p_workflows.AddImage
+    workflow_class = p_workflows.AddImage

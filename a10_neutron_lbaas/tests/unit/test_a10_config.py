@@ -58,7 +58,9 @@ class TestA10Config(test_base.UnitTestBase):
     def test_image_defaults_members(self):
         image_defaults = self.a.config.image_defaults
         actual = image_defaults.keys()
-        expected = ["name", "id", "visibility", "tags", "min_disk", "min_ram", "container_format", "protected", "properties", "disk_format"]
+        expected = ["name", "id", "visibility", "tags", "min_disk",
+                    "min_ram", "container_format", "protected",
+                    "properties", "disk_format"]
         self.assertListEqual(sorted(expected), sorted(actual))
 
     def test_image_default_properties_parses(self):
@@ -66,4 +68,3 @@ class TestA10Config(test_base.UnitTestBase):
         properties = self.a.config.image_defaults.get("properties")
         actual = json.loads(properties)
         self.assertIsNotNone(actual)
-

@@ -24,5 +24,4 @@ urlpatterns = patterns(
     url(r'^$', views.IndexView.as_view(), name='index'),
     url(r'^addappliance$', views.AddApplianceView.as_view(), name='addappliance'),
     url(r'^addimage$', views.AddImageView.as_view(), name="addimage")
-    # url(r'^deleteimage/(?P<image_id>[^/]+)/$', views.DeleteImageView.as_view(), name="deleteimage")
 )
