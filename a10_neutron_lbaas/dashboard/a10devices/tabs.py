@@ -16,10 +16,33 @@ from django.utils.translation import ugettext_lazy as _
 
 from horizon import exceptions
 from horizon import tabs
+import openstack_dashboard.api.glance as glance_api
 
-
-# from openstack_dashboard import api
 import a10_neutron_lbaas.dashboard.a10devices.tables as p_tables
+
+
+class A10ImagesTab(tabs.TableTab):
+    table_classes = (p_tables.A10ImageTable, )
+    name = _("A10 Images")
+    slug = "a10imagestab"
+    template_name = "horizon/common/_detail_table.html"
+
+    def get_a10imagestable_data(self):
+        result = []
+        filters = {
+            "filters":
+                {
+                    "tag": "a10"
+                }
+        }
+
+        try:
+            (images, has_more, has_prev) = glance_api.image_list_detailed(self.tab_group.request,
+                                                                          filters=filters)
+            result = images
+        except Exception:
+            pass
+        return result
 
 
 class A10AppliancesTab(tabs.TableTab):
@@ -32,7 +55,6 @@ class A10AppliancesTab(tabs.TableTab):
         result = []
         try:
             pass
-            # tenant_id = self.request.user.tenant_id
             # TODO(mdurrant) - Replace with call to our DB API.
         except Exception:
             result = []
@@ -43,5 +65,5 @@ class A10AppliancesTab(tabs.TableTab):
 
 class A10Tabs(tabs.TabGroup):
     slug = "a10tabs"
-    tabs = (A10AppliancesTab,)
+    tabs = (A10AppliancesTab, A10ImagesTab, )
     sticky = True
