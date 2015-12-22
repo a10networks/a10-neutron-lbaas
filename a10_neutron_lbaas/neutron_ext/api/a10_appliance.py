@@ -17,7 +17,6 @@ import neutronclient.neutron.v2_0 as neutronV20
 
 import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
 
-
 _NEUTRON_OPTIONS = ['id', 'tenant_id']
 
 
