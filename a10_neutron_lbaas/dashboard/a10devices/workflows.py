@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import json
+import logging
 import uuid
 
 from django.utils.translation import ugettext_lazy as _
@@ -126,7 +126,6 @@ class AddImageAction(workflows.Action):
         api_versions = [("2.1", "2.1"), ("3.0", "3.0")]
         self.fields["api_version"].choices = api_versions
 
-
     class Meta(object):
         name = _("Add Image")
         permissions = ('openstack.services.network',)
@@ -138,10 +137,9 @@ class AddImageStep(workflows.Step):
     contributes = ("name", "url", "username", "password", "api_version")
 
     def _build_properties(self, context):
-            result = {'username': None, 
+            result = {'username': None,
                       'password': None,
-                      'api_version': None
-                     }
+                      'api_version': None}
 
             for x in result.keys():
                 result[x] = context.get(x)
@@ -149,7 +147,7 @@ class AddImageStep(workflows.Step):
 
     def contribute(self, data, context):
         image_data = {}
-        
+
         if data:
             image_props = self._build_properties(data)
             image_data = self._merge_defaults(data)
@@ -170,23 +168,18 @@ class AddImageStep(workflows.Step):
             if x in image_data:
                 del(image_data[x])
 
-    def _build_metadata(self, data):
-        meta_props = ["is_public", "protected", "disk_format",
-                      "container_format", "min_disk", "min_ram", 
-                      "name", "properties"]
-
     def _merge_defaults(self, context):
         """Merge the data specified by the user with our defaults  stored in config.py."""
         config = a10_config.A10Config()
         image_defaults = config.image_defaults
-        
-        for k,v in image_defaults.items():
+
+        for k, v in image_defaults.items():
             # If the value isn't already specified, use the default.
             transform = lambda x: x
             if k not in context:
                 if isinstance(v, basestring):
                     transform = lambda x: str(x)
-                
+
                 context[k] = transform(v)
         return context
 
@@ -205,7 +198,6 @@ class AddImage(workflows.Workflow):
         return message % name
 
     def handle(self, request, context):
-        
         LOG.debug("<ImageCreating> {0}".format(context))
         # Tell glance to create the image.
         created = glance_api.glanceclient(request, version=2).images.create(**context)

@@ -37,7 +37,7 @@ class A10ImagesTab(tabs.TableTab):
         }
 
         try:
-            (images, has_more, has_prev) = glance_api.image_list_detailed(self.tab_group.request, 
+            (images, has_more, has_prev) = glance_api.image_list_detailed(self.tab_group.request,
                                                                           filters=filters)
             result = images
         except Exception:
@@ -65,5 +65,5 @@ class A10AppliancesTab(tabs.TableTab):
 
 class A10Tabs(tabs.TabGroup):
     slug = "a10tabs"
-    tabs = (A10AppliancesTab,A10ImagesTab,)
+    tabs = (A10AppliancesTab, A10ImagesTab, )
     sticky = True
