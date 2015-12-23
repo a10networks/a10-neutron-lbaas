@@ -31,6 +31,8 @@ import openstack_dashboard.api.nova as nova_api
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
+GLANCE_API_VERSION = 2
+
 LOG = logging.getLogger(__name__)
 
 
@@ -110,8 +112,7 @@ class AddAppliance(workflows.Workflow):
 
 class AddImageAction(workflows.Action):
     name = forms.CharField(max_length=80, label=_("Name"))
-    location = forms.CharField(label=_("Image URL"))
-    # image = forms.FileField(label=_("Image Data"))
+    copy_from = forms.CharField(label=_("Image URL"))
     username = forms.CharField(label=_("Username"))
     password = forms.CharField(label=_("Password"))
     api_version = forms.ChoiceField(label=_("API Version"))
@@ -149,8 +150,8 @@ class AddImageStep(workflows.Step):
             image_props = self._build_properties(data)
             image_data = self._merge_defaults(data)
             self._clean_image_data(image_data)
-            image_data["properties"] = json.dumps(image_props)
-            image_data["location"] = str(image_data.get("location"))
+            image_data["properties"] = image_props
+            image_data["copy_from"] = str(image_data.get("copy_from"))
             image_data["name"] = str(image_data.get("name"))
             image_data["id"] = str(uuid.uuid4())
         return image_data
@@ -195,8 +196,15 @@ class AddImage(workflows.Workflow):
         return message % name
 
     def handle(self, request, context):
-        LOG.debug("<ImageCreating> {0}".format(context))
         # Tell glance to create the image.
-        created = glance_api.glanceclient(request, version=2).images.create(**context)
+        image = {
+            "properties": context["properties"],
+            "copy_from": context["copy_from"],
+            "name": context["name"],
+            "id": context["id"],
+
+        }
+        LOG.debug("<ImageCreating> {0}".format(image))
+        created = glance_api.glanceclient(request, version=1).images.create(**image)
         LOG.debug("</ImageCreating> {0}".format(created))
         return True
