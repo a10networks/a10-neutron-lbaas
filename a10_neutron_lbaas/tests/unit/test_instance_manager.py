@@ -73,10 +73,13 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.service_catalog = [{
             "name": "keystone",
             "type": "identity",
-            "endpoints": [{"publicURL": "http://localhost:5000"}]
+            "endpoints": [{
+                "interface": "public",
+                "url": "http://localhost:5000"}]
         }]
 
-        self.token = mock.NonCallableMock(serviceCatalog=self.service_catalog)
+        project = {"id": "fakeid", "name": "Carl Adultman"}
+        self.token = mock.NonCallableMock(serviceCatalog=self.service_catalog, project=project)
         self.user = mock.NonCallableMock(token=self.token)
         self.request = mock.NonCallableMock(user=self.user)
 
