@@ -10,12 +10,12 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License.from neutron.db import model_base
+#    under the License.
 
-import neutronclient.common.extension as extension
-import neutronclient.neutron.v2_0 as neutronV20
+from neutronclient.common import extension
+from neutronclient.neutron import v2_0 as neutronV20
 
-import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
+from a10_neutron_lbaas_client.resources import a10_appliance
 
 _NEUTRON_OPTIONS = ['id', 'tenant_id']
 
@@ -26,7 +26,7 @@ def _arg_name(name):
 
 
 def _add_known_arguments(parser, required, where):
-    attributes = a10Appliance.RESOURCE_ATTRIBUTE_MAP[a10Appliance.A10_APPLIANCE_RESOURCES]
+    attributes = a10_appliance.RESOURCE_ATTRIBUTE_MAP[a10_appliance.RESOURCES]
     for name in required:
         parser.add_argument(name)
     for name, attr in attributes.items():
@@ -36,24 +36,24 @@ def _add_known_arguments(parser, required, where):
 
 
 def _args2body(parsed_args):
-    attributes = a10Appliance.RESOURCE_ATTRIBUTE_MAP[a10Appliance.A10_APPLIANCE_RESOURCES]
+    attributes = a10_appliance.RESOURCE_ATTRIBUTE_MAP[a10_appliance.RESOURCES]
     body = {}
     neutronV20.update_dict(parsed_args, body, [a for a in attributes if a != 'id'])
-    return {a10Appliance.A10_APPLIANCE_RESOURCE: body}
+    return {a10_appliance.RESOURCE: body}
 
 
-class A10ApplianceExtension(extension.NeutronClientExtension):
+class a10_applianceExtension(extension.NeutronClientExtension):
     """Define required variables for resource operations."""
 
-    resource = a10Appliance.A10_APPLIANCE_RESOURCE
-    resource_plural = a10Appliance.A10_APPLIANCE_RESOURCES
+    resource = a10_appliance.RESOURCE
+    resource_plural = a10_appliance.RESOURCES
 
     object_path = '/%s' % resource_plural
     resource_path = '/%s/%%s' % resource_plural
     versions = ['2.0']
 
 
-class ListA10Appliance(extension.ClientExtensionList, A10ApplianceExtension):
+class Lista10_appliance(extension.ClientExtensionList, a10_applianceExtension):
     """List A10 appliances"""
 
     shell_command = 'a10-appliance-list'
@@ -63,7 +63,7 @@ class ListA10Appliance(extension.ClientExtensionList, A10ApplianceExtension):
     sorting_support = True
 
 
-class CreateA10Appliance(extension.ClientExtensionCreate, A10ApplianceExtension):
+class Createa10_appliance(extension.ClientExtensionCreate, a10_applianceExtension):
     """Create A10 appliance"""
 
     shell_command = 'a10-appliance-create'
@@ -80,7 +80,7 @@ class CreateA10Appliance(extension.ClientExtensionCreate, A10ApplianceExtension)
         return _args2body(parsed_args)
 
 
-class UpdateA10Appliance(extension.ClientExtensionUpdate, A10ApplianceExtension):
+class Updatea10_appliance(extension.ClientExtensionUpdate, a10_applianceExtension):
     """Update A10 appliance"""
 
     shell_command = 'a10-appliance-update'
@@ -97,13 +97,13 @@ class UpdateA10Appliance(extension.ClientExtensionUpdate, A10ApplianceExtension)
         return _args2body(parsed_args)
 
 
-class DeleteA10Appliance(extension.ClientExtensionDelete, A10ApplianceExtension):
+class Deletea10_appliance(extension.ClientExtensionDelete, a10_applianceExtension):
     """Delete A10 appliance"""
 
     shell_command = 'a10-appliance-delete'
 
 
-class ShowA10Appliance(extension.ClientExtensionShow, A10ApplianceExtension):
+class Showa10_appliance(extension.ClientExtensionShow, a10_applianceExtension):
     """Show A10 appliance"""
 
     shell_command = 'a10-appliance-show'

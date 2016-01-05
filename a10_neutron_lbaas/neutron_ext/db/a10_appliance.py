@@ -10,14 +10,14 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License.from neutron.db import model_base
+#    under the License.
 
 import neutron.db.common_db_mixin as common_db_mixin
 from oslo_log import log as logging
 
 import a10_neutron_lbaas.db.models as models
 import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
-
+from a10_neutron_lbaas_client.resources import a10_appliance as a10_appliance_resources
 
 LOG = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class A10ApplianceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10Applian
             raise a10Appliance.A10ApplianceInUseError(a10_appliance_id)
 
     def create_a10_appliance(self, context, a10_appliance):
-        body = a10_appliance[a10Appliance.A10_APPLIANCE_RESOURCE]
+        body = a10_appliance[a10_appliance_resources.RESOURCE]
         with context.session.begin(subtransactions=True):
             appliance_record = models.A10ApplianceDB(
                 id=models.uuid_str(),
@@ -70,7 +70,7 @@ class A10ApplianceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10Applian
         return self._make_a10_appliance_dict(appliance_record)
 
     def update_a10_appliance(self, context, a10_appliance_id, a10_appliance):
-        data = a10_appliance[a10Appliance.A10_APPLIANCE_RESOURCE]
+        data = a10_appliance[a10_appliance_resources.RESOURCE]
         with context.session.begin(subtransactions=True):
             a10_appliance_db = self._get_a10_appliance(context, a10_appliance_id)
             a10_appliance_db.update(data)
