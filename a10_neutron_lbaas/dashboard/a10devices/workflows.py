@@ -116,7 +116,7 @@ class AddImageAction(workflows.Action):
     name = forms.CharField(max_length=80, label=_("Name"))
     copy_from = forms.CharField(label=_("Image URL"))
     username = forms.CharField(label=_("Username"))
-    password = forms.CharField(label=_("Password"))
+    password = forms.CharField(label=_("Password"), widget=forms.PasswordInput)
     api_version = forms.ChoiceField(label=_("API Version"))
     port = forms.IntegerField(label=_("Port"))
     protocol = forms.ChoiceField(label=_("Protocol"))
