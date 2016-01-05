@@ -14,9 +14,10 @@
 
 from neutron.plugins.common import constants as nconstants
 
-A10_APPLIANCE_EXT = 'a10-appliance'
+from a10_neutron_lbaas_client.resources import a10_appliance
 
-A10_APPLIANCE = "A10_APPLIANCE"
+A10_APPLIANCE_EXT = a10_appliance.EXTENSION
+A10_APPLIANCE = a10_appliance.SERVICE
 
 nconstants.EXT_TO_SERVICE_MAPPING[A10_APPLIANCE_EXT] = A10_APPLIANCE
 try:

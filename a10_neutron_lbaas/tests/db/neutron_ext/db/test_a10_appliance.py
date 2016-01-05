@@ -10,7 +10,7 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License.from neutron.db import model_base
+#    under the License.
 
 import mock
 
@@ -20,6 +20,7 @@ import a10_neutron_lbaas.tests.db.test_base as test_base
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
 import a10_neutron_lbaas.neutron_ext.db.a10_appliance as a10_appliance
 import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
+from a10_neutron_lbaas_client.resources import a10_appliance as a10_appliance_resources
 
 
 class TestA10ApplianceDbMixin(test_base.UnitTestBase):
@@ -44,7 +45,7 @@ class TestA10ApplianceDbMixin(test_base.UnitTestBase):
         }
 
     def envelope(self, body):
-        return {a10Appliance.A10_APPLIANCE_RESOURCE: body}
+        return {a10_appliance_resources.RESOURCE: body}
 
     def test_create_a10_appliance(self):
         appliance = self.fake_appliance()

@@ -10,10 +10,11 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License.from neutron.db import model_base
+#    under the License.
 
 import a10_neutron_lbaas.localization as localization
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
+import a10_neutron_lbaas_client.resources.a10_appliance as a10_appliance
 
 import abc
 
@@ -27,85 +28,6 @@ import six
 
 # Neutron is finicky. Sometimes _ is defined, sometimes it isn't
 localization.install()
-
-
-def singular(plural):
-    singulars = resource_helper.build_plural_mappings({}, {plural: {}})
-    return singulars[plural]
-
-
-A10_APPLIANCE_RESOURCES = 'a10_appliances'
-A10_APPLIANCE_RESOURCE = singular(A10_APPLIANCE_RESOURCES)
-
-RESOURCE_ATTRIBUTE_MAP = {
-    A10_APPLIANCE_RESOURCES: {
-        'id': {
-            'allow_post': False,
-            'allow_put': True,
-            'validate': {
-                'type:uuid': None
-            },
-            'is_visible': True,
-            'primary_key': True
-        },
-        'tenant_id': {
-            'allow_post': True,
-            'allow_put': False,
-            'required_by_policy': True,
-            'is_visible': True
-        },
-        'name': {
-            'allow_post': True,
-            'allow_put': True,
-            'validate': {
-                'type:string': None
-            },
-            'is_visible': True,
-            'default': ''
-        },
-        'description': {
-            'allow_post': True,
-            'allow_put': True,
-            'validate': {
-                'type:string': None
-            },
-            'is_visible': True,
-            'default': '',
-        },
-        'host': {
-            'allow_post': True,
-            'allow_put': True,
-            'validate': {
-                'type:string': None
-            },
-            'is_visible': True
-        },
-        'username': {
-            'allow_post': True,
-            'allow_put': True,
-            'validate': {
-                'type:string': None
-            },
-            'is_visible': True
-        },
-        'password': {
-            'allow_post': True,
-            'allow_put': True,
-            'validate': {
-                'type:string': None
-            },
-            'is_visible': False
-        },
-        'api_version': {
-            'allow_post': True,
-            'allow_put': True,
-            'validate': {
-                'type:string': None
-            },
-            'is_visible': True
-        }
-    }
-}
 
 
 class A10Appliance(extensions.ExtensionDescriptor):
@@ -134,9 +56,9 @@ class A10Appliance(extensions.ExtensionDescriptor):
     def get_resources(cls):
         """Returns external resources."""
         my_plurals = resource_helper.build_plural_mappings(
-            {}, RESOURCE_ATTRIBUTE_MAP)
+            {}, a10_appliance.RESOURCE_ATTRIBUTE_MAP)
         attributes.PLURALS.update(my_plurals)
-        attr_map = RESOURCE_ATTRIBUTE_MAP
+        attr_map = a10_appliance.RESOURCE_ATTRIBUTE_MAP
         resources = resource_helper.build_resource_info(my_plurals,
                                                         attr_map,
                                                         constants.A10_APPLIANCE)
@@ -146,11 +68,11 @@ class A10Appliance(extensions.ExtensionDescriptor):
     def update_attributes_map(self, attributes):
         super(A10Appliance, self).update_attributes_map(
             attributes,
-            extension_attrs_map=RESOURCE_ATTRIBUTE_MAP)
+            extension_attrs_map=a10_appliance.RESOURCE_ATTRIBUTE_MAP)
 
     def get_extended_resources(self, version):
         if version == "2.0":
-            return RESOURCE_ATTRIBUTE_MAP
+            return a10_appliance.RESOURCE_ATTRIBUTE_MAP
         else:
             return {}
 

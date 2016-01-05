@@ -33,7 +33,7 @@ setup(
 
     entry_points = {
         'neutronclient.extension': [
-            'a10_appliance=a10_neutron_lbaas.neutron_ext.api.a10_appliance'
+            'a10_appliance=a10_neutron_lbaas_client.a10_appliance'
         ]
     },
 
