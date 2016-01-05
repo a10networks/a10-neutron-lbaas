@@ -10,16 +10,16 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License.from neutron.db import model_base
+#    under the License.
 
 from neutronclient.v2_0 import client as clientbase
 
-import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
+from a10_neutron_lbaas_client.resources import a10_appliance
 
 
 class Client(clientbase.Client):
-    a10_appliances_path = "/%s" % a10Appliance.A10_APPLIANCE_RESOURCE
-    a10_appliance_path = "/%s/%%s" % a10Appliance.A10_APPLIANCE_RESOURCE
+    a10_appliances_path = "/%s" % a10_appliance.RESOURCE
+    a10_appliance_path = "/%s/%%s" % a10_appliance.RESOURCE
 
     @clientbase.APIParamsCall
     def list_a10_appliances(self, **_params):
