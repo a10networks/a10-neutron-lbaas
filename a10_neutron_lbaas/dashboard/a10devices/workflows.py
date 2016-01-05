@@ -115,8 +115,8 @@ class AddImageAction(workflows.Action):
     username = forms.CharField(label=_("Username"))
     password = forms.CharField(label=_("Password"))
     api_version = forms.ChoiceField(label=_("API Version"))
-    port = forms.IntegerField(label=_("Port"), default=443)
-    protocol = forms.ChoiceField(label=_("Protocol"), default="https")
+    port = forms.IntegerField(label=_("Port"))
+    protocol = forms.ChoiceField(label=_("Protocol"))
 
     def __init__(self, request, *args, **kwargs):
         super(AddImageAction, self).__init__(request, *args, **kwargs)
@@ -141,7 +141,9 @@ class AddImageStep(workflows.Step):
     def _build_properties(self, context):
             result = {'username': None,
                       'password': None,
-                      'api_version': None}
+                      'api_version': None,
+                      'port': None,
+                      'protocol': None}
 
             for x in result.keys():
                 result[x] = context.get(x)
