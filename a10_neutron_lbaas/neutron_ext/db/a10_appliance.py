@@ -12,17 +12,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import neutron.db.common_db_mixin as common_db_mixin
+from neutron.db import common_db_mixin
 from oslo_log import log as logging
 
-import a10_neutron_lbaas.db.models as models
-import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
+from a10_neutron_lbaas import a10_config
+from a10_neutron_lbaas.db import models
+from a10_neutron_lbaas.neutron_ext.common import resources
+from a10_neutron_lbaas.neutron_ext.extensions import a10Appliance
 from a10_neutron_lbaas_client.resources import a10_appliance as a10_appliance_resources
 
 LOG = logging.getLogger(__name__)
 
 
 class A10ApplianceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10AppliancePluginBase):
+
+    def __init__(self):
+        super(A10ApplianceDbMixin, self).__init__()
+        self.config = a10_config.A10Config()
 
     def _get_a10_appliance(self, context, a10_appliance_id):
         try:
@@ -38,7 +44,9 @@ class A10ApplianceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10Applian
                'host': a10_appliance_db['host'],
                'api_version': a10_appliance_db['api_version'],
                'username': a10_appliance_db['username'],
-               'password': a10_appliance_db['password']}
+               'password': a10_appliance_db['password'],
+               'protocol': a10_appliance_db['protocol'],
+               'port': a10_appliance_db['port']}
         return self._fields(res, fields)
 
     def _ensure_a10_appliance_not_in_use(self, context, a10_appliance_id):
@@ -53,24 +61,31 @@ class A10ApplianceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10Applian
         if slbs > 0:
             raise a10Appliance.A10ApplianceInUseError(a10_appliance_id)
 
-    def create_a10_appliance(self, context, a10_appliance):
+    def _get_body(self, a10_appliance):
         body = a10_appliance[a10_appliance_resources.RESOURCE]
+        return resources.remove_attributes_not_specified(body)
+
+    def create_a10_appliance(self, context, a10_appliance):
+        body = self._get_body(a10_appliance)
+        data = self.config.device_defaults(body)
         with context.session.begin(subtransactions=True):
             appliance_record = models.A10ApplianceDB(
                 id=models.uuid_str(),
                 name=body['name'],
                 description=body['description'],
-                host=body['host'],
-                api_version=body['api_version'],
-                username=body['username'],
-                password=body['password'],
+                host=data['host'],
+                api_version=data['api_version'],
+                username=data['username'],
+                password=data['password'],
+                protocol=data['protocol'],
+                port=data['port'],
                 tenant_id=context.tenant_id)
             context.session.add(appliance_record)
 
         return self._make_a10_appliance_dict(appliance_record)
 
     def update_a10_appliance(self, context, a10_appliance_id, a10_appliance):
-        data = a10_appliance[a10_appliance_resources.RESOURCE]
+        data = self._get_body(a10_appliance)
         with context.session.begin(subtransactions=True):
             a10_appliance_db = self._get_a10_appliance(context, a10_appliance_id)
             a10_appliance_db.update(data)

@@ -40,6 +40,20 @@ class A10Config(object):
         "protected": False
     }
 
+    # TODO(dougwig) -- needed?
+    def device_defaults(self, device_config):
+        device = self.DEVICE_DEFAULTS.copy()
+        device.update(device_config)
+
+        # Figure out port
+        protocol = device['protocol']
+        port = device.get(
+            'port', {'http': 80, 'https': 443}[protocol])
+        device['port'] = port
+
+        return device
+
+
     def __init__(self, config_dir=None):
         # Look for config in the virtual environment
         # virtualenv puts the original prefix in sys.real_prefix
@@ -65,6 +79,7 @@ class A10Config(object):
         sys.path = [self._config_dir]
         try:
             try:
+                sys.modules.pop('config', None)
                 import config
                 self._config = config
             except ImportError:

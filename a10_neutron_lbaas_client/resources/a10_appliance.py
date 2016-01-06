@@ -78,13 +78,24 @@ RESOURCE_ATTRIBUTE_MAP = {
             },
             'is_visible': False
         },
-        'api_version': {
+        'protocol': {
             'allow_post': True,
             'allow_put': True,
             'validate': {
                 'type:string': None
             },
-            'is_visible': True
+            'is_visible': True,
+            'default': lambda attr: attr.ATTR_NOT_SPECIFIED
+        },
+        'port': {
+            'allow_post': True,
+            'allow_put': True,
+            'validate': {
+                'type:range': [0, 65535]
+            },
+            'convert_to': lambda attr: attr.convert_to_int,
+            'is_visible': True,
+            'default': lambda attr: attr.ATTR_NOT_SPECIFIED
         }
     }
 }

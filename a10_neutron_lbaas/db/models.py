@@ -163,3 +163,107 @@ class A10TenantBinding(Base):
     updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date)
     tenant_id = sa.Column(sa.String(36), nullable=False)
     device_name = sa.Column(sa.String(1024), nullable=False)
+
+
+# class A10ApplianceDB(A10ApplianceSLB):
+#     """An a10 appliance defined in the database"""
+
+#     __tablename__ = u'a10_appliances_db'
+
+#     id = sa.Column(sa.String(36),
+#                    sa.ForeignKey(u'a10_appliances_slb.id'),
+#                    primary_key=True,
+#                    default=uuid_str,
+#                    nullable=False)
+#     tenant_id = sa.Column(sa.String(255), nullable=True)
+#     name = sa.Column(sa.String(255), nullable=True)
+#     description = sa.Column(sa.String(255), nullable=True)
+#     host = sa.Column(sa.String(255), nullable=False)
+#     api_version = sa.Column(sa.String(12), nullable=False)
+#     username = sa.Column(sa.String(255), nullable=False)
+#     password = sa.Column(sa.String(255), nullable=False)
+#     protocol = sa.Column(sa.String(255), nullable=False)
+#     port = sa.Column(sa.Integer, nullable=False)
+
+#     def device(self, context):
+#         # TODO(aritrary config): When we store all the options
+#         # we shouldn't neet to get defaults from the config
+#         config = context.a10_driver.config
+#         device = {
+#             'appliance': self,
+#             'host': self.host,
+#             'api_version': self.api_version,
+#             'username': self.username,
+#             'password': self.password,
+#             'protocol': self.protocol,
+#             'port': self.port
+#         }
+#         return config.device_defaults(device)
+
+#     __mapper_args__ = {
+#         'polymorphic_identity': __tablename__
+#     }
+
+
+# class A10SLB(model_base.BASEV2):
+#     __tablename__ = u'a10_slb'
+
+#     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=uuid_str)
+#     type = sa.Column(sa.String(50), nullable=False)
+#     a10_appliance_id = sa.Column(sa.String(36),
+#                                  sa.ForeignKey('a10_appliances_slb.id'),
+#                                  nullable=False)
+#     a10_appliance = relationship(A10ApplianceSLB)
+
+#     __mapper_args__ = {
+#         'polymorphic_identity': __tablename__,
+#         'polymorphic_on': type
+#     }
+
+
+# class A10SLBV1(A10SLB):
+#     __tablename__ = u'a10_slb_v1'
+
+#     id = sa.Column(sa.String(36),
+#                    sa.ForeignKey(u'a10_slb.id'),
+#                    primary_key=True,
+#                    default=uuid_str,
+#                    nullable=False)
+#     vip_id = sa.Column(sa.String(36),
+#                        sa.ForeignKey(u'vips.id'),
+#                        unique=True,
+#                        nullable=False)
+
+#     __mapper_args__ = {
+#         'polymorphic_identity': __tablename__
+#     }
+
+
+# class A10SLBV2(A10SLB):
+#     __tablename__ = u'a10_slb_v2'
+
+#     id = sa.Column(sa.String(36),
+#                    sa.ForeignKey(u'a10_slb.id'),
+#                    primary_key=True,
+#                    default=uuid_str,
+#                    nullable=False)
+#     lbaas_loadbalancer_id = sa.Column(sa.String(36),
+#                                       sa.ForeignKey(u'lbaas_loadbalancers.id'),
+#                                       unique=True,
+#                                       nullable=False)
+
+#     __mapper_args__ = {
+#         'polymorphic_identity': __tablename__
+#     }
+
+
+# class A10TenantAppliance(model_base.BASEV2):
+#     __tablename__ = u'a10_tenant_appliance'
+
+#     tenant_id = sa.Column(sa.String(255),
+#                           primary_key=True,
+#                           nullable=False)
+#     a10_appliance_id = sa.Column(sa.String(36),
+#                                  sa.ForeignKey('a10_appliances_slb.id'),
+#                                  nullable=False)
+#     a10_appliance = relationship(A10ApplianceSLB)
