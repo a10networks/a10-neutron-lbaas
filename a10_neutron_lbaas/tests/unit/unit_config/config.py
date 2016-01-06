@@ -130,15 +130,3 @@ devices = {
     },
 }
 
-image_defaults = {
-    "name": None,
-    "id": None,
-    "visibility": "private",
-    "tags": ["a10"],
-    "properties": '{"username": "dude", "password": "password", "api_version": "api_version"}',
-    "container_format": "bare",
-    "disk_format": "qcow2",
-    "min_disk": 10,
-    "min_ram": 4096,
-    "protected": False
-}
