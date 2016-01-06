@@ -164,7 +164,7 @@ class TestCLI(test_base.UnitTestBase):
         self.run_cli('install')
         self.run_cli('downgrade', 'base')
 
-    def test_migration_populate_lbaasv1(self):
+    def migrate_lbaasv1_vip(self):
         device_key = 'fake-device-key'
         provider = 'fake-provider'
         tenant_id = 'fake-tenant'
@@ -222,6 +222,17 @@ class TestCLI(test_base.UnitTestBase):
         drivers = {'LOADBALANCER': ({provider: mock_driver}, provider)}
         status = self.run_cli('install', drivers=drivers)
 
+        return {
+            'status': status,
+            'vip_id': vip_id,
+            'device_key': device_key
+        }
+
+    def test_migration_populate_lbaasv1(self):
+        results = self.migrate_lbaasv1_vip()
+        status = results['status']
+        vip_id = results['vip_id']
+
         self.assertEqual('UPGRADED', status['core'].status)
         self.assertEqual('UPGRADED', status['lbaasv1'].status)
 
@@ -230,7 +241,20 @@ class TestCLI(test_base.UnitTestBase):
 
         self.assertEqual(vip_id, slb.vip_id)
 
-    def test_migration_populate_lbaasv2(self):
+    def test_migration_populate_lbaasv1_tenant_appliance(self):
+        results = self.migrate_lbaasv1_vip()
+        status = results['status']
+        device_key = results['device_key']
+
+        self.assertEqual('UPGRADED', status['core'].status)
+        self.assertEqual('UPGRADED', status['lbaasv1'].status)
+
+        session = self.Session()
+        tenant_appliance = session.query(models.A10TenantAppliance).first()
+
+        self.assertEqual(tenant_appliance.a10_appliance.device_key, device_key)
+
+    def migrate_lbaasv2_vip(self):
         device_key = 'fake-device-key'
         provider = 'fake-provider'
         tenant_id = 'fake-tenant'
@@ -278,6 +302,17 @@ class TestCLI(test_base.UnitTestBase):
         drivers = {'LOADBALANCERV2': ({provider: mock_driver}, provider)}
         status = self.run_cli('install', drivers=drivers)
 
+        return {
+            'status': status,
+            'lb_id': lb_id,
+            'device_key': device_key
+        }
+
+    def test_migration_populate_lbaasv2(self):
+        results = self.migrate_lbaasv2_vip()
+        status = results['status']
+        lb_id = results['lb_id']
+
         self.assertEqual('UPGRADED', status['core'].status)
         self.assertEqual('UPGRADED', status['lbaasv2'].status)
 
@@ -285,3 +320,16 @@ class TestCLI(test_base.UnitTestBase):
         slb = session.query(models.A10SLBV2).first()
 
         self.assertEqual(lb_id, slb.lbaas_loadbalancer_id)
+
+    def test_migration_populate_lbaasv2_tenant_appliance(self):
+        results = self.migrate_lbaasv2_vip()
+        status = results['status']
+        device_key = results['device_key']
+
+        self.assertEqual('UPGRADED', status['core'].status)
+        self.assertEqual('UPGRADED', status['lbaasv2'].status)
+
+        session = self.Session()
+        tenant_appliance = session.query(models.A10TenantAppliance).first()
+
+        self.assertEqual(tenant_appliance.a10_appliance.device_key, device_key)
