@@ -33,6 +33,19 @@ class A10Config(object):
         "method": "hash"
     }
 
+    IMAGE_DEFAULTS = {
+        "name": None,
+        "id": None,
+        "visibility": "private",
+        "tags": ["a10"],
+        "properties": None,
+        "container_format": "bare",
+        "disk_format": "qcow2",
+        "min_disk": 10,
+        "min_ram": 4096,
+        "protected": False
+    }
+
     def __init__(self):
         if os.path.exists('/etc/a10'):
             d = '/etc/a10'
@@ -71,16 +84,12 @@ class A10Config(object):
                         if dk not in self.devices[k]:
                             self.devices[k][dk] = dv
 
-            self.image_defaults = {}
-            self._populate_image_defaults()
+            self.image_defaults = self.IMAGE_DEFAULTS.copy()
+            self.image_defaults.update(getattr(self.config, "image_defaults", {}))
         finally:
             sys.path = real_sys_path
 
         LOG.debug("A10Config, devices=%s", self.devices)
-
-    def _populate_image_defaults(self):
-        for k, v in self.config.image_defaults.items():
-            self.image_defaults[k] = v
 
     @property
     def verify_appliances(self):
