@@ -27,6 +27,7 @@ class AddApplianceAction(tables.LinkAction):
     verbose_name = _("Create Appliance")
     url = "horizon:project:a10appliances:addappliance"
     icon = "plus"
+    classes = ("ajax-modal",)
 
 
 class AddImageAction(tables.LinkAction):
@@ -34,6 +35,7 @@ class AddImageAction(tables.LinkAction):
     verbose_name = _("Add Image")
     url = "horizon:project:a10appliances:addimage"
     icon = "plus"
+    classes = ("ajax-modal",)
 
 
 class DeleteImageAction(tables.LinkAction):
