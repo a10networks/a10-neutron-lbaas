@@ -30,7 +30,8 @@ class A10Config(object):
         "v_method": "LSI",
         "max_instance": 5000,
         "use_float": False,
-        "method": "hash"
+        "method": "hash",
+        "protocol": "https"
     }
 
     IMAGE_DEFAULTS = {
@@ -46,18 +47,31 @@ class A10Config(object):
         "protected": False
     }
 
-    def __init__(self):
+    def device_defaults(self, device_config):
+        device = self.DEVICE_DEFAULTS.copy()
+        device.update(device_config)
+
+        # Figure out port
+        protocol = device['protocol']
+        port = device.get(
+            'port', {'http': 80, 'https': 443}[protocol])
+        device['port'] = port
+
+        return device
+
+    def __init__(self, config_dir=None):
         if os.path.exists('/etc/a10'):
             d = '/etc/a10'
         else:
             d = '/etc/neutron/services/loadbalancer/a10networks'
-        self.config_dir = os.environ.get('A10_CONFIG_DIR', d)
+        self.config_dir = config_dir or os.environ.get('A10_CONFIG_DIR', d)
         self.config_path = os.path.join(self.config_dir, "config.py")
 
         real_sys_path = sys.path
         sys.path = [self.config_dir]
         try:
             try:
+                sys.modules.pop('config', None)
                 import config
                 self.config = config
             except ImportError:
@@ -69,20 +83,9 @@ class A10Config(object):
                 if 'status' in v and not v['status']:
                     LOG.debug("status is False, skipping dev: %s", v)
                 else:
-                    v['key'] = k
-                    self.devices[k] = v
-
-                    # Figure out port and protocol
-                    protocol = self.devices[k].get('protocol', 'https')
-                    port = self.devices[k].get(
-                        'port', {'http': 80, 'https': 443}[protocol])
-                    self.devices[k]['protocol'] = protocol
-                    self.devices[k]['port'] = port
-
-                    # Device defaults
-                    for dk, dv in self.DEVICE_DEFAULTS.items():
-                        if dk not in self.devices[k]:
-                            self.devices[k][dk] = dv
+                    device = self.device_defaults(v)
+                    device['key'] = k
+                    self.devices[k] = device
 
             self.image_defaults = self.IMAGE_DEFAULTS.copy()
             self.image_defaults.update(getattr(self.config, "image_defaults", {}))

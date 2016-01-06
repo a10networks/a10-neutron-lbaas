@@ -30,20 +30,23 @@ class InventoryBase(object):
 
         return self.db_operations.get_shared_appliances(self.a10_context.tenant_id)
 
-    def device_appliance(self, device):
-        appliance = device.get('appliance')
+    def device_appliance(self, device_config):
+        appliance = device_config.get('appliance')
 
         if appliance is None:
             # TODO(aritrary config): Support for arbitrary options
+            device = self.a10_driver.config.device_defaults(device_config)
             appliance = models.default(
                 models.A10ApplianceDB,
                 name=device.get('name', None),
                 description=device.get('description', None),
                 tenant_id=self.a10_context.tenant_id,
                 host=device['host'],
-                api_version=device.get('api_version', '2.1'),
+                api_version=device['api_version'],
                 username=device['username'],
-                password=device['password'])
+                password=device['password'],
+                protocol=device['protocol'],
+                port=device['port'])
             self.db_operations.add(appliance)
 
         return appliance

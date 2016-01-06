@@ -97,15 +97,23 @@ class A10ApplianceDB(A10ApplianceSLB):
     api_version = sa.Column(sa.String(12), nullable=False)
     username = sa.Column(sa.String(255), nullable=False)
     password = sa.Column(sa.String(255), nullable=False)
+    protocol = sa.Column(sa.String(255), nullable=False)
+    port = sa.Column(sa.Integer, nullable=False)
 
     def device(self, context):
-        return {
+        # TODO(aritrary config): When we store all the options
+        # we shouldn't neet to get defaults from the config
+        config = context.a10_driver.config
+        device = {
             'appliance': self,
             'host': self.host,
             'api_version': self.api_version,
             'username': self.username,
-            'password': self.password
+            'password': self.password,
+            'protocol': self.protocol,
+            'port': self.port
         }
+        return config.device_defaults(device)
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__

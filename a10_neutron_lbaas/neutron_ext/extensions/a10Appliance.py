@@ -14,6 +14,7 @@
 
 import a10_neutron_lbaas.localization as localization
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
+from a10_neutron_lbaas.neutron_ext.common import resources
 import a10_neutron_lbaas_client.resources.a10_appliance as a10_appliance
 
 import abc
@@ -28,6 +29,8 @@ import six
 
 # Neutron is finicky. Sometimes _ is defined, sometimes it isn't
 localization.install()
+
+RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_appliance.RESOURCE_ATTRIBUTE_MAP, attributes)
 
 
 class A10Appliance(extensions.ExtensionDescriptor):
@@ -56,9 +59,9 @@ class A10Appliance(extensions.ExtensionDescriptor):
     def get_resources(cls):
         """Returns external resources."""
         my_plurals = resource_helper.build_plural_mappings(
-            {}, a10_appliance.RESOURCE_ATTRIBUTE_MAP)
+            {}, RESOURCE_ATTRIBUTE_MAP)
         attributes.PLURALS.update(my_plurals)
-        attr_map = a10_appliance.RESOURCE_ATTRIBUTE_MAP
+        attr_map = RESOURCE_ATTRIBUTE_MAP
         resources = resource_helper.build_resource_info(my_plurals,
                                                         attr_map,
                                                         constants.A10_APPLIANCE)
@@ -68,11 +71,11 @@ class A10Appliance(extensions.ExtensionDescriptor):
     def update_attributes_map(self, attributes):
         super(A10Appliance, self).update_attributes_map(
             attributes,
-            extension_attrs_map=a10_appliance.RESOURCE_ATTRIBUTE_MAP)
+            extension_attrs_map=RESOURCE_ATTRIBUTE_MAP)
 
     def get_extended_resources(self, version):
         if version == "2.0":
-            return a10_appliance.RESOURCE_ATTRIBUTE_MAP
+            return RESOURCE_ATTRIBUTE_MAP
         else:
             return {}
 

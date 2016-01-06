@@ -63,7 +63,9 @@ class TestOperations(test_base.UnitTestBase):
                                    host='fake-host',
                                    api_version='fake-version',
                                    username='fake-username',
-                                   password='fake-password')
+                                   password='fake-password',
+                                   protocol='fake-protocol',
+                                   port=1234)
         operations.add(appliance)
         shared = operations.get_shared_appliances('fake-tenant')
 
@@ -76,7 +78,9 @@ class TestOperations(test_base.UnitTestBase):
                                    host='fake-host',
                                    api_version='fake-version',
                                    username='fake-username',
-                                   password='fake-password')
+                                   password='fake-password',
+                                   protocol='fake-protocol',
+                                   port=1234)
         operations.add(appliance)
         shared = operations.get_shared_appliances('fake-tenant')
 

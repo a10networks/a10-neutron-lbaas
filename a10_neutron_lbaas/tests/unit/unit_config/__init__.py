@@ -14,7 +14,15 @@
 
 import os
 
+from a10_neutron_lbaas import a10_config
+from a10_neutron_lbaas.install import blank_config
+
 
 def setUp():
     unit_dir = os.path.dirname(__file__)
     os.environ['A10_CONFIG_DIR'] = unit_dir
+
+
+def empty_config():
+    config_dir = os.path.dirname(blank_config.__file__)
+    return a10_config.A10Config(config_dir=config_dir)

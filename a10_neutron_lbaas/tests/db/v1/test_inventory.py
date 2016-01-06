@@ -15,6 +15,7 @@
 import mock
 
 import a10_neutron_lbaas.tests.db.test_base as test_base
+from a10_neutron_lbaas.tests.unit import unit_config
 
 import a10_neutron_lbaas.db.operations as db_operations
 import a10_neutron_lbaas.v1.inventory as inventory
@@ -26,10 +27,13 @@ class TestInventory(test_base.UnitTestBase):
         session = self.open_session()
         operations = db_operations.Operations(mock.MagicMock(session=session))
 
+        config = unit_config.empty_config()
+
         a10_context = mock.MagicMock(
             db_operations=operations,
             openstack_context=mock.MagicMock(session=session))
         a10_context.a10_driver.config.devices.__getitem__.side_effect = lambda x: {'key': x}
+        a10_context.a10_driver.config.device_defaults = config.device_defaults
 
         i = inventory.InventoryV1(a10_context)
         a10_context.inventory = i

@@ -44,6 +44,18 @@ class TestA10ApplianceDbMixin(test_base.UnitTestBase):
             'password': 'fake-password'
         }
 
+    def fake_appliance_options(self):
+        return {
+            'protocol': 'http',
+            'port': 12345
+        }
+
+    def default_options(self):
+        return {
+            'protocol': 'https',
+            'port': 443
+        }
+
     def envelope(self, body):
         return {a10_appliance_resources.RESOURCE: body}
 
@@ -53,13 +65,38 @@ class TestA10ApplianceDbMixin(test_base.UnitTestBase):
         result = self.plugin.create_a10_appliance(context, self.envelope(appliance))
         context.session.commit()
         self.assertIsNot(result['id'], None)
-        expected = appliance.copy()
+        expected = self.default_options()
+        expected.update(appliance)
         expected.update(
             {
                 'id': result['id'],
                 'tenant_id': context.tenant_id
             })
         self.assertEqual(expected, result)
+
+    def test_create_a10_appliance_options(self):
+        appliance = self.fake_appliance()
+        appliance.update(self.fake_appliance_options())
+        context = self.context()
+        result = self.plugin.create_a10_appliance(context, self.envelope(appliance))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+        expected = appliance.copy()
+        expected.update(
+            {
+                'id': result['id'],
+                'tenant_id': context.tenant_id,
+            })
+        self.assertEqual(expected, result)
+
+    def test_create_a10_appliance_default_port(self):
+        appliance = self.fake_appliance()
+        appliance['protocol'] = 'http'
+        context = self.context()
+        result = self.plugin.create_a10_appliance(context, self.envelope(appliance))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+        self.assertEqual(80, result['port'])
 
     def test_get_a10_appliance(self):
         appliance = self.fake_appliance()
