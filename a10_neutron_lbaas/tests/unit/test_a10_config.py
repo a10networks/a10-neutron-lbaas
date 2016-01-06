@@ -62,9 +62,3 @@ class TestA10Config(test_base.UnitTestBase):
                     "min_ram", "container_format", "protected",
                     "properties", "disk_format"]
         self.assertListEqual(sorted(expected), sorted(actual))
-
-    def test_image_default_properties_parses(self):
-        import json
-        properties = self.a.config.image_defaults.get("properties")
-        actual = json.loads(properties)
-        self.assertIsNotNone(actual)
