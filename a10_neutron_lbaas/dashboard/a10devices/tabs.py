@@ -22,6 +22,7 @@ import a10_neutron_lbaas.dashboard.a10devices.tables as p_tables
 
 GLANCE_API_VERSION = 2
 
+
 class A10ImagesTab(tabs.TableTab):
     table_classes = (p_tables.A10ImageTable, )
     name = _("A10 Images")
@@ -31,12 +32,14 @@ class A10ImagesTab(tabs.TableTab):
     def get_a10imagestable_data(self):
         result = []
         image_filter = {
-                    "tag": ["a10"]
-                }
-        
-        images = glance_api.glanceclient(self.tab_group.request, version=GLANCE_API_VERSION).images.list(filters=image_filter)
+            "tag": ["a10"]
+        }
+
+        images = glance_api.glanceclient(self.tab_group.request,
+                                         version=GLANCE_API_VERSION).images.list(
+            filters=image_filter)
         result = list(images)
-        
+
         return result
 
 
