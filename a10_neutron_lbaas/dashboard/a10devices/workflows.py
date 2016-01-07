@@ -50,9 +50,8 @@ class AddApplianceAction(workflows.Action):
         # So we can get networks for the tenant
         tenant_id = request.user.tenant_id
         image_filter = {
-                    "tag": ["a10"]
-                }
-
+            "tag": ["a10"]
+        }
 
         # default values
         network_choices = [((""), _("Select a network"))]
@@ -62,9 +61,11 @@ class AddApplianceAction(workflows.Action):
         # Get our data from the API
         networks = neutron_api.network_list_for_tenant(request, tenant_id=tenant_id)
         flavors = nova_api.flavor_list(request)
-        
-        images = glance_api.glanceclient(request, version=GLANCE_API_VERSION).images.list(filters=image_filter)
-        
+
+        images = glance_api.glanceclient(request,
+                                         version=GLANCE_API_VERSION
+                                         ).images.list(filters=image_filter)
+
         # Build the list from IDs/names
         self._build_choices_list(network_choices, networks)
         self._build_choices_list(flavor_choices, flavors)
@@ -219,6 +220,7 @@ class AddImage(workflows.Workflow):
         }
 
         LOG.debug("<ImageCreating> {0}".format(image))
-        created = glance_api.glanceclient(request, version=GLANCE_API_VERSION).images.create(**image)
+        created = glance_api.glanceclient(
+            request, version=GLANCE_API_VERSION).images.create(**image)
         LOG.debug("</ImageCreating> {0}".format(created))
         return True
