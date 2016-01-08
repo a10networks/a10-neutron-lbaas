@@ -96,12 +96,18 @@ class InstanceManager(object):
             raise AttributeError("FATAL: Service catalog not populated.")
         for x in token.serviceCatalog:
             # This is always returned as an array.
-            endpoints = x.get("endpoints", [{}])
-            endpoint_filter = lambda x: x.get("interface") in OS_INTERFACE_URLS
-            endpoint = filter(endpoint_filter, endpoints)
-            if len(endpoint) > 0:
-                res[x["type"]] = endpoint[0].get("url")
+            endpoints = x.get("endpoints", [])
+            urls = map(self.endpoint_public_url, endpoints)
+            urls = filter(lambda x: x is not None, urls)
+
+            if len(urls) > 0:
+                res[x["type"]] = urls[0]
         return res
+
+    def endpoint_public_url(self, endpoint):
+        if endpoint.get('interface') == 'public':
+            return endpoint['url']
+        return endpoint.get('publicURL')
 
     def _get_auth_from_token(self, token):
         auth_url = None
