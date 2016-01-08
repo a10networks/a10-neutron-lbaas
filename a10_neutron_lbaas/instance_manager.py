@@ -35,7 +35,7 @@ GLANCE_VERSION = 1
 KEYSTONE_VERSION = "2.0"
 NOVA_VERSION = "2.1"
 NEUTRON_VERSION = "2.0"
-OS_INTERFACE_URL = "public"
+OS_INTERFACE_URLS = ["public", "publicURL"]
 
 _default_server = {
     "id": None,
@@ -97,7 +97,7 @@ class InstanceManager(object):
         for x in token.serviceCatalog:
             # This is always returned as an array.
             endpoints = x.get("endpoints", [{}])
-            endpoint_filter = lambda x: x.get("interface") == OS_INTERFACE_URL
+            endpoint_filter = lambda x: x.get("interface") in OS_INTERFACE_URLS
             endpoint = filter(endpoint_filter, endpoints)
             if len(endpoint) > 0:
                 res[x["type"]] = endpoint[0].get("url")
