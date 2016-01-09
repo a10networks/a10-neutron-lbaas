@@ -33,7 +33,8 @@ import openstack_dashboard.api.nova as nova_api
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
-GLANCE_API_VERSION = 2
+GLANCE_API_VERSION_CREATE = 2
+GLANCE_API_VERSION_UPDATE = 1
 
 LOG = logging.getLogger(__name__)
 
@@ -212,15 +213,35 @@ class AddImage(workflows.Workflow):
 
     def handle(self, request, context):
         # Tell glance to create the image.
-        image = {
-            "properties": context["properties"],
-            "copy_from": context["copy_from"],
-            "name": context["name"],
-            "id": context["id"],
-        }
+        import json
+        import pdb; pdb.set_trace()
+        image = {}
+        image.update(context)
+        copy_from = image["copy_from"]
+        
+        del image["copy_from"]
 
-        LOG.debug("<ImageCreating> {0}".format(image))
-        created = glance_api.glanceclient(
-            request, version=GLANCE_API_VERSION).images.create(**image)
+        props = image["properties"]
+        prop_string = json.dumps(props)
+        image["properties"] = prop_string
+        # image = {
+        #     "properties": context["properties"],
+        #     "copy_from": context["copy_from"],
+        #     "name": context["name"],
+        #     "id": context["id"],
+        # }
+
+        LOG.debug("<ImageCreating> {0}".format(context))
+        queued = glance_api.glanceclient(request, version=2).images.create(**image)
+        
+        image_id = queued.get("id")
+        del image["id"]
+        del image["properties"]
+
+        if not image_id:
+            return False
+
+        image["copy_from"] = copy_from
+        created = glance_api.image_update(request, image_id, **image)
         LOG.debug("</ImageCreating> {0}".format(created))
         return True
