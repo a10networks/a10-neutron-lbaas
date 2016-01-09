@@ -164,9 +164,7 @@ class TestCLI(test_base.UnitTestBase):
         self.run_cli('install')
         self.run_cli('downgrade', 'base')
 
-    def test_migration_populate_lbaasv1(self):
-        device_key = 'fake-device-key'
-        provider = 'fake-provider'
+    def add_lbaasv1_vip(self, provider):
         tenant_id = 'fake-tenant'
         status = 'FAKE'
 
@@ -205,6 +203,9 @@ class TestCLI(test_base.UnitTestBase):
         session.add(pra)
         session.commit()
 
+        return vip_id
+
+    def lbaasv1_drivers(self, device_key, provider):
         mock_config = mock.MagicMock(
             name='mock_config',
             devices={device_key: {'key': device_key}})
@@ -220,7 +221,28 @@ class TestCLI(test_base.UnitTestBase):
             name='mock_driver',
             a10=mock_a10)
         drivers = {'LOADBALANCER': ({provider: mock_driver}, provider)}
+
+        return drivers
+
+    def migrate_lbaasv1_vip(self):
+        device_key = 'fake-device-key'
+        provider = 'fake-provider'
+
+        vip_id = self.add_lbaasv1_vip(provider)
+        drivers = self.lbaasv1_drivers(device_key, provider)
+
         status = self.run_cli('install', drivers=drivers)
+
+        return {
+            'status': status,
+            'vip_id': vip_id,
+            'device_key': device_key
+        }
+
+    def test_migration_populate_lbaasv1(self):
+        results = self.migrate_lbaasv1_vip()
+        status = results['status']
+        vip_id = results['vip_id']
 
         self.assertEqual('UPGRADED', status['core'].status)
         self.assertEqual('UPGRADED', status['lbaasv1'].status)
@@ -230,9 +252,42 @@ class TestCLI(test_base.UnitTestBase):
 
         self.assertEqual(vip_id, slb.vip_id)
 
-    def test_migration_populate_lbaasv2(self):
+    def test_migration_populate_lbaasv1_tenant_appliance(self):
+        results = self.migrate_lbaasv1_vip()
+        status = results['status']
+        device_key = results['device_key']
+
+        self.assertEqual('UPGRADED', status['core'].status)
+        self.assertEqual('UPGRADED', status['lbaasv1'].status)
+
+        session = self.Session()
+        tenant_appliance = session.query(models.A10TenantAppliance).first()
+
+        self.assertEqual(tenant_appliance.a10_appliance.device_key, device_key)
+
+    def test_migration_remove_orphaned_a10_slb_v1(self):
         device_key = 'fake-device-key'
         provider = 'fake-provider'
+
+        self.add_lbaasv1_vip(provider)
+        drivers = self.lbaasv1_drivers(device_key, provider)
+
+        self.run_cli('upgrade', '5a960cad849b', drivers=drivers)
+
+        session1 = self.Session()
+        session1.execute("DELETE FROM a10_slb_v1")
+        session1.commit()
+
+        status = self.run_cli('install', drivers=drivers)
+        self.assertEqual('UPGRADED', status['core'].status)
+        self.assertEqual('UPGRADED', status['lbaasv1'].status)
+
+        session = self.Session()
+        slbs = list(session.query(models.A10SLB))
+
+        self.assertEqual([], slbs)
+
+    def add_lbaasv2_lb(self, provider):
         tenant_id = 'fake-tenant'
         status = 'FAKE'
 
@@ -261,6 +316,9 @@ class TestCLI(test_base.UnitTestBase):
         session.add(pra)
         session.commit()
 
+        return lb_id
+
+    def lbaasv2_drivers(self, provider, device_key):
         mock_config = mock.MagicMock(
             name='mock_config',
             devices={device_key: {'key': device_key}})
@@ -276,7 +334,28 @@ class TestCLI(test_base.UnitTestBase):
             name='mock_driver',
             a10=mock_a10)
         drivers = {'LOADBALANCERV2': ({provider: mock_driver}, provider)}
+
+        return drivers
+
+    def migrate_lbaasv2_vip(self):
+        device_key = 'fake-device-key'
+        provider = 'fake-provider'
+
+        lb_id = self.add_lbaasv2_lb(provider)
+        drivers = self.lbaasv2_drivers(provider, device_key)
+
         status = self.run_cli('install', drivers=drivers)
+
+        return {
+            'status': status,
+            'lb_id': lb_id,
+            'device_key': device_key
+        }
+
+    def test_migration_populate_lbaasv2(self):
+        results = self.migrate_lbaasv2_vip()
+        status = results['status']
+        lb_id = results['lb_id']
 
         self.assertEqual('UPGRADED', status['core'].status)
         self.assertEqual('UPGRADED', status['lbaasv2'].status)
@@ -285,3 +364,38 @@ class TestCLI(test_base.UnitTestBase):
         slb = session.query(models.A10SLBV2).first()
 
         self.assertEqual(lb_id, slb.lbaas_loadbalancer_id)
+
+    def test_migration_populate_lbaasv2_tenant_appliance(self):
+        results = self.migrate_lbaasv2_vip()
+        status = results['status']
+        device_key = results['device_key']
+
+        self.assertEqual('UPGRADED', status['core'].status)
+        self.assertEqual('UPGRADED', status['lbaasv2'].status)
+
+        session = self.Session()
+        tenant_appliance = session.query(models.A10TenantAppliance).first()
+
+        self.assertEqual(tenant_appliance.a10_appliance.device_key, device_key)
+
+    def test_migration_remove_orphaned_a10_slb_v2(self):
+        device_key = 'fake-device-key'
+        provider = 'fake-provider'
+
+        self.add_lbaasv2_lb(provider)
+        drivers = self.lbaasv2_drivers(provider, device_key)
+
+        self.run_cli('upgrade', '2024607c4f06', drivers=drivers)
+
+        session1 = self.Session()
+        session1.execute("DELETE FROM a10_slb_v2")
+        session1.commit()
+
+        status = self.run_cli('install', drivers=drivers)
+        self.assertEqual('UPGRADED', status['core'].status)
+        self.assertEqual('UPGRADED', status['lbaasv2'].status)
+
+        session = self.Session()
+        slbs = list(session.query(models.A10SLB))
+
+        self.assertEqual([], slbs)

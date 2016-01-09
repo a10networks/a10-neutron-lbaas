@@ -12,27 +12,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""populate vip appliances
+"""Remove orphaned a10_slb_v1 slb
 
-Revision ID: 4657b284f454
-Revises: 38bfe6f0fe53
-Create Date: 2015-10-26 21:18:29.541590
+Revision ID: 2e7daa753e19
+Revises: 5a960cad849b
+Create Date: 2016-01-08 23:18:54.856154
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '4657b284f454'
-down_revision = '38bfe6f0fe53'
+revision = '2e7daa753e19'
+down_revision = '5a960cad849b'
 branch_labels = None
 depends_on = None
 
+from alembic import op
+
 
 def upgrade():
-    """This step moved to populate vip, tenant appliances
-    to also populate the a10_tenant_appliance table
-    """
-
-    pass
+    conn = op.get_bind()
+    conn.execute(
+        "DELETE FROM a10_slb "
+        "WHERE type='a10_slb_v1' "
+        "AND id NOT IN (SELECT id FROM a10_slb_v1)")
 
 
 def downgrade():

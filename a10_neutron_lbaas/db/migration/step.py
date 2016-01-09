@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import itertools
 from sqlalchemy.sql import table, column, text
 import uuid
 
@@ -48,10 +47,34 @@ def initialize_a10_appliances_configured(conn, config):
     return appliance_lookup
 
 
-def initialize_a10_slb_v1(conn, provider, a10):
-    """Create a10_slb_v1 for existing vips"""
+def initialize_a10_tenant_appliance(conn, a10, tenant_ids):
 
     appliance_lookup = initialize_a10_appliances_configured(conn, a10.config)
+
+    a10_tenant_appliance = table(
+        'a10_tenant_appliance',
+        column('tenant_id'),
+        column('a10_appliance_id'))
+    select_tenant_appliance = a10_tenant_appliance.select()
+    tenant_appliances = conn.execute(select_tenant_appliance).fetchall()
+    tenant_appliance_lookup = dict((a.tenant_id, a.a10_appliance_id) for a in tenant_appliances)
+
+    for tenant_id in tenant_ids:
+        if tenant_id not in tenant_appliance_lookup:
+            device = a10._plumbing_hooks.select_device(tenant_id)
+            appliance_id = appliance_lookup[device['key']]
+
+            insert_tenant_appliance = a10_tenant_appliance.insert().\
+                values(tenant_id=tenant_id, a10_appliance_id=appliance_id)
+            conn.execute(insert_tenant_appliance)
+
+            tenant_appliance_lookup[tenant_id] = appliance_id
+
+    return tenant_appliance_lookup
+
+
+def initialize_a10_slb_v1(conn, provider, a10):
+    """Create a10_slb_v1 for existing vips"""
 
     a10_slb_v1 = table(
         'a10_slb_v1',
@@ -65,7 +88,10 @@ def initialize_a10_slb_v1(conn, provider, a10):
         "AND p.provider_name = :provider "
         "AND vips.id NOT IN (SELECT vip_id FROM a10_slb_v1)")
     select_vips = select_vips.bindparams(provider=provider)
-    vips = itertools.imap(dict, conn.execute(select_vips).fetchall())
+    vips = list(map(dict, conn.execute(select_vips).fetchall()))
+
+    tenant_ids = [v['tenant_id'] for v in vips]
+    tenant_appliance_lookup = initialize_a10_tenant_appliance(conn, a10, tenant_ids)
 
     a10_slb = table(
         'a10_slb',
@@ -74,8 +100,7 @@ def initialize_a10_slb_v1(conn, provider, a10):
         column('a10_appliance_id'))
     for vip in vips:
         id = str(uuid.uuid4())
-        device = a10._plumbing_hooks.select_device(vip['tenant_id'])
-        appliance = appliance_lookup[device['key']]
+        appliance = tenant_appliance_lookup[vip['tenant_id']]
         insert_slb = a10_slb.insert().\
             values(id=id, type=a10_slb_v1.name, a10_appliance_id=appliance)
         conn.execute(insert_slb)
@@ -86,8 +111,6 @@ def initialize_a10_slb_v1(conn, provider, a10):
 
 def initialize_a10_slb_v2(conn, provider, a10):
     """Create a10_slb_v2 for existing loadbalancers"""
-
-    appliance_lookup = initialize_a10_appliances_configured(conn, a10.config)
 
     a10_slb_v2 = table(
         'a10_slb_v2',
@@ -100,7 +123,10 @@ def initialize_a10_slb_v2(conn, provider, a10):
         "AND p.provider_name = :provider "
         "AND lb.id NOT IN (SELECT lbaas_loadbalancer_id FROM a10_slb_v2)")
     select_lbs = select_lbs.bindparams(provider=provider)
-    lbs = itertools.imap(dict, conn.execute(select_lbs).fetchall())
+    lbs = list(map(dict, conn.execute(select_lbs).fetchall()))
+
+    tenant_ids = [lb['tenant_id'] for lb in lbs]
+    tenant_appliance_lookup = initialize_a10_tenant_appliance(conn, a10, tenant_ids)
 
     a10_slb = table(
         'a10_slb',
@@ -109,8 +135,7 @@ def initialize_a10_slb_v2(conn, provider, a10):
         column('a10_appliance_id'))
     for lb in lbs:
         id = str(uuid.uuid4())
-        device = a10._plumbing_hooks.select_device(lb['tenant_id'])
-        appliance = appliance_lookup[device['key']]
+        appliance = tenant_appliance_lookup[lb['tenant_id']]
         insert_slb = a10_slb.insert().\
             values(id=id, type=a10_slb_v2.name, a10_appliance_id=appliance)
         conn.execute(insert_slb)

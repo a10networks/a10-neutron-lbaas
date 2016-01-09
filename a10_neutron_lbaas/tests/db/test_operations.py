@@ -16,8 +16,8 @@ import mock
 
 import test_base
 
-import a10_neutron_lbaas.db.models as models
-import a10_neutron_lbaas.db.operations as db_operations
+from a10_neutron_lbaas.db import models
+from a10_neutron_lbaas.db import operations as db_operations
 
 
 class TestOperations(test_base.UnitTestBase):
@@ -85,3 +85,43 @@ class TestOperations(test_base.UnitTestBase):
         shared = operations.get_shared_appliances('fake-tenant')
 
         self.assertEqual([], shared)
+
+    def test_delete_slb_v1_deletes_slb(self):
+        slb = models.default(
+            models.A10SLBV1,
+            vip_id='fake-vip-id',
+            a10_appliance_id='fake-a10-appliance-id'
+        )
+
+        operations1 = self.operations()
+        operations1.add(slb)
+        operations1.session.commit()
+
+        operations2 = self.operations()
+        operations2.delete_slb_v1(slb.vip_id)
+        operations2.session.commit()
+
+        session = self.open_session()
+        slbs = list(session.query(models.A10SLB))
+
+        self.assertEqual([], slbs)
+
+    def test_delete_slb_v2_deletes_slb(self):
+        slb = models.default(
+            models.A10SLBV2,
+            lbaas_loadbalancer_id='lbaas_loadbalancer_id',
+            a10_appliance_id='fake-a10-appliance-id'
+        )
+
+        operations1 = self.operations()
+        operations1.add(slb)
+        operations1.session.commit()
+
+        operations2 = self.operations()
+        operations2.delete_slb_v2(slb.lbaas_loadbalancer_id)
+        operations2.session.commit()
+
+        session = self.open_session()
+        slbs = list(session.query(models.A10SLB))
+
+        self.assertEqual([], slbs)

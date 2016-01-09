@@ -35,9 +35,8 @@ class Operations(object):
             filter_by(vip_id=vip_id).first()
 
     def delete_slb_v1(self, vip_id):
-        # print 'delete_slb_v1({0})'.format(repr(vip_id))
-        return self.session.query(models.A10SLBV1).\
-            filter_by(vip_id=vip_id).delete()
+        query = self.session.query(models.A10SLBV1).filter_by(vip_id=vip_id)
+        models.delete_all(self.session, query)
 
     def get_slb_v2(self, loadbalancer_id):
         # print 'get_slb_v2({0})'.format(repr(loadbalancer_id))
@@ -45,9 +44,9 @@ class Operations(object):
             filter_by(lbaas_loadbalancer_id=loadbalancer_id).first()
 
     def delete_slb_v2(self, loadbalancer_id):
-        # print 'delete_slb_v2({0})'.format(repr(loadbalancer_id))
-        return self.session.query(models.A10SLBV2).\
-            filter_by(lbaas_loadbalancer_id=loadbalancer_id).delete()
+        query = self.session.query(models.A10SLBV2).\
+            filter_by(lbaas_loadbalancer_id=loadbalancer_id)
+        models.delete_all(self.session, query)
 
     def get_tenant_appliance(self, tenant_id):
         return self.session.query(models.A10TenantAppliance).\
