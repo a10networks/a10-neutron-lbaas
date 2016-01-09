@@ -112,16 +112,21 @@ class AddAppliance(workflows.Workflow):
 class AddImageAction(workflows.Action):
     name = forms.CharField(max_length=80, label=_("Name"))
     copy_from = forms.CharField(label=_("Image URL"))
-    username = forms.CharField(label=_("Username"))
-    password = forms.CharField(label=_("Password"))
-    api_version = forms.ChoiceField(label=_("API Version"))
+    username = forms.CharField(label=_("Appliance Username"))
+    password = forms.CharField(label=_("Appliance Password"), widget=forms.PasswordInput)
+    api_version = forms.ChoiceField(label=_("Appliance API Version"))
+    port = forms.IntegerField(label=_("Appliance Port"))
+    protocol = forms.ChoiceField(label=_("Appliance Protocol"))
 
     def __init__(self, request, *args, **kwargs):
         super(AddImageAction, self).__init__(request, *args, **kwargs)
         self.tenant_id = request.user.tenant_id
         # TODO(mdurrant) - A10 versions need to come from a data source, not a hardcoded list.
         api_versions = [("2.1", "2.1"), ("3.0", "3.0")]
+        protocol_choices = [("https", "HTTPS"), ("http", "HTTP")]
+
         self.fields["api_version"].choices = api_versions
+        self.fields["protocol"].choices = protocol_choices
 
     class Meta(object):
         name = _("Add Image")
@@ -131,12 +136,14 @@ class AddImageAction(workflows.Action):
 
 class AddImageStep(workflows.Step):
     action_class = AddImageAction
-    contributes = ("name", "url", "username", "password", "api_version")
+    contributes = ("name", "url", "username", "password", "api_version", "port", "protocol")
 
     def _build_properties(self, context):
             result = {'username': None,
                       'password': None,
-                      'api_version': None}
+                      'api_version': None,
+                      'port': None,
+                      'protocol': None}
 
             for x in result.keys():
                 result[x] = context.get(x)
@@ -160,7 +167,7 @@ class AddImageStep(workflows.Step):
         # and create schema validation errors.
         # Said form data gets shoved in to the "properties"
         # property of the image.
-        del_props = ['username', 'password', 'api_version']
+        del_props = ['username', 'password', 'api_version', "port", "protocol"]
         for x in del_props:
             if x in image_data:
                 del(image_data[x])
