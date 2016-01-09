@@ -101,9 +101,9 @@ class A10ApplianceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10Applian
             # Remove tenant affinities
             # The tenant partitions on the appliance should have been removed
             # when the last object was deleted
-            context.session.query(models.A10TenantAppliance).\
-                filter_by(a10_appliance_id=appliance.id).\
-                delete()
+            unused_affinities = context.session.query(models.A10TenantAppliance).\
+                filter_by(a10_appliance_id=appliance.id)
+            models.delete_all(context.session, unused_affinities)
             context.session.delete(appliance)
 
     def get_a10_appliance(self, context, a10_appliance_id, fields=None):
