@@ -41,6 +41,13 @@ def summon(session, cls, **kw):
     return existing
 
 
+def delete_all(session, query):
+    """Sql-alchemy's Query.delete() doesn't remove rows from polymorphically related tables"""
+
+    for row in query:
+        session.delete(row)
+
+
 def uuid_str():
     return str(uuid.uuid4())
 
