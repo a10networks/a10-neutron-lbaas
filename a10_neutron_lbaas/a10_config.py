@@ -37,8 +37,8 @@ class A10Config(object):
     IMAGE_DEFAULTS = {
         "name": None,
         "id": None,
-        # "visibility": "private",
-        # "tags": ["a10"],
+        "visibility": "private",
+        "tags": ["a10"],
         "properties": None,
         "container_format": "bare",
         "disk_format": "qcow2",

@@ -30,6 +30,7 @@ import openstack_dashboard.api.nova as nova_api
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
+GLANCE_API_VERSION_LIST = 2
 GLANCE_API_VERSION_CREATE = 2
 GLANCE_API_VERSION_UPDATE = 1
 
@@ -61,7 +62,7 @@ class AddApplianceAction(workflows.Action):
         flavors = nova_api.flavor_list(request)
 
         images = glance_api.glanceclient(request,
-                                         version=GLANCE_API_VERSION
+                                         version=GLANCE_API_VERSION_LIST
                                          ).images.list(filters=image_filter)
 
         # Build the list from IDs/names
@@ -211,7 +212,6 @@ class AddImage(workflows.Workflow):
     def handle(self, request, context):
         # Tell glance to create the image.
         import json
-        import pdb; pdb.set_trace()
         image = {}
         image.update(context)
         copy_from = image["copy_from"]
@@ -232,11 +232,11 @@ class AddImage(workflows.Workflow):
         queued = glance_api.glanceclient(request, version=2).images.create(**image)
         
         image_id = queued.get("id")
-        del image["id"]
-        del image["properties"]
-        del image["tags"]
-        del image["visibility"]
-
+        
+        del_props = ["id", "properties", "tags", "visibility"]
+        for x in del_props:
+            del image[x]
+        
         if not image_id:
             return False
 
