@@ -82,9 +82,36 @@ RESOURCE_ATTRIBUTE_MAP = {
             'allow_post': True,
             'allow_put': True,
             'validate': {
-                'type:string': None
+                'type:values': ['2.1', '3.0']
             },
             'is_visible': True
+        },
+        'protocol': {
+            'allow_post': True,
+            'allow_put': True,
+            'validate': {
+                'type:values': ['http', 'https']
+            },
+            'is_visible': True,
+            'convert_to': lambda attr: convert_to_lower,
+            'default': lambda attr: attr.ATTR_NOT_SPECIFIED
+        },
+        'port': {
+            'allow_post': True,
+            'allow_put': True,
+            'validate': {
+                'type:range': [0, 65535]
+            },
+            'convert_to': lambda attr: attr.convert_to_int,
+            'is_visible': True,
+            'default': lambda attr: attr.ATTR_NOT_SPECIFIED
         }
     }
 }
+
+
+def convert_to_lower(input):
+    try:
+        return input.lower()
+    except AttributeError:
+        return input

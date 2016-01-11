@@ -44,7 +44,9 @@ def upgrade():
         sa.Column('host', sa.String(255), nullable=False),
         sa.Column('api_version', sa.String(12), nullable=False),
         sa.Column('username', sa.String(255), nullable=False),
-        sa.Column('password', sa.String(255), nullable=False)
+        sa.Column('password', sa.String(255), nullable=False),
+        sa.Column('protocol', sa.String(255), nullable=False),
+        sa.Column('port', sa.Integer, nullable=False)
     )
 
 

@@ -13,6 +13,7 @@
 #    under the License.from neutron.db import model_base
 
 import a10_neutron_lbaas.db.models as models
+import a10_neutron_lbaas.scheduling_hooks as scheduling_hooks
 
 
 class InventoryBase(object):
@@ -21,37 +22,55 @@ class InventoryBase(object):
         self.a10_driver = self.a10_context.a10_driver
         self.db_operations = self.a10_context.db_operations
 
-    def tenant_appliance(self):
-        """Chooses the appliance a tenant is already on, or assigns it"""
-        tenant_id = self.a10_context.tenant_id
-        tenant = self.db_operations.get_tenant_appliance(tenant_id)
-        if tenant is None:
-            # Assign this tenant to an appliance
-            appliance = self.select_tenant_appliance()
-            tenant = models.default(
-                models.A10TenantAppliance,
-                tenant_id=tenant_id,
-                a10_appliance=appliance)
-            self.db_operations.add(tenant)
+    def get_appliances(self):
+        """Get appliances available to this tenant"""
+        # Populate all the config devices
+        for device_key in self.a10_driver.config.devices:
+            self.db_operations.summon_appliance_configured(device_key)
 
-        return tenant.a10_appliance
+        return self.db_operations.get_shared_appliances(self.a10_context.tenant_id)
 
-    def select_tenant_appliance(self):
-        """Chooses an appliance affinity for a new tenant"""
-        device = self.a10_driver._select_a10_device(self.a10_context.tenant_id)
-        appliance = self.db_operations.summon_appliance_configured(device['key'])
+    def device_appliance(self, device_config):
+        appliance = device_config.get('appliance')
+
+        if appliance is None:
+            # TODO(aritrary config): Support for arbitrary options
+            device = self.a10_driver.config.device_defaults(device_config)
+            appliance = models.default(
+                models.A10ApplianceDB,
+                name=device.get('name', None),
+                description=device.get('description', None),
+                tenant_id=self.a10_context.tenant_id,
+                host=device['host'],
+                api_version=device['api_version'],
+                username=device['username'],
+                password=device['password'],
+                protocol=device['protocol'],
+                port=device['port'])
+            self.db_operations.add(appliance)
+
         return appliance
 
-    def select_appliance(self, openstack_lbaas_obj):
+    def select_appliance(self, openstack_lbaas_obj, scheduling_hooks=None):
         """Chooses an appliance for a new loadbalancer
 
-        When we add scheduling hooks, this will delegate the choice to the scheduler.
-        For now, it always chooses based on tenant affinity.
+        Delegates the choice to scheduling hooks.
         """
-        return self.tenant_appliance()
+        scheduling_hooks = scheduling_hooks or self.a10_driver.scheduling_hooks
+
+        appliances = self.get_appliances()
+        device_configs = [a.device(self.a10_context) for a in appliances]
+
+        selected_devices = scheduling_hooks.select_devices(self.a10_context, device_configs)
+        selected_device = next(selected_devices.__iter__())
+
+        appliance = self.device_appliance(selected_device)
+
+        return appliance
 
     def find(self, openstack_lbaas_obj):
         """Find or select the appliance the openstack_lbaas_obj lives on"""
 
         # The default, safe implementation puts all of a tenant's objects on the same appliance
-        return self.tenant_appliance()
+        per_tenant_scheduler = scheduling_hooks.DevicePerTenant(self.a10_driver.scheduling_hooks)
+        return self.select_appliance(openstack_lbaas_obj, per_tenant_scheduler)

@@ -1,4 +1,4 @@
-# Copyright 2014, Doug Wiegley (dougwig), A10 Networks
+# Copyright 2015,  A10 Networks
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -10,15 +10,19 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License.
+#    under the License.from neutron.db import model_base
 
-import test_base
+import os
+
+from a10_neutron_lbaas import a10_config
+from a10_neutron_lbaas.install import blank_config
 
 
-class TestA10Openstack(test_base.UnitTestBase):
+def setUp():
+    unit_dir = os.path.dirname(__file__)
+    os.environ['A10_CONFIG_DIR'] = unit_dir
 
-    def test_sanity(self):
-        pass
 
-    def test_verify(self):
-        self.a._verify_appliances()
+def empty_config():
+    config_dir = os.path.dirname(blank_config.__file__)
+    return a10_config.A10Config(config_dir=config_dir)
