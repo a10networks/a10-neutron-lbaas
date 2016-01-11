@@ -234,6 +234,8 @@ class AddImage(workflows.Workflow):
         image_id = queued.get("id")
         del image["id"]
         del image["properties"]
+        del image["tags"]
+        del image["visibility"]
 
         if not image_id:
             return False
