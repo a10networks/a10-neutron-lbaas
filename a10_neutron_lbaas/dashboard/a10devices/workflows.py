@@ -218,28 +218,22 @@ class AddImage(workflows.Workflow):
         image = {}
         image.update(context)
         copy_from = image["copy_from"]
-        
+
         del image["copy_from"]
 
         props = image["properties"]
         prop_string = json.dumps(props)
         image["properties"] = prop_string
-        # image = {
-        #     "properties": context["properties"],
-        #     "copy_from": context["copy_from"],
-        #     "name": context["name"],
-        #     "id": context["id"],
-        # }
 
         LOG.debug("<ImageCreating> {0}".format(context))
         queued = glance_api.glanceclient(request, version=2).images.create(**image)
-        
+
         image_id = queued.get("id")
-        
-        del_props = ["id", "properties", "tags", "visibility"]
-        for x in del_props:
+
+        del_props_v1 = ["id", "properties", "tags", "visibility"]
+        for x in del_props_v1:
             del image[x]
-        
+
         if not image_id:
             return False
 
