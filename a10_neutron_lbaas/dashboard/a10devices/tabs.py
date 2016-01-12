@@ -20,6 +20,8 @@ import openstack_dashboard.api.glance as glance_api
 
 import a10_neutron_lbaas.dashboard.a10devices.tables as p_tables
 
+GLANCE_API_VERSION = 2
+
 
 class A10ImagesTab(tabs.TableTab):
     table_classes = (p_tables.A10ImageTable, )
@@ -29,19 +31,15 @@ class A10ImagesTab(tabs.TableTab):
 
     def get_a10imagestable_data(self):
         result = []
-        filters = {
-            "filters":
-                {
-                    "tag": "a10"
-                }
+        image_filter = {
+            "tag": ["a10"]
         }
 
-        try:
-            (images, has_more, has_prev) = glance_api.image_list_detailed(self.tab_group.request,
-                                                                          filters=filters)
-            result = images
-        except Exception:
-            pass
+        images = glance_api.glanceclient(self.tab_group.request,
+                                         version=GLANCE_API_VERSION).images.list(
+            filters=image_filter)
+        result = list(images)
+
         return result
 
 
