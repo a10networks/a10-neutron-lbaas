@@ -48,8 +48,8 @@ class FakeInstance(dict):
 
 
 class FakeImage(FakeModel):
-    def __init__(self, id="image01", name="Image"):
-        super(FakeImage, self).__init__(id=id, name=name)
+    def __init__(self, id="image01", name="Image", metadata={}):
+        super(FakeImage, self).__init__(id=id, name=name, metadata=metadata)
 
 
 class FakeFlavor(FakeModel):
