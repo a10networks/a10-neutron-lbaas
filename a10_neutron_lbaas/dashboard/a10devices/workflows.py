@@ -23,11 +23,13 @@ from django.utils.translation import ugettext_lazy as _
 
 import a10_neutron_lbaas.instance_manager as im
 
+
 import horizon.forms as forms
 import horizon.workflows as workflows
 import openstack_dashboard.api.glance as glance_api
 import openstack_dashboard.api.neutron as neutron_api
 import openstack_dashboard.api.nova as nova_api
+
 
 # GITFLAG
 import pprint
@@ -51,6 +53,7 @@ class AddApplianceAction(workflows.Action):
         super(AddApplianceAction, self).__init__(request, *args, **kwargs)
         # So we can get networks for the tenant
         tenant_id = request.user.tenant_id
+
         image_filter = {
             "tag": ["a10"]
         }
@@ -95,6 +98,8 @@ class AddApplianceStep(workflows.Step):
     def contribute(self, data, context):
         context = super(AddApplianceStep, self).contribute(data, context)
         if data:
+            networks = context["networks"]
+            context["networks"] = [networks]
             return context
 
 
@@ -239,5 +244,6 @@ class AddImage(workflows.Workflow):
 
         image["copy_from"] = copy_from
         created = glance_api.image_update(request, image_id, **image)
+
         LOG.debug("</ImageCreating> {0}".format(created))
         return True

@@ -47,7 +47,8 @@ class DeleteImageAction(tables.LinkAction):
 class A10ApplianceTable(tables.DataTable):
     id = tables.Column("id", verbose_name=_("ID"), hidden=True)
     name = tables.Column("name", verbose_name=_("Hostname"), hidden=False)
-    ip = tables.Column("ip_mgmt", verbose_name="Management IP")
+    ip = tables.Column("host", verbose_name="Management IP")
+    api_ver = tables.Column("api_version", verbose_name="API Version")
 
     class Meta(object):
         name = "a10appliancestable"

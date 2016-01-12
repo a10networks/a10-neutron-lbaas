@@ -16,14 +16,17 @@ from django.utils.translation import ugettext_lazy as _
 
 from horizon import exceptions
 from horizon import tabs
+
 import openstack_dashboard.api.glance as glance_api
 
 import a10_neutron_lbaas.dashboard.a10devices.tables as p_tables
+import a10_neutron_lbaas.dashboard.api.a10devices as a10api
 
 GLANCE_API_VERSION = 2
 
 
 class A10ImagesTab(tabs.TableTab):
+
     table_classes = (p_tables.A10ImageTable, )
     name = _("A10 Images")
     slug = "a10imagestab"
@@ -35,10 +38,13 @@ class A10ImagesTab(tabs.TableTab):
             "tag": ["a10"]
         }
 
-        images = glance_api.glanceclient(self.tab_group.request,
-                                         version=GLANCE_API_VERSION).images.list(
-            filters=image_filter)
-        result = list(images)
+        try:
+            images = glance_api.glanceclient(self.tab_group.request,
+                                             version=GLANCE_API_VERSION
+                                             ).images.list(filters=image_filter)
+            result = images
+        except Exception:
+            pass
 
         return result
 
@@ -52,12 +58,11 @@ class A10AppliancesTab(tabs.TableTab):
     def get_a10appliancestable_data(self):
         result = []
         try:
-            pass
-            # TODO(mdurrant) - Replace with call to our DB API.
+            result = a10api.get_a10_appliances(self.request)
         except Exception:
             result = []
             exceptions.handle(self.tab_group.request,
-                              _('Unable to retrieve member list.'))
+                              _('Unable to retrieve appliance list.'))
         return result
 
 
