@@ -28,10 +28,6 @@ import openstack_dashboard.api.neutron as neutron_api
 import openstack_dashboard.api.nova as nova_api
 
 
-# GITFLAG
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-
 GLANCE_API_VERSION_LIST = 2
 GLANCE_API_VERSION_CREATE = 2
 GLANCE_API_VERSION_UPDATE = 1

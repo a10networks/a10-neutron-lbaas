@@ -43,8 +43,9 @@ class A10ImagesTab(tabs.TableTab):
                                              version=GLANCE_API_VERSION
                                              ).images.list(filters=image_filter)
             result = images
-        except Exception:
-            pass
+        except Exception as ex:
+            result = []
+            exceptions.handle(self.tab.group.request, _('Unable to retrieve image list'))
 
         return result
 

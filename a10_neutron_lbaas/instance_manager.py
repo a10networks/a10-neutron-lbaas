@@ -200,17 +200,19 @@ class InstanceManager(object):
         created_instance = self._nova_api.servers.create(**server)
         # Next 6 lines -  Added due to insane API on the other side
         created_instance.manager.client.last_request_id = None
+
         try:
             created_instance.get()
         except Exception as ex:
             ex
             pass
-
+        
         ip_address = self._get_ip_addresses_from_instance(created_instance.addresses)
         a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
 
         # TODO(mdurrant): Do something with the result of this call, like validation.
         self._a10_api.create_a10_appliance(request, **a10_record)
+        return created_instance
 
     def delete_instance(self, instance_id):
         return self._nova_api.servers.delete(instance_id)
