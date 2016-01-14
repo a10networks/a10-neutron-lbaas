@@ -39,7 +39,8 @@ LOG = logging.getLogger(__name__)
 
 
 class AddApplianceAction(workflows.Action):
-    name = forms.CharField(max_length=80, label=_("Name"))
+    name = forms.CharField(max_length=255, label=_("Name"))
+    
     flavor = forms.ChoiceField(label=_("Flavor"))
     image = forms.ChoiceField(label=_("Image"))
     # TODO(mdurrant): mgmt network/dp network/vip network

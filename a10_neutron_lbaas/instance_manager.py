@@ -196,17 +196,21 @@ class InstanceManager(object):
 
         server["image"] = image.id
         server["flavor"] = flavor.id
-        server["networks"] = networks
+        server["nics"] = [{'net-id': x} for x in networks]
+
         created_instance = self._nova_api.servers.create(**server)
+        import time
+        time.sleep(2)
         # Next 6 lines -  Added due to insane API on the other side
         created_instance.manager.client.last_request_id = None
-
+        LOG.debug(created_instance.addresses)
+        
         try:
             created_instance.get()
         except Exception as ex:
             ex
             pass
-        
+
         ip_address = self._get_ip_addresses_from_instance(created_instance.addresses)
         a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
 
