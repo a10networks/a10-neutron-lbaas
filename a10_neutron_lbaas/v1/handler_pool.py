@@ -55,7 +55,7 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
                 m = self.neutron.member_get(context, member)
                 self.a10_driver.member._delete(c, context, m)
 
-            for hm in pool['health_monitors_status']:
+            for hm in pool.get('health_monitors_status', []):
                 z = self.neutron.hm_get(context, hm['monitor_id'])
                 self.a10_driver.hm.dissociate(c, context, z, pool_id)
 

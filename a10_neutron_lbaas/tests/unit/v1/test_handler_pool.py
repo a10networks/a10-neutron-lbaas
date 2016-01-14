@@ -15,6 +15,7 @@
 import test_base
 import test_handler_member
 
+import mock
 
 class TestPools(test_base.UnitTestBase):
     def fake_hm(self, type):
@@ -91,7 +92,21 @@ class TestPools(test_base.UnitTestBase):
         self.a.pool.delete(None, pool)
         self.print_mocks()
 
-    def test_delete_with_health_monitor(self):
+    def test_update_remove_monitor(self):
+        old_pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
+        old_pool['health_monitors_status'] = [{'monitor_id': 'hm1'}]
+        pool = self.fake_pool('TCP', 'ROUND_ROBIN')
+        pool['health_monitors_status'] = []
+        self.a.pool.update(None, old_pool, pool)
+        self.print_mocks()
+        
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            pool['id'],
+            lb_method=self.a.last_client.slb.service_group.ROUND_ROBIN,
+            protocol=self.a.last_client.slb.service_group.TCP)
+        self.a.last_client.slb.hm.delete.assert_called_with(mock.ANY)
+        
+    def test_delete(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         pool['members'] = [test_handler_member._fake_member()]
         pool['health_monitors_status'] = [{'monitor_id': 'hm1'}]
@@ -124,6 +139,14 @@ class TestPools(test_base.UnitTestBase):
         self._test_delete(pool)
         (self.a.last_client.slb.service_group.delete.
             assert_called_with(pool['id']))
+
+    def test_delete_removes_monitor(self):
+        pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
+        pool['members'] = [test_handler_member._fake_member()]
+        pool['health_monitors_status'] = [{'monitor_id':"fakepoolid"}]
+        self.a.pool.delete(None, pool)
+
+        (self.a.last_client.slb.hm._delete.assert_called_with(mock.ANY))
 
     def test_stats(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
