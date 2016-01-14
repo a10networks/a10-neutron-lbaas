@@ -20,15 +20,13 @@ from django.utils.translation import ugettext_lazy as _
 import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.instance_manager as im
 
+
 import horizon.forms as forms
 import horizon.workflows as workflows
 import openstack_dashboard.api.glance as glance_api
 import openstack_dashboard.api.neutron as neutron_api
 import openstack_dashboard.api.nova as nova_api
 
-# GITFLAG
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
 
 GLANCE_API_VERSION_LIST = 2
 GLANCE_API_VERSION_CREATE = 2
@@ -38,7 +36,8 @@ LOG = logging.getLogger(__name__)
 
 
 class AddApplianceAction(workflows.Action):
-    name = forms.CharField(max_length=80, label=_("Name"))
+    name = forms.CharField(max_length=255, label=_("Name"))
+
     flavor = forms.ChoiceField(label=_("Flavor"))
     image = forms.ChoiceField(label=_("Image"))
     # TODO(mdurrant): mgmt network/dp network/vip network
@@ -48,6 +47,7 @@ class AddApplianceAction(workflows.Action):
         super(AddApplianceAction, self).__init__(request, *args, **kwargs)
         # So we can get networks for the tenant
         tenant_id = request.user.tenant_id
+
         image_filter = {
             "tag": ["a10"]
         }
@@ -92,6 +92,8 @@ class AddApplianceStep(workflows.Step):
     def contribute(self, data, context):
         context = super(AddApplianceStep, self).contribute(data, context)
         if data:
+            networks = context["networks"]
+            context["networks"] = [networks]
             return context
 
 
@@ -236,5 +238,6 @@ class AddImage(workflows.Workflow):
 
         image["copy_from"] = copy_from
         created = glance_api.image_update(request, image_id, **image)
+
         LOG.debug("</ImageCreating> {0}".format(created))
         return True

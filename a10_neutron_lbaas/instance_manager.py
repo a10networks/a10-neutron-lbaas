@@ -21,14 +21,17 @@ import keystoneclient.client as keystone_client
 import keystoneclient.session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
-
+import time
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+import a10_neutron_lbaas.dashboard.api.a10devices as a10api
 
 pp = pprint.PrettyPrinter(indent=4)
 
 
 LOG = logging.getLogger(__name__)
+
+CREATE_TIMEOUT = 30
 
 # TODO(mdurrant) - These may need to go into a configuration file.
 GLANCE_VERSION = 1
@@ -52,7 +55,6 @@ _default_server = {
     "availability_zone": None,
     "block_device_mapping": None,  # optional extension
     "block_device_mapping_v2": None,  # optional extension
-    "networks": None,  # optional extension
     "scheduler_hints": {},  # optional extension
     "config_drive": False,  # optional extension
     "disk_config": "AUTO",   # AUTO or MANUAL # optional extension
@@ -64,7 +66,7 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 class InstanceManager(object):
     def __init__(self, context=None, request=None, nova_api=None,
-                 glance_api=None, neutron_api=None, keystone_api=None):
+                 glance_api=None, neutron_api=None, keystone_api=None, a10_api=None):
         self.context = context
         self.user = request.user
         self.tenant_id = request.user.token.project["id"]
@@ -72,6 +74,7 @@ class InstanceManager(object):
         (self.auth_url, self.auth_token) = self._get_auth_from_token(self.user.token)
         self._validate_auth()
         session = keystone_session.Session(auth=self.token)
+        self.session = session
         self._keystone_api = (keystone_api or keystone_client.Client(KEYSTONE_VERSION,
                               session=session, auth_url=self.auth_url))
 
@@ -83,6 +86,7 @@ class InstanceManager(object):
                                                                  auth_url=self.auth_url)
 
         self._glance_api = glance_api or glance_client.Client(GLANCE_VERSION, session=session)
+        self._a10_api = a10_api or a10api
 
     def _validate_auth(self):
         pass
@@ -136,18 +140,51 @@ class InstanceManager(object):
         return self._nova_api.servers.list(detailed, search_opts, marker, limit,
                                            sort_keys, sort_dirs)
 
-    def create_instance(self, context, instance):
-        return self._create_instance(context, instance)
+    def create_instance(self, request, context):
+        return self._create_instance(request, context)
 
-    def _create_instance(self, context, instance):
-        server = self._build_server(instance)
-        image_id = instance.get("image", None)
-        flavor_id = instance.get("flavor", None)
-        net_ids = instance.get("networks", [])
-        image = self.get_image(context, identifier=image_id)
-        flavor = self.get_flavor(context, identifier=flavor_id)
+    def _build_a10_appliance_record(self, instance, image, appliance, ip):
+        """Build an a10_appliances_db record from Nova instance/image"""
+        import json
 
-        networks = self.get_networks(context, net_ids)
+        imgprops = json.loads(image.metadata["properties"])
+
+        rv = {
+            "tenant_id": self.tenant_id,
+            "name": appliance["name"],
+            # TODO(mdurrant): not sure this is populated
+            "description": "",
+            # need to get the network data out.
+            "host": ip,
+            "api_version": imgprops["api_version"],
+            "username": imgprops["username"],
+            "password": imgprops["password"],
+            "protocol": imgprops["protocol"],
+            "port": imgprops["port"]
+        }
+
+        return rv
+
+    def _get_ip_addresses_from_instance(self, addresses):
+        rv = ""
+        if len(addresses.keys()) > 0:
+            v4addresses = filter(lambda x: x["version"] == 4,
+                                 addresses[addresses.keys()[0]])
+            if len(v4addresses) > 0:
+                addresses = map(lambda x: x["addr"], v4addresses)
+                if len(addresses) > 0:
+                    rv = addresses[0]
+        return rv
+
+    def _create_instance(self, request, context):
+        server = self._build_server(context)
+        image_id = context.get("image", None)
+        flavor_id = context.get("flavor", None)
+        net_ids = context.get("networks")
+        image = self.get_image(request, identifier=image_id)
+        flavor = self.get_flavor(request, identifier=flavor_id)
+
+        networks = self.get_networks(request, net_ids)
         if image is None:
             raise a10_ex.ImageNotFoundError(MISSING_ERR_FORMAT.format("Image", image_id))
 
@@ -160,8 +197,36 @@ class InstanceManager(object):
 
         server["image"] = image.id
         server["flavor"] = flavor.id
-        server["networks"] = networks
-        return self._nova_api.servers.create(**server)
+        server["nics"] = [{'net-id': x} for x in networks]
+
+        created_instance = self._nova_api.servers.create(**server)
+
+        # time.sleep(2)
+        # Next 6 lines -  Added due to insane API on the other side
+        created_instance.manager.client.last_request_id = None
+        self._create_server_spinlock(created_instance)
+
+        ip_address = self._get_ip_addresses_from_instance(created_instance.addresses)
+        a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
+
+        # TODO(mdurrant): Do something with the result of this call, like validation.
+        self._a10_api.create_a10_appliance(request, **a10_record)
+        return created_instance
+
+    def _create_server_spinlock(self, created_instance):
+        created_id = created_instance.id
+
+        timeout = False
+        start_time = time.clock()
+        while not timeout:
+            created_instance = self._nova_api.servers.get(created_id)
+            if created_instance.id == created_id and len(created_instance.addresses) > 0:
+                timeout = True
+                break
+
+            end_time = time.clock()
+            if end_time - start_time > CREATE_TIMEOUT:
+                timeout = True
 
     def delete_instance(self, instance_id):
         return self._nova_api.servers.delete(instance_id)
@@ -210,8 +275,9 @@ class InstanceManager(object):
             msgs.append(msg_format.format(net))
         ex_msg = "\n".join(msgs)
         LOG.exception(ex_msg)
+        raise a10_ex.NetworksNotFoundError(ex_msg)
 
-    def get_networks(self, context, networks={}):
+    def get_networks(self, context, networks=[]):
         network_list = {"networks": []}
         net_list = []
 
@@ -230,15 +296,11 @@ class InstanceManager(object):
         id_func = (lambda x: x.get("net-id",
                    x.get("uuid", x.get("id", None))) if x is not None else None)
 
-        net_filter = lambda x: id_func(x) in networks
+        available_networks = dict((id_func(x), x) for x in net_list)
 
-        filtered = filter(net_filter, net_list)
-        filtered_ids = map(id_func, filtered)
-        not_found = map(id_func, filter(lambda x: x not in filtered, net_list))
+        missing_networks = [x for x in networks if x not in available_networks.keys()]
 
-        if not filtered_ids or len(filtered_ids) < 1:
-            raise a10_ex.NetworksNotFoundError(
-                "Unable to retrieve specified networks.")
-        if not_found:
-            self._handle_missing_networks(not_found)
-        return filtered_ids
+        if any(missing_networks):
+            self._handle_missing_networks(missing_networks)
+
+        return [id_func(available_networks[x]) for x in networks]

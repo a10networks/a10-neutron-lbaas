@@ -25,9 +25,20 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 log_mock = mock.MagicMock()
 
+sys.modules["a10_neutron_lbaas_client"] = mock.MagicMock()
 sys.modules["glanceclient"] = mock.MagicMock()
 sys.modules["glanceclient.client"] = mock.MagicMock()
 sys.modules["logging"] = mock.Mock(getLogger=mock.Mock(return_value=log_mock))
+sys.modules["django"] = mock.MagicMock()
+sys.modules["django.conf"] = mock.MagicMock()
+sys.modules["django.conf.settings"] = mock.MagicMock()
+sys.modules["openstack_dashboard"] = mock.MagicMock()
+sys.modules["openstack_dashboard.api"] = mock.MagicMock()
+sys.modules["openstack_dashboard.api.neutron"] = mock.MagicMock()
+sys.modules["openstack_dashboard.api.neutron.NeutronAPIDictWrapper"] = mock.MagicMock()
+
+
+# a10 client that extends neutronclient.v2_0.client.Client
 
 import a10_neutron_lbaas.instance_manager as im
 
@@ -36,6 +47,9 @@ class TestInstanceManager(test_base.UnitTestBase):
     def setUp(self):
         log_mock.reset_mock()
         super(TestInstanceManager, self).setUp()
+
+        im.CREATE_TIMEOUT = 0.1
+
         glance_patch = mock.patch("glanceclient.client")
         self.glance_api = glance_patch.start()
         self.addCleanup(glance_patch.stop)
@@ -51,12 +65,17 @@ class TestInstanceManager(test_base.UnitTestBase):
         nova_patch = mock.patch("novaclient.client.Client")
         self.nova_api = nova_patch.start()
         self.addCleanup(nova_patch.stop)
+
+        a10api_patch = mock.patch("a10_neutron_lbaas.dashboard.api.a10devices")
+        self.a10_api = a10api_patch.start()
+        self.addCleanup(a10api_patch.stop)
+
         self.setup_mocks()
 
         self.target = im.InstanceManager(context=self.os_context, request=self.request,
                                          nova_api=self.nova_api,
                                          glance_api=self.glance_api, neutron_api=self.neutron_api,
-                                         keystone_api=self.keystone_api)
+                                         keystone_api=self.keystone_api, a10_api=self.a10_api)
 
     def setup_mocks(self):
         self.a10_context = mock.MagicMock()
@@ -64,12 +83,19 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.servers = mock.Mock()
         self.fake_image = self._fake_image()
         self.fake_flavor = self._fake_flavor()
-        self.fake_networks = {"networks": [{"net-id": "net01"}, {"net-id": "net02"}]}
+        self.fake_networks = {"networks": [{"id": "net01"}]}
 
         self.fake_instance = self._fake_instance(name="fake-instance-01",
                                                  image=self.fake_image.id,
                                                  flavor=self.fake_flavor.id,
                                                  nics=self.fake_networks.get("networks"))
+
+        self.fake_created = mock.Mock(addresses={"public": [
+            {
+                "version": 4,
+                "addr": "127.0.0.1"
+            }
+        ]})
 
         self.service_catalog = [{
             "name": "keystone",
@@ -85,6 +111,7 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.request = mock.NonCallableMock(user=self.user)
 
         self.nova_api.servers.list = mock.Mock(return_value=[self._fake_instance()])
+        self.nova_api.servers.create = mock.Mock(return_value=self.fake_created)
         self.nova_api.flavors = mock.Mock()
 
         self.nova_api.flavors.list = mock.Mock(return_value=[self._fake_flavor()])
@@ -93,6 +120,9 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.images.list = mock.Mock(return_value=[self._fake_image()])
         self.neutron_api.list_networks = mock.Mock(return_value=self.fake_networks)
 
+        self.a10_api.get_a10_instances = mock.Mock(return_value=[{}])
+        self.a10_api.create_a10_instance = mock.Mock(return_value=self.fake_created)
+
     def _fake_instance(self, id=1, name="instance001", image=None, flavor=None, nics=[]):
         return mocks.FakeInstance(id=id, name=name, image=image, flavor=flavor, nics=nics)
 
@@ -100,7 +130,20 @@ class TestInstanceManager(test_base.UnitTestBase):
         return mocks.FakeFlavor(id=id, name=name)
 
     def _fake_image(self, id=1, name="image001"):
-        return mocks.FakeImage(id=id, name=name)
+        import json
+
+        metadata = {
+            "properties": json.dumps(
+                {
+                    "api_version": 2.1,
+                    "username": "dude",
+                    "password": "password",
+                    "protocol": "http",
+                    "port": 80
+                }
+            )
+        }
+        return mocks.FakeImage(id=id, name=name, metadata=metadata)
 
     def _test_create(self, instance):
         self.target.create_instance(self.os_context, instance)
@@ -112,7 +155,11 @@ class TestInstanceManager(test_base.UnitTestBase):
     def test_create_calls_nova_api_with_args(self):
         fake_instance = self.fake_instance
         self._test_create(fake_instance)
-        self.nova_api.servers.create.assert_called_with(**fake_instance)
+        expected = fake_instance.copy()
+        expected["nics"] = [{'net-id': x} for x in fake_instance["networks"]]
+        del expected["networks"]
+
+        self.nova_api.servers.create.assert_called_with(**expected)
 
     def test_get_instance_gets_image_get(self):
         instance_id = "INSTANCE_ID"
