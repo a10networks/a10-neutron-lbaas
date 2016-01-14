@@ -46,6 +46,9 @@ class TestInstanceManager(test_base.UnitTestBase):
     def setUp(self):
         log_mock.reset_mock()
         super(TestInstanceManager, self).setUp()
+
+        im.CREATE_TIMEOUT = 0.1
+
         glance_patch = mock.patch("glanceclient.client")
         self.glance_api = glance_patch.start()
         self.addCleanup(glance_patch.stop)
@@ -151,7 +154,11 @@ class TestInstanceManager(test_base.UnitTestBase):
     def test_create_calls_nova_api_with_args(self):
         fake_instance = self.fake_instance
         self._test_create(fake_instance)
-        self.nova_api.servers.create.assert_called_with(**fake_instance)
+        expected = fake_instance.copy()
+        expected["nics"] = [{'net-id': x} for x in fake_instance["networks"]]
+        del expected["networks"]
+
+        self.nova_api.servers.create.assert_called_with(**expected)
 
     def test_get_instance_gets_image_get(self):
         instance_id = "INSTANCE_ID"

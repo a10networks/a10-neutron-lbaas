@@ -56,7 +56,6 @@ _default_server = {
     "availability_zone": None,
     "block_device_mapping": None,  # optional extension
     "block_device_mapping_v2": None,  # optional extension
-    "networks": None,  # optional extension
     "scheduler_hints": {},  # optional extension
     "config_drive": False,  # optional extension
     "disk_config": "AUTO",   # AUTO or MANUAL # optional extension
@@ -207,7 +206,6 @@ class InstanceManager(object):
         # Next 6 lines -  Added due to insane API on the other side
         created_instance.manager.client.last_request_id = None
         self._create_server_spinlock(created_instance)
-        
 
         ip_address = self._get_ip_addresses_from_instance(created_instance.addresses)
         a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
@@ -230,7 +228,6 @@ class InstanceManager(object):
             end_time = time.clock()
             if end_time - start_time > CREATE_TIMEOUT:
                 timeout = True
-
 
     def delete_instance(self, instance_id):
         return self._nova_api.servers.delete(instance_id)
