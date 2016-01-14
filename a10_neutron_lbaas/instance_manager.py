@@ -21,6 +21,7 @@ import keystoneclient.client as keystone_client
 import keystoneclient.session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
+import time
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.dashboard.api.a10devices as a10api
@@ -30,6 +31,8 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 LOG = logging.getLogger(__name__)
+
+CREATE_TIMEOUT = 30
 
 # TODO(mdurrant) - These may need to go into a configuration file.
 GLANCE_VERSION = 1
@@ -199,17 +202,12 @@ class InstanceManager(object):
         server["nics"] = [{'net-id': x} for x in networks]
 
         created_instance = self._nova_api.servers.create(**server)
-        import time
-        time.sleep(2)
+
+        # time.sleep(2)
         # Next 6 lines -  Added due to insane API on the other side
         created_instance.manager.client.last_request_id = None
-        LOG.debug(created_instance.addresses)
+        self._create_server_spinlock(created_instance)
         
-        try:
-            created_instance.get()
-        except Exception as ex:
-            ex
-            pass
 
         ip_address = self._get_ip_addresses_from_instance(created_instance.addresses)
         a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
@@ -217,6 +215,22 @@ class InstanceManager(object):
         # TODO(mdurrant): Do something with the result of this call, like validation.
         self._a10_api.create_a10_appliance(request, **a10_record)
         return created_instance
+
+    def _create_server_spinlock(self, created_instance):
+        created_id = created_instance.id
+
+        timeout = False
+        start_time = time.clock()
+        while not timeout:
+            created_instance = self._nova_api.servers.get(created_id)
+            if created_instance.id == created_id and len(created_instance.addresses) > 0:
+                timeout = True
+                break
+
+            end_time = time.clock()
+            if end_time - start_time > CREATE_TIMEOUT:
+                timeout = True
+
 
     def delete_instance(self, instance_id):
         return self._nova_api.servers.delete(instance_id)
