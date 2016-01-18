@@ -118,7 +118,7 @@ class TestA10ContextADP(TestA10Context):
         expected = self.a.config.get_device("axadp-alt").get("shared_partition",
                                                              "shared")
 
-        self.m["tenant_id"] = expected if use_alternate else "get-off-my-lawn"
+        self.m["tenant_id"] = expected if use_alternate else self.m["tenant_id"]
         with a10.A10Context(self.handler, self.ctx, self.m,
                             use_alternate_partition=use_alternate) as c:
             c

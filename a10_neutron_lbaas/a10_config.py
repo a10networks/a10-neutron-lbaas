@@ -40,6 +40,11 @@ class A10Config(object):
         "protected": False
     }
 
+    INSTANCE_DEFAULTS = {
+        "flavor": "acos.min",
+        "networks": ["private", "private", "private"]
+    }
+
     # TODO(dougwig) -- needed?
     def device_defaults(self, device_config):
         device = self.DEVICE_DEFAULTS.copy()
@@ -133,6 +138,9 @@ class A10Config(object):
             # TODO(dougwig) -- vet these
             self.image_defaults = self.IMAGE_DEFAULTS.copy()
             self.image_defaults.update(getattr(self.config, "image_defaults", {}))
+
+            self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
+            self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
         finally:
             sys.path = real_sys_path
 

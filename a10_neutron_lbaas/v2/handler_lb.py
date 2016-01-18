@@ -12,7 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import errno
 import logging
+import socket
+import time
 
 from a10_neutron_lbaas.acos import axapi_mappings
 
@@ -42,8 +45,40 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             pass
 
     def _create(self, c, context, lb):
-        self._set(c.client.slb.virtual_server.create, c, context, lb)
+        self._create_spinlock(c, context, lb)
         self.hooks.after_vip_create(c, context, lb)
+
+    def _create_spinlock(self, c, context, lb):
+        sleep_time = 1
+        lock_time = 600
+        skip_errs = [errno.EHOSTUNREACH]
+        running = True
+        time_begin = time.time()
+
+        while running:
+            try:
+                self._set(c.client.slb.virtual_server.create, c, context, lb)
+                running = False
+            except socket.error as e:
+                last_e = e
+                if e.errno not in skip_errs:
+                    raise
+                    break
+            except Exception as ex:
+                last_e = ex
+                running = False
+
+            if not running:
+                break
+
+            time_end = time.time()
+            if (time_end - time_begin) >= lock_time:
+                if last_e is not None:
+                    LOG.exception(last_e)
+                    running = False
+                break
+
+            time.sleep(sleep_time)
 
     def create(self, context, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:
