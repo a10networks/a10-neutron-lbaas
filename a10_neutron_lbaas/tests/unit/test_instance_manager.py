@@ -66,20 +66,13 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api = nova_patch.start()
         self.addCleanup(nova_patch.stop)
 
-        a10api_patch = mock.patch("a10_neutron_lbaas.dashboard.api.a10devices")
-        self.a10_api = a10api_patch.start()
-        self.addCleanup(a10api_patch.stop)
-
         self.setup_mocks()
 
-        self.target = im.InstanceManager(context=self.os_context, request=self.request,
-                                         nova_api=self.nova_api,
-                                         glance_api=self.glance_api, neutron_api=self.neutron_api,
-                                         keystone_api=self.keystone_api, a10_api=self.a10_api)
+        self.target = im.InstanceManager('fake-tenant-id', nova_api=self.nova_api,
+                                         glance_api=self.glance_api, neutron_api=self.neutron_api)
 
     def setup_mocks(self):
         self.a10_context = mock.MagicMock()
-        self.os_context = mock.MagicMock()
         self.nova_api.servers = mock.Mock()
         self.fake_image = self._fake_image()
         self.fake_flavor = self._fake_flavor()
@@ -120,8 +113,8 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.images.list = mock.Mock(return_value=[self._fake_image()])
         self.neutron_api.list_networks = mock.Mock(return_value=self.fake_networks)
 
-        self.a10_api.get_a10_instances = mock.Mock(return_value=[{}])
-        self.a10_api.create_a10_instance = mock.Mock(return_value=self.fake_created)
+        self.neutron_api.get_a10_instances = mock.Mock(return_value=[{}])
+        self.neutron_api.create_a10_instance = mock.Mock(return_value=self.fake_created)
 
     def _fake_instance(self, id=1, name="instance001", image=None, flavor=None, nics=[]):
         return mocks.FakeInstance(id=id, name=name, image=image, flavor=flavor, nics=nics)
@@ -146,7 +139,7 @@ class TestInstanceManager(test_base.UnitTestBase):
         return mocks.FakeImage(id=id, name=name, metadata=metadata)
 
     def _test_create(self, instance):
-        self.target.create_instance(self.os_context, instance)
+        self.target.create_instance(instance)
 
     def test_create_calls_nova_api(self):
         self._test_create(self.fake_instance)
@@ -183,23 +176,6 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.servers.list.assert_called_with(detailed, search_opts, marker, limit,
                                                       sort_keys, sort_dirs)
 
-    def test_token_contains_service_catalog(self):
-        self.assertIsNotNone(self.target.endpoints)
-        self.assertGreater(len(self.target.endpoints), 0)
-
-    def test_missing_service_catalog_raises_exception(self):
-        self.token.serviceCatalog = []
-        with self.assertRaises(AttributeError):
-            self.target = im.InstanceManager(context=self.os_context,
-                                             request=self.request,
-                                             nova_api=self.nova_api,
-                                             glance_api=self.glance_api,
-                                             neutron_api=self.neutron_api,
-                                             keystone_api=self.keystone_api)
-
-    def test_keystoneapi_notnone(self):
-        self.assertIsNotNone(self.target._keystone_api)
-
     def test_glanceapi_notnone(self):
         self.assertIsNotNone(self.target._glance_api)
 
@@ -214,14 +190,14 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.images.list.side_effect = a10_ex.ImageNotFoundError()
         fake_instance = self.fake_instance
         with self.assertRaises(a10_ex.ImageNotFoundError):
-            self.target.create_instance(self.os_context, fake_instance)
+            self.target.create_instance(fake_instance)
 
     def test_create_instance_flavor_not_available_throws_exception(self):
         self.nova_api.flavors.list.return_value = [None]
         fake_instance = self.fake_instance
 
         with self.assertRaises(a10_ex.FlavorNotFoundError):
-            self.target.create_instance(self.os_context, fake_instance)
+            self.target.create_instance(fake_instance)
 
     def test_create_instance_network_not_available_throws_exception(self):
         self.neutron_api.list_networks.return_value = {"networks": [None]}
@@ -230,41 +206,36 @@ class TestInstanceManager(test_base.UnitTestBase):
         fake_instance["networks"] = ["fakenet"]
 
         with self.assertRaises(a10_ex.NetworksNotFoundError):
-            self.target.create_instance(self.os_context, fake_instance)
+            self.target.create_instance(fake_instance)
 
     def test_get_network_throws_exception_for_unspecified_identifier(self):
         with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
-            self.target.get_networks(self.os_context, networks={})
+            self.target.get_networks(networks={})
 
     def test_get_image_throws_exception_for_unspecified_identifier(self):
         with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
-            self.target.get_image(self.os_context, identifier=None)
+            self.target.get_image(identifier=None)
 
     def test_get_image_throws_exception_for_missing_image(self):
         self.nova_api.images.list.return_value = [None]
         with self.assertRaises(a10_ex.ImageNotFoundError):
             self.nova_api.images.list.return_value = None
             self.nova_api.images.list.side_effect = a10_ex.ImageNotFoundError()
-            self.target.get_image(self.os_context, identifier="invalidimage")
+            self.target.get_image(identifier="invalidimage")
 
     def test_get_flavor_throws_exception_for_unspecified_identifier(self):
         with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
-            self.target.get_flavor(self.os_context, identifier=None)
+            self.target.get_flavor(identifier=None)
 
     def test_get_flavor_throws_exception_for_missing_flavor(self):
         self.nova_api.flavors.list.return_value = [None]
         self.nova_api.flavors.list.side_effect = a10_ex.FlavorNotFoundError
         with self.assertRaises(a10_ex.FlavorNotFoundError):
-            self.target.get_flavor(self.os_context, identifier="invalidflavor")
-
-    def test_token_missing_endpoints_logs_exception(self):
-        self.token.serviceCatalog = []
-        self.target._get_auth_from_token(self.token)
-        log_mock.exception.assert_called()
+            self.target.get_flavor(identifier="invalidflavor")
 
     def test_get_networks_failure_returns_exception(self):
         self.neutron_api.list_networks.side_effect = a10_ex.ServiceUnavailableError()
         self.neutron_api.list_networks.return_value = {"networks": []}
 
         with self.assertRaises(a10_ex.NetworksNotFoundError):
-            self.target.get_networks(self.os_context, networks=[{"network"}])
+            self.target.get_networks(networks=[{"network"}])

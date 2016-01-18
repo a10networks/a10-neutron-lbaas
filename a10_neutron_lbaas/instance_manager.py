@@ -16,15 +16,11 @@ import logging
 import pprint
 
 import glanceclient.client as glance_client
-import keystoneclient.auth.identity.generic as auth_plugin
-import keystoneclient.client as keystone_client
-import keystoneclient.session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import time
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-import a10_neutron_lbaas.dashboard.api.a10devices as a10api
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -65,68 +61,15 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 
 class InstanceManager(object):
-    def __init__(self, context=None, request=None, nova_api=None,
-                 glance_api=None, neutron_api=None, keystone_api=None, a10_api=None):
-        self.context = context
-        self.user = request.user
-        self.tenant_id = request.user.token.project["id"]
-        self.endpoints = self._get_services_from_token(self.user.token)
-        (self.auth_url, self.auth_token) = self._get_auth_from_token(self.user.token)
-        self._validate_auth()
-        session = keystone_session.Session(auth=self.token)
-        self.session = session
-        self._keystone_api = (keystone_api or keystone_client.Client(KEYSTONE_VERSION,
-                              session=session, auth_url=self.auth_url))
+    def __init__(self, tenant_id, session=None,
+                 nova_api=None, glance_api=None, neutron_api=None):
+        self.tenant_id = tenant_id
 
-        self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session,
-                                                        auth_url=self.auth_url)
+        self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
 
-        self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION,
-                                                                 session=session,
-                                                                 auth_url=self.auth_url)
+        self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
 
         self._glance_api = glance_api or glance_client.Client(GLANCE_VERSION, session=session)
-        self._a10_api = a10_api or a10api
-
-    def _validate_auth(self):
-        pass
-        # if self.auth_url is None or self.auth_token is None:
-        #     raise AttributeError("Auth URL and Token must be provided for authentication.")
-
-    def _get_services_from_token(self, token):
-        # This changes between keystone versions.
-        res = {}
-        if not token.serviceCatalog or len(token.serviceCatalog) < 1:
-            raise AttributeError("FATAL: Service catalog not populated.")
-        for x in token.serviceCatalog:
-            # This is always returned as an array.
-            endpoints = x.get("endpoints", [])
-            urls = map(self.endpoint_public_url, endpoints)
-            urls = filter(lambda x: x is not None, urls)
-
-            if len(urls) > 0:
-                res[x["type"]] = urls[0]
-        return res
-
-    def endpoint_public_url(self, endpoint):
-        if endpoint.get('interface') == 'public':
-            return endpoint['url']
-        return endpoint.get('publicURL')
-
-    def _get_auth_from_token(self, token):
-        auth_url = None
-        auth_token = token.unscoped_token
-
-        if self.endpoints:
-            auth_url = self.endpoints.get("identity", None)
-        else:
-            LOG.exception("Identity Service discovery failed.")
-
-        self.token = auth_plugin.Token(token=auth_token,
-                                       project_name=self.user.token.project["name"],
-                                       auth_url=auth_url)
-
-        return (auth_url, auth_token)
 
     def _build_server(self, instance):
         retval = {}
@@ -140,8 +83,8 @@ class InstanceManager(object):
         return self._nova_api.servers.list(detailed, search_opts, marker, limit,
                                            sort_keys, sort_dirs)
 
-    def create_instance(self, request, context):
-        return self._create_instance(request, context)
+    def create_instance(self, context):
+        return self._create_instance(context)
 
     def _build_a10_appliance_record(self, instance, image, appliance, ip):
         """Build an a10_appliances_db record from Nova instance/image"""
@@ -149,7 +92,7 @@ class InstanceManager(object):
 
         imgprops = json.loads(image.metadata["properties"])
 
-        rv = {
+        a10_appliance = {
             "tenant_id": self.tenant_id,
             "name": appliance["name"],
             # TODO(mdurrant): not sure this is populated
@@ -163,7 +106,7 @@ class InstanceManager(object):
             "port": imgprops["port"]
         }
 
-        return rv
+        return {'a10_appliance': a10_appliance}
 
     def _get_ip_addresses_from_instance(self, addresses):
         rv = ""
@@ -176,15 +119,15 @@ class InstanceManager(object):
                     rv = addresses[0]
         return rv
 
-    def _create_instance(self, request, context):
+    def _create_instance(self, context):
         server = self._build_server(context)
         image_id = context.get("image", None)
         flavor_id = context.get("flavor", None)
         net_ids = context.get("networks")
-        image = self.get_image(request, identifier=image_id)
-        flavor = self.get_flavor(request, identifier=flavor_id)
+        image = self.get_image(identifier=image_id)
+        flavor = self.get_flavor(identifier=flavor_id)
 
-        networks = self.get_networks(request, net_ids)
+        networks = self.get_networks(net_ids)
         if image is None:
             raise a10_ex.ImageNotFoundError(MISSING_ERR_FORMAT.format("Image", image_id))
 
@@ -210,7 +153,7 @@ class InstanceManager(object):
         a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
 
         # TODO(mdurrant): Do something with the result of this call, like validation.
-        self._a10_api.create_a10_appliance(request, **a10_record)
+        self._neutron_api.create_a10_appliance(a10_record)
         return created_instance
 
     def _create_server_spinlock(self, created_instance):
@@ -234,7 +177,7 @@ class InstanceManager(object):
     def get_instance(self, instance):
         return self._nova_api.servers.get(instance)
 
-    def get_flavor(self, context, identifier=None):
+    def get_flavor(self, identifier=None):
         result = None
         if identifier is None:
             raise a10_ex.IdentifierUnspecifiedError(
@@ -249,7 +192,7 @@ class InstanceManager(object):
             result = filtered[0]
         return result
 
-    def get_image(self, context, identifier=None):
+    def get_image(self, identifier=None):
         result = None
         images = []
         if identifier is None:
@@ -277,7 +220,7 @@ class InstanceManager(object):
         LOG.exception(ex_msg)
         raise a10_ex.NetworksNotFoundError(ex_msg)
 
-    def get_networks(self, context, networks=[]):
+    def get_networks(self, networks=[]):
         network_list = {"networks": []}
         net_list = []
 
