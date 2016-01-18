@@ -35,3 +35,7 @@ class IdentifierUnspecifiedError(Exception):
 
 class ServiceUnavailableError(Exception):
     pass
+
+
+class FeatureNotConfiguredError(Exception):
+    pass
