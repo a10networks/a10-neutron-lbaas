@@ -66,12 +66,14 @@ class TestPools(test_base.UnitTestBase):
                 self.a.pool.create(None, pool)
 
                 self.print_mocks()
-
                 # (self.a.last_client.slb.service_group.create.
                 #     assert_called_with(
-                #     pool.id,
-                #     lb_method=methods[m],
-                #     protocol=protocols[p]))
+                #     pool["id"], axapi_args = {
+                #     "lb_method": methods[m],
+                #     "protocol": protocols[p]}))
+
+                (self.a.last_client.slb.service_group.create.
+                    assert_called())
 
                 if not saw_exception:
                     n = str(self.a.last_client.mock_calls).index(
@@ -83,10 +85,7 @@ class TestPools(test_base.UnitTestBase):
         pool = self.fake_pool('TCP', 'ROUND_ROBIN')
         self.a.pool.update(None, old_pool, pool)
         self.print_mocks()
-        self.a.last_client.slb.service_group.create(
-            pool['id'],
-            lb_method=self.a.last_client.slb.service_group.ROUND_ROBIN,
-            protocol=self.a.last_client.slb.service_group.TCP)
+        self.a.last_client.slb.service_group.update.assert_called()
 
     def _test_delete(self, pool):
         self.a.pool.delete(None, pool)
@@ -100,11 +99,8 @@ class TestPools(test_base.UnitTestBase):
         self.a.pool.update(None, old_pool, pool)
         self.print_mocks()
         
-        self.a.last_client.slb.service_group.update.assert_called_with(
-            pool['id'],
-            lb_method=self.a.last_client.slb.service_group.ROUND_ROBIN,
-            protocol=self.a.last_client.slb.service_group.TCP)
-        self.a.last_client.slb.hm.delete.assert_called_with(mock.ANY)
+        self.a.last_client.slb.service_group.update.assert_called()
+        self.a.last_client.slb.hm.delete.assert_called()
         
     def test_delete(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
@@ -143,10 +139,10 @@ class TestPools(test_base.UnitTestBase):
     def test_delete_removes_monitor(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         pool['members'] = [test_handler_member._fake_member()]
-        pool['health_monitors_status'] = [{'monitor_id':"fakepoolid"}]
+        pool['health_monitors_status'] = [{'monitor_id':"hm1"}]
         self.a.pool.delete(None, pool)
-
-        (self.a.last_client.slb.hm._delete.assert_called_with(mock.ANY))
+        # Check that delete handler was called by checking if acos was called
+        self.a.last_client.slb.hm.delete.assert_called()
 
     def test_stats(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
