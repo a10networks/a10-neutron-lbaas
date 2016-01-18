@@ -93,14 +93,15 @@ class TestPools(test_base.UnitTestBase):
 
     def test_update_remove_monitor(self):
         old_pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
-        old_pool['health_monitors_status'] = [{'monitor_id': 'hm1'}]
+        fake_mon = {'monitor_id': 'hm1'}
+        old_pool['health_monitors_status'] = [fake_mon]
         pool = self.fake_pool('TCP', 'ROUND_ROBIN')
         pool['health_monitors_status'] = []
         self.a.pool.update(None, old_pool, pool)
         self.print_mocks()
         
         self.a.last_client.slb.service_group.update.assert_called()
-        self.a.last_client.slb.hm.delete.assert_called()
+        self.a.last_client.slb.hm.delete.assert_called(self.a.hm._name(fake_mon))
         
     def test_delete(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
