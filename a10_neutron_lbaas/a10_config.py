@@ -47,6 +47,11 @@ class A10Config(object):
         "protected": False
     }
 
+    INSTANCE_DEFAULTS = {
+        "flavor": "m1.medium",
+        "networks": ["public"]
+    }
+
     def device_defaults(self, device_config):
         device = self.DEVICE_DEFAULTS.copy()
         device.update(device_config)
@@ -89,6 +94,9 @@ class A10Config(object):
 
             self.image_defaults = self.IMAGE_DEFAULTS.copy()
             self.image_defaults.update(getattr(self.config, "image_defaults", {}))
+
+            self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
+            self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
         finally:
             sys.path = real_sys_path
 

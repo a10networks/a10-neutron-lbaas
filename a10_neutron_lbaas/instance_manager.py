@@ -20,6 +20,7 @@ import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import time
 
+import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -62,7 +63,7 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 class InstanceManager(object):
     def __init__(self, tenant_id, session=None,
-                 nova_api=None, glance_api=None, neutron_api=None):
+                 nova_api=None, glance_api=None, neutron_api=None, config=None):
         self.tenant_id = tenant_id
 
         self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
@@ -70,6 +71,8 @@ class InstanceManager(object):
         self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
 
         self._glance_api = glance_api or glance_client.Client(GLANCE_VERSION, session=session)
+
+        self._config = config or a10_config.A10Config()
 
     def _build_server(self, instance):
         retval = {}
@@ -84,7 +87,11 @@ class InstanceManager(object):
                                            sort_keys, sort_dirs)
 
     def create_instance(self, context):
-        return self._create_instance(context)
+        a10_record = self._create_instance(context)
+
+        # TODO(mdurrant): Do something with the result of this call, like validation.
+        self._neutron_api.create_a10_appliance(a10_record)
+        return a10_record
 
     def _build_a10_appliance_record(self, instance, image, appliance, ip):
         """Build an a10_appliances_db record from Nova instance/image"""
@@ -152,9 +159,7 @@ class InstanceManager(object):
         ip_address = self._get_ip_addresses_from_instance(created_instance.addresses)
         a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
 
-        # TODO(mdurrant): Do something with the result of this call, like validation.
-        self._neutron_api.create_a10_appliance(a10_record)
-        return created_instance
+        return a10_record
 
     def _create_server_spinlock(self, created_instance):
         created_id = created_instance.id
@@ -247,3 +252,45 @@ class InstanceManager(object):
             self._handle_missing_networks(missing_networks)
 
         return [id_func(available_networks[x]) for x in networks]
+
+    def _default_instance(self):
+        # Get all the a10 images
+        image_filter = {
+            "tag": ["a10"]
+        }
+        try:
+            images = self._glance_api.images.list(filters=image_filter)
+        except Exception as ex:
+            raise a10_ex.ImageNotFoundError(
+                "Unable to retrieve images from glance.  Error %s" % (ex))
+
+        if images is None or len(images) < 1:
+            raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured images")
+
+        # Pick an image, any image
+        image_id = images[0].id
+
+        # Get the flavor from config
+        flavor = self._config.instance_defaults.get('flavor')
+
+        if flavor is None:
+            raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured flavor")
+
+        networks = self._config.instance_defaults.get('networks')
+
+        if networks is None or len(networks) < 1:
+            raise a10_ex.FeatureNotConfiguredError(
+                "Launching instance requires configured networks")
+
+        return {
+            'image': image_id,
+            'flavor': flavor,
+            'networks': networks
+        }
+
+    def create_default_instance(self):
+        """Create the default instance for this tenant
+        """
+        instance_configuration = self._default_instance()
+
+        return self.create_instance(instance_configuration)

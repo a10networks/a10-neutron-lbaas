@@ -16,8 +16,11 @@ import abc
 import six
 
 import acos_client
+from keystoneclient import session as keystone_session
 
+import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.db.models as models
+import a10_neutron_lbaas.instance_manager as a10_instance_manager
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -41,7 +44,7 @@ class DevicePerTenant(SchedulingHooks):
         tenant = db_operations.get_tenant_appliance(tenant_id)
         if tenant is None:
             # Assign this tenant to an appliance
-            devices = self.underlying_scheduler.select_devices(a10_context, device_list)
+            devices = self.underlying_scheduler.select_devices(a10_context, device_list, **kwargs)
             device = next(devices.__iter__())
 
             # We need an appliance to save the a10 tenant appliance
@@ -65,23 +68,52 @@ class ExistingDevice(SchedulingHooks):
     """Uses an existing device. Prefers a device owned by the tenant"""
 
     def select_devices(self, a10_context, device_list, **kwargs):
+        if any(device_list):
+            tenant_id = a10_context.tenant_id
+
+            device_dict = dict([
+                (getattr(x.get('appliance'), 'id', None) or 'key-' + x.get('key'), x)
+                for x in device_list])
+            appliance_hash = acos_client.Hash(device_dict.keys())
+            key = appliance_hash.get_server(tenant_id)
+            return [device_dict[key]]
+
+        return []
+
+
+class TenantDevice(ExistingDevice):
+    """Uses an existing device owned by the tenant"""
+
+    def select_devices(self, a10_context, device_list, **kwargs):
         tenant_id = a10_context.tenant_id
         tenant_devices = filter(
             lambda x: getattr(x.get('appliance'), 'tenant_id', None) == tenant_id,
             device_list)
 
-        for devices in [tenant_devices, device_list]:
-            if any(devices):
-                device_dict = dict([
-                    (getattr(x.get('appliance'), 'id', None) or 'key-' + x.get('key'), x)
-                    for x in devices])
-                appliance_hash = acos_client.Hash(device_dict.keys())
-                key = appliance_hash.get_server(tenant_id)
-                return [device_dict[key]]
+        return super(TenantDevice, self).select_devices(a10_context, tenant_devices, **kwargs)
+
+
+class Fallback(SchedulingHooks):
+    """Falls back across multiple schedulers.
+    Only devices from a single scheduler are returned
+    """
+
+    def __init__(self, *underlying_schedulers):
+        self.underlying_schedulers = underlying_schedulers
+
+    def select_devices(self, a10_context, device_list, **kwargs):
+        for underlying_scheduler in self.underlying_schedulers:
+            any_devices = False
+            devices = underlying_scheduler.select_devices(a10_context, device_list, **kwargs)
+            for device in devices:
+                yield device
+                any_devices = True
+            if any_devices:
+                break
 
 
 def existing_device_per_tenant(a10_driver):
-    existing_device = ExistingDevice()
+    existing_device = Fallback(TenantDevice(), ExistingDevice())
     device_per_tenant = DevicePerTenant(existing_device)
     return device_per_tenant
 
@@ -107,3 +139,38 @@ def plumbing_hooks_device_per_tenant(plumbing_hooks):
         device_per_tenant = DevicePerTenant(plumbing_hooks_scheduler)
         return device_per_tenant
     return f
+
+
+class LaunchDevice(SchedulingHooks):
+    """Launches a default instance
+    """
+
+    def __init__(self, context_instance_manager=None):
+        self.context_instance_manager = context_instance_manager or self.tenant_instance_manager
+
+    def tenant_instance_manager(self, a10_context):
+        tenant_id = a10_context.tenant_id
+        auth_token = a10_context.openstack_context.auth_token
+        session = keystone_session.Session(auth=auth_token)
+
+        instance_manager = a10_instance_manager.InstanceManager(tenant_id, session=session)
+        return instance_manager
+
+    def select_devices(self, a10_context, device_list, **kwargs):
+        instance_manager = self.context_instance_manager(a10_context)
+
+        try:
+            device_config = instance_manager.create_default_instance()
+        except a10_ex.FeatureNotConfiguredError:
+            return []
+
+        appliance = a10_context.inventory.device_appliance(device_config)
+        device = appliance.device(a10_context)
+
+        return [device]
+
+
+def launch_device_per_tenant(a10_driver):
+    existing_device = Fallback(TenantDevice(), LaunchDevice(), ExistingDevice())
+    device_per_tenant = DevicePerTenant(existing_device)
+    return device_per_tenant
