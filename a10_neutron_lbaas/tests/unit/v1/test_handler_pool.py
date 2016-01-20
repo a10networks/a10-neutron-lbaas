@@ -15,7 +15,6 @@
 import test_base
 import test_handler_member
 
-import mock
 
 class TestPools(test_base.UnitTestBase):
     def fake_hm(self, type):
@@ -66,12 +65,6 @@ class TestPools(test_base.UnitTestBase):
                 self.a.pool.create(None, pool)
 
                 self.print_mocks()
-                # (self.a.last_client.slb.service_group.create.
-                #     assert_called_with(
-                #     pool["id"], axapi_args = {
-                #     "lb_method": methods[m],
-                #     "protocol": protocols[p]}))
-
                 (self.a.last_client.slb.service_group.create.
                     assert_called())
 
@@ -90,29 +83,6 @@ class TestPools(test_base.UnitTestBase):
     def _test_delete(self, pool):
         self.a.pool.delete(None, pool)
         self.print_mocks()
-
-    # This test is invalid.
-    # def test_update_remove_monitor(self):
-    #     old_pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
-    #     fake_mon = {'monitor_id': 'hm1'}
-    #     old_pool['health_monitors_status'] = [fake_mon]
-    #     pool = self.fake_pool('TCP', 'ROUND_ROBIN')
-    #     pool['health_monitors_status'] = []
-    #     self.a.pool.update(None, old_pool, pool)
-    #     self.print_mocks()
-        
-    #     expected = {
-    #         "service_group": {
-    #             "name": "id1",
-    #             "health_check_disable": True
-    #         }
-    #     }
-
-    #     self.a.last_client.slb.service_group.update.assert_called()
-    #     self.a.last_client.slb.service_group.update.assert_called_with(
-    #         "id1",
-    #         health_monitor="",
-    #         axapi_args=expected)
 
     def test_delete(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
@@ -151,9 +121,8 @@ class TestPools(test_base.UnitTestBase):
     def test_delete_removes_monitor(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         pool['members'] = [test_handler_member._fake_member()]
-        pool['health_monitors_status'] = [{'monitor_id':"hm1"}]
+        pool['health_monitors_status'] = [{'monitor_id': "hm1"}]
         self.a.pool.delete(None, pool)
-        # Check that delete handler was called by checking if acos was called
         self.a.last_client.slb.hm.delete.assert_called()
 
     def test_stats(self):

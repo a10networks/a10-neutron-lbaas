@@ -80,16 +80,14 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
 
     def dissociate(self, c, context, hm, pool_id):
         """Remove a pool association, and the healthmonitor if its the last one"""
-        
+
         self._dissociate(c, context, hm, pool_id)
         pools = hm.get("pools", [])
         if not any(p for p in pools if p.get("pool_id") != pool_id):
-            import pdb; pdb.set_trace
             self._delete_unused(c, context, hm)
 
     def _delete(self, c, context, hm):
         """Delete a healthmonitor and ALL its pool associations"""
-        import pdb; pdb.set_trace
         pools = hm.get("pools", [])
 
         for pool in pools:
@@ -99,7 +97,6 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
         self._delete_unused(c, context, hm)
 
     def _delete_unused(self, c, context, hm):
-        import pdb; pdb.set_trace
         try:
             c.client.slb.hm.delete(self._meta_name(hm))
         except acos_errors.InUse:
@@ -109,13 +106,12 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
             pass
 
     def delete(self, context, hm, pool_id):
-        import pdb; pdb.set_trace
         h = hm.copy()
         # Get the binding count to see if we need to perform disassociation
 
         h['pool_id'] = pool_id
         with a10.A10DeleteHMContext(self, context, h) as c:
-            
+
             if pool_id is None:
                 # Delete the whole healthmonitor
                 self._delete(c, context, hm)

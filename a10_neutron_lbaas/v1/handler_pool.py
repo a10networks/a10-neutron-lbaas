@@ -48,17 +48,6 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
         with a10.A10WriteStatusContext(self, context, pool) as c:
             self._set(c.client.slb.service_group.update,
                       c, context, pool)
-            
-            # old_monitors = set(map(id_func, old_pool.get("health_monitors_status", [])))
-            # monitors = set(map(id_func, pool.get("health_monitors_status", [])))
-            # delete_ids = old_monitors - monitors
-
-            # # Is this the same new pool?
-            # if (old_pool.get("id") == pool.get("id") and
-            #     len(monitors_for_delete) > 0):
-            #     for i in delete_ids:
-            #         m = filter(lambda x: x.get("monitor_id") == i, pool.get("health_monitors_status". []))
-            #         self.a10_driver.hm.dissociate(c, context, m, pool.get("id"))
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:

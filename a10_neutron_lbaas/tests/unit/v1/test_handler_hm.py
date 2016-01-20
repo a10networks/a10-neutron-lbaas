@@ -13,8 +13,6 @@
 #    under the License.
 
 
-import mock
-
 import test_base
 
 
@@ -127,7 +125,8 @@ class TestHM(test_base.UnitTestBase):
         fake_hm['tenant_id'] = "tenv1"
 
         self.a.hm.dissociate(self.a.last_client, None, fake_hm, fake_pool.id)
-        self.a.last_client.slb.service_group.update.assert_called(fake_pool.id, health_monitor="", health_check_disable=True)
+        self.a.last_client.slb.service_group.update.assert_called(
+            fake_pool.id, health_monitor="", health_check_disable=True)
 
     def test_dissociate_calls_hm_delete(self):
         fake_pool = test_base.FakePool()
