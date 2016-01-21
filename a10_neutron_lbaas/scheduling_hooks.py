@@ -16,8 +16,8 @@ import abc
 import six
 
 import acos_client
-from keystoneclient import session as keystone_session
 from keystoneclient.auth.identity import generic as auth_plugin
+from keystoneclient import session as keystone_session
 from oslo_config import cfg
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex

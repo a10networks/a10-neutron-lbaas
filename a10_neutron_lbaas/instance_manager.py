@@ -252,7 +252,8 @@ class InstanceManager(object):
         available_networks = dict((id_func(x), x) for x in net_list)
         networks_by_name = dict((x.get("name"), x) for x in net_list)
 
-        missing_networks = [x for x in networks if x not in available_networks and x not in networks_by_name]
+        missing_networks = [x for x in networks if x not in available_networks
+                            and x not in networks_by_name]
 
         if any(missing_networks):
             self._handle_missing_networks(missing_networks)
