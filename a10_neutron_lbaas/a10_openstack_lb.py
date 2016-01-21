@@ -76,7 +76,7 @@ class A10OpenstackLBBase(object):
 
         if scheduling_hooks_class is None:
             scheduling_hooks_class = (
-                scheduling_hooks.existing_device_per_tenant
+                scheduling_hooks.launch_device_per_tenant
                 if plumbing_hooks_class is None else
                 scheduling_hooks.plumbing_hooks_device_per_tenant(plumbing_hooks)
             )
