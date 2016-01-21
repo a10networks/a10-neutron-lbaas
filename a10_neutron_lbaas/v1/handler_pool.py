@@ -43,6 +43,8 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
                 pass
 
     def update(self, context, old_pool, pool):
+        # id_func = lambda x: x.get("monitor_id")
+
         with a10.A10WriteStatusContext(self, context, pool) as c:
             self._set(c.client.slb.service_group.update,
                       c, context, pool)
@@ -55,7 +57,7 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
                 m = self.neutron.member_get(context, member)
                 self.a10_driver.member._delete(c, context, m)
 
-            for hm in pool['health_monitors_status']:
+            for hm in pool.get('health_monitors_status', []):
                 z = self.neutron.hm_get(context, hm['monitor_id'])
                 self.a10_driver.hm.dissociate(c, context, z, pool_id)
 
