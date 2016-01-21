@@ -76,7 +76,7 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.servers = mock.Mock()
         self.fake_image = self._fake_image()
         self.fake_flavor = self._fake_flavor()
-        self.fake_networks = {"networks": [{"id": "net01"}]}
+        self.fake_networks = {"networks": [{"id": "net01", "name": "network1"}]}
 
         self.fake_instance = self._fake_instance(name="fake-instance-01",
                                                  image=self.fake_image.id,
@@ -238,4 +238,4 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.neutron_api.list_networks.return_value = {"networks": []}
 
         with self.assertRaises(a10_ex.NetworksNotFoundError):
-            self.target.get_networks(networks=[{"network"}])
+            self.target.get_networks(networks=["network"])
