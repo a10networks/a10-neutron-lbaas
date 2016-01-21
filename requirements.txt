@@ -1,1 +1,5 @@
 acos_client>=1.2.6
+python-glanceclient>=1.1.0
+python-keystoneclient==1.8.1
+python-novaclient>=2.34.0
+python-neutronclient>=3.1.0

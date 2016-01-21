@@ -18,7 +18,9 @@ import a10_config
 import acos_client
 import db.operations as operations
 import inventory
+import network_hooks
 import plumbing_hooks as hooks
+import scheduling_hooks
 import v1.handler_hm
 import v1.handler_member
 import v1.handler_pool
@@ -44,11 +46,14 @@ LOG = logging.getLogger(__name__)
 class A10OpenstackLBBase(object):
 
     def __init__(self, openstack_driver,
-                 plumbing_hooks_class=hooks.PlumbingHooks,
+                 plumbing_hooks_class=None,
                  neutron_hooks_module=None,
                  barbican_client=None,
                  db_operations_class=operations.Operations,
-                 inventory_class=inventory.InventoryBase):
+                 inventory_class=inventory.InventoryBase,
+                 scheduling_hooks_class=None,
+                 network_hooks_class=None
+                 ):
         self.openstack_driver = openstack_driver
         self.config = a10_config.A10Config()
         self.neutron = neutron_hooks_module
@@ -62,10 +67,32 @@ class A10OpenstackLBBase(object):
         if self.config.verify_appliances:
             self._verify_appliances()
 
-        self.hooks = plumbing_hooks_class(self)
+        if plumbing_hooks_class is not None:
+            plumbing_hooks = plumbing_hooks_class(self)
+            self._plumbing_hooks = plumbing_hooks
+        else:
+            # _plumbing_hooks is used by the migrations to reach the old behaviour
+            self._plumbing_hooks = hooks.PlumbingHooks(self)
 
-    def _select_a10_device(self, tenant_id):
-        return self.hooks.select_device(tenant_id)
+        if scheduling_hooks_class is None:
+            scheduling_hooks_class = (
+                # TODO(mdurrant) - Change this back to launch_device_per_tenant
+                # scheduling_hooks.launch_device_per_tenant
+                scheduling_hooks.existing_device_per_tenant
+                if plumbing_hooks_class is None else
+                scheduling_hooks.plumbing_hooks_device_per_tenant(plumbing_hooks)
+            )
+        self.scheduling_hooks = scheduling_hooks_class(self)
+
+        if network_hooks_class is None:
+            network_hooks_class = (
+                network_hooks.DefaultNetworkHooks
+                if plumbing_hooks_class is None else
+                network_hooks.plumbing_network_hooks(plumbing_hooks)
+            )
+        self.network_hooks = network_hooks_class(self)
+
+        self.hooks = self.network_hooks
 
     def _get_a10_client(self, device_info):
         d = device_info

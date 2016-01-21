@@ -18,6 +18,7 @@ import itertools
 import os
 
 import a10_neutron_lbaas.db.migration.mocks as mocks
+import a10_neutron_lbaas.localization as localization
 from alembic import command as alembic_command
 from alembic import config as alembic_config
 from alembic import migration as alembic_migration
@@ -33,11 +34,7 @@ import neutron_lbaas.services.loadbalancer.plugin as neutron_lbaas_plugin
 SCRIPT_LOCATION = 'a10_neutron_lbaas.db.migration:alembic_migrations'
 
 # Neutron is finicky. Sometimes _ is defined, sometimes it isn't
-try:
-    _
-except NameError:
-    _ = lambda x: x
-
+localization.install()
 
 _db_opts = [
     cfg.StrOpt('connection',

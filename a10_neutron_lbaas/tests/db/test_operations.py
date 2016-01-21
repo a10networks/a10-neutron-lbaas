@@ -49,6 +49,43 @@ class TestOperations(test_base.UnitTestBase):
 
         self.assertNotEqual(appliance1.id, appliance2.id)
 
+    def test_get_shared_appliances_configured(self):
+        operations = self.operations()
+        appliance = operations.summon_appliance_configured('fake-device-key')
+        shared = operations.get_shared_appliances('fake-tenant')
+
+        self.assertEqual([appliance], shared)
+
+    def test_get_shared_appliances_db_same_tenant(self):
+        operations = self.operations()
+        appliance = models.default(models.A10ApplianceDB,
+                                   tenant_id='fake-tenant',
+                                   host='fake-host',
+                                   api_version='fake-version',
+                                   username='fake-username',
+                                   password='fake-password',
+                                   protocol='fake-protocol',
+                                   port=1234)
+        operations.add(appliance)
+        shared = operations.get_shared_appliances('fake-tenant')
+
+        self.assertEqual([appliance], shared)
+
+    def test_get_shared_appliances_db_other_tenant(self):
+        operations = self.operations()
+        appliance = models.default(models.A10ApplianceDB,
+                                   tenant_id='other-tenant',
+                                   host='fake-host',
+                                   api_version='fake-version',
+                                   username='fake-username',
+                                   password='fake-password',
+                                   protocol='fake-protocol',
+                                   port=1234)
+        operations.add(appliance)
+        shared = operations.get_shared_appliances('fake-tenant')
+
+        self.assertEqual([], shared)
+
     def test_delete_slb_v1_deletes_slb(self):
         slb = models.default(
             models.A10SLBV1,

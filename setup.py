@@ -27,7 +27,12 @@ setup(
     ],
 
     entry_points = {
-        'console_scripts': ['a10-neutron-lbaas-db-manage=a10_neutron_lbaas.db.migration.cli:main']
+        'console_scripts': [
+            'a10-neutron-lbaas-db-manage=a10_neutron_lbaas.db.migration.cli:main'
+        ],
+        'neutronclient.extension': [
+            'a10_appliance=a10_neutron_lbaas_client.a10_appliance'
+        ]
     },
 
     install_requires = ['acos-client>=1.2.6']

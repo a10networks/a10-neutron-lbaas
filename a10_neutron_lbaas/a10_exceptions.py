@@ -15,3 +15,27 @@
 
 class UnsupportedFeature(Exception):
     pass
+
+
+class ImageNotFoundError(Exception):
+    pass
+
+
+class FlavorNotFoundError(Exception):
+    pass
+
+
+class NetworksNotFoundError(Exception):
+    pass
+
+
+class IdentifierUnspecifiedError(Exception):
+    pass
+
+
+class ServiceUnavailableError(Exception):
+    pass
+
+
+class FeatureNotConfiguredError(Exception):
+    pass

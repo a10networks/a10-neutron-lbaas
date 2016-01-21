@@ -61,7 +61,7 @@ def initialize_a10_tenant_appliance(conn, a10, tenant_ids):
 
     for tenant_id in tenant_ids:
         if tenant_id not in tenant_appliance_lookup:
-            device = a10.hooks.select_device(tenant_id)
+            device = a10._plumbing_hooks.select_device(tenant_id)
             appliance_id = appliance_lookup[device['key']]
 
             insert_tenant_appliance = a10_tenant_appliance.insert().\
