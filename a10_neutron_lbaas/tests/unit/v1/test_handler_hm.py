@@ -114,4 +114,28 @@ class TestHM(test_base.UnitTestBase):
         self.a.hm.delete(None, fakehm, 'p01')
 
         self.a.last_client.slb.service_group.update.assert_called_with(
-            pool_name, health_monitor='', health_monitor_disabled=True)
+            pool_name, health_monitor='', health_check_disable=True)
+
+    def test_dissociate_calls_service_group_update(self):
+        fake_pool = test_base.FakePool()
+        fake_hm = test_base.FakeHM()
+        fake_hm["id"] = "id1"
+        fake_hm["pools"] = []
+        fake_hm["pools"].append(fake_pool)
+        fake_hm['tenant_id'] = "tenv1"
+
+        self.a.hm.dissociate(self.a.last_client, None, fake_hm, fake_pool.id)
+        self.a.last_client.slb.service_group.update.assert_called(
+            fake_pool.id, health_monitor="", health_check_disable=True)
+
+    def test_dissociate_calls_hm_delete(self):
+        fake_pool = test_base.FakePool()
+        fake_hm = test_base.FakeHM()
+        fake_pool["health_monitor_status"] = [{"monitor_id": fake_hm.id}]
+        fake_hm["id"] = "id1"
+        fake_hm["pools"] = []
+        fake_hm["pools"].append(fake_pool)
+        fake_hm['tenant_id'] = "tenv1"
+
+        self.a.hm.dissociate(self.a.last_client, None, fake_hm, fake_pool.id)
+        self.a.last_client.hm.service_group.delete.assert_called(self.a.hm._meta_name(fake_hm))
