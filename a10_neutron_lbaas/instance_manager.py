@@ -19,6 +19,7 @@ import glanceclient.client as glance_client
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import time
+import uuid
 
 import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -78,6 +79,8 @@ class InstanceManager(object):
         retval = {}
         for k in _default_server:
             retval[k] = instance.get(k, _default_server[k])
+
+        retval['name'] = retval['name'] or 'a10-' + str(uuid.uuid4())
 
         return retval
 
