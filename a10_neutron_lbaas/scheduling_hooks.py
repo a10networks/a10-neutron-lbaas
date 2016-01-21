@@ -17,6 +17,8 @@ import six
 
 import acos_client
 from keystoneclient import session as keystone_session
+from keystoneclient.auth.identity import generic as auth_plugin
+from oslo_config import cfg
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.db.models as models
@@ -151,7 +153,13 @@ class LaunchDevice(SchedulingHooks):
     def tenant_instance_manager(self, a10_context):
         tenant_id = a10_context.tenant_id
         auth_token = a10_context.openstack_context.auth_token
-        session = keystone_session.Session(auth=auth_token)
+
+        auth_url = cfg.CONF.keystone_authtoken.auth_uri
+
+        token = auth_plugin.Token(token=auth_token,
+                                  tenant_id=tenant_id,
+                                  auth_url=auth_url)
+        session = keystone_session.Session(auth=token)
 
         instance_manager = a10_instance_manager.InstanceManager(tenant_id, session=session)
         return instance_manager

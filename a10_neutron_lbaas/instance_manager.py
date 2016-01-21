@@ -31,7 +31,7 @@ LOG = logging.getLogger(__name__)
 CREATE_TIMEOUT = 30
 
 # TODO(mdurrant) - These may need to go into a configuration file.
-GLANCE_VERSION = 1
+GLANCE_VERSION = 2
 KEYSTONE_VERSION = "2.0"
 NOVA_VERSION = "2.1"
 NEUTRON_VERSION = "2.0"
@@ -241,6 +241,7 @@ class InstanceManager(object):
             LOG.exception(
                 "Unable to retrieve networks from neutron.\nError %s" % (ex))
 
+        # TODO(mdurrant-jk-cshock) - Look up networks by name too
         id_func = (lambda x: x.get("net-id",
                    x.get("uuid", x.get("id", None))) if x is not None else None)
 
@@ -258,8 +259,9 @@ class InstanceManager(object):
         image_filter = {
             "tag": ["a10"]
         }
+
         try:
-            images = self._glance_api.images.list(filters=image_filter)
+            images = list(self._glance_api.images.list(filters=image_filter))
         except Exception as ex:
             raise a10_ex.ImageNotFoundError(
                 "Unable to retrieve images from glance.  Error %s" % (ex))
