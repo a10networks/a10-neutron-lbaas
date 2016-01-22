@@ -93,7 +93,7 @@ class InstanceManager(object):
         a10_record = self._create_instance(context)
 
         # TODO(mdurrant): Do something with the result of this call, like validation.
-        self._neutron_api.create_a10_appliance(a10_record)
+        self._neutron_api.create_a10_appliance({'a10_appliance': a10_record})
         return a10_record
 
     def _build_a10_appliance_record(self, instance, image, appliance, ip):
@@ -116,7 +116,7 @@ class InstanceManager(object):
             "port": imgprops["port"]
         }
 
-        return {'a10_appliance': a10_appliance}
+        return a10_appliance
 
     def _get_ip_addresses_from_instance(self, addresses):
         rv = ""

@@ -21,7 +21,6 @@ import mocks
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
-
 # Figure out why this is necessary to make the mock work correctly.
 
 log_mock = mock.MagicMock()
@@ -135,11 +134,13 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.servers.get = mock.Mock(return_value=self.fake_created)
 
         self.nova_api.flavors = mock.Mock()
-
         self.nova_api.flavors.list = mock.Mock(return_value=[self._fake_flavor()])
-        self.nova_api.images = mock.Mock()
 
+        self.nova_api.images = mock.Mock()
         self.nova_api.images.list = mock.Mock(return_value=[self._fake_image()])
+
+        self.glance_api.images.list.return_value=[self._fake_image()]
+
         self.neutron_api.list_networks = mock.Mock(return_value=self.fake_networks)
 
         self.neutron_api.get_a10_instances = mock.Mock(return_value=[{}])
@@ -269,3 +270,19 @@ class TestInstanceManager(test_base.UnitTestBase):
 
         with self.assertRaises(a10_ex.NetworksNotFoundError):
             self.target.get_networks(networks=["network"])
+
+    def test_create_default_instance_returns_host(self):
+
+        self.nova_api.flavors.list.return_value = [self._fake_flavor(
+            name=self.target._config.instance_defaults['flavor'])]
+
+        self.neutron_api.list_networks.return_value = {
+            "networks": [{"id": x, "name": x}
+                         for x in self.target._config.instance_defaults['networks']]
+        }
+
+        device = self.target.create_default_instance()
+
+        expected_host = self.fake_created.addresses['public'][0]['addr']
+
+        self.assertEqual(expected_host, device['host'])
