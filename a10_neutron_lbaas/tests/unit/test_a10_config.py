@@ -62,3 +62,6 @@ class TestA10Config(test_base.UnitTestBase):
                     "min_ram", "container_format", "protected",
                     "properties", "disk_format"]
         self.assertListEqual(sorted(expected), sorted(actual))
+
+    def test_instance_defaults(self):
+        self.assertIsNotNone(self.a.config.instance_defaults)
