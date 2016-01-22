@@ -168,16 +168,35 @@ class InstanceManager(object):
         created_id = created_instance.id
 
         timeout = False
-        start_time = time.clock()
+        start_time = time.time()
+        sleep_time = 0.25
+        
+        pending_statuses = ["INITALIZED"]
+        active_statuses = ["ACTIVE"]
+        fatal_statuses = ["ERROR",
+                          "SOFT_DELETED",
+                          "HARD_DELETED",
+                          "STOPPED",
+                          "PAUSED"]
+
         while not timeout:
             created_instance = self._nova_api.servers.get(created_id)
-            if created_instance.id == created_id and len(created_instance.addresses) > 0:
+            vm_state = getattr(created_instance, "OS-EXT-STS:vm_state").upper()
+            end_time = time.time()
+            if ((created_instance.id == created_id and len(created_instance.addresses) > 0 
+                and vm_state in active_statuses)):
                 timeout = True
                 break
-
-            end_time = time.clock()
-            if end_time - start_time > CREATE_TIMEOUT:
+            elif vm_state in fatal_statuses:
+                raise Exception("Instance created in error state %s" % (vm_state))
+                break
+            elif end_time - start_time > CREATE_TIMEOUT:
                 timeout = True
+                # TODO(mdurrant) - Specific exception
+                raise Exception("Timed out creating instance.")
+                break
+            else:
+                time.sleep(sleep_time)
 
     def delete_instance(self, instance_id):
         return self._nova_api.servers.delete(instance_id)
@@ -231,7 +250,6 @@ class InstanceManager(object):
     def get_networks(self, networks=[]):
         network_list = {"networks": []}
         net_list = []
-        networks_by_name = {}
 
         if networks is None or len(networks) < 1:
             raise a10_ex.IdentifierUnspecifiedError(
@@ -247,13 +265,15 @@ class InstanceManager(object):
 
         # TODO(mdurrant-jk-cshock) - Look up networks by name too
         id_func = (lambda x: x.get("net-id",
-                   x.get("uuid", x.get("id", None))) if x is not None else None)
+                   x.get("uuid", x.get("id"))) if x is not None else None)
 
-        available_networks = dict((id_func(x), x) for x in net_list)
+        
+        networks_by_id = dict((id_func(x), x) for x in net_list)
         networks_by_name = dict((x.get("name"), x) for x in net_list)
+        available_networks = networks_by_name.copy()
+        available_networks.update(networks_by_id)
 
-        missing_networks = [x for x in networks if x not in available_networks
-                            and x not in networks_by_name]
+        missing_networks = [x for x in networks if x not in available_networks.keys()]
 
         if any(missing_networks):
             self._handle_missing_networks(missing_networks)

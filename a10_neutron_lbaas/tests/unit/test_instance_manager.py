@@ -48,7 +48,7 @@ class TestInstanceManager(test_base.UnitTestBase):
         log_mock.reset_mock()
         super(TestInstanceManager, self).setUp()
 
-        im.CREATE_TIMEOUT = 0.1
+        im.CREATE_TIMEOUT = 1
 
         glance_patch = mock.patch("glanceclient.client")
         self.glance_api = glance_patch.start()
@@ -90,6 +90,8 @@ class TestInstanceManager(test_base.UnitTestBase):
             }
         ]})
 
+        setattr(self.fake_created, "OS-EXT-STS", "ACTIVE")
+
         self.service_catalog = [{
             "name": "keystone",
             "type": "identity",
@@ -105,6 +107,7 @@ class TestInstanceManager(test_base.UnitTestBase):
 
         self.nova_api.servers.list = mock.Mock(return_value=[self._fake_instance()])
         self.nova_api.servers.create = mock.Mock(return_value=self.fake_created)
+        self.nova_api.servers.get = mock.Mock(return_value=self.fake_created)
         self.nova_api.flavors = mock.Mock()
 
         self.nova_api.flavors.list = mock.Mock(return_value=[self._fake_flavor()])
