@@ -29,7 +29,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 LOG = logging.getLogger(__name__)
 
-CREATE_TIMEOUT = 30
+CREATE_TIMEOUT = 60
 
 # TODO(mdurrant) - These may need to go into a configuration file.
 GLANCE_VERSION = 2
@@ -166,7 +166,6 @@ class InstanceManager(object):
 
     def _create_server_spinlock(self, created_instance):
         created_id = created_instance.id
-
         timeout = False
         start_time = time.time()
         sleep_time = 0.25
@@ -180,23 +179,25 @@ class InstanceManager(object):
                           "PAUSED"]
 
         while not timeout:
-            created_instance = self._nova_api.servers.get(created_id)
-            vm_state = getattr(created_instance, "OS-EXT-STS:vm_state").upper()
+            get_instance = self._nova_api.servers.get(created_id)
+            vm_state = getattr(get_instance, "OS-EXT-STS:vm_state").upper()
             end_time = time.time()
-            if ((created_instance.id == created_id and len(created_instance.addresses) > 0 
+            if ((get_instance.id == created_id and len(get_instance.addresses) > 0 
                 and vm_state in active_statuses)):
                 timeout = True
                 break
             elif vm_state in fatal_statuses:
                 raise Exception("Instance created in error state %s" % (vm_state))
                 break
-            elif end_time - start_time > CREATE_TIMEOUT:
+            
+            if end_time - start_time > CREATE_TIMEOUT:
+                import pdb; pdb.set_trace()
                 timeout = True
                 # TODO(mdurrant) - Specific exception
                 raise Exception("Timed out creating instance.")
                 break
-            else:
-                time.sleep(sleep_time)
+            
+            time.sleep(sleep_time)
 
     def delete_instance(self, instance_id):
         return self._nova_api.servers.delete(instance_id)

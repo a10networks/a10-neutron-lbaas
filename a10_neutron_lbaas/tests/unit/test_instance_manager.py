@@ -12,11 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import mock
 import test_base
+import sys
 
 import mocks
-import sys
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
@@ -25,6 +26,8 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 log_mock = mock.MagicMock()
 
+# This is here because I couldn't get mock to actually mock the classes
+# Get rid of this and I'll give you a cookie - MD
 sys.modules["a10_neutron_lbaas_client"] = mock.MagicMock()
 sys.modules["glanceclient"] = mock.MagicMock()
 sys.modules["glanceclient.client"] = mock.MagicMock()
@@ -42,13 +45,21 @@ sys.modules["openstack_dashboard.api.neutron.NeutronAPIDictWrapper"] = mock.Magi
 
 import a10_neutron_lbaas.instance_manager as im
 
+VMSTATE_KEY = "OS-EXT-STS:vm_state"
+DEFAULT_INSTANCE_STATES = [
+    "INITALIZED",
+    "ACTIVE"
+]
+
+instance_states = []
+
 
 class TestInstanceManager(test_base.UnitTestBase):
     def setUp(self):
         log_mock.reset_mock()
         super(TestInstanceManager, self).setUp()
 
-        im.CREATE_TIMEOUT = 1
+        im.CREATE_TIMEOUT = 10
 
         glance_patch = mock.patch("glanceclient.client")
         self.glance_api = glance_patch.start()
@@ -65,13 +76,32 @@ class TestInstanceManager(test_base.UnitTestBase):
         nova_patch = mock.patch("novaclient.client.Client")
         self.nova_api = nova_patch.start()
         self.addCleanup(nova_patch.stop)
+        self.instance_states = ["ACTIVE",
+                                "ACTIVE"]
 
         self.setup_mocks()
 
         self.target = im.InstanceManager('fake-tenant-id', nova_api=self.nova_api,
                                          glance_api=self.glance_api, neutron_api=self.neutron_api)
 
+    def server_get_side_effect(self, args):
+        if len(instance_states) > 0:
+            vmstate = instance_states.pop()
+        else:
+            vmstate = "ACTIVE"
+        setattr(self.fake_created, VMSTATE_KEY, vmstate)
+
+
     def setup_mocks(self):
+        instance_states = copy.copy(DEFAULT_INSTANCE_STATES)
+        self.fake_created = mock.Mock(addresses={"public": [
+            {
+                "version": 4,
+                "addr": "127.0.0.1"
+            }
+        ]})
+        setattr(self.fake_created, VMSTATE_KEY, "ACTIVE")
+
         self.a10_context = mock.MagicMock()
         self.nova_api.servers = mock.Mock()
         self.fake_image = self._fake_image()
@@ -83,14 +113,9 @@ class TestInstanceManager(test_base.UnitTestBase):
                                                  flavor=self.fake_flavor.id,
                                                  nics=self.fake_networks.get("networks"))
 
-        self.fake_created = mock.Mock(addresses={"public": [
-            {
-                "version": 4,
-                "addr": "127.0.0.1"
-            }
-        ]})
+        
 
-        setattr(self.fake_created, "OS-EXT-STS", "ACTIVE")
+        
 
         self.service_catalog = [{
             "name": "keystone",
@@ -100,7 +125,7 @@ class TestInstanceManager(test_base.UnitTestBase):
                 "url": "http://localhost:5000"}]
         }]
 
-        project = {"id": "fakeid", "name": "Carl Adultman"}
+        project = {"id": "fakeid", "name": "Kevin Adultman"}
         self.token = mock.NonCallableMock(serviceCatalog=self.service_catalog, project=project)
         self.user = mock.NonCallableMock(token=self.token)
         self.request = mock.NonCallableMock(user=self.user)
@@ -108,6 +133,7 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.servers.list = mock.Mock(return_value=[self._fake_instance()])
         self.nova_api.servers.create = mock.Mock(return_value=self.fake_created)
         self.nova_api.servers.get = mock.Mock(return_value=self.fake_created)
+
         self.nova_api.flavors = mock.Mock()
 
         self.nova_api.flavors.list = mock.Mock(return_value=[self._fake_flavor()])
@@ -149,16 +175,17 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.assertTrue(self.nova_api.servers.create.called)
 
     def test_create_calls_nova_api_with_args(self):
-        fake_instance = self.fake_instance
-        self._test_create(fake_instance)
-        expected = fake_instance.copy()
-        expected["nics"] = [{'net-id': x} for x in fake_instance["networks"]]
+        #fake_instance = self._fake_instance()
+        self._test_create(self.fake_instance)
+        expected = self.fake_instance.copy()
+        expected["nics"] = [{'net-id': x} for x in self.fake_instance["networks"]]
         del expected["networks"]
 
         self.nova_api.servers.create.assert_called_with(**expected)
 
     def test_get_instance_gets_image_get(self):
         instance_id = "INSTANCE_ID"
+        self.nova_api.servers.get.side_effect = self.server_get_side_effect
         self.target.get_instance(instance_id)
         self.nova_api.flavors.list.assert_called()
 
