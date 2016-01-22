@@ -111,24 +111,7 @@ class TestInstanceManager(test_base.UnitTestBase):
                                                  image=self.fake_image.id,
                                                  flavor=self.fake_flavor.id,
                                                  nics=self.fake_networks.get("networks"))
-
-        
-
-        
-
-        self.service_catalog = [{
-            "name": "keystone",
-            "type": "identity",
-            "endpoints": [{
-                "interface": "public",
-                "url": "http://localhost:5000"}]
-        }]
-
-        project = {"id": "fakeid", "name": "Kevin Adultman"}
-        self.token = mock.NonCallableMock(serviceCatalog=self.service_catalog, project=project)
-        self.user = mock.NonCallableMock(token=self.token)
-        self.request = mock.NonCallableMock(user=self.user)
-
+  
         self.nova_api.servers.list = mock.Mock(return_value=[self._fake_instance()])
         self.nova_api.servers.create = mock.Mock(return_value=self.fake_created)
         self.nova_api.servers.get = mock.Mock(return_value=self.fake_created)
