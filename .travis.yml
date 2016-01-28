@@ -1,5 +1,6 @@
 language: python
 python: 2.7
+sudo: falsee
 env:
   - TOX_ENV=py27
   - TOX_ENV=pep8

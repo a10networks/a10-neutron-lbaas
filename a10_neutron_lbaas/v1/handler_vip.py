@@ -19,6 +19,8 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.a10_openstack_map as a10_os
 import a10_neutron_lbaas.db.models as models
 
+from neutron.db import db_base_plugin_v2
+
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
@@ -28,6 +30,9 @@ LOG = logging.getLogger(__name__)
 
 
 class VipHandler(handler_base_v1.HandlerBaseV1):
+    def __init__(self, a10_driver):
+        super(VipHandler, self).__init__(a10_driver)
+        self.neutrondb = neutron_db.NeutronDBV1(self.neutron)
 
     def vport_meta(self, vip):
         """Get the vport meta, no matter which name was used"""
@@ -41,6 +46,12 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             status = c.client.slb.UP
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
+
+            if c.openstack_driver.device_info["enable_host_binding"]:
+                hostname = c.device_cfg.get("name", c.device_cfg.get("host", None))
+                self.neutrondb.portbindingport_create_or_update(context,
+                                                                vip['port_id'],
+                                                                hostname)
 
             pool_name = self._pool_name(context, vip['pool_id'])
 
@@ -148,10 +159,9 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             self.hooks.after_vip_update(c, context, vip)
 
     def _delete(self, c, context, vip):
-        try:
-            c.client.slb.virtual_server.delete(self._meta_name(vip))
-        except acos_errors.NotFound:
-            pass
+        c.client.slb.virtual_server.delete(self._meta_name(vip))
+        if c.openstack_driver.device_info["enable_host_binding"]:
+            self.neutrondb.portbindingport_delete(context, vip["port_id"])
 
         PersistHandler(c, context, vip, self._meta_name(vip)).delete()
         c.db_operations.delete_slb_v1(vip['id'])

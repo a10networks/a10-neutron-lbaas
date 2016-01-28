@@ -10,45 +10,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.db import l3_db
-try:
-    from neutron.db import db_base_plugin_v2
-    from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
-    from neutron_lbaas.db.loadbalancer import models as lb_db
-except ImportError:
-    # v2 does not exist before Kilo
-    pass
+from neutron.db import db_base_plugin_v2
+from neutron.db.portbindings_db import PortBindingPort as PortBindingPort
 
 
-class NeutronOpsV2(object):
+class NeutronDBV1(object):
 
-    def __init__(self, handler):
-        self.openstack_driver = handler.openstack_driver
-        self.plugin = self.openstack_driver.plugin
+    # This class exposes the portbindingports table in the DB as neutron_ops
+    # doesn't provide direct access.
+
+    def __init__(self, neutron_ops=None):
         self.ndbplugin = db_base_plugin_v2.NeutronDbPluginV2()
+        self.neutron_ops = neutron_ops
 
-    def member_get_ip(self, context, member, use_float=False):
-        ip_address = member.address
-        if use_float:
-            fip_qry = context.session.query(l3_db.FloatingIP)
-            if (fip_qry.filter_by(fixed_ip_address=ip_address).count() > 0):
-                float_address = fip_qry.filter_by(
-                    fixed_ip_address=ip_address).first()
-                ip_address = str(float_address.floating_ip_address)
-        return ip_address
-
-    def member_count(self, context, member):
-        return context.session.query(lb_db.MemberV2).filter_by(
-            tenant_id=member.tenant_id,
-            address=member.address).count()
-
-    def loadbalancer_total(self, context, tenant_id):
-        return context.session.query(lb_db.LoadBalancer).filter_by(
-            tenant_id=tenant_id).count()
-
-    def pool_get(self, context, pool_id):
-        return self.plugin.db.get_pool(context, pool_id)
-
+    # This stuff should be moved into a DB class.
+    # Neutron does not expose creation of port/host bindings so it's gotta go somewhere
     def _get_portbindingport(self, context, port_id):
         with context.session.begin():
             port_binding = (context.session.query(PortBindingPort)
@@ -77,12 +53,6 @@ class NeutronOpsV2(object):
     def _get_port(self, context, port_id):
         return self.ndbplugin.get_port(context, port_id)
 
-    def _delete_portbinding(self, context, port_id):
-        with context.session.begin(subtransactions=True):
-            binding = self._get_portbindingport(context, port_id)
-            if binding:
-                context.session.delete(binding)
-
     def portbindingport_create_or_update(self, context, pool_id, host):
         return self._create_or_update_portbindingport(context, pool_id, host)
 
@@ -90,6 +60,3 @@ class NeutronOpsV2(object):
         vip = self.neutron_ops.vip_get(context, vip_id)
         port_id = vip.port_id
         return self._create_or_update_portbindingport(context, port_id, host)
-
-    def portbindingport_delete(self, context, port_id):
-        return self._delete_portbinding(port_id)

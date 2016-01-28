@@ -12,7 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 import a10_neutron_lbaas.tests.unit.test_base as test_base
+
+from mock import MagicMock
+from mock import Mock
 
 
 class FakeModel(object):
@@ -29,6 +33,7 @@ class FakeLoadBalancer(FakeModel):
         self.listeners = listeners
         self.vip_address = '5.5.5.5'
         self.admin_state_up = True
+
         self.vip_port = {"id": "vip-id-001", "tenant_id": "tenant_id", "name": "vip-id-001"}
         self.vip_port_id = self.vip_port["id"]
 
@@ -117,6 +122,18 @@ class UnitTestBase(test_base.UnitTestBase):
         super(UnitTestBase, self).__init__(*args)
         self.version = 'v2'
 
+    def setUp(self):
+        super(UnitTestBase, self).setUp()
+        self.context = self._get_context()
+        # self.neutrondb = MagicMock()
+
     def print_mocks(self):
         super(UnitTestBase, self).print_mocks()
         print("NEUTRON ", self.a.neutron.mock_calls)
+
+    def _get_context(self):
+        context = MagicMock()
+        context.session = MagicMock()
+        context.__enter__ = Mock(return_value=MagicMock())
+        context.__exit__ = Mock(return_value=False)
+        return context

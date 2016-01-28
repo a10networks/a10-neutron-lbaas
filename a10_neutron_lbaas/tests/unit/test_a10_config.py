@@ -16,16 +16,18 @@ import test_base
 
 
 class TestA10Config(test_base.UnitTestBase):
-
     def test_verify_appliances(self):
         self.assertTrue(self.a.config.verify_appliances)
 
+    # Is this test needed?  We're testing that Python
+    # returns the length of an array/the JSON is good.
+    # Is that not accomplished by verify_appliances?
     def test_num_appliances(self):
         # Everytime we update the test config, this test has to be updated
         # A better test would seem to be be parsing the JSON structure found in the file
         # and comparing that against what we get in devices.
         # This actually tests the number of devices with status == True
-        self.assertEqual(8, len(self.a.config.devices))
+        self.assertEqual(9, len(self.a.config.devices))
 
     def test_expected_ports(self):
         self.assertEqual(8443, self.a.config.devices['ax1']['port'])
@@ -51,3 +53,7 @@ class TestA10Config(test_base.UnitTestBase):
             if "ip_in_ip" in v:
                 actual = v['ip_in_ip']
                 self.assertEqual(expected, actual)
+
+    def test_enabled_host_binding(self):
+        for k, v in self.a.config.devices.items():
+            self.assertTrue("enable_host_binding" in v)
