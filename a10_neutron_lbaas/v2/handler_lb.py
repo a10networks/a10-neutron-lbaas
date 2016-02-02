@@ -59,16 +59,19 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             try:
                 import pdb; pdb.set_trace()
                 self._set(c.client.slb.virtual_server.create, c, context, lb)
+                running = False
             except socket.error as e:
                 last_e = e
-                if e.errno in skip_errs:
-                    time_end = time.time()
-                    if (time_end - time_begin) >= lock_time:
-                        running = False
-                        break
+                if e.errno not in skip_errs:
+                    raise
             except Exception as ex:
                 last_e = ex
                 running = False
+                break
+            time_end = time.time()
+            if (time_end - time_begin) >= lock_time:
+                running = False
+                break
 
     def create(self, context, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:

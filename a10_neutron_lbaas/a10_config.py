@@ -49,7 +49,7 @@ class A10Config(object):
 
     INSTANCE_DEFAULTS = {
         "flavor": "acos.min",
-        "networks": ["private", "private", "public"]
+        "networks": ["private", "private", "private"]
     }
 
     def device_defaults(self, device_config):
