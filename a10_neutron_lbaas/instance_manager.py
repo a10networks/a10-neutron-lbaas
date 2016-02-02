@@ -154,7 +154,6 @@ class InstanceManager(object):
 
         created_instance = self._nova_api.servers.create(**server)
 
-        # time.sleep(2)
         # Next 6 lines -  Added due to insane API on the other side
         created_instance.manager.client.last_request_id = None
         self._create_server_spinlock(created_instance)
