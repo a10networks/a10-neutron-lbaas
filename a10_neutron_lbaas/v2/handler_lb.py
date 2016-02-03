@@ -49,15 +49,15 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         self.hooks.after_vip_create(c, context, lb)
 
     def _create_spinlock(self, c, context, lb):
-        sleep_time = 1
-        lock_time = 60
+        sleep_time = 0.25
+        lock_time = 900
         skip_errs = [errno.EHOSTUNREACH]
         running = True
         time_begin = time.time()
         
         while running:
             try:
-                import pdb; pdb.set_trace()
+                # import pdb; pdb.set_trace()
                 self._set(c.client.slb.virtual_server.create, c, context, lb)
                 running = False
             except socket.error as e:
@@ -70,6 +70,8 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 break
             time_end = time.time()
             if (time_end - time_begin) >= lock_time:
+                if not last_e is None:
+                    LOG.exception(last_e)
                 running = False
                 break
 
