@@ -45,36 +45,41 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             pass
 
     def _create(self, c, context, lb):
-        created = self._create_spinlock(c, context, lb)
+        self._create_spinlock(c, context, lb)
         self.hooks.after_vip_create(c, context, lb)
 
     def _create_spinlock(self, c, context, lb):
-        sleep_time = 0.25
+        sleep_time = 1
         lock_time = 600
         skip_errs = [errno.EHOSTUNREACH]
         running = True
         time_begin = time.time()
         
+        time.sleep()
+
         while running:
             try:
-                # import pdb; pdb.set_trace()
                 self._set(c.client.slb.virtual_server.create, c, context, lb)
                 running = False
-                break
             except socket.error as e:
                 last_e = e
                 if e.errno not in skip_errs:
                     raise
+                    break
             except Exception as ex:
                 last_e = ex
                 running = False
-                break
+            
+            if not running:
+            	break
+            
             time_end = time.time()
             if (time_end - time_begin) >= lock_time:
                 if not last_e is None:
                     LOG.exception(last_e)
-                running = False
+                    running = False
                 break
+            time.sleep(sleep_time)
 
     def create(self, context, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:
