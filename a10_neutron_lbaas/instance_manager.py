@@ -29,7 +29,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 LOG = logging.getLogger(__name__)
 
-CREATE_TIMEOUT = 60
+CREATE_TIMEOUT = 900
 
 # TODO(mdurrant) - These may need to go into a configuration file.
 GLANCE_VERSION = 2

@@ -50,7 +50,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
     def _create_spinlock(self, c, context, lb):
         sleep_time = 0.25
-        lock_time = 900
+        lock_time = 600
         skip_errs = [errno.EHOSTUNREACH]
         running = True
         time_begin = time.time()
@@ -60,6 +60,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 # import pdb; pdb.set_trace()
                 self._set(c.client.slb.virtual_server.create, c, context, lb)
                 running = False
+                break
             except socket.error as e:
                 last_e = e
                 if e.errno not in skip_errs:
