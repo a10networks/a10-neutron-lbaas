@@ -190,7 +190,6 @@ class InstanceManager(object):
                 break
             
             if end_time - start_time > CREATE_TIMEOUT:
-                import pdb; pdb.set_trace()
                 timeout = True
                 # TODO(mdurrant) - Specific exception
                 raise Exception("Timed out creating instance.")

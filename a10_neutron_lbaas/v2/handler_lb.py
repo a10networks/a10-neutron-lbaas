@@ -79,6 +79,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                     LOG.exception(last_e)
                     running = False
                 break
+                
             time.sleep(sleep_time)
 
     def create(self, context, lb):
