@@ -14,51 +14,29 @@
 
 from __future__ import absolute_import
 
-from django.conf import settings
 import logging
-from openstack_dashboard.api import base
 from openstack_dashboard.api.neutron import NeutronAPIDictWrapper
+from openstack_dashboard.api.neutron import neutronclient
 
-# a10 client that extends neutronclient.v2_0.client.Client
-from a10_neutron_lbaas_client import client as neutron_client
+from a10_neutron_lbaas_client.resources import a10_appliance
 
 LOG = logging.getLogger(__name__)
 
-RV_KEY = "a10_appliance"
-RV_KEY_PLURAL = "{0}s".format(RV_KEY)
-
 
 class A10Appliance(NeutronAPIDictWrapper):
-    """Wrapper for neutron Certificates"""
+    """Wrapper for a10_appliance dictionary"""
     def __init__(self, apiresource):
         super(A10Appliance, self).__init__(apiresource)
 
 
-def neutronclient(request):
-    insecure = getattr(settings, 'OPENSTACK_SSL_NO_VERIFY', False)
-    cacert = getattr(settings, 'OPENSTACK_SSL_CACERT', None)
-    LOG.debug('neutronclient connection created using token "%s" and url "%s"'
-              % (request.user.token.id, base.url_for(request, 'network')))
-    LOG.debug('user_id=%(user)s, tenant_id=%(tenant)s' %
-              {'user': request.user.id, 'tenant': request.user.tenant_id})
-    c = neutron_client.Client(token=request.user.token.id,
-                              auth_url=base.url_for(request, 'identity'),
-                              endpoint_url=base.url_for(request, 'network'),
-                              insecure=insecure,
-                              ca_cert=cacert)
-    return c
-
-
 def get_a10_appliances(request, **kwargs):
-    rv = []
-    rv = neutronclient(request).list_a10_appliances(**kwargs).get(RV_KEY_PLURAL)
+    rv = neutronclient(request).list_a10_appliances(**kwargs).get(a10_appliance.RESOURCES)
     return map(A10Appliance, rv)
 
 
 def get_a10_appliance(request, id, **params):
-    rv = None
-    rv = neutronclient(request).get_a10_appliance(id).get(RV_KEY)
-    return map(A10Appliance, rv)
+    rv = neutronclient(request).show_a10_appliance(id).get(a10_appliance.RESOURCE)
+    return A10Appliance(rv)
 
 
 def delete_a10_appliance(request, id):
@@ -66,14 +44,12 @@ def delete_a10_appliance(request, id):
 
 
 def create_a10_appliance(request, **kwargs):
-    rv = None
-    body = {RV_KEY: kwargs}
-    rv = neutronclient(request).create_a10_appliance(body=body).get(RV_KEY)
+    body = {a10_appliance.RESOURCE: kwargs}
+    rv = neutronclient(request).create_a10_appliance(body=body).get(a10_appliance.RESOURCE)
     return A10Appliance(rv)
 
 
-def update_a10_appliance(request, **kwargs):
-    rv = None
-    body = {RV_KEY: kwargs}
-    rv = neutronclient(request).update_a10_appliance(body).get(RV_KEY)
-    return map(A10Appliance, rv)
+def update_a10_appliance(request, id, **kwargs):
+    body = {a10_appliance.RESOURCE: kwargs}
+    rv = neutronclient(request).update_a10_appliance(id, body=body).get(a10_appliance.RESOURCE)
+    return A10Appliance(rv)
