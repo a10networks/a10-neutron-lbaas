@@ -55,3 +55,7 @@ class ServiceUnavailableError(Exception):
 
 class FeatureNotConfiguredError(Exception):
     pass
+
+
+class DeviceUnavailableError(Exception):
+    pass

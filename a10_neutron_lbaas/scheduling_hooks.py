@@ -47,7 +47,13 @@ class DevicePerTenant(SchedulingHooks):
         if tenant is None:
             # Assign this tenant to an appliance
             devices = self.underlying_scheduler.select_devices(a10_context, device_list, **kwargs)
-            device = next(devices.__iter__())
+
+            try:
+                device = next(devices.__iter__())
+            except StopIteration:
+                raise a10_ex.DeviceUnavailableError("No devices are available for selection.")
+            except Exception:
+                raise
 
             # We need an appliance to save the a10 tenant appliance
             appliance = a10_context.inventory.device_appliance(device)
