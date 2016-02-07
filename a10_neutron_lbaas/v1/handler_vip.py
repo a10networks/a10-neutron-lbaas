@@ -113,10 +113,11 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            pool_name = self._pool_name(context, vip['pool_id'])
-
-            p = PersistHandler(c, context, vip, self._meta_name(vip))
-            p.create()
+            pool_name = self._pool_name(context, vip['pool_id'])	    
+      
+            p = PersistHandler(c, context, vip, self._meta_name(vip), old_vip)
+       
+	    p.create()
 
             templates = self.meta(vip, "template", {})
 
@@ -164,15 +165,16 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
 
 class PersistHandler(object):
 
-    def __init__(self, c, context, vip, vip_name):
+    def __init__(self, c, context, vip, vip_name, old_vip=None):
         self.c = c
         self.context = context
         self.vip = vip
-        self.c_pers = None
-        self.s_pers = None
+        self.c_pers = ""
+        self.s_pers = ""
         self.name = vip_name
+	self.old_vip = old_vip
 
-        if vip.get('session_persistence', None) is not None:
+        if vip.get('session_persistence', "") is not "":
             self.sp = vip['session_persistence']
             if self.sp['type'] == 'HTTP_COOKIE':
                 self.c_pers = self.name
@@ -190,20 +192,35 @@ class PersistHandler(object):
         return self.s_pers
 
     def create(self):
-        if self.sp is None:
-            return
 
-        methods = {
-            'HTTP_COOKIE':
-                self.c.client.slb.template.cookie_persistence.create,
-            'SOURCE_IP':
-                self.c.client.slb.template.src_ip_persistence.create,
-        }
-        if self.sp['type'] in methods:
-            try:
-                methods[self.sp['type']](self.name)
-            except acos_errors.Exists:
-                pass
+	if self.sp is None:
+            methods = {
+                'HTTP_COOKIE':
+                    self.c.client.slb.template.cookie_persistence.delete,
+                'SOURCE_IP':
+                    self.c.client.slb.template.src_ip_persistence.delete,
+            }
+            if self.old_vip is not None:
+		if self.old_vip.get('session_persistence', "") is not "":
+                    try:
+                        methods[self.old_vip.get('session_persistence').get('type')](self.old_vip.get('id'))
+                    except Exception:
+                        pass
+	    return
+	
+	else:
+            methods = {
+           	 'HTTP_COOKIE':
+                      self.c.client.slb.template.cookie_persistence.create,
+            	 'SOURCE_IP':
+                      self.c.client.slb.template.src_ip_persistence.create,
+        	}
+            if self.sp['type'] in methods:
+                try:
+                    methods[self.sp['type']](self.name)
+                except acos_errors.Exists:
+                    pass
+	
 
     def delete(self):
         if self.sp is None:
