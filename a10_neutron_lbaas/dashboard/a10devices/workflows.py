@@ -18,6 +18,7 @@ import uuid
 from django.utils.translation import ugettext_lazy as _
 
 import a10_neutron_lbaas.a10_config as a10_config
+import a10_neutron_lbaas.dashboard.api.base as base
 import a10_neutron_lbaas.instance_manager as im
 
 
@@ -33,6 +34,12 @@ GLANCE_API_VERSION_CREATE = 2
 GLANCE_API_VERSION_UPDATE = 1
 
 LOG = logging.getLogger(__name__)
+
+
+def instance_manager_for(request):
+    return im.InstanceManager(
+        base.project_id_for(request),
+        session=base.session_for(request))
 
 
 class AddApplianceAction(workflows.Action):
@@ -112,8 +119,8 @@ class AddAppliance(workflows.Workflow):
 
     def handle(self, request, context):
         # Create the instance manager, giving it the context so it knows how to auth
-        instance_mgr = im.InstanceManager(context=context, request=request)
-        instance_data = instance_mgr.create_instance(request, context)
+        instance_mgr = instance_manager_for(request)
+        instance_data = instance_mgr.create_instance(context)
 
         LOG.debug("Instance: {0}".format(instance_data))
         return True
