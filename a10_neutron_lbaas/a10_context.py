@@ -44,7 +44,7 @@ class A10Context(object):
             d = appliance.device(self)
         self.device_cfg = d
         self.appliance = appliance
-        self.client = self.a10_driver._get_a10_client(self.device_cfg)
+        self.client = self.a10_driver.client_class(self.device_cfg)
         self.select_appliance_partition()
         return self
 
