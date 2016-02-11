@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import a10_neutron_lbaas.appliance_client as appliance_client
 import a10_neutron_lbaas.tests.test_case as test_case
 import a10_neutron_lbaas.tests.unit.unit_config as unit_config
 import mock
@@ -40,18 +41,18 @@ class FakeA10OpenstackLB(object):
     def __init__(self, openstack_driver, **kw):
         super(FakeA10OpenstackLB, self).__init__(
             mock.MagicMock(),
+            client_class=appliance_client.UniformDeviceClient(self.mock_a10_client),
             **kw)
         self.openstack_context = _build_openstack_context()
 
-    def _get_a10_client(self, device_info):
+    def mock_a10_client(self, device_info):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
         return self.last_client
 
     def reset_mocks(self):
         self.openstack_driver = mock.MagicMock()
-        self.last_client = self._get_a10_client(self.device_info)
-        return self.last_client
+        return self.mock_a10_client(self.device_info)
 
 
 class FakeA10OpenstackLBV1(FakeA10OpenstackLB, a10_os.A10OpenstackLBV1):

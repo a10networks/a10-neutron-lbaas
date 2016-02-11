@@ -39,7 +39,12 @@ class A10Context(object):
         else:
             d = self.a10_driver._select_a10_device(self.tenant_id)
         self.device_cfg = d
+
         self.client = self.a10_driver._get_a10_client(self.device_cfg)
+        # TOOD(dougwig) -- new from orchestration branch
+        # self.appliance = appliance
+        # self.client = self.a10_driver.client_class(self.device_cfg)
+
         self.select_appliance_partition()
         return self
 

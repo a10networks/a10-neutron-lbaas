@@ -15,6 +15,7 @@
 import logging
 
 import a10_config
+import appliance_client
 import acos_client
 import plumbing_hooks as hooks
 import version
@@ -48,12 +49,16 @@ class A10OpenstackLBBase(object):
                  #db_operations_class=operations.Operations,
                  #inventory_class=inventory.InventoryBase,
                  scheduling_hooks_class=None,
-                 network_hooks_class=None
+                 network_hooks_class=None,
+                 client_class=appliance_client.UniformDeviceClient(),
                  ):
         self.openstack_driver = openstack_driver
         self.config = a10_config.A10Config()
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
+
+        # TODO(dougwig) -- maybe, I am not convinced.
+        self.client_class = client_class
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
@@ -90,11 +95,7 @@ class A10OpenstackLBBase(object):
         self.hooks = self.network_hooks
 
     def _get_a10_client(self, device_info):
-        d = device_info
-        return acos_client.Client(d['host'],
-                                  d.get('api_version', acos_client.AXAPI_21),
-                                  d['username'], d['password'],
-                                  port=d['port'], protocol=d['protocol'])
+        return self.client_class(device_info)
 
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")
@@ -105,7 +106,7 @@ class A10OpenstackLBBase(object):
         for k, v in self.config.get_devices().items():
             try:
                 LOG.info("A10Driver: appliance(%s) = %s", k,
-                         self._get_a10_client(v).system.information())
+                         self.client_class(v).system.information())
             except Exception:
                 LOG.error("A10Driver: unable to connect to configured"
                           "appliance, name=%s", k)
