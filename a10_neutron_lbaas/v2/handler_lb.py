@@ -17,8 +17,6 @@ import logging
 import socket
 import time
 
-from a10_neutron_lbaas import a10_common
-
 import acos_client.errors as acos_errors
 import handler_base_v2
 import v2_context as a10

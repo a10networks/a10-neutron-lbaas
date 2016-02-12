@@ -14,7 +14,6 @@
 
 import logging
 
-from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_openstack_map as a10_osmap
 from neutron_lbaas.services.loadbalancer import constants as lb_const
 
@@ -88,7 +87,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             c, context, listener.default_pool)
 
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
-        vport_args = a10_common._vport(vport_meta, c.device_cfg)
 
         try:
             set_method(
@@ -100,7 +98,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 s_pers_name=persistence.s_persistence(),
                 c_pers_name=persistence.c_persistence(),
                 status=status,
-                axapi_args=vport_args)
+                axapi_body=vport_meta)
         except acos_errors.Exists:
             pass
 
