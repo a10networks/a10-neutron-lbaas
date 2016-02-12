@@ -17,6 +17,7 @@ import logging
 import socket
 import time
 
+# TODO(dougwig) -- this is gone in orchestration branch         
 from a10_neutron_lbaas.acos import axapi_mappings
 
 import acos_client.errors as acos_errors

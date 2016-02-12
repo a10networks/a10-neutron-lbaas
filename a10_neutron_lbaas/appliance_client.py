@@ -13,8 +13,9 @@
 #    under the License.
 
 import acos_client
+import appliance_client_21
+import appliance_client_30
  
-
 def device_acos_client(device_info):
     d = device_info
     return acos_client.Client(d['host'],
@@ -22,9 +23,28 @@ def device_acos_client(device_info):
                               d['username'], d['password'],
                               port=d['port'], protocol=d['protocol'])
 
-class UniformDeviceClient(object):
-	def __init__(self, client_factory=device_acos_client):
-		self.client_factory = client_factory
 
-	def __call__(self, device_info):
-		return self.client_factory(device_info)
+def _api_ver(device_info):
+    api_ver = device_info.get("api_version", None)
+    if api_ver is None:
+        api_ver = "2.1"
+    return api_ver
+
+
+version_adapters = { 
+    "2.1": appliance_client_21.Client,
+    "3.0": appliance_client_30.Client
+}
+
+class UniformDeviceClient(object):
+    def __init__(self, client_factory=device_acos_client):
+        self.client_factory = client_factory
+
+    def __call__(self, device_info):
+        underlying_client = self.client_factory(device_info)
+
+        api_ver = _api_ver(device_info)
+        proxy = version_adapters.get(api_ver, lambda x, d: x)
+        client = proxy(underlying_client, device_info)
+
+        return client
