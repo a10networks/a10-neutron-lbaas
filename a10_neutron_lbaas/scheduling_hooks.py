@@ -51,7 +51,7 @@ class DevicePerTenant(SchedulingHooks):
             try:
                 device = next(devices.__iter__())
             except StopIteration:
-                raise a10_ex.DeviceUnavailableError("No devices are available for selection.")
+                raise a10_ex.NoDevicesAvailableError("No devices are available for selection.")
             except Exception:
                 raise
 

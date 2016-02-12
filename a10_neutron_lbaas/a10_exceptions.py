@@ -41,5 +41,5 @@ class FeatureNotConfiguredError(Exception):
     pass
 
 
-class DeviceUnavailableError(Exception):
+class NoDevicesAvailableError(Exception):
     pass
