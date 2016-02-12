@@ -16,8 +16,8 @@ import mock
 
 import test_base
 
-from a10_neutron_lbaas import scheduling_hooks
 from a10_neutron_lbaas import a10_exceptions
+from a10_neutron_lbaas import scheduling_hooks
 
 
 class TestFallback(test_base.UnitTestBase):
