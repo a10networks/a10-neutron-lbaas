@@ -36,15 +36,20 @@ def _build_class_instance_mock():
     return (class_mock, instance_mock)
 
 
+def _build_appliance_mock(device):
+    appliance = mock.MagicMock()
+    appliance.device.return_value = device
+    appliance.client.side_effect = lambda c: c.a10_driver.client_class(device)
+    return appliance
+
+
 def _build_inventory_mock():
     (inventory_class, inventory_mock) = _build_class_instance_mock()
 
     def find(openstack_lbaas_obj):
         ((a10_context,), _) = inventory_class.call_args
         device = a10_context.a10_driver.config.devices.values()[0]
-        appliance = mock.MagicMock()
-        appliance.device.return_value = device
-        return appliance
+        return _build_appliance_mock(device)
 
     inventory_mock.find.side_effect = find
     return (inventory_class, inventory_mock)
@@ -57,6 +62,8 @@ class FakeA10OpenstackLB(object):
         self.inventory_mock = inventory_mock
 
         (db_operations_class, db_operations_mock) = _build_class_instance_mock()
+        db_operations_mock.summon_appliance_configured.side_effect = (
+            lambda x: _build_appliance_mock(self.config.devices[x]))
         self.db_operations_mock = db_operations_mock
 
         super(FakeA10OpenstackLB, self).__init__(

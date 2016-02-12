@@ -58,6 +58,13 @@ class A10ApplianceSLB(model_base.BASEV2):
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=uuid_str)
     type = sa.Column(sa.String(50), nullable=False)
 
+    def device(self, context):
+        raise NotImplementedError()
+
+    def client(self, context):
+        device_cfg = self.device(context)
+        return context.a10_driver.client_class(device_cfg)
+
     __mapper_args__ = {
         'polymorphic_identity': __tablename__,
         'polymorphic_on': type
