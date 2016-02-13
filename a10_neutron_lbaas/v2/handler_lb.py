@@ -36,12 +36,15 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
         try:
             vip_meta = self.meta(lb, 'virtual_server', {})
+
+            # TODO(dougwig) -- gone in orc branch
             vip_args = axapi_mappings._virtual_server(vip_meta, c.device_cfg)
+
             set_method(
                 self._meta_name(lb),
                 lb.vip_address,
                 status,
-                axapi_args=vip_args)
+                axapi_body=vip_meta)  # vip_args?
         except acos_errors.Exists:
             pass
 
