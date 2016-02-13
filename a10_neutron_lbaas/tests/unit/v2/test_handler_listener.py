@@ -130,7 +130,7 @@ class TestListeners(test_base.UnitTestBase):
         pool = test_base.FakePool(p, 'ROUND_ROBIN', None)
         m = test_base.FakeListener(p, 2222, pool=pool,
                                    loadbalancer=lb)
-    
+
         auto_format = "'{0}': {1}"
         auto_expected = auto_format.format(key, int(True))
 

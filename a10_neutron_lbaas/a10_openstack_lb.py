@@ -15,11 +15,11 @@
 import logging
 
 import a10_config
-import appliance_client
 import acos_client
 import plumbing_hooks as hooks
 import version
 
+import appliance_client
 import db.operations as operations
 import inventory
 import network_hooks

@@ -11,7 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
- 
+
+
 class StupidSimpleProxy(object):
     def __init__(self, underlying):
         self._underlying = underlying
@@ -37,9 +38,9 @@ class VirtualServer(object):
             virtual_server['vrid'] = vrid
 
         axapi_args = {'virtual_server': virtual_server}
-        
+
         return self._underlying.create(
-                    name,
-                    ip_address,
-                    status,
-                    axapi_args=axapi_args)
+            name,
+            ip_address,
+            status,
+            axapi_args=axapi_args)

@@ -86,7 +86,7 @@ class TestVIP(test_base.UnitTestBase):
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
 
-        vip = self.fake_vip()   
+        vip = self.fake_vip()
 
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
@@ -143,11 +143,11 @@ class TestVIP(test_base.UnitTestBase):
 
     def _test_create_ipinip(self, ip_in_ip=False, api_ver="3.0", key="ipinip"):
         vip = self.fake_vip()
-        
+
         for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
             v['api_version'] = api_ver
-        
+
         ipinip_format = "'{0}': {1}"
         expected = ipinip_format.format(key, int(True))
 
