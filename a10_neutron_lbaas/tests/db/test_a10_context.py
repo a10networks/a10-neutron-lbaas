@@ -32,8 +32,8 @@ class TestA10Context(test_a10_openstack_lb.SetupA10OpenstackLBBase, test_base.Un
         mock_driver = mock.MagicMock()
         with mock.patch('acos_client.Client'):
             a10_driver = self.a10_openstack_lb_class(mock_driver,
-                                                    client_class=lambda x: mock.MagicMock(),
-                                                    **self.a10_openstack_lb_kws)
+                                                     client_class=lambda x: mock.MagicMock(),
+                                                     **self.a10_openstack_lb_kws)
 
         mock_handler = mock.MagicMock(openstack_driver=mock_driver, a10_driver=a10_driver)
 

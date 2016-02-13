@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import acos_client
 import appliance_client_base
+
 
 class Client(appliance_client_base.ClientProxy):
 
@@ -21,17 +21,20 @@ class Client(appliance_client_base.ClientProxy):
     def slb(self):
         return SLB(self._underlying.slb, self._device_info)
 
+
 class SLB(appliance_client_base.ClientProxy):
 
     @property
     def virtual_server(self):
         return VirtualServer(self._underlying.virtual_server, self._device_info)
 
+
 class VirtualServer(appliance_client_base.VirtualServer, appliance_client_base.ClientProxy):
 
     @property
     def vport(self):
         return VPort(self._underlying.vport, self._device_info)
+
 
 class VPort(appliance_client_base.ClientProxy):
 

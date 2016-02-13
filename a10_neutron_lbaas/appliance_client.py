@@ -15,7 +15,8 @@
 import acos_client
 import appliance_client_21
 import appliance_client_30
- 
+
+
 def device_acos_client(device_info):
     d = device_info
     return acos_client.Client(d['host'],
@@ -31,10 +32,11 @@ def _api_ver(device_info):
     return api_ver
 
 
-version_adapters = { 
+version_adapters = {
     "2.1": appliance_client_21.Client,
     "3.0": appliance_client_30.Client
 }
+
 
 class UniformDeviceClient(object):
     def __init__(self, client_factory=device_acos_client):

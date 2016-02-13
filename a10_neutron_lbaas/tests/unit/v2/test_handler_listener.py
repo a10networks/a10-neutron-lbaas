@@ -126,7 +126,7 @@ class TestListeners(test_base.UnitTestBase):
         pool = test_base.FakePool(p, 'ROUND_ROBIN', None)
         m = test_base.FakeListener(p, 2222, pool=pool,
                                    loadbalancer=lb)
-    
+
         auto_format = "'{0}': {1}"
         auto_expected = auto_format.format(key, int(True))
 
@@ -139,7 +139,7 @@ class TestListeners(test_base.UnitTestBase):
         if not saw_exception:
             s = str(self.a.last_client.mock_calls)
             self.assertTrue('vport.create' in s)
-            
+
             self.assertEqual(auto_expected in s, True if autosnat else False)
 
     def _test_create_ipinip(self, api_ver="3.0", ip_in_ip=False, key="ipinip"):
