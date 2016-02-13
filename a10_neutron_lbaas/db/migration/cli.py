@@ -49,6 +49,16 @@ try:
 except cfg.DuplicateOptError:
     pass
 
+# There's an existing verbose option.
+# It conflicts with --verbose
+# It's deprecated, so we can't just use it instead.
+# Kill it.
+try:
+    CONF.unregister_opt(CONF._opts['verbose']['opt'])
+except Exception:
+    # With fire!
+    pass
+
 
 def do_alembic_command(config, cmd, *args, **kwargs):
     try:

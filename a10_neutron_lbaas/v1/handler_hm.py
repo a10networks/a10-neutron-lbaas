@@ -74,10 +74,9 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
 
     def _dissociate(self, c, context, hm, pool_id):
         """Remove a pool association"""
-
         pool_name = self._pool_name(context, pool_id)
         c.client.slb.service_group.update(pool_name, health_monitor="",
-                                          health_monitor_disabled=True)
+                                          health_check_disable=True)
 
     def dissociate(self, c, context, hm, pool_id):
         """Remove a pool association, and the healthmonitor if its the last one"""
@@ -89,7 +88,6 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
 
     def _delete(self, c, context, hm):
         """Delete a healthmonitor and ALL its pool associations"""
-
         pools = hm.get("pools", [])
 
         for pool in pools:
@@ -109,8 +107,11 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
 
     def delete(self, context, hm, pool_id):
         h = hm.copy()
+        # Get the binding count to see if we need to perform disassociation
+
         h['pool_id'] = pool_id
         with a10.A10DeleteHMContext(self, context, h) as c:
+
             if pool_id is None:
                 # Delete the whole healthmonitor
                 self._delete(c, context, hm)
