@@ -226,6 +226,7 @@ class PersistHandler(object):
 
         if self.sp['type'] in self.sp_obj_dict.keys():
             try:
-                methods[self.sp['type']].delete(self.name)
+                m = getattr(self.c.client.slb.template, self.sp_obj_dict[self.sp['type']])
+                m.delete(self.name)
             except Exception:
                 pass
