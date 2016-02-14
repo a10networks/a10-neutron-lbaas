@@ -212,7 +212,7 @@ class PersistHandler(object):
                         pass
         else:
             sp_type = self.sp.get("type")
-            if sp_type is not None and self.sp.get("type") in self.sp_obj_dict:
+            if sp_type is not None and sp_type in self.sp_obj_dict:
                 try:
                     
                     m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
@@ -224,9 +224,10 @@ class PersistHandler(object):
         if self.sp is None:
             return
 
-        if self.sp['type'] in self.sp_obj_dict.keys():
+        sp_type = self.sp.get("type")
+        if sp_type in self.sp_obj_dict.keys():
             try:
-                m = getattr(self.c.client.slb.template, self.sp_obj_dict[self.sp['type']])
+                m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
                 m.delete(self.name)
             except Exception:
                 pass
