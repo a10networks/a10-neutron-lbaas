@@ -9,24 +9,10 @@ class TestVIP(test_base.UnitTestBase):
     def __init__(self, *args):
         super(TestVIP, self).__init__(*args)
 
-    def fake_vip(self, pers=""):
+    def fake_vip(self, pers="", vip_id="id1"):
         h = {
             'tenant_id': 'ten1',
-            'id': 'id1',
-            'protocol': 'HTTP',
-            'admin_state_up': True,
-            'address': '1.1.1.1',
-            'protocol_port': '80',
-            'pool_id': 'pool1',
-        }
-        if pers:
-            h['session_persistence'] = {'type': pers}
-        return h.copy()
-
-    def old_vip(self, pers=""):
-        h = {
-            'tenant_id': 'ten1',
-            'id': 'id0',
+            'id': vip_id,
             'protocol': 'HTTP',
             'admin_state_up': True,
             'address': '1.1.1.1',
@@ -199,7 +185,8 @@ class TestVIP(test_base.UnitTestBase):
         self.assertTrue('HTTP' in s)
 
     def test_update_delete_pers(self):
-        self.a.vip.update(None, self.old_vip('SOURCE_IP'), self.fake_vip())
+        vip_id = "id2"
+        self.a.vip.update(None, self.fake_vip('SOURCE_IP', vip_id=vip_id), self.fake_vip())
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
@@ -208,7 +195,7 @@ class TestVIP(test_base.UnitTestBase):
         self.a.openstack_driver.plugin.get_pool.assert_called_with(
             None, 'pool1')
 	z = self.a.last_client.slb.template.src_ip_persistence.delete
-	z.assert_called_with('id0')
+	z.assert_called_with(vip_id)
         self.assertTrue('HTTP' in s)
 
     def test_delete(self):
@@ -220,7 +207,8 @@ class TestVIP(test_base.UnitTestBase):
         self.a.db_operations_mock.delete_slb_v1.assert_called_with('id1')
 
     def test_delete_pers(self):
-        self.a.vip.delete(None, self.fake_vip('SOURCE_IP'))
-        self.a.last_client.slb.virtual_server.delete.assert_called_with('id1')
+        vip_id="idx"
+        self.a.vip.delete(None, self.fake_vip('SOURCE_IP', vip_id=vip_id))
+        self.a.last_client.slb.virtual_server.delete.assert_called_with(vip_id)
         z = self.a.last_client.slb.template.src_ip_persistence.delete
-        z.assert_called_with('id1')
+        z.assert_called_with(vip_id)
