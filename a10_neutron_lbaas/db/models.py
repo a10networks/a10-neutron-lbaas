@@ -18,6 +18,7 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import relationship
 import uuid
 
+import a10_neutron_lbaas.acos_client_extensions
 
 def default(cls, **kw):
     instance = cls(**kw)
@@ -63,7 +64,7 @@ class A10ApplianceSLB(model_base.BASEV2):
 
     def client(self, context):
         device_cfg = self.device(context)
-        return context.a10_driver.client_class(device_cfg)
+        return context.a10_driver._get_a10_client(device_cfg)
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__,
@@ -169,6 +170,13 @@ class A10ApplianceNova(A10ApplianceSLB):
             'port': self.port
         }
         return config.device_defaults(device)
+
+    def client(self, context):
+        device_cfg = self.device(context)
+        acos_client = context.a10_driver.acos_client_class(device_cfg)
+        patient_client = acos_client_extensions.patient_client(acos_client)
+        client = context.a10_driver.client_class(patient_client, device_cfg)
+        return client
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__

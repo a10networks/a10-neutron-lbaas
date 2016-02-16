@@ -39,7 +39,7 @@ def _build_class_instance_mock():
 def _build_appliance_mock(device):
     appliance = mock.MagicMock()
     appliance.device.return_value = device
-    appliance.client.side_effect = lambda c: c.a10_driver.client_class(device)
+    appliance.client.side_effect = lambda c: c.a10_driver._get_a10_client(device)
     return appliance
 
 
@@ -70,7 +70,7 @@ class FakeA10OpenstackLB(object):
             mock.MagicMock(),
             db_operations_class=db_operations_class,
             inventory_class=inventory_class,
-            client_class=appliance_client.UniformDeviceClient(self.mock_a10_client),
+            acos_client_class=self.mock_a10_client,
             **kw)
         self.openstack_context = _build_openstack_context()
 

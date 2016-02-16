@@ -38,15 +38,9 @@ version_adapters = {
 }
 
 
-class UniformDeviceClient(object):
-    def __init__(self, client_factory=device_acos_client):
-        self.client_factory = client_factory
+def uniform_device_client(underlying_client, device_info):
+    api_ver = _api_ver(device_info)
+    proxy = version_adapters.get(api_ver, lambda x, d: x)
+    client = proxy(underlying_client, device_info)
 
-    def __call__(self, device_info):
-        underlying_client = self.client_factory(device_info)
-
-        api_ver = _api_ver(device_info)
-        proxy = version_adapters.get(api_ver, lambda x, d: x)
-        client = proxy(underlying_client, device_info)
-
-        return client
+    return client

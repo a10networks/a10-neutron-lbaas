@@ -54,14 +54,16 @@ class A10OpenstackLBBase(object):
                  inventory_class=inventory.InventoryBase,
                  scheduling_hooks_class=None,
                  network_hooks_class=None,
-                 client_class=appliance_client.UniformDeviceClient(),
+                 acos_client_class=appliance_client.device_acos_client,
+                 client_class=appliance_client.uniform_device_client,
                  ):
         self.openstack_driver = openstack_driver
         self.config = a10_config.A10Config()
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
         self.db_operations_class = db_operations_class
-        self.inventory_class = inventory_class
+        self.inventory_class = inventory_class        
+        self.acos_client_class = acos_client_class
         self.client_class = client_class
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
@@ -99,7 +101,7 @@ class A10OpenstackLBBase(object):
         self.hooks = self.network_hooks
 
     def _get_a10_client(self, device_info):
-        return self.client_class(device_info)
+        return self.client_class(self.acos_client_class(device_info), device_info)
 
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")
@@ -110,7 +112,7 @@ class A10OpenstackLBBase(object):
         for k, v in self.config.devices.items():
             try:
                 LOG.info("A10Driver: appliance(%s) = %s", k,
-                         self.client_class(v).system.information())
+                         self._get_a10_client(v).system.information())
             except Exception:
                 LOG.error("A10Driver: unable to connect to configured"
                           "appliance, name=%s", k)
