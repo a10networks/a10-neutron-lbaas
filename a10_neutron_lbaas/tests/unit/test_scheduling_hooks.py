@@ -16,6 +16,7 @@ import mock
 
 import test_base
 
+from a10_neutron_lbaas import a10_exceptions
 from a10_neutron_lbaas import scheduling_hooks
 
 
@@ -53,3 +54,15 @@ class TestFallback(test_base.UnitTestBase):
         result = fallback.select_devices(mock.MagicMock(), mock.MagicMock())
 
         self.assertEqual(['second'], list(result))
+
+
+class TestDevicePerTenantScheduler(test_base.UnitTestBase):
+    def test_select_devices_raises_exception_for_no_devices(self):
+        mock_scheduler = mock.MagicMock()
+        mock_scheduler.select_devices.return_value = list()
+        mock_context = mock.MagicMock()
+        mock_context.db_operations.get_tenant_appliance.return_value = None
+
+        target = scheduling_hooks.DevicePerTenant(mock_scheduler)
+        with self.assertRaises(a10_exceptions.NoDevicesAvailableError):
+            target.select_devices(mock_context, mock.MagicMock())
