@@ -12,10 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import errno
+
 import logging
-import socket
-import time
 
 # TODO(dougwig) -- this is gone in orchestration branch         
 from a10_neutron_lbaas.acos import axapi_mappings
