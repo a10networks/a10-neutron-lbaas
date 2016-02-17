@@ -13,8 +13,9 @@
 #    under the License.
 
 import copy
+import errno
+import socket
 
-import acos_client
 
 def patient_client(original):
     self = copy.copy(original)
@@ -23,7 +24,9 @@ def patient_client(original):
 
     return self
 
+
 def patient_http(original):
+    import pdb; pdb.set_trace()
     self = copy.copy(original)
 
     underlying_request = self.request

@@ -12,10 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import errno
+
 import logging
-import socket
-import time
 
 import acos_client.errors as acos_errors
 import handler_base_v2
