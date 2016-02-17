@@ -107,9 +107,15 @@ class TestLB(test_base.UnitTestBase):
         # self.a.last_client.slb.virtual_server.stats.assert_called_with(
         #     'fake-id-001')
 
-    def test_create_bad_exception(self):
-        # We can't raise exceptions in a lambda
-        import pdb; pdb.set_trace()
+    def test_create_calls_client_proxy(self):
+        m = test_base.FakeLoadBalancer()
+        mock_client = mock.MagicMock()
+        self.a.acos_client_class = lambda x: mock_client
+        self.a.lb.create(None, m)
+        create_call = mock_client.slb.virtual_server.create
+        self.assertEqual(1, create_call.call_count)
+
+    def test_create_failure_raises_exception(self):
         m = test_base.FakeLoadBalancer()
         mock_client = mock.MagicMock()
         self.a.acos_client_class = lambda x: mock_client
