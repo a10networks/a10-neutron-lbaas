@@ -26,7 +26,6 @@ def patient_client(original):
 
 
 def patient_http(original):
-    import pdb; pdb.set_trace()
     self = copy.copy(original)
 
     underlying_request = self.request
