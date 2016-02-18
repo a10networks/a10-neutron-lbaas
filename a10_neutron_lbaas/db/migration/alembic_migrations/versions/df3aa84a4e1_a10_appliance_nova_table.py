@@ -31,25 +31,10 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_table(
-        'a10_appliances_nova',
-        sa.Column('id',
-                  sa.String(36),
-                  sa.ForeignKey('a10_appliances_slb.id'),
-                  primary_key=True,
-                  nullable=False),
-        sa.Column('instance_id', sa.String(36), nullable=False),
-        sa.Column('tenant_id', sa.String(255), nullable=True),
-        sa.Column('name', sa.String(255), nullable=True),
-        sa.Column('description', sa.String(255), nullable=True),
-        sa.Column('host', sa.String(255), nullable=False),
-        sa.Column('api_version', sa.String(12), nullable=False),
-        sa.Column('username', sa.String(255), nullable=False),
-        sa.Column('password', sa.String(255), nullable=False),
-        sa.Column('protocol', sa.String(255), nullable=False),
-        sa.Column('port', sa.Integer, nullable=False)
+    op.add_column("a10_appliances_db", 
+        sa.Column("nova_instance_id", sa.String(36), nullable=True)
     )
 
 
 def downgrade():
-    op.drop_table('a10_appliances_nova')
+    op.drop_column("a10_appliances_db", "nova_instance_id")
