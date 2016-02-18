@@ -18,7 +18,8 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import relationship
 import uuid
 
-import a10_neutron_lbaas.acos_client_extensions
+import a10_neutron_lbaas.acos_client_extensions as acos_client_extensions
+
 
 def default(cls, **kw):
     instance = cls(**kw)

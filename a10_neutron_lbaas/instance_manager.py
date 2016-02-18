@@ -102,7 +102,7 @@ class InstanceManager(object):
         imgprops = json.loads(image.metadata["properties"])
 
         a10_appliance = {
-            "instance_id": instance.id,
+            "nova_instance_id": instance.id,
             "tenant_id": self.tenant_id,
             "name": appliance["name"],
             # TODO(mdurrant): not sure this is populated

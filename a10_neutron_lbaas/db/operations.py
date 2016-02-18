@@ -61,6 +61,7 @@ class Operations(object):
         return list(self.session.query(any_appliance).filter(
             or_(
                 not_null_(any_appliance.A10ApplianceConfigured.id),
+                not_null_(any_appliance.A10ApplianceDB.id),
                 any_appliance.A10ApplianceDB.tenant_id == tenant_id
             )))
 

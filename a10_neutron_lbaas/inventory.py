@@ -46,7 +46,8 @@ class InventoryBase(object):
                 username=device['username'],
                 password=device['password'],
                 protocol=device['protocol'],
-                port=device['port'])
+                port=device['port'],
+                nova_instance_id=device.get("nova_instance_id"))
             self.db_operations.add(appliance)
 
         return appliance
