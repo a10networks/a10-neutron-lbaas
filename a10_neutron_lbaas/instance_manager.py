@@ -318,4 +318,4 @@ class InstanceManager(object):
         """
         instance_configuration = self._default_instance()
 
-        return self.create_instance(instance_configuration)
+        return self._create_instance(instance_configuration)
