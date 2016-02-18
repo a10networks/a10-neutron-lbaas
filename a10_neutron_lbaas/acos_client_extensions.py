@@ -15,6 +15,7 @@
 import copy
 import errno
 import socket
+import time
 
 
 def patient_client(original):

@@ -41,7 +41,8 @@ class TestA10ApplianceDbMixin(test_base.UnitTestBase):
             'host': 'fake-host',
             'api_version': 'fake-version',
             'username': 'fake-username',
-            'password': 'fake-password'
+            'password': 'fake-password',
+            'nova_instance_id': None
         }
 
     def fake_appliance_options(self):
