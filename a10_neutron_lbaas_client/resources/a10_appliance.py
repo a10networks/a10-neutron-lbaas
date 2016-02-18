@@ -105,6 +105,14 @@ RESOURCE_ATTRIBUTE_MAP = {
             'convert_to': lambda attr: attr.convert_to_int,
             'is_visible': True,
             'default': lambda attr: attr.ATTR_NOT_SPECIFIED
+        },
+        'nova_instance_id': {
+            'allow_post': True,
+            'allow_put': True,
+            'validate': {
+                'type:uuid': None
+            },
+            'is_visible': True,
         }
     }
 }
