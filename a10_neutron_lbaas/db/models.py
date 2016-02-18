@@ -15,6 +15,8 @@ import uuid
 
 import sqlalchemy as sa
 import a10_neutron_lbaas.acos_client_extensions
+import a10_neutron_lbaas.acos_client_extensions as acos_client_extensions
+
 
 from a10_neutron_lbaas.db import api as db_api
 
