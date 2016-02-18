@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""A10 Appliance Nova Table
+"""A10 Appliance Nova Column 
 
 Revision ID: df3aa84a4e1
 Revises: 2c45cb7e1c1d

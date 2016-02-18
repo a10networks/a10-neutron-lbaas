@@ -114,6 +114,7 @@ class A10ApplianceDB(A10ApplianceSLB):
     password = sa.Column(sa.String(255), nullable=False)
     protocol = sa.Column(sa.String(255), nullable=False)
     port = sa.Column(sa.Integer, nullable=False)
+    nova_instance_id = sa.Column(sa.String(36), nullable=True)
 
     def device(self, context):
         # TODO(aritrary config): When we store all the options
@@ -130,53 +131,16 @@ class A10ApplianceDB(A10ApplianceSLB):
         }
         return config.device_defaults(device)
 
-    __mapper_args__ = {
-        'polymorphic_identity': __tablename__
-    }
-
-
-class A10ApplianceNova(A10ApplianceSLB):
-    """An a10 appliance defined in the database"""
-
-    __tablename__ = u'a10_appliances_nova'
-
-    id = sa.Column(sa.String(36),
-                   sa.ForeignKey(u'a10_appliances_slb.id'),
-                   primary_key=True,
-                   default=uuid_str,
-                   nullable=False)
-    instance_id = sa.Column(sa.String(36), nullable=False)
-    tenant_id = sa.Column(sa.String(255), nullable=True)
-    name = sa.Column(sa.String(255), nullable=True)
-    description = sa.Column(sa.String(255), nullable=True)
-    host = sa.Column(sa.String(255), nullable=False)
-    api_version = sa.Column(sa.String(12), nullable=False)
-    username = sa.Column(sa.String(255), nullable=False)
-    password = sa.Column(sa.String(255), nullable=False)
-    protocol = sa.Column(sa.String(255), nullable=False)
-    port = sa.Column(sa.Integer, nullable=False)
-
-    def device(self, context):
-        # TODO(aritrary config): When we store all the options
-        # we shouldn't neet to get defaults from the config
-        config = context.a10_driver.config
-        device = {
-            'appliance': self,
-            'host': self.host,
-            'api_version': self.api_version,
-            'username': self.username,
-            'password': self.password,
-            'protocol': self.protocol,
-            'port': self.port
-        }
-        return config.device_defaults(device)
 
     def client(self, context):
-        device_cfg = self.device(context)
-        acos_client = context.a10_driver.acos_client_class(device_cfg)
-        patient_client = acos_client_extensions.patient_client(acos_client)
-        client = context.a10_driver.client_class(patient_client, device_cfg)
-        return client
+        if self.nova_instance_id is not None:
+            device_cfg = self.device(context)
+            acos_client = context.a10_driver.acos_client_class(device_cfg)
+            patient_client = acos_client_extensions.patient_client(acos_client)
+            client = context.a10_driver.client_class(patient_client, device_cfg)
+            return client
+
+        return super(A10ApplianceDB, self).client(context)
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__
