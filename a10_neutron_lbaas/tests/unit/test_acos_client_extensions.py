@@ -12,7 +12,59 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+import requests
+
 import test_base
 
+import a10_neutron_lbaas.acos_client_extensions as target
+
+import acos_client.client
+import errno
+import socket
+
 class TestACOSClientExtensions(test_base.UnitTestBase):
-    pass
+
+    def test_patient_client_replaces_http(self, client_version="3.0"):
+
+        c = acos_client.client.Client(host="ax", username="admin", 
+                                      password="password", version=client_version)
+        unexpected = c.http
+        actual = target.patient_client(c)
+        self.assertIsNot(unexpected, actual.http)
+
+    def test_patient_client_replaces_http_request(self, client_version="3.0"):
+
+        c = acos_client.client.Client(host="ax", username="admin", 
+                                      password="password", version=client_version)
+        unexpected = c.http.request
+        actual = target.patient_client(c)
+        self.assertIsNot(unexpected, actual.http.request)
+
+    def test_patient_client(self, client_version="3.0"):
+
+        c = acos_client.client.Client(host="ax", username="admin", 
+                                      password="password", version=client_version)
+        actual = target.patient_client(c)
+
+        with mock.patch('requests.request') as request_mock:
+            request_mock.return_value = mock.MagicMock()
+            request_mock.return_value.json.return_value = "Stuff!"
+
+            actual.http.get("/stuff")
+            self.assertTrue(request_mock.called)
+
+    def test_patient_client_handles_host_unreachable(self, client_version="3.0"):
+
+        c = acos_client.client.Client(host="ax", username="admin", 
+                                      password="password", version=client_version)
+        actual = target.patient_client(c)
+
+        with mock.patch('requests.request') as request_mock:
+            result_mock = mock.MagicMock()
+            result_mock.json.return_value = "asdf"
+            request_mock.side_effect = [socket.error(errno.EHOSTUNREACH, "Host unreachable"), result_mock]
+            
+            actual.http.get("/stuff")
+            self.assertEqual(2, request_mock.call_count)
+
