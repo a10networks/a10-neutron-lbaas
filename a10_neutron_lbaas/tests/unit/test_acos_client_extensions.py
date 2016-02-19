@@ -33,7 +33,7 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
                                       password="password", version=client_version)
         unexpected = c.http
         actual = target.patient_client(c)
-        self.assertIsNot(unexpected, actual.http)
+        self.assertNotEqual(unexpected, actual.http)
 
     def test_patient_client_replaces_http_21(self):
         return self.test_patient_client_replaces_http("2.1")
@@ -47,7 +47,18 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
                                       password="password", version=client_version)
         unexpected = c.http.request
         actual = target.patient_client(c)
-        self.assertIsNot(unexpected, actual.http.request)
+        self.assertNotEqual(unexpected, actual.http.request)
+
+    def test_patient_client_replaces_session_http_request(self, client_version="3.0"):
+
+        c = acos_client.client.Client(host="ax", username="admin", 
+                                      password="password", version=client_version)
+        unexpected = c.session.http.request
+        actual = target.patient_client(c)
+        self.assertNotEqual(unexpected, actual.session.http.request)
+
+    def test_patient_client_replaces_session_http_request_21(self):
+        self.test_patient_client_replaces_session_http_request(client_version="2.1")
 
     def test_patient_client_21(self):
         c = acos_client.client.Client(host="ax", username="admin", 
