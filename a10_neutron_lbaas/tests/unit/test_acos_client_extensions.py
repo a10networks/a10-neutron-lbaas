@@ -23,6 +23,8 @@ import acos_client.client
 import errno
 import socket
 
+import httplib
+
 class TestACOSClientExtensions(test_base.UnitTestBase):
 
     def test_patient_client_replaces_http(self, client_version="3.0"):
@@ -33,6 +35,12 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
         actual = target.patient_client(c)
         self.assertIsNot(unexpected, actual.http)
 
+    def test_patient_client_replaces_http_21(self):
+        return self.test_patient_client_replaces_http("2.1")
+
+    def test_patient_client_replaces_http_request_21(self):
+        return self.test_patient_client_replaces_http_request("2.1")
+
     def test_patient_client_replaces_http_request(self, client_version="3.0"):
 
         c = acos_client.client.Client(host="ax", username="admin", 
@@ -41,6 +49,28 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
         actual = target.patient_client(c)
         self.assertIsNot(unexpected, actual.http.request)
 
+    def test_patient_client_21(self):
+        c = acos_client.client.Client(host="ax", username="admin", 
+                                      password="password", version="2.1")
+        actual = target.patient_client(c)
+
+        with mock.patch('httplib.HTTPConnection') as http_mock:
+            with mock.patch('httplib.HTTPSConnection') as https_mock:
+                connection_mock = mock.MagicMock()
+
+                http_mock.return_value = connection_mock
+                https_mock.return_value = connection_mock
+
+                request_mock = mock.MagicMock()
+                connection_mock.request = request_mock
+
+                response_mock = mock.MagicMock()
+                response_mock.read.return_value = "Stuff"
+                connection_mock.getresponse.return_value = response_mock
+
+                actual.http.get("/stuff")
+                self.assertTrue(request_mock.called)
+    
     def test_patient_client(self, client_version="3.0"):
 
         c = acos_client.client.Client(host="ax", username="admin", 
@@ -68,3 +98,25 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
             actual.http.get("/stuff")
             self.assertEqual(2, request_mock.call_count)
 
+    def test_patient_client_handles_host_unreachable_21(self):
+        c = acos_client.client.Client(host="ax", username="admin", 
+                                      password="password", version="2.1")
+        actual = target.patient_client(c)
+
+        with mock.patch('httplib.HTTPConnection') as http_mock:
+            with mock.patch('httplib.HTTPSConnection') as https_mock:
+                connection_mock = mock.MagicMock()
+
+                http_mock.return_value = connection_mock
+                https_mock.return_value = connection_mock
+
+                request_mock = mock.MagicMock()
+                request_mock.side_effect = [socket.error(errno.EHOSTUNREACH, "Host unreachable"), mock.MagicMock()]
+                connection_mock.request = request_mock           
+
+                response_mock = mock.MagicMock()
+                response_mock.read.return_value = "Stuff"
+                connection_mock.getresponse.return_value = response_mock
+
+                actual.http.get("/stuff")
+                self.assertEqual(2, request_mock.call_count)
