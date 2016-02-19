@@ -62,7 +62,7 @@ class A10OpenstackLBBase(object):
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
         self.db_operations_class = db_operations_class
-        self.inventory_class = inventory_class        
+        self.inventory_class = inventory_class
         self.acos_client_class = acos_client_class
         self.client_class = client_class
 
@@ -82,8 +82,8 @@ class A10OpenstackLBBase(object):
         if scheduling_hooks_class is None:
             scheduling_hooks_class = (
                 # TODO(mdurrant) - Change this back to launch_device_per_tenant
-                scheduling_hooks.launch_device_per_tenant
-                #scheduling_hooks.existing_device_per_tenant
+                # scheduling_hooks.launch_device_per_tenant
+                scheduling_hooks.existing_device_per_tenant
 
                 if plumbing_hooks_class is None else
                 scheduling_hooks.plumbing_hooks_device_per_tenant(plumbing_hooks)

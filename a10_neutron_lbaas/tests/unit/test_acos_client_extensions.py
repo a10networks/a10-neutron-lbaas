@@ -13,7 +13,6 @@
 #    under the License.
 
 import mock
-import requests
 
 import test_base
 
@@ -23,13 +22,11 @@ import acos_client.client
 import errno
 import socket
 
-import httplib
 
 class TestACOSClientExtensions(test_base.UnitTestBase):
 
     def test_patient_client_replaces_http(self, client_version="3.0"):
-
-        c = acos_client.client.Client(host="ax", username="admin", 
+        c = acos_client.client.Client(host="ax", username="admin",
                                       password="password", version=client_version)
         unexpected = c.http
         actual = target.patient_client(c)
@@ -42,16 +39,14 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
         return self.test_patient_client_replaces_http_request("2.1")
 
     def test_patient_client_replaces_http_request(self, client_version="3.0"):
-
-        c = acos_client.client.Client(host="ax", username="admin", 
+        c = acos_client.client.Client(host="ax", username="admin",
                                       password="password", version=client_version)
         unexpected = c.http.request
         actual = target.patient_client(c)
         self.assertNotEqual(unexpected, actual.http.request)
 
     def test_patient_client_replaces_session_http_request(self, client_version="3.0"):
-
-        c = acos_client.client.Client(host="ax", username="admin", 
+        c = acos_client.client.Client(host="ax", username="admin",
                                       password="password", version=client_version)
         unexpected = c.session.http.request
         actual = target.patient_client(c)
@@ -61,7 +56,7 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
         self.test_patient_client_replaces_session_http_request(client_version="2.1")
 
     def test_patient_client_21(self):
-        c = acos_client.client.Client(host="ax", username="admin", 
+        c = acos_client.client.Client(host="ax", username="admin",
                                       password="password", version="2.1")
         actual = target.patient_client(c)
 
@@ -81,10 +76,9 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
 
                 actual.http.get("/stuff")
                 self.assertTrue(request_mock.called)
-    
-    def test_patient_client(self, client_version="3.0"):
 
-        c = acos_client.client.Client(host="ax", username="admin", 
+    def test_patient_client(self, client_version="3.0"):
+        c = acos_client.client.Client(host="ax", username="admin",
                                       password="password", version=client_version)
         actual = target.patient_client(c)
 
@@ -96,21 +90,21 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
             self.assertTrue(request_mock.called)
 
     def test_patient_client_handles_host_unreachable(self, client_version="3.0"):
-
-        c = acos_client.client.Client(host="ax", username="admin", 
+        c = acos_client.client.Client(host="ax", username="admin",
                                       password="password", version=client_version)
         actual = target.patient_client(c)
 
         with mock.patch('requests.request') as request_mock:
             result_mock = mock.MagicMock()
             result_mock.json.return_value = "asdf"
-            request_mock.side_effect = [socket.error(errno.EHOSTUNREACH, "Host unreachable"), result_mock]
-            
+            request_mock.side_effect = [socket.error(errno.EHOSTUNREACH, "Host unreachable"),
+                                        result_mock]
+
             actual.http.get("/stuff")
             self.assertEqual(2, request_mock.call_count)
 
     def test_patient_client_handles_host_unreachable_21(self):
-        c = acos_client.client.Client(host="ax", username="admin", 
+        c = acos_client.client.Client(host="ax", username="admin",
                                       password="password", version="2.1")
         actual = target.patient_client(c)
 
@@ -122,8 +116,10 @@ class TestACOSClientExtensions(test_base.UnitTestBase):
                 https_mock.return_value = connection_mock
 
                 request_mock = mock.MagicMock()
-                request_mock.side_effect = [socket.error(errno.EHOSTUNREACH, "Host unreachable"), mock.MagicMock()]
-                connection_mock.request = request_mock           
+                request_mock.side_effect = [socket.error(errno.EHOSTUNREACH,
+                                                         "Host unreachable"),
+                                            mock.MagicMock()]
+                connection_mock.request = request_mock
 
                 response_mock = mock.MagicMock()
                 response_mock.read.return_value = "Stuff"

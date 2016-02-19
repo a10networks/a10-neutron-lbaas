@@ -124,13 +124,14 @@ class TestLB(test_base.UnitTestBase):
         class ExpectedException(Exception):
             pass
 
-        mock_client.slb.virtual_server.create.side_effect = self.do_raise_exception(ExpectedException)
-        
+        mock_client.slb.virtual_server.create.side_effect = self.do_raise_exception(
+            ExpectedException)
+
         with self.assertRaises(ExpectedException):
             self.a.lb.create(None, m)
 
     def do_raise_exception(self, e, msg="mock raised exception"):
-        def raise_exception( e, msg="acos broke!"):
+        def raise_exception(e, msg="acos broke!"):
             raise e(msg)
 
         return lambda *args, **kwargs: raise_exception(e, msg)

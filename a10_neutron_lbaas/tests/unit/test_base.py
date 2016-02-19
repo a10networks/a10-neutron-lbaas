@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.appliance_client as appliance_client
 import a10_neutron_lbaas.tests.test_case as test_case
 import a10_neutron_lbaas.tests.unit.unit_config as unit_config
 import mock
