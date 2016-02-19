@@ -22,7 +22,6 @@ from oslo_config import cfg
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.db.models as models
-import a10_neutron_lbaas.db.operations as db_operations
 import a10_neutron_lbaas.instance_manager as a10_instance_manager
 
 

@@ -40,10 +40,8 @@ def patient_http(original):
 
         while time.time() < time_end:
             try:
-                print "My party and I'll cry if I want to"
                 return underlying_request(*args, **kwargs)
             except socket.error as e:
-                last_e = e
                 if e.errno not in skip_errs:
                     raise
                     break
