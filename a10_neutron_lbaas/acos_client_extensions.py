@@ -22,6 +22,7 @@ def patient_client(original):
     self = copy.copy(original)
 
     self.http = patient_http(self.http)
+    self.session.http = self.http
 
     return self
 
@@ -39,6 +40,7 @@ def patient_http(original):
 
         while time.time() < time_end:
             try:
+                print "My party and I'll cry if I want to"
                 return underlying_request(*args, **kwargs)
             except socket.error as e:
                 last_e = e
