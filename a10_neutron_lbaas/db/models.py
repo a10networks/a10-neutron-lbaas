@@ -132,9 +132,7 @@ class A10ApplianceDB(A10ApplianceSLB):
         }
         return config.device_defaults(device)
 
-
     def client(self, context):
-        import pdb; pdb.set_trace()
         if self.nova_instance_id is not None:
             device_cfg = self.device(context)
             acos_client = context.a10_driver.acos_client_class(device_cfg)
