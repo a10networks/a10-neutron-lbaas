@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import logging
 
 from a10_neutron_lbaas import a10_openstack_map as a10_os
@@ -68,10 +69,18 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
 
             LOG.debug("handler_pool.delete(): Checking pool health monitor...")
             if pool.healthmonitor:
-                LOG.debug("handler_pool.delete(): HM: %s" % (pool.healthmonitor))
-                self.a10_driver.hm._delete(c, context, pool.healthmonitor)
+                # The pool.healthmonitor we get doesn't have a pool
+                # Make a new one with the hm as the root
+                hm = copy.copy(pool.healthmonitor)
+                hm.pool = copy.copy(pool)
+                hm.pool.healthmonitor = None
+                LOG.debug("handler_pool.delete(): HM: %s" % hm)
+                self.a10_driver.hm._delete(c, context, hm)
 
-            c.client.slb.service_group.delete(self._meta_name(pool))
+            try:
+                c.client.slb.service_group.delete(self._meta_name(pool))
+            except (acos_errors.NotFound, acos_errors.NoSuchServiceGroup):
+                pass
 
             handler_persist.PersistHandler(
                 c, context, pool, self._meta_name(pool)).delete()
