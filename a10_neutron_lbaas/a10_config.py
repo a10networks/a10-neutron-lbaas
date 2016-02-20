@@ -32,7 +32,13 @@ class A10Config(object):
     }
 
     def __init__(self):
-        if os.path.exists('/etc/a10'):
+        # Look for config in the virtual environment
+        # virtualenv puts the original prefix in sys.real_prefix
+        # pyenv puts it in sys.base_prefix
+        venv_d = os.path.join(sys.prefix, 'etc/a10')
+        if (hasattr(sys, 'real_prefix') or hasattr(sys, 'base_prefix')) and os.path.exists(venv_d):
+            d = venv_d
+        elif os.path.exists('/etc/a10'):
             d = '/etc/a10'
         else:
             d = '/etc/neutron/services/loadbalancer/a10networks'
