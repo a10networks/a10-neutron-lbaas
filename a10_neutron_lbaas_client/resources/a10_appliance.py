@@ -113,6 +113,7 @@ RESOURCE_ATTRIBUTE_MAP = {
                 'type:uuid': None
             },
             'is_visible': True,
+            'default': lambda attr: attr.ATTR_NOT_SPECIFIED
         }
     }
 }
