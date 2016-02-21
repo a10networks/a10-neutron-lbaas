@@ -26,8 +26,8 @@ LOG = logging.getLogger(__name__)
 
 class PoolHandler(handler_base_v2.HandlerBaseV2):
 
-    def _set(self, set_method, c, context, pool):
-        p = handler_persist.PersistHandler(c, context, pool)
+    def _set(self, set_method, c, context, pool, old_pool=None):
+        p = handler_persist.PersistHandler(c, context, pool, old_pool)
         p.create()
 
         args = {'service_group': self.meta(pool, 'service_group', {})}
@@ -60,7 +60,7 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
     def update(self, context, old_pool, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
             self._set(c.client.slb.service_group.update,
-                      c, context, pool)
+                      c, context, pool, old_pool)
 
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:

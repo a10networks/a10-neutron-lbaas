@@ -169,8 +169,8 @@ class PersistHandler(object):
         self.c = c
         self.context = context
         self.vip = vip
-        self.c_pers = ""
-        self.s_pers = ""
+        self.c_pers = None
+        self.s_pers = None
         self.name = vip_name
         self.old_vip = old_vip
 
