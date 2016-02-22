@@ -102,13 +102,13 @@ class UnitTestBase(test_case.TestCase):
     def _build_openstack_context(self):
         return _build_openstack_context()
 
-    def setUp(self):
+    def setUp(self, openstack_lb_args={}):
         unit_config.setUp()
 
         if not hasattr(self, 'version') or self.version == 'v2':
-            self.a = FakeA10OpenstackLBV2(None)
+            self.a = FakeA10OpenstackLBV2(None, **openstack_lb_args)
         else:
-            self.a = FakeA10OpenstackLBV1(None)
+            self.a = FakeA10OpenstackLBV1(None, **openstack_lb_args)
 
     def print_mocks(self):
         print("OPENSTACK ", self.a.openstack_driver.mock_calls)
