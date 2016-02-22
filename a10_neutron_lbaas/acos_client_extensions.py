@@ -37,7 +37,7 @@ def patient_http(original):
     def request(*args, **kwargs):
         sleep_time = 1
         lock_time = 600
-        skip_errs = [errno.EHOSTUNREACH]
+        skip_errs = [errno.EHOSTUNREACH, errno.ECONNREFUSED]
         skip_err_codes = [errno.errorcode[e] for e in skip_errs]
         time_end = time.time() + lock_time
 
