@@ -38,6 +38,9 @@ class A10Context(object):
             d = self.a10_driver.config.get_device(self.device_name)
         else:
             d = self.a10_driver._select_a10_device(self.tenant_id)
+        # TOOD(dougwig) -- new from orchestration branch
+        #appliance = self.inventory.find(self.openstack_lbaas_obj)
+        #d = appliance.device(self)
         self.device_cfg = d
 
         # TODO(dougwig) -- orchestration tangle begin

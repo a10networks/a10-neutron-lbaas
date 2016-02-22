@@ -52,9 +52,10 @@ class A10OpenstackLBBase(object):
                  network_hooks_class=None,
                  acos_client_class=appliance_client.device_acos_client,
                  client_class=appliance_client.uniform_device_client,
+                 config=None
                  ):
         self.openstack_driver = openstack_driver
-        self.config = a10_config.A10Config()
+        self.config = config or a10_config.A10Config()
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
 

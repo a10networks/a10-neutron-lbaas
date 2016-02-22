@@ -58,7 +58,6 @@ class A10Config(object):
 
         return device
 
-
     def __init__(self, config_dir=None):
         # Look for config in the virtual environment
         # virtualenv puts the original prefix in sys.real_prefix
@@ -143,6 +142,12 @@ class A10Config(object):
             self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
         finally:
             sys.path = real_sys_path
+
+        self.image_defaults = self.IMAGE_DEFAULTS.copy()
+        self.image_defaults.update(getattr(self.config, "image_defaults", {}))
+
+        self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
+        self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
 
     # We don't use oslo.config here, in a weak attempt to avoid pulling in all
     # the many openstack dependencies. If this proves problematic, we should
