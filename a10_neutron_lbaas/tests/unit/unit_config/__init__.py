@@ -24,5 +24,9 @@ def setUp():
 
 
 def empty_config():
-    config_dir = os.path.dirname(blank_config.__file__)
-    return a10_config.A10Config(config_dir=config_dir)
+    return a10_config.A10Config(config=blank_config)
+
+
+def config(config_dict):
+    config_constructor = type('config', (object,), config_dict)
+    return a10_config.A10Config(config=config_constructor())

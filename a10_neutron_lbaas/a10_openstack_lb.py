@@ -16,6 +16,7 @@ import logging
 
 import a10_config
 import acos_client
+import appliance_client
 import db.operations as operations
 import inventory
 import network_hooks
@@ -52,14 +53,19 @@ class A10OpenstackLBBase(object):
                  db_operations_class=operations.Operations,
                  inventory_class=inventory.InventoryBase,
                  scheduling_hooks_class=None,
-                 network_hooks_class=None
+                 network_hooks_class=None,
+                 acos_client_class=appliance_client.device_acos_client,
+                 client_class=appliance_client.uniform_device_client,
+                 config=None
                  ):
         self.openstack_driver = openstack_driver
-        self.config = a10_config.A10Config()
+        self.config = config or a10_config.A10Config()
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
         self.db_operations_class = db_operations_class
         self.inventory_class = inventory_class
+        self.acos_client_class = acos_client_class
+        self.client_class = client_class
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
@@ -96,11 +102,7 @@ class A10OpenstackLBBase(object):
         self.hooks = self.network_hooks
 
     def _get_a10_client(self, device_info):
-        d = device_info
-        return acos_client.Client(d['host'],
-                                  d.get('api_version', acos_client.AXAPI_21),
-                                  d['username'], d['password'],
-                                  port=d['port'], protocol=d['protocol'])
+        return self.client_class(self.acos_client_class(device_info), device_info)
 
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")

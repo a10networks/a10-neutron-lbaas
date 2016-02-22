@@ -64,41 +64,42 @@ class A10Config(object):
 
         return device
 
-    def __init__(self, config_dir=None):
-        if os.path.exists('/etc/a10'):
-            d = '/etc/a10'
-        else:
-            d = '/etc/neutron/services/loadbalancer/a10networks'
-        self.config_dir = config_dir or os.environ.get('A10_CONFIG_DIR', d)
-        self.config_path = os.path.join(self.config_dir, "config.py")
+    def __init__(self, config_dir=None, config=None):
+        self.config = config
+        if self.config is None:
+            if os.path.exists('/etc/a10'):
+                d = '/etc/a10'
+            else:
+                d = '/etc/neutron/services/loadbalancer/a10networks'
+            self.config_dir = config_dir or os.environ.get('A10_CONFIG_DIR', d)
+            self.config_path = os.path.join(self.config_dir, "config.py")
 
-        real_sys_path = sys.path
-        sys.path = [self.config_dir]
-        try:
+            real_sys_path = sys.path
+            sys.path = [self.config_dir]
             try:
                 sys.modules.pop('config', None)
-                import config
-                self.config = config
+                import config as imported_config
+                self.config = imported_config
             except ImportError:
                 LOG.error("A10Config couldn't find config.py in %s", self.config_dir)
                 self.config = blank_config
+            finally:
+                sys.path = real_sys_path
 
-            self.devices = {}
-            for k, v in self.config.devices.items():
-                if 'status' in v and not v['status']:
-                    LOG.debug("status is False, skipping dev: %s", v)
-                else:
-                    device = self.device_defaults(v)
-                    device['key'] = k
-                    self.devices[k] = device
+        self.devices = {}
+        for k, v in self.config.devices.items():
+            if 'status' in v and not v['status']:
+                LOG.debug("status is False, skipping dev: %s", v)
+            else:
+                device = self.device_defaults(v)
+                device['key'] = k
+                self.devices[k] = device
 
-            self.image_defaults = self.IMAGE_DEFAULTS.copy()
-            self.image_defaults.update(getattr(self.config, "image_defaults", {}))
+        self.image_defaults = self.IMAGE_DEFAULTS.copy()
+        self.image_defaults.update(getattr(self.config, "image_defaults", {}))
 
-            self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
-            self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
-        finally:
-            sys.path = real_sys_path
+        self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
+        self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
 
         LOG.debug("A10Config, devices=%s", self.devices)
 
