@@ -20,6 +20,7 @@ import test_base
 
 import a10_neutron_lbaas.a10_context as a10_context
 import a10_neutron_lbaas.db.models as models
+import a10_neutron_lbaas.instance_manager as instance_manager
 
 
 class TestA10Context(test_a10_openstack_lb.SetupA10OpenstackLBBase, test_base.UnitTestBase):
@@ -50,8 +51,22 @@ class TestA10Context(test_a10_openstack_lb.SetupA10OpenstackLBBase, test_base.Un
     def test_inventory_find(self):
         """Test inventory and scheduling hooks in their almost-real environment"""
 
-        with self.a10_context:
-            appliance = self.a10_context.inventory.find(self.a10_context.openstack_lbaas_obj)
+        # We really just want to patch glance, but oslo library loading is non-standard.
+        mock_glance_client = mock.MagicMock()
+        mock_glance_client.images.list.return_value = []
+
+        InstanceManager = instance_manager.InstanceManager
+        with mock.patch(
+            'a10_neutron_lbaas.instance_manager.InstanceManager'
+        ) as mock_instance_manager:
+
+            mock_instance_manager.side_effect = lambda *args, **kwargs: InstanceManager(
+                *args,
+                glance_api=mock_glance_client,
+                **kwargs)
+
+            with self.a10_context:
+                appliance = self.a10_context.inventory.find(self.a10_context.openstack_lbaas_obj)
 
         session = self.a10_context.db_operations.session
         session.commit()
