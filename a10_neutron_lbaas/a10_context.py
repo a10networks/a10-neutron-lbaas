@@ -64,20 +64,15 @@ class A10Context(object):
             self.tenant_id = self.openstack_lbaas_obj['tenant_id']
 
     def select_appliance_partition(self):
+
+        name = self.device_cfg.get("shared_partition", "shared")
+
+        if self.device_cfg['v_method'].lower() == 'adp':
+            name = self.tenant_id[0:13]
+
         # If we are not using appliance partitions, we are done.
 
-        if self.device_cfg['v_method'].lower() != 'adp':
-            return
-
-        # Try to make the requested partition active
-        name = self.tenant_id[0:13]
-
-        # This could be improved by adding users that would share the partition, etc.
-        if (self.openstack_context.is_admin
-                and not self.device_cfg.get("shared_partition", "shared") == "shared"):
-            name = self.device_cfg["shared_partition"]
-
-        if not name:
+        if name == 'shared':
             return
 
         try:
