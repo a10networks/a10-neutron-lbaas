@@ -15,9 +15,15 @@
 import logging
 import pprint
 
-import glanceclient.client as glance_client
+try:
+    # glanceclient importing is too fragile to have module initialization depend on it
+    import glanceclient.client as glance_client
+except ImportError:
+    pass
+
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
+
 import time
 import uuid
 
