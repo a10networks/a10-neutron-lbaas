@@ -17,6 +17,22 @@ import test_handler_member
 
 
 class TestPools(test_base.UnitTestBase):
+    def fake_hm(self, type):
+        hm = {
+            'tenant_id': 'tenv1',
+            'id': 'abcdef',
+            'name': 'abcdef',
+            'type': type,
+            'delay': '5',
+            'timeout': 5,
+            'max_retries': '5',
+            'pools': [],
+        }
+        if type in ['HTTP', 'HTTPS']:
+            hm['http_method'] = 'GET'
+            hm['url_path'] = '/'
+            hm['expected_codes'] = '200'
+        return hm.copy()
 
     def fake_pool(self, protocol, method):
         return {
@@ -49,12 +65,8 @@ class TestPools(test_base.UnitTestBase):
                 self.a.pool.create(None, pool)
 
                 self.print_mocks()
-
-                # (self.a.last_client.slb.service_group.create.
-                #     assert_called_with(
-                #     pool.id,
-                #     lb_method=methods[m],
-                #     protocol=protocols[p]))
+                (self.a.last_client.slb.service_group.create.
+                    assert_called())
 
                 if not saw_exception:
                     n = str(self.a.last_client.mock_calls).index(
@@ -66,21 +78,52 @@ class TestPools(test_base.UnitTestBase):
         pool = self.fake_pool('TCP', 'ROUND_ROBIN')
         self.a.pool.update(None, old_pool, pool)
         self.print_mocks()
-        self.a.last_client.slb.service_group.create(
-            pool['id'],
-            lb_method=self.a.last_client.slb.service_group.ROUND_ROBIN,
-            protocol=self.a.last_client.slb.service_group.TCP)
+        self.a.last_client.slb.service_group.update.assert_called()
+
+    def _test_delete(self, pool):
+        self.a.pool.delete(None, pool)
+        self.print_mocks()
 
     def test_delete(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         pool['members'] = [test_handler_member._fake_member()]
-        pool['health_monitors_status'] = [{'monitor_id': 'hm1'}]
-        self.a.pool.delete(None, pool)
+        pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools": [pool]}]
+        self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = test_base.FakeHM()
 
-        self.print_mocks()
+        self._test_delete(pool)
 
         (self.a.last_client.slb.service_group.delete.
             assert_called_with(pool['id']))
+
+    def test_delete_with_hm_dissociates_hm(self):
+        pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
+        hm = self.fake_hm("TCP")
+        hm["pools"].append(self.fake_pool('TCP', 'LEAST_CONNECTIONS'))
+        pool['members'] = [test_handler_member._fake_member()]
+        pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools": [pool]}]
+
+        self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = hm
+
+        self._test_delete(pool)
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            "id1",
+            health_monitor="",
+            health_check_disable=True)
+
+    def test_delete_without_health_monitor(self):
+        pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
+        pool['members'] = [test_handler_member._fake_member()]
+        pool['health_monitors_status'] = []
+        self._test_delete(pool)
+        (self.a.last_client.slb.service_group.delete.
+            assert_called_with(pool['id']))
+
+    def test_delete_removes_monitor(self):
+        pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
+        pool['members'] = [test_handler_member._fake_member()]
+        pool['health_monitors_status'] = [{'monitor_id': "hm1"}]
+        self.a.pool.delete(None, pool)
+        self.a.last_client.slb.hm.delete.assert_called()
 
     def test_stats(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')

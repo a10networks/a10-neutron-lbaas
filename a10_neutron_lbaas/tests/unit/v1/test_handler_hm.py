@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 import test_base
 
 
@@ -28,6 +29,7 @@ class TestHM(test_base.UnitTestBase):
         hm = {
             'tenant_id': 'tenv1',
             'id': 'abcdef',
+            'name': 'abcdef',
             'type': type,
             'delay': '5',
             'timeout': 5,
@@ -84,7 +86,56 @@ class TestHM(test_base.UnitTestBase):
             axapi_args={})
 
     def test_delete(self):
-        self.a.hm.delete(None, self.fake_hm('HTTP'), 'p01')
+        expected = test_base.FakePool()
+        fakehm = test_base.FakeHM()
+        fakehm['tenant_id'] = 'tenv1'
+        fakehm['id'] = 'fedcba'
+        fakehm.pools.append(expected)
+
+        self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
+        self.a.hm.openstack_driver._hm_binding_count.return_value = 1
+
+        self.a.hm.delete(None, fakehm, 'p01')
+        self.a.last_client.slb.hm.delete.assert_called_with(fakehm["id"])
+
+    def test_delete_updates_pool_health_monitor(self):
+        expected = test_base.FakePool()
+        fakehm = test_base.FakeHM()
+        fakehm['tenant_id'] = 'tenv1'
+        fakehm['id'] = 'fedcba'
+        fakehm['pools'] = []
+        fakehm['pools'].append(expected)
+
+        self.a.hm.openstack_driver._pool_get_hm.return_value = fakehm
+        self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
+        self.a.hm.openstack_driver._hm_binding_count.return_value = 1
+
         pool_name = self.a.hm._pool_name(None, 'p01')
+        self.a.hm.delete(None, fakehm, 'p01')
+
         self.a.last_client.slb.service_group.update.assert_called_with(
-            pool_name, health_monitor='')
+            pool_name, health_monitor='', health_check_disable=True)
+
+    def test_dissociate_calls_service_group_update(self):
+        fake_pool = test_base.FakePool()
+        fake_hm = test_base.FakeHM()
+        fake_hm["id"] = "id1"
+        fake_hm["pools"] = []
+        fake_hm["pools"].append(fake_pool)
+        fake_hm['tenant_id'] = "tenv1"
+
+        self.a.hm.dissociate(self.a.last_client, None, fake_hm, fake_pool.id)
+        self.a.last_client.slb.service_group.update.assert_called(
+            fake_pool.id, health_monitor="", health_check_disable=True)
+
+    def test_dissociate_calls_hm_delete(self):
+        fake_pool = test_base.FakePool()
+        fake_hm = test_base.FakeHM()
+        fake_pool["health_monitor_status"] = [{"monitor_id": fake_hm.id}]
+        fake_hm["id"] = "id1"
+        fake_hm["pools"] = []
+        fake_hm["pools"].append(fake_pool)
+        fake_hm['tenant_id'] = "tenv1"
+
+        self.a.hm.dissociate(self.a.last_client, None, fake_hm, fake_pool.id)
+        self.a.last_client.hm.service_group.delete.assert_called(self.a.hm._meta_name(fake_hm))
