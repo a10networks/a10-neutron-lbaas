@@ -14,6 +14,7 @@
 
 import a10_neutron_lbaas.v1.v1_context as a10
 
+import a10_neutron_lbaas.tests.unit.unit_config as unit_config
 import test_base
 
 
@@ -23,8 +24,8 @@ class FakeException(Exception):
 
 class TestA10Context(test_base.UnitTestBase):
 
-    def setUp(self):
-        super(TestA10Context, self).setUp()
+    def setUp(self, **kwargs):
+        super(TestA10Context, self).setUp(**kwargs)
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
         self.m = {'id': 'fake-id-001', 'tenant_id': 'faketen1'}
@@ -48,14 +49,6 @@ class TestA10Context(test_base.UnitTestBase):
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
         self.a.last_client.system.action.write_memory.assert_called_with()
-        self.a.last_client.session.close.assert_called_with()
-
-    def test_ha(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m,
-                                 device_name='ax4') as c:
-            c
-        self.a.last_client.ha.sync.assert_called_with(
-            '1.1.1.1', 'admin', 'a10')
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_e(self):
@@ -104,28 +97,36 @@ class TestA10Context(test_base.UnitTestBase):
 class TestA10ContextADP(TestA10Context):
 
     def setUp(self):
-        super(TestA10ContextADP, self).setUp()
-        self.reset_v_method('adp')
+        adp_config = {
+            'devices': {
+                "axadp-alt": {
+                    "host": "10.10.100.24",
+                    "username": "admin",
+                    "password": "a10",
+                    "protocol": "https",
+                    "v_method": "ADP"
+                }
+            }
+        }
+        config = unit_config.config(adp_config)
 
-    def tearDown(self):
-        self.reset_v_method('lsi')
-
-    def reset_v_method(self, val):
-        for k, v in self.a.config.devices.items():
-            v['v_method'] = val
+        super(TestA10ContextADP, self).setUp(openstack_lb_args={'config': config})
 
     def _test_alternate_partition(self, use_alternate=False):
         expected = self.a.config.devices["axadp-alt"].get("shared_partition",
                                                           "shared")
 
         self.m["tenant_id"] = expected if use_alternate else self.m["tenant_id"]
-        with a10.A10Context(self.handler, self.ctx, self.m,
-                            use_alternate_partition=use_alternate) as c:
+        with a10.A10Context(self.handler, self.ctx, self.m) as c:
             c
             active_mock = self.a.last_client.system.partition.active
             self.assertEqual(use_alternate, expected in str(active_mock.mock_calls))
 
         self.empty_close_mocks()
+
+    def test_use_alternate_partition_named(self):
+        self.a.config.devices["axadp-alt"]["shared_partition"] = "mypart"
+        self._test_alternate_partition(use_alternate=True)
 
     def test_use_alternate_partition_positive(self):
         self._test_alternate_partition(use_alternate=True)
@@ -145,4 +146,39 @@ class TestA10ContextADP(TestA10Context):
         self.print_mocks()
         self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
         self.assertEqual(2, len(self.a.last_client.mock_calls))
+        self.a.last_client.session.close.assert_called_with()
+
+
+class TestA10ContextHA(TestA10Context):
+
+    def setUp(self):
+        adp_config = {
+            'devices': {
+                "ax4": {
+                    "host": "10.10.100.23",
+                    "username": "admin",
+                    "password": "a10",
+                    "api_version": "2.1",
+                    "use_float": True,
+                    "ha_sync_list": [
+                        {
+                            "name": "ax5",
+                            "ip": "1.1.1.1",
+                            "username": "admin",
+                            "password": "a10"
+                        }
+                    ]
+                },
+            }
+        }
+        config = unit_config.config(adp_config)
+
+        super(TestA10ContextHA, self).setUp(openstack_lb_args={'config': config})
+
+    def test_ha(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m,
+                                 device_name='ax4') as c:
+            c
+        self.a.last_client.ha.sync.assert_called_with(
+            '1.1.1.1', 'admin', 'a10')
         self.a.last_client.session.close.assert_called_with()

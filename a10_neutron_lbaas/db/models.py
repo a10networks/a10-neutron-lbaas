@@ -18,6 +18,8 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import relationship
 import uuid
 
+import a10_neutron_lbaas.acos_client_extensions as acos_client_extensions
+
 
 def default(cls, **kw):
     instance = cls(**kw)
@@ -57,6 +59,13 @@ class A10ApplianceSLB(model_base.BASEV2):
 
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=uuid_str)
     type = sa.Column(sa.String(50), nullable=False)
+
+    def device(self, context):
+        raise NotImplementedError()
+
+    def client(self, context):
+        device_cfg = self.device(context)
+        return context.a10_driver._get_a10_client(device_cfg)
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__,
@@ -106,6 +115,7 @@ class A10ApplianceDB(A10ApplianceSLB):
     password = sa.Column(sa.String(255), nullable=False)
     protocol = sa.Column(sa.String(255), nullable=False)
     port = sa.Column(sa.Integer, nullable=False)
+    nova_instance_id = sa.Column(sa.String(36), nullable=True)
 
     def device(self, context):
         # TODO(aritrary config): When we store all the options
@@ -121,6 +131,16 @@ class A10ApplianceDB(A10ApplianceSLB):
             'port': self.port
         }
         return config.device_defaults(device)
+
+    def client(self, context):
+        if self.nova_instance_id is not None:
+            device_cfg = self.device(context)
+            acos_client = context.a10_driver.acos_client_class(device_cfg)
+            patient_client = acos_client_extensions.patient_client(acos_client)
+            client = context.a10_driver.client_class(patient_client, device_cfg)
+            return client
+
+        return super(A10ApplianceDB, self).client(context)
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__

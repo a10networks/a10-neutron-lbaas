@@ -46,7 +46,8 @@ class A10ApplianceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10Applian
                'username': a10_appliance_db['username'],
                'password': a10_appliance_db['password'],
                'protocol': a10_appliance_db['protocol'],
-               'port': a10_appliance_db['port']}
+               'port': a10_appliance_db['port'],
+               'nova_instance_id': a10_appliance_db.get('nova_instance_id')}
         return self._fields(res, fields)
 
     def _ensure_a10_appliance_not_in_use(self, context, a10_appliance_id):
@@ -79,7 +80,8 @@ class A10ApplianceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10Applian
                 password=data['password'],
                 protocol=data['protocol'],
                 port=data['port'],
-                tenant_id=context.tenant_id)
+                tenant_id=context.tenant_id,
+                nova_instance_id=data.get("nova_instance_id"))
             context.session.add(appliance_record)
 
         return self._make_a10_appliance_dict(appliance_record)

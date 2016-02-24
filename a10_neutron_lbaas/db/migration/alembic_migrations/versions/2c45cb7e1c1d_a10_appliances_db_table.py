@@ -46,7 +46,8 @@ def upgrade():
         sa.Column('username', sa.String(255), nullable=False),
         sa.Column('password', sa.String(255), nullable=False),
         sa.Column('protocol', sa.String(255), nullable=False),
-        sa.Column('port', sa.Integer, nullable=False)
+        sa.Column('port', sa.Integer, nullable=False),
+        sa.Column('nova_instance_id', sa.String(36), nullable=True)
     )
 
 

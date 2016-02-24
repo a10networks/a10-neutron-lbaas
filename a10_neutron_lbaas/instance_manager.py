@@ -15,9 +15,15 @@
 import logging
 import pprint
 
-import glanceclient.client as glance_client
+try:
+    # glanceclient importing is too fragile to have module initialization depend on it
+    import glanceclient.client as glance_client
+except ImportError:
+    pass
+
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
+
 import time
 import uuid
 
@@ -91,7 +97,6 @@ class InstanceManager(object):
 
     def create_instance(self, context):
         a10_record = self._create_instance(context)
-
         # TODO(mdurrant): Do something with the result of this call, like validation.
         self._neutron_api.create_a10_appliance({'a10_appliance': a10_record})
         return a10_record
@@ -103,6 +108,7 @@ class InstanceManager(object):
         imgprops = json.loads(image.metadata["properties"])
 
         a10_appliance = {
+            "nova_instance_id": instance.id,
             "tenant_id": self.tenant_id,
             "name": appliance["name"],
             # TODO(mdurrant): not sure this is populated
@@ -318,4 +324,4 @@ class InstanceManager(object):
         """
         instance_configuration = self._default_instance()
 
-        return self.create_instance(instance_configuration)
+        return self._create_instance(instance_configuration)
