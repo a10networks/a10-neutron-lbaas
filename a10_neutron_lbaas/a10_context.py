@@ -91,7 +91,7 @@ class A10WriteContext(A10Context):
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
             try:
-                self.client.system.action.write_memory()
+                self.client.system.action.write_active()
             except acos_errors.InvalidSessionID:
                 pass
 
