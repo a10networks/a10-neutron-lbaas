@@ -200,25 +200,25 @@ class PersistHandler(object):
     def create(self):
         # TODO - Assign source data and function pointer then just call
         # function pointer with the data you want.
-        if self.sp is None:
-            if self.old_vip is not None:
-                vip_sp = self.old_vip.get("session_persistence")
-                if vip_sp is not None:
-                    try:
-                        vip_sp_type = vip_sp.get("type")
-                        m = getattr(self.c.client.slb.template, self.sp_obj_dict[vip_sp_type])
-                        m.delete(self.old_vip.get("id"))
-                    except Exception:
-                        pass
-        else:
+        if self.old_vip is not None:
+            vip_sp = self.old_vip.get("session_persistence")
+            if vip_sp is not None:
+                try:
+                    vip_sp_type = vip_sp.get("type")
+                    m = getattr(self.c.client.slb.template, self.sp_obj_dict[vip_sp_type])
+                    m.delete(self.old_vip.get("id"))
+                except Exception:
+                    pass
+	
+	if self.sp is not None:
             sp_type = self.sp.get("type")
             if sp_type is not None and sp_type in self.sp_obj_dict:
                 try:
-                    
                     m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
                     m.create(self.name)
                 except acos_errors.Exists:
-                    pass
+		    pass
+                    
 
     def delete(self):
         if self.sp is None:
