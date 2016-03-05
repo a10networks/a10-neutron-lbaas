@@ -113,11 +113,10 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
 
-            pool_name = self._pool_name(context, vip['pool_id'])	    
-      
+            pool_name = self._pool_name(context, vip['pool_id'])
+
             p = PersistHandler(c, context, vip, self._meta_name(vip), old_vip)
-       
-	    p.create()
+            p.create()
 
             templates = self.meta(vip, "template", {})
 
@@ -164,7 +163,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
 
 
 class PersistHandler(object):
-    
+
     def __init__(self, c, context, vip, vip_name, old_vip=None):
         self.c = c
         self.context = context
@@ -181,6 +180,7 @@ class PersistHandler(object):
 
         self.sp = vip.get("session_persistence")
 
+
         if self.sp is not None:
             if self.sp['type'] == 'HTTP_COOKIE':
                 self.c_pers = self.name
@@ -188,8 +188,6 @@ class PersistHandler(object):
                 self.s_pers = self.name
             else:
                 raise a10_ex.UnsupportedFeature()
-        # else:
-        #     self.sp = None
 
     def c_persistence(self):
         return self.c_pers
@@ -198,8 +196,6 @@ class PersistHandler(object):
         return self.s_pers
 
     def create(self):
-        # TODO - Assign source data and function pointer then just call
-        # function pointer with the data you want.
         if self.old_vip is not None:
             vip_sp = self.old_vip.get("session_persistence")
             if vip_sp is not None:
@@ -207,20 +203,20 @@ class PersistHandler(object):
                     vip_sp_type = vip_sp.get("type")
                     m = getattr(self.c.client.slb.template, self.sp_obj_dict[vip_sp_type])
                     m.delete(self.old_vip.get("id"))
-                except Exception:
+                except acos_errors.NotExists:
                     pass
-	
-	if self.sp is not None:
+
+        if self.sp is not None:
             sp_type = self.sp.get("type")
             if sp_type is not None and sp_type in self.sp_obj_dict:
                 try:
                     m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
                     m.create(self.name)
                 except acos_errors.Exists:
-		    pass
-                    
+                    pass
 
     def delete(self):
+
         if self.sp is None:
             return
 
@@ -229,5 +225,6 @@ class PersistHandler(object):
             try:
                 m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
                 m.delete(self.name)
-            except Exception:
-                pass
+
+            except Exception as e:
+                LOG.exception(e)
