@@ -91,17 +91,14 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
             p.create()
             return
 
-
         # existed, change, delete and recreate
         if (old_pool.sessionpersistence and pool.sessionpersistence and
-            oldpool.sessionpersistence.sp_type != pool.sessionpersistence.sp_type):
+                old_pool.sessionpersistence.sp_type != pool.sessionpersistence.sp_type):
             p = handler_persist.PersistHandler(c, context, old_pool)
             p.delete()
             p = handler_persist.PersistHandler(c, context, pool)
             p.create()
             return
-
-
 
         # didn't exist, does exist now, create
         if old_pool.sessionpersistence and not pool.sessionpersistence:
