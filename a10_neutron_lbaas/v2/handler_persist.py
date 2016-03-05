@@ -23,18 +23,17 @@ LOG = logging.getLogger(__name__)
 
 class PersistHandler(object):
 
-    def __init__(self, c, context, pool, old_pool, deprecated_arg=None):
+    def __init__(self, c, context, pool, old_pool=None, deprecated_arg=None):
         self.c = c
         self.context = context
         self.pool = pool
         self.c_pers = None
         self.s_pers = None
-        self.name = vip_name
         self.old_pool = old_pool
 
         self.sp_obj_dict = {
             'HTTP_COOKIE': "cookie_persistence",
-	    'APP_COOKIE': "cookie_persistence",
+            'APP_COOKIE': "cookie_persistence",
             'SOURCE_IP': "src_ip_persistence",
         }
 
@@ -66,13 +65,13 @@ class PersistHandler(object):
                 pool_sp = self.old_pool.sessionpersistence
                 if pool_sp is not None:
                     try:
-                        pool_sp_type = pool_sp.get("type")
+                        pool_sp_type = pool_sp.type
                         m = getattr(self.c.client.slb.template, self.sp_obj_dict[pool_sp_type])
-                        m.delete(self.old_pool.get("id"))
+                        m.delete(self.old_pool.id)
                     except Exception:
                         pass
         else:
-            sp_type = self.sp.get("type")
+            sp_type = self.sp.type
             if sp_type is not None and sp_type in self.sp_obj_dict:
                 try:
 
@@ -85,7 +84,7 @@ class PersistHandler(object):
         if self.sp is None:
             return
 
-        sp_type = self.sp.get("type")
+        sp_type = self.sp.type
         if sp_type in self.sp_obj_dict.keys():
             try:
                 m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
