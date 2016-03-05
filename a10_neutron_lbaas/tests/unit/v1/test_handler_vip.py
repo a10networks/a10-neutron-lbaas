@@ -23,10 +23,10 @@ class TestVIP(test_base.UnitTestBase):
     def __init__(self, *args):
         super(TestVIP, self).__init__(*args)
 
-    def fake_vip(self, pers=None):
+    def fake_vip(self, pers="", vip_id="id1"):
         h = {
             'tenant_id': 'ten1',
-            'id': 'id1',
+            'id': vip_id,
             'protocol': 'HTTP',
             'admin_state_up': True,
             'address': '1.1.1.1',
@@ -196,6 +196,33 @@ class TestVIP(test_base.UnitTestBase):
         self.assertTrue('UP' in s)
         self.a.openstack_driver.plugin.get_pool.assert_called_with(
             None, 'pool1')
+        self.assertTrue('HTTP' in s)
+
+    def test_update_delete_pers(self):
+        vip_id = "id2"
+        self.a.vip.update(None, self.fake_vip('SOURCE_IP', vip_id=vip_id), self.fake_vip())
+        self.print_mocks()
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('vport.update' in s)
+        self.assertTrue('id1' in s)
+        self.assertTrue('UP' in s)
+        self.a.openstack_driver.plugin.get_pool.assert_called_with(None, 'pool1')
+        z = self.a.last_client.slb.template.src_ip_persistence.delete
+        z.assert_called_with(vip_id)
+        self.assertTrue('HTTP' in s)
+
+    def test_update_change_pers(self):
+        vip_id = "id2"
+        self.a.vip.update(None, self.fake_vip('SOURCE_IP', vip_id=vip_id),
+                          self.fake_vip('HTTP_COOKIE'))
+        self.print_mocks()
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('vport.update' in s)
+        self.assertTrue('id1' in s)
+        self.assertTrue('UP' in s)
+        self.a.openstack_driver.plugin.get_pool.assert_called_with(None, 'pool1')
+        z = self.a.last_client.slb.template.cookie_persistence.create
+        z.assert_called_with("id1")
         self.assertTrue('HTTP' in s)
 
     def test_delete(self):
