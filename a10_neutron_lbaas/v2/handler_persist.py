@@ -29,7 +29,7 @@ class PersistHandler(object):
         self.pool = pool
         self.c_pers = None
         self.s_pers = None
-        self.old_pool = old_pool
+        # self.old_pool = old_pool
 
         self.sp_obj_dict = {
             'HTTP_COOKIE': "cookie_persistence",
@@ -58,27 +58,16 @@ class PersistHandler(object):
         return self.s_pers
 
     def create(self):
-        # TODO - Assign source data and function pointer then just call
-        # function pointer with the data you want.
         if self.sp is None:
-            if self.old_pool is not None:
-                pool_sp = self.old_pool.sessionpersistence
-                if pool_sp is not None:
-                    try:
-                        pool_sp_type = pool_sp.type
-                        m = getattr(self.c.client.slb.template, self.sp_obj_dict[pool_sp_type])
-                        m.delete(self.old_pool.id)
-                    except Exception:
-                        pass
-        else:
-            sp_type = self.sp.type
-            if sp_type is not None and sp_type in self.sp_obj_dict:
-                try:
+            return
+        sp_type = self.sp.type
+        if sp_type is not None and sp_type in self.sp_obj_dict:
+            try:
 
-                    m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
-                    m.create(self.name)
-                except acos_errors.Exists:
-                    pass
+                m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
+                m.create(self.name)
+            except acos_errors.Exists:
+                pass
 
     def delete(self):
         if self.sp is None:

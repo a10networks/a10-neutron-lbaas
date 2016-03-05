@@ -27,9 +27,7 @@ LOG = logging.getLogger(__name__)
 class PoolHandler(handler_base_v2.HandlerBaseV2):
 
     def _set(self, set_method, c, context, pool, old_pool=None):
-        p = handler_persist.PersistHandler(c, context, pool, old_pool)
-        p.create()
-
+        self._update_session_persistence(old_pool, pool, c, context)
         args = {'service_group': self.meta(pool, 'service_group', {})}
         set_method(
             self._meta_name(pool),
@@ -59,6 +57,7 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
 
     def update(self, context, old_pool, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
+
             self._set(c.client.slb.service_group.update,
                       c, context, pool, old_pool)
 
@@ -84,3 +83,37 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
 
             handler_persist.PersistHandler(
                 c, context, pool, self._meta_name(pool)).delete()
+
+    def _update_session_persistence(self, old_pool, pool, c, context):
+        # didn't exist, does exist, create
+        if not old_pool or (not old_pool.sessionpersistence and pool.sessionpersistence):
+            p = handler_persist.PersistHandler(c, context, pool, old_pool)
+            p.create()
+            return
+
+
+        # existed, change, delete and recreate
+        if (old_pool.sessionpersistence and pool.sessionpersistence and
+            oldpool.sessionpersistence.sp_type != pool.sessionpersistence.sp_type):
+            p = handler_persist.PersistHandler(c, context, old_pool)
+            p.delete()
+            p = handler_persist.PersistHandler(c, context, pool)
+            p.create()
+            return
+
+
+
+        # didn't exist, does exist now, create
+        if old_pool.sessionpersistence and not pool.sessionpersistence:
+            p = handler_persist.PersistHandler(c, context, pool)
+            p.create()
+            return
+
+        # didn't exist, doesn't exist
+        if (not old_pool.sessionpersistence and not pool.sessionpersistence):
+            return
+
+        # did exist, does exist, didn't change
+        if (old_pool.sessionpersistence and pool.sessionpersistence
+                and old_pool.sessionpersistence.sp_type == pool.sessionpersistence.sp_type):
+            return
