@@ -84,6 +84,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             pool_name = self._pool_name(context, pool_id=listener.default_pool_id)
         except Exception:
             pool_name = None
+
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
 
