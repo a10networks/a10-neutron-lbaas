@@ -23,18 +23,25 @@ LOG = logging.getLogger(__name__)
 
 class PersistHandler(object):
 
-    def __init__(self, c, context, pool, deprecated_arg=None):
+    def __init__(self, c, context, pool, old_pool=None, deprecated_arg=None):
         self.c = c
         self.context = context
         self.pool = pool
         self.c_pers = None
         self.s_pers = None
+        # self.old_pool = old_pool
+
+        self.sp_obj_dict = {
+            'HTTP_COOKIE': "cookie_persistence",
+            'APP_COOKIE': "cookie_persistence",
+            'SOURCE_IP': "src_ip_persistence",
+        }
 
         if pool:
             self.name = pool.id
 
-        if pool and pool.sessionpersistence:
-            self.sp = pool.sessionpersistence
+        if pool and pool.session_persistence:
+            self.sp = pool.session_persistence
             if self.sp.type == 'HTTP_COOKIE' or self.sp.type == 'APP_COOKIE':
                 self.c_pers = self.name
             elif self.sp.type == 'SOURCE_IP':
@@ -53,18 +60,12 @@ class PersistHandler(object):
     def create(self):
         if self.sp is None:
             return
-
-        methods = {
-            'HTTP_COOKIE':
-                self.c.client.slb.template.cookie_persistence.create,
-            'APP_COOKIE':
-                self.c.client.slb.template.cookie_persistence.create,
-            'SOURCE_IP':
-                self.c.client.slb.template.src_ip_persistence.create,
-        }
-        if self.sp.type in methods:
+        sp_type = self.sp.type
+        if sp_type is not None and sp_type in self.sp_obj_dict:
             try:
-                methods[self.sp.type](self.name)
+
+                m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
+                m.create(self.name)
             except acos_errors.Exists:
                 pass
 
@@ -72,16 +73,10 @@ class PersistHandler(object):
         if self.sp is None:
             return
 
-        methods = {
-            'HTTP_COOKIE':
-                self.c.client.slb.template.cookie_persistence.delete,
-            'APP_COOKIE':
-                self.c.client.slb.template.cookie_persistence.delete,
-            'SOURCE_IP':
-                self.c.client.slb.template.src_ip_persistence.delete,
-        }
-        if self.sp.type in methods:
+        sp_type = self.sp.type
+        if sp_type in self.sp_obj_dict.keys():
             try:
-                methods[self.sp.type](self.name)
-            except Exception:
+                m = getattr(self.c.client.slb.template, self.sp_obj_dict[sp_type])
+                m.delete(self.name)
+            except acos_errors.NotExists:
                 pass

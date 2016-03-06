@@ -1,4 +1,4 @@
-# Copyright 2014, Doug Wiegley (dougwig), A10 Networks
+# Copyright 2016 A10 Networks
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,13 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
 class TestPools(test_base.UnitTestBase):
-
     def test_sanity(self):
         pass
 
@@ -35,6 +35,7 @@ class TestPools(test_base.UnitTestBase):
             'TCP': self.a.last_client.slb.service_group.TCP,
             'UDP': self.a.last_client.slb.service_group.UDP,
         }
+
         persistences = [None, 'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE']
         listeners = [False, True]
 
@@ -59,8 +60,9 @@ class TestPools(test_base.UnitTestBase):
                         # (self.a.last_client.slb.service_group.create.
                         #     assert_called_with(
                         #     pool.id,
-                        #     lb_method=methods[m],
-                        #     protocol=protocols[p]))
+                        #     axapi_args={"service_group": {}},
+                        #     lb_method=methods(m),
+                        #     protocol=protocols(p)))
 
                         if not saw_exception:
                             n = str(self.a.last_client.mock_calls).index(
@@ -81,14 +83,17 @@ class TestPools(test_base.UnitTestBase):
                                 assert_called_with(pool.id))
 
     def test_update(self):
-        old_pool = test_base.FakePool('TCP', 'LEAST_CONNECTIONS', None, True)
-        pool = test_base.FakePool('TCP', 'ROUND_ROBIN', None, True)
-        self.a.pool.update(None, old_pool, pool)
+        pers1 = None
+        pers2 = None
+        old_pool = test_base.FakePool('TCP', 'LEAST_CONNECTIONS', pers1, True)
+        pool = test_base.FakePool('TCP', 'ROUND_ROBIN', pers2, True)
+        self.a.pool.update(None, pool, old_pool)
         self.print_mocks()
-        self.a.last_client.slb.service_group.create(
+        self.a.last_client.slb.service_group.update.assert_called_with(
             pool.id,
-            lb_method=self.a.last_client.slb.service_group.ROUND_ROBIN,
-            protocol=self.a.last_client.slb.service_group.TCP)
+            axapi_args={"service_group": {}},
+            lb_method=mock.ANY,
+            protocol=mock.ANY)
 
     def test_delete(self):
         members = [[], [test_base.FakeMember()]]
