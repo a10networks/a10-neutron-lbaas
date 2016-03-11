@@ -155,7 +155,7 @@ class A10SLB(model_base.BASEV2):
     a10_appliance_id = sa.Column(sa.String(36),
                                  sa.ForeignKey('a10_appliances_slb.id'),
                                  nullable=False)
-    a10_appliance = relationship(A10ApplianceSLB)
+    a10_appliance = relationship(A10ApplianceSLB, backref='slbs')
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__,
