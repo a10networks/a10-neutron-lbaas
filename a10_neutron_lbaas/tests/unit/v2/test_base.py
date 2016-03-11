@@ -22,6 +22,7 @@ class FakeModel(object):
         self.tenant_id = kwargs.get('tenant_id', 'get-off-my-lawn')
         self.root_loadbalancer = None
 
+
 class FakeLoadBalancer(FakeModel):
     def __init__(self, listeners=[]):
         super(FakeLoadBalancer, self).__init__()
