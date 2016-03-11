@@ -34,7 +34,7 @@ class TestA10Context(test_base.UnitTestBase):
         super(TestA10Context, self).setUp()
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
-        self.m = test_base.FakeModel()
+        self.m = test_base.FakeLoadBalancer()
 
     def test_context(self):
         with a10.A10Context(self.handler, self.ctx, self.m) as c:
