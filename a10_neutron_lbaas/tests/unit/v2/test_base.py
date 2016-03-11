@@ -24,6 +24,7 @@ class FakeModel(object):
 
 
 class FakeLoadBalancer(FakeModel):
+
     def __init__(self, listeners=[]):
         super(FakeLoadBalancer, self).__init__()
         self.id = 'fake-lb-id-001'
