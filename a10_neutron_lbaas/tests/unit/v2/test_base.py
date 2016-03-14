@@ -34,6 +34,7 @@ class FakeLoadBalancer(FakeModel):
         self.vip_port = {"id": "vip-id-001", "tenant_id": "tenant_id", "name": "vip-id-001"}
         self.vip_port_id = self.vip_port["id"]
         self.root_loadbalancer = self
+        self.vip_subnet_id = "fake-subnet-id-001"
 
 
 class FakeListener(FakeModel):

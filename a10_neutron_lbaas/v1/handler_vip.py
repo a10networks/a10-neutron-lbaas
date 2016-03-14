@@ -75,7 +75,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                     vip['address'],
                     status,
                     vrid=c.device_cfg.get('default_virtual_server_vrid'),
-                    axapi_body=vip_meta)
+                    axapi_body=vip_meta)   ## TODO - neutron_subnet_id=vip['subnet_id'])
             except acos_errors.Exists:
                 pass
 

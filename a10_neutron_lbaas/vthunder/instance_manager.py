@@ -21,9 +21,12 @@ try:
 except ImportError:
     pass
 
+from keystoneclient.auth.identity import generic as auth_plugin
+from keystoneclient import session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
+from oslo_config import cfg
 
 import time
 import uuid
@@ -329,3 +332,50 @@ class InstanceManager(object):
         instance_configuration = self._default_instance()
 
         return self._create_instance(instance_configuration)
+
+    def _plumb_port(self, server, network_id):
+        """Look for an existing port on the network
+        Add one if it doesn't exist
+        """
+
+        for attached_interface in server.interface_list():
+            if attached_interface.net_id == network_id:
+                return attached_interface
+
+        return server.interface_attach(net_id=network_id)
+
+    def plumb_instance(self, instance_id, network_id, allowed_ip):
+        server = self._nova_api.servers.get(instance_id)
+
+        interface = self._plumb_port(server, network_id)
+
+        port = self._neutron_api.show_port(interface.port_id)
+
+        allowed_address_pairs = port.get("allowed_address_pairs", [])
+        allowed_address_pairs.append({"ip_address": allowed_ip})
+
+        self._neutron_api.update_port(interface.port_id, {
+            "allowed_address_pairs": allowed_address_pairs
+        })
+
+        return interface.fixed_ips[0]
+
+    def plumb_instance_subnet(self, instance_id, subnet_id, allowed_ip):
+        subnet = self._neutron_api.show_subnet(subnet_id)
+        network_id = subnet["network_id"]
+        return self.plumb_instance(instance_id, network_id, allowed_ip)
+
+
+def context_instance_manager(a10_context):
+        tenant_id = a10_context.tenant_id
+        auth_token = a10_context.openstack_context.auth_token
+
+        auth_url = cfg.CONF.keystone_authtoken.auth_uri
+
+        token = auth_plugin.Token(token=auth_token,
+                                  tenant_id=tenant_id,
+                                  auth_url=auth_url)
+        session = keystone_session.Session(auth=token)
+
+        instance_manager = InstanceManager(tenant_id, session=session)
+        return instance_manager
