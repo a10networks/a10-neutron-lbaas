@@ -74,7 +74,8 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                     self._meta_name(vip),
                     vip['address'],
                     status,
-                    axapi_body=vip_meta)
+                    axapi_body=vip_meta,
+                    neutron_subnet_id=vip['subnet_id'])
             except acos_errors.Exists:
                 pass
 
