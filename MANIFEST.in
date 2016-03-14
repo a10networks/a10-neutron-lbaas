@@ -1,2 +1,3 @@
 include README.md
 include LICENSE
+include a10_neutron_lbaas/db/migration/alembic.ini

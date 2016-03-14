@@ -30,5 +30,10 @@ setup(
         'console_scripts': ['a10-neutron-lbaas-db-manage=a10_neutron_lbaas.db.migration.cli:main']
     },
 
+    package_data={'': [
+        'a10_neutron_lbaas/db/migration/alembic.ini'
+    ]},
+    include_package_data=True,
+
     install_requires = ['acos-client>=1.2.6']
 )
