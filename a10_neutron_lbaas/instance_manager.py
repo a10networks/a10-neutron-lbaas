@@ -23,6 +23,7 @@ except ImportError:
 
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
+import novaclient.exceptions as nova_exceptions
 
 import time
 import uuid
@@ -203,7 +204,10 @@ class InstanceManager(object):
             time.sleep(sleep_time)
 
     def delete_instance(self, instance_id):
-        return self._nova_api.servers.delete(instance_id)
+        try:
+            return self._nova_api.servers.delete(instance_id)
+        except nova_exceptions.NotFound:
+            pass
 
     def get_instance(self, instance):
         return self._nova_api.servers.get(instance)
