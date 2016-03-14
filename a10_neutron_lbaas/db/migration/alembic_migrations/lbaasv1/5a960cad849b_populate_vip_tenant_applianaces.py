@@ -35,9 +35,12 @@ import neutron.plugins.common.constants as constants
 
 
 def upgrade():
-    for provider, driver in context.config.drivers[constants.LOADBALANCER][0].items():
-        if hasattr(driver, 'a10') and isinstance(driver.a10, A10OpenstackLBV1):
-            upgrade_driver(provider, driver.a10)
+    conn = op.get_bind()
+    vips = conn.execute('SELECT count(*) from vips').scalar()
+    if vips:
+        for provider, driver in context.config.drivers[constants.LOADBALANCER][0].items():
+            if hasattr(driver, 'a10') and isinstance(driver.a10, A10OpenstackLBV1):
+                upgrade_driver(provider, driver.a10)
 
 
 def upgrade_driver(provider, a10):

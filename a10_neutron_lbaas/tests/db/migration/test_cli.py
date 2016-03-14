@@ -78,14 +78,14 @@ class TestCLI(test_base.UnitTestBase):
 
         self.assertEqual('UPGRADED', status['core'].status)
         self.assertEqual('UPGRADED', status['lbaasv1'].status)
-        self.assertEqual('ERROR', status['lbaasv2'].status)
+        self.assertEqual('UPGRADED', status['lbaasv2'].status)
 
     def test_install_lbaasv2(self):
         drivers = {'LOADBALANCERV2': mock.MagicMock()}
         status = self.run_cli('install', drivers=drivers)
 
         self.assertEqual('UPGRADED', status['core'].status)
-        self.assertEqual('ERROR', status['lbaasv1'].status)
+        self.assertEqual('UPGRADED', status['lbaasv1'].status)
         self.assertEqual('UPGRADED', status['lbaasv2'].status)
 
     def test_install_schema_matches_model_schema(self):
