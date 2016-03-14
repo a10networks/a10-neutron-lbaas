@@ -20,9 +20,11 @@ class FakeModel(object):
     def __init__(self, **kwargs):
         self.id = kwargs.get('id', 'fake-id-001')
         self.tenant_id = kwargs.get('tenant_id', 'get-off-my-lawn')
+        self.root_loadbalancer = None
 
 
 class FakeLoadBalancer(FakeModel):
+
     def __init__(self, listeners=[]):
         super(FakeLoadBalancer, self).__init__()
         self.id = 'fake-lb-id-001'
@@ -31,6 +33,7 @@ class FakeLoadBalancer(FakeModel):
         self.admin_state_up = True
         self.vip_port = {"id": "vip-id-001", "tenant_id": "tenant_id", "name": "vip-id-001"}
         self.vip_port_id = self.vip_port["id"]
+        self.root_loadbalancer = self
 
 
 class FakeListener(FakeModel):
@@ -47,6 +50,7 @@ class FakeListener(FakeModel):
         self.loadbalancer = loadbalancer
         self.default_tls_container_id = container_id
         self.sni_containers = containers
+        self.root_loadbalancer = FakeLoadBalancer()
 
 
 class FakePersistence(FakeModel):
@@ -68,6 +72,7 @@ class FakeMember(FakeModel):
         self.admin_state_up = admin_state_up
         self.pool = pool
         self.protocol_port = 80
+        self.root_loadbalancer = FakeLoadBalancer()
 
 
 class FakePool(FakeModel):
@@ -93,6 +98,7 @@ class FakePool(FakeModel):
         self.healthmonitor = hm
         if hm is not None:
             self.healthmonitor.pool = self
+        self.root_loadbalancer = FakeLoadBalancer()
 
 
 class FakeHM(FakeModel):
@@ -109,6 +115,7 @@ class FakeHM(FakeModel):
         self.url_path = '/'
         self.expected_codes = '200'
         self.pool = pool
+        self.root_loadbalancer = FakeLoadBalancer()
 
 
 class UnitTestBase(test_base.UnitTestBase):

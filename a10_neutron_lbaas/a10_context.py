@@ -59,7 +59,7 @@ class A10Context(object):
 
     def get_tenant_id(self):
         if hasattr(self.openstack_lbaas_obj, 'tenant_id'):
-            self.tenant_id = self.openstack_lbaas_obj.tenant_id
+            self.tenant_id = self.openstack_lbaas_obj.root_loadbalancer.tenant_id
         else:
             self.tenant_id = self.openstack_lbaas_obj['tenant_id']
 
