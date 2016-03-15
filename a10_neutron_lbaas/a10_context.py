@@ -90,7 +90,7 @@ class A10WriteContext(A10Context):
             try:
                 # AXAPI 2.1 is broken and does not correctly write tenant partitions.
                 shared_partition = self.device_cfg.get("shared_partition", "shared")
-                self.client.system.action.write_active(self.partition_name, shared_partition)
+                self.client.system.action.write_active([self.partition_name, shared_partition])
 
             except acos_errors.InvalidSessionID:
                 pass
