@@ -164,11 +164,11 @@ class TestA10ContextADP(TestA10Context):
         self._set_api_version("2.1")
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.last_client.system.action.write_active.assert_called_with("faketen1", "shared")
+        self.a.last_client.system.action.write_active.assert_called_with(["faketen1", "shared"])
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_v30(self):
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.last_client.system.action.write_active.assert_called_with(mock.ANY, mock.ANY)
+        self.a.last_client.system.action.write_active.assert_called_with(mock.ANY)
         self.a.last_client.session.close.assert_called_with()
