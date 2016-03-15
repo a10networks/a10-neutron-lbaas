@@ -31,6 +31,7 @@ class A10Context(object):
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
+        self.partition_name = None
 
     def __enter__(self):
         self.get_tenant_id()
@@ -69,7 +70,8 @@ class A10Context(object):
 
         if name == 'shared':
             return
-
+        else:
+            self.partition_name = name
         try:
             self.client.system.partition.active(name)
             return
@@ -86,7 +88,10 @@ class A10WriteContext(A10Context):
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None and self.device_cfg.get('write_memory', True):
             try:
-                self.client.system.action.write_active()
+                # AXAPI 2.1 is broken and does not correctly write tenant partitions.
+                shared_partition = self.device_cfg.get("shared_partition", "shared")
+                self.client.system.action.write_active(self.partition_name, shared_partition)
+
             except acos_errors.InvalidSessionID:
                 pass
 
