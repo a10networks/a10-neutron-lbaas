@@ -35,9 +35,12 @@ import neutron.plugins.common.constants as constants
 
 
 def upgrade():
-    for provider, driver in context.config.drivers[constants.LOADBALANCERV2][0].items():
-        if hasattr(driver, 'a10') and isinstance(driver.a10, A10OpenstackLBV2):
-            upgrade_driver(provider, driver.a10)
+    conn = op.get_bind()
+    lbs = conn.execute('SELECT count(*) from lbaas_loadbalancers').scalar()
+    if lbs:
+        for provider, driver in context.config.drivers[constants.LOADBALANCERV2][0].items():
+            if hasattr(driver, 'a10') and isinstance(driver.a10, A10OpenstackLBV2):
+                upgrade_driver(provider, driver.a10)
 
 
 def upgrade_driver(provider, a10):
