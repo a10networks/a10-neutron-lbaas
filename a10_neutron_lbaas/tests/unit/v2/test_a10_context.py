@@ -28,7 +28,7 @@ class TestA10Context(test_base.UnitTestBase):
             "tenant_id": "admin"
         }
 
-        return mock.Mock(is_admin=False, get_admin_context=mock.Mock(return_value=admin_context))
+        return mock.Mock(get_admin_context=mock.Mock(return_value=admin_context))
 
     def setUp(self):
         super(TestA10Context, self).setUp()
@@ -158,7 +158,8 @@ class TestA10ContextADP(TestA10Context):
         self._set_api_version("2.1")
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.last_client.system.action.write_active.assert_called_with(["get-off-my-la", "shared"])
+        self.a.last_client.system.action.write_active.assert_called_with(["get-off-my-la",
+                                                                          "shared"])
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_v30(self):
