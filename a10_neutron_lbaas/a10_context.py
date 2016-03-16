@@ -88,7 +88,6 @@ class A10WriteContext(A10Context):
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None and self.device_cfg.get('write_memory', True):
             try:
-                # AXAPI 2.1 is broken and does not correctly write tenant partitions.
                 shared_partition = self.device_cfg.get("shared_partition", "shared")
                 self.client.system.action.write_active([self.partition_name, shared_partition])
 
