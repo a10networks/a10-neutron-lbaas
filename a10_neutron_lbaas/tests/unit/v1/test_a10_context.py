@@ -165,7 +165,7 @@ class TestA10ContextADP(TestA10Context):
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
         self.a.last_client.system.action.write_active.assert_called_with(
-            ["faketen1", "shared"])
+            "faketen1")
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_v30(self):
