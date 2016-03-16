@@ -67,11 +67,11 @@ class A10Context(object):
             name = self.tenant_id[0:13]
 
         # If we are not using appliance partitions, we are done.
-
         if name == 'shared':
             return
-        else:
-            self.partition_name = name
+
+        self.partition_name = name
+
         try:
             self.client.system.partition.active(name)
             return
@@ -88,8 +88,7 @@ class A10WriteContext(A10Context):
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None and self.device_cfg.get('write_memory', True):
             try:
-                shared_partition = self.device_cfg.get("shared_partition", "shared")
-                self.client.system.action.write_active([self.partition_name, shared_partition])
+                self.client.system.action.write_active(self.partition_name)
 
             except acos_errors.InvalidSessionID:
                 pass
