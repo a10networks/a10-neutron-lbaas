@@ -14,9 +14,9 @@
 
 import logging
 
-from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-import a10_neutron_lbaas.a10_openstack_map as a10_os
+from a10_neutron_lbaas.acos import axapi_mappings
+from a10_neutron_lbaas.acos import openstack_mappings
 import a10_neutron_lbaas.db.models as models
 
 import acos_client.errors as acos_errors
@@ -71,7 +71,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             try:
                 vip_meta = self.meta(vip, 'virtual_server', {})
                 vport_list = vip_meta.pop('vport_list', None)
-                vip_args = a10_common._virtual_server(vip_meta, c.device_cfg)
+                vip_args = axapi_mappings._virtual_server(vip_meta, c.device_cfg)
                 c.client.slb.virtual_server.create(
                     self._meta_name(vip),
                     vip['address'],
@@ -86,11 +86,11 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             for vport, i in zip(vport_list, range(len(vport_list))):
                 try:
                     vport_name = str(i) if i else ''
-                    vport_args = a10_common._vport(vport, c.device_cfg)
+                    vport_args = axapi_mappings._vport(vport, c.device_cfg)
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
                         self._meta_name(vip) + '_VPORT' + vport_name,
-                        protocol=a10_os.vip_protocols(c, vip['protocol']),
+                        protocol=openstack_mappings.vip_protocols(c, vip['protocol']),
                         port=vip['protocol_port'],
                         service_group_name=pool_name,
                         s_pers_name=p.s_persistence(),
@@ -133,11 +133,11 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                     axapi_args=args)
 
             vport_meta = self.vport_meta(vip)
-            vport_args = a10_common._vport(vport_meta, c.device_cfg)
+            vport_args = axapi_mappings._vport(vport_meta, c.device_cfg)
             c.client.slb.virtual_server.vport.update(
                 self._meta_name(vip),
                 self._meta_name(vip) + '_VPORT',
-                protocol=a10_os.vip_protocols(c, vip['protocol']),
+                protocol=openstack_mappings.vip_protocols(c, vip['protocol']),
                 port=vip['protocol_port'],
                 service_group_name=pool_name,
                 s_pers_name=p.s_persistence(),

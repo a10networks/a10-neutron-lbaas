@@ -17,7 +17,7 @@ import handler_base_v2
 import logging
 import v2_context as a10
 
-from a10_neutron_lbaas import a10_openstack_map as a10_os
+from a10_neutron_lbaas.acos import openstack_mappings
 
 LOG = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
 
         args = self.meta(hm, 'hm', {})
 
-        set_method(hm_name, a10_os.hm_type(c, hm.type),
+        set_method(hm_name, openstack_mappings.hm_type(c, hm.type),
                    hm.delay, hm.timeout, hm.max_retries,
                    method=method, url=url, expect_code=expect_code,
                    axapi_args=args)

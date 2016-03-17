@@ -14,7 +14,7 @@
 
 import logging
 
-from a10_neutron_lbaas import a10_openstack_map as a10_os
+from a10_neutron_lbaas.acos import openstack_mappings
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
@@ -30,8 +30,8 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
 
         set_method(
             self._meta_name(pool),
-            protocol=a10_os.service_group_protocol(c, pool['protocol']),
-            lb_method=a10_os.service_group_lb_method(c, pool['lb_method']),
+            protocol=openstack_mappings.service_group_protocol(c, pool['protocol']),
+            lb_method=openstack_mappings.service_group_lb_method(c, pool['lb_method']),
             axapi_args=args)
 
     def create(self, context, pool):
