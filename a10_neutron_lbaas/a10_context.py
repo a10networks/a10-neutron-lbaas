@@ -33,7 +33,7 @@ class A10Context(object):
         self.db_operations = self.a10_driver.db_operations_class(self.openstack_context)
         self.inventory = self.a10_driver.inventory_class(self)
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
-        self.partition_name = None
+        self.partition_name = "shared"
 
     def __enter__(self):
         self.get_tenant_id()
