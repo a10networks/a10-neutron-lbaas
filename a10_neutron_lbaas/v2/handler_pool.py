@@ -1,4 +1,4 @@
-# Copyright 2014, Doug Wiegley (dougwig), A10 Networks
+# Copyright 2014-2016, Doug Wiegley (dougwig), A10 Networks
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -85,7 +85,6 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
                 c, context, pool, self._meta_name(pool)).delete()
 
     def _update_session_persistence(self, old_pool, pool, c, context):
-        # import pdb; pdb.set_trace()
         # didn't exist, does exist, create
         if not old_pool or (not old_pool.session_persistence and pool.session_persistence):
             p = handler_persist.PersistHandler(c, context, pool, old_pool)
@@ -108,10 +107,5 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
             return
 
         # didn't exist, doesn't exist
-        if (not old_pool.session_persistence and not pool.session_persistence):
-            return
-
         # did exist, does exist, didn't change
-        if (old_pool.session_persistence and pool.session_persistence
-                and old_pool.session_persistence.type == pool.session_persistence.type):
-            return
+        return
