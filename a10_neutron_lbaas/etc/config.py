@@ -1,5 +1,3 @@
-# Copyright 2013,  Mike Thompson,  A10 Networks.
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -13,9 +11,25 @@
 #    under the License.
 
 
-class InvalidDeviceConfig(Exception):
-    pass
+verify_appliances = False
 
-
-class UnsupportedFeature(Exception):
-    pass
+devices = {
+    # # A sample ACOS 2.7.2 box, using the shared partition
+    # "ax1": {
+    #     "host": "10.10.100.20",
+    #     "port": 8443,
+    #     "username": "admin",
+    #     "password": "a10",
+    #     "api_version": "2.1",
+    #     "v_method": "LSI",
+    # },
+    # # A sample ACOS 4.0.1 box, using a partition per tenant
+    # "ax4": {
+    #     "host": "10.10.100.20",
+    #     "port": 443,
+    #     "username": "admin",
+    #     "password": "a10",
+    #     "api_version": "3.0",
+    #     "v_method": "ADP",
+    # },
+}

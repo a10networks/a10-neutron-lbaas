@@ -105,7 +105,7 @@ devices = {
     "axipinip": {
         "host": "10.48.5.219",
         "protocol": "https",
-        "user": "admin",
+        "username": "admin",
         "password": "a10",
         "status": True,
         "api_version": "2.1",
