@@ -14,8 +14,8 @@
 
 import logging
 
-from a10_neutron_lbaas import a10_common
-import a10_neutron_lbaas.a10_openstack_map as a10_osmap
+from a10_neutron_lbaas.acos import axapi_mappings
+from a10_neutron_lbaas.acos import openstack_mappings
 from neutron_lbaas.services.loadbalancer import constants as lb_const
 
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
@@ -88,13 +88,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             c, context, listener.default_pool)
 
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
-        vport_args = a10_common._vport(vport_meta, c.device_cfg)
+        vport_args = axapi_mappings._vport(vport_meta, c.device_cfg)
 
         try:
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=a10_osmap.vip_protocols(c, listener.protocol),
+                protocol=openstack_mappings.vip_protocols(c, listener.protocol),
                 port=listener.protocol_port,
                 service_group_name=pool_name,
                 s_pers_name=persistence.s_persistence(),
@@ -171,7 +171,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             c.client.slb.virtual_server.vport.delete(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=a10_osmap.vip_protocols(c, listener.protocol),
+                protocol=openstack_mappings.vip_protocols(c, listener.protocol),
                 port=listener.protocol_port)
         except acos_errors.NotFound:
             pass

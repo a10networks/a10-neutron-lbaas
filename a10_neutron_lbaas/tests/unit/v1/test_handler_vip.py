@@ -15,8 +15,8 @@
 import mock
 import test_base
 
-from a10_neutron_lbaas import a10_common
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+from a10_neutron_lbaas.acos import axapi_mappings
 
 
 class TestVIP(test_base.UnitTestBase):
@@ -90,7 +90,7 @@ class TestVIP(test_base.UnitTestBase):
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
 
-        expected_tuple = a10_common.auto_dictionary.get(api_ver, None)
+        expected_tuple = axapi_mappings.auto_dictionary.get(api_ver, None)
 
         vip = self.fake_vip()
         if expected_tuple is not None:
@@ -157,7 +157,7 @@ class TestVIP(test_base.UnitTestBase):
         vip = self.fake_vip()
         expected = None
 
-        expected_tuple = a10_common.ipinip_dictionary.get(api_ver, None)
+        expected_tuple = axapi_mappings.ipinip_dictionary.get(api_ver, None)
         for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
             v['api_version'] = api_ver

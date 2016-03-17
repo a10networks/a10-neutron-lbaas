@@ -15,7 +15,7 @@
 import copy
 import logging
 
-from a10_neutron_lbaas import a10_openstack_map as a10_os
+from a10_neutron_lbaas.acos import openstack_mappings
 import acos_client.errors as acos_errors
 import handler_base_v2
 import handler_persist
@@ -33,8 +33,8 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
         args = {'service_group': self.meta(pool, 'service_group', {})}
         set_method(
             self._meta_name(pool),
-            protocol=a10_os.service_group_protocol(c, pool.protocol),
-            lb_method=a10_os.service_group_lb_method(c, pool.lb_algorithm),
+            protocol=openstack_mappings.service_group_protocol(c, pool.protocol),
+            lb_method=openstack_mappings.service_group_lb_method(c, pool.lb_algorithm),
             axapi_args=args)
 
         # session persistence might need a vport update

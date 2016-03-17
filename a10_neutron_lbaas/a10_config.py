@@ -21,6 +21,7 @@ import a10_neutron_lbaas.install.blank_config as blank_config
 LOG = logging.getLogger(__name__)
 
 
+
 class A10Config(object):
 
     DEVICE_DEFAULTS = {

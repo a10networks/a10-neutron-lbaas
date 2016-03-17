@@ -22,7 +22,7 @@ import neutron_lbaas.services.loadbalancer.constants as lbaas_const
 
 LOG = logging.getLogger(__name__)
 
-from a10_neutron_lbaas import a10_common
+from a10_neutron_lbaas.acos import axapi_mappings
 
 
 class TestListeners(test_base.UnitTestBase):
@@ -134,7 +134,7 @@ class TestListeners(test_base.UnitTestBase):
 
         auto_expected = None
 
-        expected_tuple = a10_common.auto_dictionary.get(api_ver, None)
+        expected_tuple = axapi_mappings.auto_dictionary.get(api_ver, None)
 
         if expected_tuple is not None:
             key = expected_tuple[0]
@@ -161,7 +161,7 @@ class TestListeners(test_base.UnitTestBase):
 
     def _test_create_ipinip(self, api_ver="3.0", ip_in_ip=False):
         ipinip_expected = None
-        expected_tuple = a10_common.ipinip_dictionary.get(api_ver)
+        expected_tuple = axapi_mappings.ipinip_dictionary.get(api_ver)
         saw_exception = False
 
         for k, v in self.a.config.devices.items():
