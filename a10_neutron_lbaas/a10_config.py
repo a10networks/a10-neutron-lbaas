@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ConfigParser as ini
 import logging
 import os
 import sys
@@ -23,20 +24,17 @@ from a10_neutron_lbaas.etc import defaults
 LOG = logging.getLogger(__name__)
 
 
-class EmptyConfig(object):
-    @property
-    def devices(self):
-        return {}
-
-
 class A10Config(object):
 
-    def __init__(self):
+    def __init__(self, config_dir=None):
         # Look for config in the virtual environment
         # virtualenv puts the original prefix in sys.real_prefix
         # pyenv puts it in sys.base_prefix
         venv_d = os.path.join(sys.prefix, 'etc/a10')
-        if (hasattr(sys, 'real_prefix') or hasattr(sys, 'base_prefix')) and os.path.exists(venv_d):
+
+        if config_dir is not None:
+            d = config_dir
+        elif (hasattr(sys, 'real_prefix') or hasattr(sys, 'base_prefix')) and os.path.exists(venv_d):
             d = venv_d
         elif os.path.exists('/etc/a10'):
             d = '/etc/a10'
@@ -90,10 +88,34 @@ class A10Config(object):
                         if dk not in self.devices[k]:
                             self.devices[k][dk] = dv
 
+            # Setup db foo
+            if self.config.use_database and self.database_connection is None:
+                self.database_connection = self._get_db_string()
+
         finally:
             sys.path = real_sys_path
 
         LOG.debug("A10Config, devices=%s", self.devices)
+
+    # We don't use oslo.config here, in a weak attempt to avoid pulling in all
+    # the many openstack dependencies. If this proves problematic, we should
+    # shoot this manual parser in the head and just use the global config
+    # object.
+    def _get_db_string(self):
+        z = 'sqlite:////tmp/a10.db'
+
+        neutron_conf = '/etc/neutron/neutron.conf'
+        if os.file.exists(neutron_conf):
+            LOG.debug("found neutron.conf file in /etc")
+            n = ini.ConfigParser()
+            n.read(neutron_conf)
+            try:
+                z = n..get('database', 'connection')
+            except ini.NoSectionError, ini.NoOptionError:
+                pass
+
+        LOG.debug("using %s as db connect string", z)
+        return z
 
     @property
     def verify_appliances(self):
