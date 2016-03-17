@@ -19,6 +19,8 @@ import acos_client
 import db.operations as operations
 import inventory
 import plumbing_hooks as hooks
+import version
+
 import v1.handler_hm
 import v1.handler_member
 import v1.handler_pool
@@ -28,17 +30,16 @@ import v1.inventory
 LOG = logging.getLogger(__name__)
 
 try:
+    import neutron_lbaas  # noqa
+except ImportError:
+    LOG.error("Could not import A10OpenstackLBaaSV2 driver as neutron-lbaas could not be found.")
+else:
     import v2.handler_hm
     import v2.handler_lb
     import v2.handler_listener
     import v2.handler_member
     import v2.handler_pool
     import v2.inventory
-except ImportError:
-    LOG.error("Could not import A10OpenstackLBaaSV2 driver as neutron-lbaas could not be found.")
-import version
-
-LOG = logging.getLogger(__name__)
 
 
 class A10OpenstackLBBase(object):
