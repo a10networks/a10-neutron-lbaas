@@ -48,17 +48,18 @@ class Client(ClientProxy):
         return SLB(self._underlying.slb, self._plumber)
 
 
-class SLB(appliance_client_base.ClientProxy):
+class SLB(ClientProxy):
 
     @property
     def virtual_server(self):
         return VirtualServer(self._underlying.virtual_server, self._plumber)
 
 
-class VirtualServer(appliance_client_base.VirtualServer, appliance_client_base.ClientProxy):
+class VirtualServer(ClientProxy):
 
-    def create(self, name, ip_address, neutron_subnet_id, **kwargs):
-        result = self._underlying.create(name, ip_address, **kwargs)
+    def create(self, name, ip_address, status=1, neutron_subnet_id=None, **kwargs):
+
+        result = self._underlying.create(name, ip_address, status=status, **kwargs)
 
         self._plumber.plumb(neutron_subnet_id, ip_address)
 

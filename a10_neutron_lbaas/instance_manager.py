@@ -342,7 +342,7 @@ class InstanceManager(object):
             if attached_interface.net_id == network_id:
                 return attached_interface
 
-        return server.interface_attach(net_id=network_id)
+        return server.interface_attach(None, network_id, None)
 
     def plumb_instance(self, instance_id, network_id, allowed_ip):
         server = self._nova_api.servers.get(instance_id)
@@ -351,18 +351,20 @@ class InstanceManager(object):
 
         port = self._neutron_api.show_port(interface.port_id)
 
-        allowed_address_pairs = port.get("allowed_address_pairs", [])
+        allowed_address_pairs = port["port"].get("allowed_address_pairs", [])
         allowed_address_pairs.append({"ip_address": allowed_ip})
 
         self._neutron_api.update_port(interface.port_id, {
-            "allowed_address_pairs": allowed_address_pairs
+            "port": {
+                "allowed_address_pairs": allowed_address_pairs
+            }
         })
 
         return interface.fixed_ips[0]
 
     def plumb_instance_subnet(self, instance_id, subnet_id, allowed_ip):
         subnet = self._neutron_api.show_subnet(subnet_id)
-        network_id = subnet["network_id"]
+        network_id = subnet["subnet"]["network_id"]
         return self.plumb_instance(instance_id, network_id, allowed_ip)
 
 
