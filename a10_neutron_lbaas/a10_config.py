@@ -16,9 +16,13 @@ import logging
 import os
 import sys
 
-import a10_neutron_lbaas.install.blank_config as blank_config
-
 LOG = logging.getLogger(__name__)
+
+
+class EmptyConfig(object):
+    @property
+    def devices(self):
+        return {}
 
 
 class A10Config(object):
@@ -49,7 +53,7 @@ class A10Config(object):
                 self.config = config
             except ImportError:
                 LOG.error("A10Config couldn't find config.py in %s", self.config_dir)
-                self.config = blank_config
+                self.config = EmptyConfig()
 
             self.devices = {}
             for k, v in self.config.devices.items():
