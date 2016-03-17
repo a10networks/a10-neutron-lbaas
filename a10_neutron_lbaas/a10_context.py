@@ -31,7 +31,7 @@ class A10Context(object):
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
-        self.partition_name = None
+        self.partition_name = "shared"
 
     def __enter__(self):
         self.get_tenant_id()
