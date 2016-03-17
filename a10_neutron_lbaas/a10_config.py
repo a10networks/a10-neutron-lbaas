@@ -16,6 +16,10 @@ import logging
 import os
 import sys
 
+from a10_neutron_lbaas import a10_exceptions as a10_ex
+from a10_neutron_lbaas.etc import config as blank_config
+from a10_neutron_lbaas.etc import defaults
+
 LOG = logging.getLogger(__name__)
 
 
@@ -26,16 +30,6 @@ class EmptyConfig(object):
 
 
 class A10Config(object):
-
-    DEVICE_DEFAULTS = {
-        "status": True,
-        "autosnat": True,
-        "api_version": "2.1",
-        "v_method": "LSI",
-        "max_instance": 5000,
-        "use_float": False,
-        "method": "hash"
-    }
 
     def __init__(self):
         if os.path.exists('/etc/a10'):
@@ -53,15 +47,30 @@ class A10Config(object):
                 self.config = config
             except ImportError:
                 LOG.error("A10Config couldn't find config.py in %s", self.config_dir)
-                self.config = EmptyConfig()
+                self.config = blank_config
+
+            # Global defaults
+            for dk, dv in defaults.GLOBAL_DEFAULTS.items():
+                if not hasattr(self.config, dk):
+                    self.config.dk = dv
 
             self.devices = {}
             for k, v in self.config.devices.items():
                 if 'status' in v and not v['status']:
                     LOG.debug("status is False, skipping dev: %s", v)
                 else:
+                    for x in defaults.DEVICE_REQUIRED_FIELDS:
+                        if x not in v:
+                            msg = "device %s missing required value %s, skipping" % (k, x)
+                            LOG.error(msg)
+                            raise a10_ex.InvalidDeviceConfig(msg)
+
                     v['key'] = k
                     self.devices[k] = v
+
+                    # Old configs had a name field
+                    if 'name' not in v:
+                        self.devices[k]['name'] = k
 
                     # Figure out port and protocol
                     protocol = self.devices[k].get('protocol', 'https')
@@ -71,9 +80,10 @@ class A10Config(object):
                     self.devices[k]['port'] = port
 
                     # Device defaults
-                    for dk, dv in self.DEVICE_DEFAULTS.items():
+                    for dk, dv in defaults.DEVICE_OPTIONAL_DEFAULTS.items():
                         if dk not in self.devices[k]:
                             self.devices[k][dk] = dv
+
         finally:
             sys.path = real_sys_path
 
