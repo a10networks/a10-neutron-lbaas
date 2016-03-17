@@ -30,8 +30,7 @@ import v1.inventory
 LOG = logging.getLogger(__name__)
 
 try:
-    import neutron_lbaas
-    neutron_lbaas.__name__
+    import neutron_lbaas  # noqa
 except ImportError:
     LOG.error("Could not import A10OpenstackLBaaSV2 driver as neutron-lbaas could not be found.")
 else:
