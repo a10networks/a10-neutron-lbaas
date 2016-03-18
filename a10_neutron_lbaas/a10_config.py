@@ -122,6 +122,14 @@ class A10Config(object):
         return z
 
     @property
+    def use_database(self):
+        return self.config.use_database
+
+    @property
+    def database_connection(self):
+        return self.config.database_connection
+
+    @property
     def verify_appliances(self):
         if hasattr(self.config, 'verify_appliances'):
             return self.config.verify_appliances

@@ -14,14 +14,15 @@
 import sqlalchemy
 import sqlalchemy.orm
 
-import a10_config
+import a10_neutron_lbaas.a10_config as a10_config
+import a10_neutron_lbaas.a10_exceptions as ex
 
 a10_cfg = a10_config.A10Config()
 
 
 def get_session():
     if not a10_cfg.use_database:
-        raise InternalError("attempted to use database when it is disabled")
+        raise ex.InternalError("attempted to use database when it is disabled")
 
     engine = sqlalchemy.create_engine(a10_cfg.database_connection)
 
