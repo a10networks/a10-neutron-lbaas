@@ -31,10 +31,11 @@ class A10Config(object):
         # virtualenv puts the original prefix in sys.real_prefix
         # pyenv puts it in sys.base_prefix
         venv_d = os.path.join(sys.prefix, 'etc/a10')
+        has_prefix = (hasattr(sys, 'real_prefix') or hasattr(sys, 'base_prefix'))
 
         if config_dir is not None:
             d = config_dir
-        elif (hasattr(sys, 'real_prefix') or hasattr(sys, 'base_prefix')) and os.path.exists(venv_d):
+        elif has_prefix and os.path.exists(venv_d):
             d = venv_d
         elif os.path.exists('/etc/a10'):
             d = '/etc/a10'
@@ -56,7 +57,10 @@ class A10Config(object):
             # Global defaults
             for dk, dv in defaults.GLOBAL_DEFAULTS.items():
                 if not hasattr(self.config, dk):
-                    self.config.dk = dv
+                    LOG.debug("setting global default %s=%s", dk, dv)
+                    setattr(self.config, dk, dv)
+                else:
+                    LOG.debug("global setting %s=%s", dk, getattr(self.config, dk))
 
             self.devices = {}
             for k, v in self.config.devices.items():
@@ -88,14 +92,14 @@ class A10Config(object):
                         if dk not in self.devices[k]:
                             self.devices[k][dk] = dv
 
+                    LOG.debug("A10Config, device %s=%s", k, self.devices[k])
+
             # Setup db foo
-            if self.config.use_database and self.database_connection is None:
-                self.database_connection = self._get_db_string()
+            if self.config.use_database and self.config.database_connection is None:
+                self.config.database_connection = self._get_db_string()
 
         finally:
             sys.path = real_sys_path
-
-        LOG.debug("A10Config, devices=%s", self.devices)
 
     # We don't use oslo.config here, in a weak attempt to avoid pulling in all
     # the many openstack dependencies. If this proves problematic, we should
@@ -111,7 +115,7 @@ class A10Config(object):
             n.read(neutron_conf)
             try:
                 z = n.get('database', 'connection')
-            except ini.NoSectionError, ini.NoOptionError:
+            except (ini.NoSectionError, ini.NoOptionError):
                 pass
 
         LOG.debug("using %s as db connect string", z)

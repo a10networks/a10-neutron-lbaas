@@ -14,7 +14,7 @@
 GLOBAL_DEFAULTS = {
     # Should the driver check that A10 appliances are alive before
     # successfully initializing?
-    "verify_appliances": False,
+    "verify_appliances": True,
 
     # Should the driver store some meta-info in a database?
     # Needed for tenant<->appliance persistence if the number of appliances

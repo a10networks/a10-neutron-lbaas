@@ -17,7 +17,6 @@ import logging
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 from a10_neutron_lbaas.acos import axapi_mappings
 from a10_neutron_lbaas.acos import openstack_mappings
-import a10_neutron_lbaas.db.models as models
 
 import acos_client.errors as acos_errors
 import handler_base_v1
@@ -100,11 +99,6 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 except acos_errors.Exists:
                     pass
 
-            slb = models.default(
-                models.A10SLBV1,
-                vip_id=vip['id'],
-                a10_appliance=c.appliance)
-            c.db_operations.add(slb)
             self.hooks.after_vip_create(c, context, vip)
 
     def update(self, context, old_vip, vip):
@@ -154,7 +148,6 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             pass
 
         PersistHandler(c, context, vip, self._meta_name(vip)).delete()
-        c.db_operations.delete_slb_v1(vip['id'])
 
     def delete(self, context, vip):
         with a10.A10DeleteContext(self, context, vip) as c:

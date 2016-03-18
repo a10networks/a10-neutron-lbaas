@@ -111,7 +111,6 @@ class TestLB(test_base.UnitTestBase):
     def test_delete_removes_slb(self):
         m = test_base.FakeLoadBalancer()
         self.a.lb.delete(None, m)
-        self.a.db_operations_mock.delete_slb_v2.assert_called_with(m.id)
 
     def test_refresh(self):
         try:
