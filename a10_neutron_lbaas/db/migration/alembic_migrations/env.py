@@ -15,7 +15,8 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
-import a10_config
+from a10_neutron_lbaas import a10_config
+from a10_neutron_lbaas import a10_exceptions as ex
 
 VERSION_TABLE = 'alembic_version_a10'
 
@@ -25,6 +26,8 @@ config = context.config
 
 # Override db location
 a10_cfg = a10_config.A10Config()
+if not a10_cfg.use_database:
+    raise ex.InternalError("database not enabled")
 config.set_main_option("url", a10_cfg.database_connection)
 
 # Interpret the config file for Python logging.
