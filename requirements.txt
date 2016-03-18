@@ -1,3 +1,2 @@
 acos_client>=1.2.6
-SQLAHelper
 SQLAlchemy

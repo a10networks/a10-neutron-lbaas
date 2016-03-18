@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sqlahelper
 import sqlalchemy as sa
+import sqlalchemy.ext.declarative
 
-Base = sqlahelper.get_base()
+Base = sqlalchemy.ext.declarative.declarative_base()
 
 
 class A10TenantBinding(Base):
