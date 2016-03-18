@@ -109,7 +109,7 @@ class A10Config(object):
         z = 'sqlite:////tmp/a10.db'
 
         neutron_conf = '/etc/neutron/neutron.conf'
-        if os.file.exists(neutron_conf):
+        if os.path.exists(neutron_conf):
             LOG.debug("found neutron.conf file in /etc")
             n = ini.ConfigParser()
             n.read(neutron_conf)
