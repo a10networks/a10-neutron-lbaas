@@ -24,18 +24,14 @@ import v1.handler_member
 import v1.handler_pool
 import v1.handler_vip
 
-LOG = logging.getLogger(__name__)
+import v2.handler_hm
+import v2.handler_lb
+import v2.handler_listener
+import v2.handler_member
+import v2.handler_pool
 
-try:
-    import neutron_lbaas  # noqa
-except ImportError:
-    LOG.error("Could not import A10OpenstackLBaaSV2 driver as neutron-lbaas could not be found.")
-else:
-    import v2.handler_hm
-    import v2.handler_lb
-    import v2.handler_listener
-    import v2.handler_member
-    import v2.handler_pool
+logging.basicConfig()
+LOG = logging.getLogger(__name__)
 
 
 class A10OpenstackLBBase(object):
