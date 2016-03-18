@@ -13,7 +13,7 @@
 """create a10 tenant table
 
 Revision ID: 579f359e6e30
-Revises:
+Revises: None
 Create Date: 2016-03-17 21:44:11.257126
 
 """
@@ -32,7 +32,7 @@ def upgrade():
     op.create_table(
         'a10_tenant_bindings',
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('project_id', sa.String(36), nullable=False),
+        sa.Column('tenant_id', sa.String(36), nullable=False),
         sa.Column('device_name', sa.String(1024), nullable=False)
     )
 

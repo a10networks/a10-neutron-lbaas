@@ -15,9 +15,17 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
+import a10_config
+
+VERSION_TABLE = 'alembic_version_a10'
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override db location
+a10_cfg = a10_config.A10Config()
+config.set_main_option("url", a10_cfg.database_connection)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -69,7 +77,8 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=target_metadata
+            target_metadata=target_metadata,
+            version_table=VERSION_TABLE
         )
 
         with context.begin_transaction():

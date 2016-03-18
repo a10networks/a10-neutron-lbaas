@@ -10,15 +10,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sqlahelper
-import sqlalchemy as sa
 
-Base = sqlahelper.get_base()
+import sqlalchemy
+import sqlalchemy.orm
+
+import a10_config
+
+a10_cfg = a10_config.A10Config()
 
 
-class A10TenantBinding(Base):
-    __tablename__ = "a10_tenant_bindings"
+def get_session():
+    if not a10_cfg.use_database:
+        raise InternalError("attempted to use database when it is disabled")
 
-    id = sa.Column(sa.Integer, primary_key=True)
-    tenant_id = sa.Column(sa.String(36), nullable=False)
-    device_name = sa.Column(sa.String(1024), nullable=False)
+    engine = sqlalchemy.create_engine(a10_cfg.database_connection)
+
+    # # Bind the engine to the metadata of the Base class so that the
+    # # declaratives can be accessed through a DBSession instance
+    # Base.metadata.bind = engine
+
+    return sqlalchemy.orm.sessionmaker(bind=engine)

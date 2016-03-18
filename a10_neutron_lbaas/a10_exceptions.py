@@ -13,6 +13,10 @@
 #    under the License.
 
 
+class InternalError(Exception):
+    pass
+
+
 class InvalidDeviceConfig(Exception):
     pass
 
