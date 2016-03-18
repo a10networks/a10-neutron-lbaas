@@ -30,4 +30,5 @@ def get_session():
     # # declaratives can be accessed through a DBSession instance
     # Base.metadata.bind = engine
 
-    return sqlalchemy.orm.sessionmaker(bind=engine)
+    DBSession = sqlalchemy.orm.sessionmaker(bind=engine)
+    return DBSession()
