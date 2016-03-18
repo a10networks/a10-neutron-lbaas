@@ -110,7 +110,7 @@ class A10Config(object):
             n = ini.ConfigParser()
             n.read(neutron_conf)
             try:
-                z = n..get('database', 'connection')
+                z = n.get('database', 'connection')
             except ini.NoSectionError, ini.NoOptionError:
                 pass
 
