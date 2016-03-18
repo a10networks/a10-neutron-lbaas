@@ -338,13 +338,14 @@ class InstanceManager(object):
         Add one if it doesn't exist
         """
 
-        for attached_interface in server.interface_list():
+        # Don't plumb things to the management (first) interface
+        for attached_interface in server.interface_list()[1:]:
             if attached_interface.net_id == network_id:
                 return attached_interface
 
         return server.interface_attach(None, network_id, None)
 
-    def plumb_instance(self, instance_id, network_id, allowed_ip):
+    def plumb_instance(self, instance_id, network_id, allowed_ips):
         server = self._nova_api.servers.get(instance_id)
 
         interface = self._plumb_port(server, network_id)
@@ -352,11 +353,13 @@ class InstanceManager(object):
         port = self._neutron_api.show_port(interface.port_id)
 
         allowed_address_pairs = port["port"].get("allowed_address_pairs", [])
-        allowed_address_pairs.append({"ip_address": allowed_ip})
+        new_address_pairs = map(lambda ip: {"ip_address": ip}, allowed_ips)
+
+        merged_address_pairs = distinct_dicts(allowed_address_pairs + new_address_pairs)
 
         self._neutron_api.update_port(interface.port_id, {
             "port": {
-                "allowed_address_pairs": allowed_address_pairs
+                "allowed_address_pairs": merged_address_pairs
             }
         })
 
@@ -366,6 +369,11 @@ class InstanceManager(object):
         subnet = self._neutron_api.show_subnet(subnet_id)
         network_id = subnet["subnet"]["network_id"]
         return self.plumb_instance(instance_id, network_id, allowed_ip)
+
+
+def distinct_dicts(dicts):
+    hashable = map(lambda x: tuple(sorted(x.items())), dicts)
+    return map(dict, set(hashable))
 
 
 def context_instance_manager(a10_context):
