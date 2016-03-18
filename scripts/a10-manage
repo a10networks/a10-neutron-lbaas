@@ -22,4 +22,4 @@ if [ ! -d /etc/a10 ]; then
 fi
 
 cd "${d}/db/migration"
-alembic upgrade HEAD
+alembic upgrade head

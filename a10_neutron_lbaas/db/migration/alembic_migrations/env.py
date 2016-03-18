@@ -28,7 +28,7 @@ config = context.config
 a10_cfg = a10_config.A10Config()
 if not a10_cfg.use_database:
     raise ex.InternalError("database not enabled")
-config.set_main_option("url", a10_cfg.database_connection)
+config.set_main_option("sqlalchemy.url", a10_cfg.database_connection)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
