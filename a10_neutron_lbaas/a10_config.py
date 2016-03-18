@@ -96,7 +96,7 @@ class A10Config(object):
 
             # Setup db foo
             if self.config.use_database and self.config.database_connection is None:
-                self.config.database_connection = self._get_db_string()
+                self.config.database_connection = self._get_neutron_db_string()
 
         finally:
             sys.path = real_sys_path
@@ -105,10 +105,11 @@ class A10Config(object):
     # the many openstack dependencies. If this proves problematic, we should
     # shoot this manual parser in the head and just use the global config
     # object.
-    def _get_db_string(self):
-        z = 'sqlite:////tmp/a10.db'
+    def _get_neutron_db_string(self):
+        neutron_conf_dir = os.environ.get('NEUTRON_CONF_DIR', self.config.neutron_conf_dir)
+        neutron_conf = '%s/neutron.conf' % neutron_conf_dir
 
-        neutron_conf = '/etc/neutron/neutron.conf'
+        z = None
         if os.path.exists(neutron_conf):
             LOG.debug("found neutron.conf file in /etc")
             n = ini.ConfigParser()
@@ -117,6 +118,9 @@ class A10Config(object):
                 z = n.get('database', 'connection')
             except (ini.NoSectionError, ini.NoOptionError):
                 pass
+
+        if z is None:
+            raise a10_ex.NoDatabaseURL('must set db connection url or neutron dir in config.py')
 
         LOG.debug("using %s as db connect string", z)
         return z

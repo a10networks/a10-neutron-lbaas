@@ -23,3 +23,11 @@ class InvalidDeviceConfig(Exception):
 
 class UnsupportedFeature(Exception):
     pass
+
+
+class DeviceConfigMissing(Exception):
+    pass
+
+
+class NoDatabaseURL(Exception):
+    pass

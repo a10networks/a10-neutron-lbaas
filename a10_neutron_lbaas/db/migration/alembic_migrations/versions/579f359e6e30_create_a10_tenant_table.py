@@ -31,7 +31,9 @@ import sqlalchemy as sa
 def upgrade():
     op.create_table(
         'a10_tenant_bindings',
-        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('id', sa.String(36), primary_key=True),
+        sa.Column('created_at', sa.Date),
+        sa.Column('updated_at', sa.Date),
         sa.Column('tenant_id', sa.String(36), nullable=False),
         sa.Column('device_name', sa.String(1024), nullable=False)
     )

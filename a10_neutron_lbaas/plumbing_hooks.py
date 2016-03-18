@@ -14,6 +14,7 @@
 
 import acos_client
 
+from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import api as db_api
 from a10_neutron_lbaas.db import models
 
@@ -35,8 +36,14 @@ class PlumbingHooks(object):
         # See if we have a saved tenant
         a10 = db.query(models.A10TenantBinding).filter(
             models.A10TenantBinding.tenant_id == tenant_id).one_or_none()
-        if a10 is not None and a10.device_name in self.driver.config.devices:
-            return self.driver.config.devices[a10.device_name]
+        if a10 is not None:
+            if a10.device_name in self.driver.config.devices:
+                return self.driver.config.devices[a10.device_name]
+            else:
+                raise ex.DeviceConfigMissing(
+                    'A10 device %s mapped to tenant %s is not present in config; '
+                    'add it back to config or migrate loadbalancers' %
+                    (a10.device_name, tenant_id))
 
         # Nope, so we hash and save
         d = self.select_device_hash(tenant_id)

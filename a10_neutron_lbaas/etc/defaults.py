@@ -14,7 +14,7 @@
 GLOBAL_DEFAULTS = {
     # Should the driver check that A10 appliances are alive before
     # successfully initializing?
-    "verify_appliances": True,
+    "verify_appliances": False,
 
     # Should the driver store some meta-info in a database?
     # Needed for tenant<->appliance persistence if the number of appliances
@@ -24,7 +24,10 @@ GLOBAL_DEFAULTS = {
     # The SQLAlchemy connection string to use to connect to the database.
     # If None, and use_database is True, the driver will attempt to use
     # the configured neutron database.
-    "database_connection": None
+    "database_connection": None,
+
+    # Sometimes we need things fro neutron
+    "neutron_conf_dir": '/etc/neutron',
 }
 
 DEVICE_REQUIRED_FIELDS = [
