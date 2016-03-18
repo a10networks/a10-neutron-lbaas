@@ -35,5 +35,7 @@ setup(
     ]},
     include_package_data=True,
 
+    scripts=['scripts/a10-manage'],
+
     install_requires = ['acos-client>=1.2.6']
 )
