@@ -34,7 +34,7 @@ class PlumbingHooks(object):
 
         # See if we have a saved tenant
         a10 = db.query(models.A10TenantBinding).filter(
-            models.A10TenantBinding.tenant_id == tenant_id).one()
+            models.A10TenantBinding.tenant_id == tenant_id).one_or_none()
         if a10 is not None and a10.device_name in self.driver.config.devices:
             return self.driver.config.devices[a10.device_name]
 
