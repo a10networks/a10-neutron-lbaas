@@ -61,6 +61,6 @@ class VirtualServer(ClientProxy):
 
         result = self._underlying.create(name, ip_address, status=status, **kwargs)
 
-        self._plumber.plumb(neutron_subnet_id, ip_address)
+        self._plumber.plumb(neutron_subnet_id, [ip_address])
 
         return result
