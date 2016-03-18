@@ -84,9 +84,11 @@ class TestListeners(test_base.UnitTestBase):
                         self.assertTrue('s_pers_name=None' not in s)
                         pass
                     elif pers == 'HTTP_COOKIE':
+                        self.assertTrue('s_pers=HTTP_COOKIE')
                         self.assertTrue('c_pers_name=None' not in s)
                         pass
                     elif pers == 'APP_COOKIE':
+                        self.assertTrue('s_pers=APP_COOKIE')
                         self.assertTrue('c_pers_name=None' not in s)
                         pass
                     else:
