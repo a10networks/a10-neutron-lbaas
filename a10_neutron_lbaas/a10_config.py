@@ -37,10 +37,10 @@ class A10Config(object):
             d = config_dir
         elif has_prefix and os.path.exists(venv_d):
             d = venv_d
-        elif os.path.exists('/etc/a10'):
-            d = '/etc/a10'
-        else:
+        elif os.path.exists('/etc/neutron/services/loadbalancer/a10networks'):
             d = '/etc/neutron/services/loadbalancer/a10networks'
+        else:
+            d = '/etc/a10'
         self.config_dir = os.environ.get('A10_CONFIG_DIR', d)
         self.config_path = os.path.join(self.config_dir, "config.py")
 
@@ -51,7 +51,7 @@ class A10Config(object):
                 import config
                 self.config = config
             except ImportError:
-                LOG.error("A10Config couldn't find config.py in %s", self.config_dir)
+                LOG.error("A10Config could not find %s/config.py", self.config_dir)
                 self.config = blank_config
 
             # Global defaults

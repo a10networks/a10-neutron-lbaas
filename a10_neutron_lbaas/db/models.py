@@ -14,9 +14,10 @@ import datetime
 import uuid
 
 import sqlalchemy as sa
-import sqlalchemy.ext.declarative
 
-Base = sqlalchemy.ext.declarative.declarative_base()
+from a10_neutron_lbaas.db import api as db_api
+
+Base = db_api.get_base()
 
 
 def _uuid_str():
@@ -31,7 +32,7 @@ class A10TenantBinding(Base):
     __tablename__ = "a10_tenant_bindings"
 
     id = sa.Column(sa.String(36), default=_uuid_str, primary_key=True)
-    created_at = sa.Column(sa.Date, default=_get_date)
-    updated_at = sa.Column(sa.Date, default=_get_date, onupdate=_get_date)
+    created_at = sa.Column(sa.DateTime, default=_get_date)
+    updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date)
     tenant_id = sa.Column(sa.String(36), nullable=False)
     device_name = sa.Column(sa.String(1024), nullable=False)

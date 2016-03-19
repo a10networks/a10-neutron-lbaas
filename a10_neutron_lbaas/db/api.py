@@ -12,23 +12,29 @@
 
 
 import sqlalchemy
+import sqlalchemy.ext.declarative
 import sqlalchemy.orm
 
 import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.a10_exceptions as ex
 
+Base = sqlalchemy.ext.declarative.declarative_base()
 a10_cfg = a10_config.A10Config()
 
 
-def get_session():
-    if not a10_cfg.use_database:
-        raise ex.InternalError("attempted to use database when it is disabled")
+def get_base():
+    return Base
 
-    engine = sqlalchemy.create_engine(a10_cfg.database_connection)
 
-    # # Bind the engine to the metadata of the Base class so that the
-    # # declaratives can be accessed through a DBSession instance
-    # Base.metadata.bind = engine
+def get_engine(url=None):
+    if url is None:
+        if not a10_cfg.use_database:
+            raise ex.InternalError("attempted to use database when it is disabled")
+        url = a10_cfg.database_connection
 
-    DBSession = sqlalchemy.orm.sessionmaker(bind=engine)
+    return sqlalchemy.create_engine(url)
+
+
+def get_session(url=None):
+    DBSession = sqlalchemy.orm.sessionmaker(bind=get_engine())
     return DBSession()

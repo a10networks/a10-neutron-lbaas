@@ -12,9 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
-import a10_neutron_lbaas.tests.test_case as test_case
-
-import session
+from a10_neutron_lbaas.tests.db import session
+from a10_neutron_lbaas.tests import test_case
 
 
 class UnitTestBase(test_case.TestCase):
