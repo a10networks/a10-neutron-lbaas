@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "`basename $0`: <install|upgrade>"
+    echo "    install - Perform first-time installation steps and checks"
+    echo "    upgrade - Upgrade DB schema after package upgrade"
+    echo " All checks are safe to run multiple times."
+    exit 1
+fi
+
+d=$(python -c 'import a10_neutron_lbaas; print(a10_neutron_lbaas.__path__[0])' 2>/dev/null)
+if [ $? -ne 0 ]; then
+    echo "error: unable to find a10_neutron_lbaas package"
+    exit 1
+fi
+
+if [ ! -d /etc/a10 ]; then
+  echo "error: no /etc/a10 directory; please add a config file. Suggest running the following command and modifying for your site:"
+  echo "  sudo mkdir /etc/a10"
+  echo "  sudo cp $d/etc/config.py /etc/a10"
+  exit 1
+fi
+
+cd "${d}/db/migration"
+alembic upgrade head

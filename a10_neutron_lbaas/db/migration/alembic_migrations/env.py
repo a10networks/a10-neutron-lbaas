@@ -1,5 +1,3 @@
-# Copyright 2015,  A10 Networks
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -14,14 +12,23 @@
 
 from __future__ import with_statement
 from alembic import context
-from sqlalchemy import create_engine, pool
+from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
-VERSION_TABLE = 'alembic_version_a10_neutron_lbaas'
+from a10_neutron_lbaas import a10_config
+from a10_neutron_lbaas import a10_exceptions as ex
+
+VERSION_TABLE = 'alembic_version_a10'
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override db location
+a10_cfg = a10_config.A10Config()
+if not a10_cfg.use_database:
+    raise ex.InternalError("database not enabled")
+config.set_main_option("sqlalchemy.url", a10_cfg.database_connection)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -52,8 +59,7 @@ def run_migrations_offline():
 
     """
     url = config.get_main_option("sqlalchemy.url")
-    context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(url=url, target_metadata=target_metadata)
 
     with context.begin_transaction():
         context.run_migrations()
@@ -66,8 +72,9 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = create_engine(
-        config.neutron_config.database.connection,
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
+        prefix='sqlalchemy.',
         poolclass=pool.NullPool)
 
     with connectable.connect() as connection:

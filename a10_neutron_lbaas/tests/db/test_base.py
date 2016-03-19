@@ -10,11 +10,10 @@
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License.from neutron.db import model_base
+#    under the License.
 
-import a10_neutron_lbaas.tests.test_case as test_case
-
-import session
+from a10_neutron_lbaas.tests.db import session
+from a10_neutron_lbaas.tests import test_case
 
 
 class UnitTestBase(test_case.TestCase):

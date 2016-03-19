@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "a10-neutron-lbaas",
-    version = "1.4.0",
+    version = "1.4.1",
     packages = find_packages(),
 
     author = "A10 Networks",
@@ -26,14 +26,12 @@ setup(
         'Topic :: Internet',
     ],
 
-    entry_points = {
-        'console_scripts': ['a10-neutron-lbaas-db-manage=a10_neutron_lbaas.db.migration.cli:main']
-    },
-
     package_data={'': [
         'a10_neutron_lbaas/db/migration/alembic.ini'
     ]},
     include_package_data=True,
+
+    scripts=['scripts/a10-manage', 'scripts/a10-neutron-lbaas-db-manage'],
 
     install_requires = ['acos-client>=1.2.6']
 )

@@ -13,9 +13,21 @@
 #    under the License.
 
 
+class InternalError(Exception):
+    pass
+
+
 class InvalidDeviceConfig(Exception):
     pass
 
 
 class UnsupportedFeature(Exception):
+    pass
+
+
+class DeviceConfigMissing(Exception):
+    pass
+
+
+class NoDatabaseURL(Exception):
     pass

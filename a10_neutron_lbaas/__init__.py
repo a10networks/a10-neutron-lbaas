@@ -15,9 +15,19 @@
 
 from version import VERSION
 
-from a10_openstack_lb import A10OpenstackLBV1
 try:
-    from a10_openstack_lb import A10OpenstackLBV2
+    import neutron  # noqa
 except ImportError:
-    # This was logged as an error in a10_openstack_lb, so punt here
+    # Maybe running tests or utilties?
     pass
+else:
+    from a10_openstack_lb import A10OpenstackLBV1
+
+try:
+    import neutron  # noqa
+    import neutron_lbaas  # noqa
+except ImportError:
+    # Maybe running tests or utilties?
+    pass
+else:
+    from a10_openstack_lb import A10OpenstackLBV2

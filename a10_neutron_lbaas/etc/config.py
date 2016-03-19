@@ -12,6 +12,8 @@
 
 
 verify_appliances = False
+use_database = False
+database_connection = None
 
 devices = {
     # # A sample ACOS 2.7.2 box, using the shared partition

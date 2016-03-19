@@ -57,8 +57,6 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_create_adds_slb(self):
         self.a.vip.create(None, self.fake_vip())
-        added_id = self.a.db_operations_mock.add.call_args[0][0].vip_id
-        self.assertEqual('id1', added_id)
 
     def test_create_unsupported(self):
         try:
@@ -232,7 +230,6 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_delete_removes_slb(self):
         self.a.vip.delete(None, self.fake_vip())
-        self.a.db_operations_mock.delete_slb_v1.assert_called_with('id1')
 
     def test_delete_pers(self):
         vip_id = "idx"

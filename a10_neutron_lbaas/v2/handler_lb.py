@@ -59,7 +59,6 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             c.client.slb.virtual_server.delete(self._meta_name(lb))
         except acos_errors.NotFound:
             pass
-        c.db_operations.delete_slb_v2(lb.id)
 
     def delete(self, context, lb):
         with a10.A10DeleteContext(self, context, lb) as c:

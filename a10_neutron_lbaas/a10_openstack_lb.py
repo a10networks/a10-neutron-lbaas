@@ -16,8 +16,6 @@ import logging
 
 import a10_config
 import acos_client
-import db.operations as operations
-import inventory
 import plumbing_hooks as hooks
 import version
 
@@ -25,21 +23,15 @@ import v1.handler_hm
 import v1.handler_member
 import v1.handler_pool
 import v1.handler_vip
-import v1.inventory
 
+import v2.handler_hm
+import v2.handler_lb
+import v2.handler_listener
+import v2.handler_member
+import v2.handler_pool
+
+logging.basicConfig()
 LOG = logging.getLogger(__name__)
-
-try:
-    import neutron_lbaas  # noqa
-except ImportError:
-    LOG.error("Could not import A10OpenstackLBaaSV2 driver as neutron-lbaas could not be found.")
-else:
-    import v2.handler_hm
-    import v2.handler_lb
-    import v2.handler_listener
-    import v2.handler_member
-    import v2.handler_pool
-    import v2.inventory
 
 
 class A10OpenstackLBBase(object):
@@ -47,15 +39,11 @@ class A10OpenstackLBBase(object):
     def __init__(self, openstack_driver,
                  plumbing_hooks_class=hooks.PlumbingHooks,
                  neutron_hooks_module=None,
-                 barbican_client=None,
-                 db_operations_class=operations.Operations,
-                 inventory_class=inventory.InventoryBase):
+                 barbican_client=None):
         self.openstack_driver = openstack_driver
         self.config = a10_config.A10Config()
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
-        self.db_operations_class = db_operations_class
-        self.inventory_class = inventory_class
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
@@ -91,12 +79,6 @@ class A10OpenstackLBBase(object):
 
 
 class A10OpenstackLBV2(A10OpenstackLBBase):
-    def __init__(self, openstack_driver,
-                 inventory_class=v2.inventory.InventoryV2,
-                 **kw):
-        super(A10OpenstackLBV2, self).__init__(openstack_driver,
-                                               inventory_class=inventory_class,
-                                               **kw)
 
     @property
     def lb(self):
@@ -139,12 +121,6 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
 
 class A10OpenstackLBV1(A10OpenstackLBBase):
-    def __init__(self, openstack_driver,
-                 inventory_class=v1.inventory.InventoryV1,
-                 **kw):
-        super(A10OpenstackLBV1, self).__init__(openstack_driver,
-                                               inventory_class=inventory_class,
-                                               **kw)
 
     @property
     def pool(self):
