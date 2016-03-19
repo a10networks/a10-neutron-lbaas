@@ -19,14 +19,14 @@ import a10_neutron_lbaas.plumbing_hooks as hooks
 
 import test_base
 
-dev1 = { 'name': 'dev1' }
-dev2 = { 'name': 'dev2' }
-dev3 = { 'name': 'dev3' }
-dev4 = { 'name': 'dev4' }
-dev5 = { 'name': 'dev5' }
-dev6 = { 'name': 'dev6' }
+dev1 = {'name': 'dev1'}
+dev2 = {'name': 'dev2'}
+dev3 = {'name': 'dev3'}
+dev4 = {'name': 'dev4'}
+dev5 = {'name': 'dev5'}
+dev6 = {'name': 'dev6'}
 
-devices1 = { 'dev1': dev1 }
+devices1 = {'dev1': dev1}
 devices2 = {
     'dev1': dev1,
     'dev2': dev2,
@@ -42,6 +42,7 @@ EXPECTED_DEV1 = acos_client.Hash(devices1.keys()).get_server(TENANT_ID)
 HARDCODE_RESULT1 = 'dev1'
 EXPECTED_DEV2 = acos_client.Hash(devices2.keys()).get_server(TENANT_ID)
 HARDCODE_RESULT2 = 'dev2'
+
 
 class TestSelectDevice(test_base.UnitTestBase):
 
