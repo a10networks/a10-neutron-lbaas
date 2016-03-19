@@ -1,1 +1,2 @@
 acos_client>=1.2.6
+alembic>=0.8.0
