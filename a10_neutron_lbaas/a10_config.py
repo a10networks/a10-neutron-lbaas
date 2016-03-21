@@ -15,6 +15,7 @@
 import ConfigParser as ini
 import logging
 import os
+import runpy
 import sys
 
 from debtcollector import removals
@@ -26,7 +27,21 @@ from a10_neutron_lbaas.etc import defaults
 LOG = logging.getLogger(__name__)
 
 
+# TODO
+#class Config(object):
+#    pass
+
+
+#def load(path):
+#    config_dict = runpy.run_path(path)
+#    config = Config()
+#    config.__dict__.update(config_dict)
+#    return config
+
+
 class A10Config(object):
+
+    # TODO -- networks, mgmt__network, and management_gateway
 
     def __init__(self, config_dir=None):
         # Look for config in the virtual environment
