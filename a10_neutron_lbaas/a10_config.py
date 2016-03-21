@@ -14,11 +14,23 @@
 
 import logging
 import os
+import runpy
 import sys
 
 import a10_neutron_lbaas.install.blank_config as blank_config
 
 LOG = logging.getLogger(__name__)
+
+
+class Config(object):
+    pass
+
+
+def load(path):
+    config_dict = runpy.run_path(path)
+    config = Config()
+    config.__dict__.update(config_dict)
+    return config
 
 
 class A10Config(object):
@@ -74,17 +86,11 @@ class A10Config(object):
             self.config_dir = config_dir or os.environ.get('A10_CONFIG_DIR', d)
             self.config_path = os.path.join(self.config_dir, "config.py")
 
-            real_sys_path = sys.path
-            sys.path = [self.config_dir]
             try:
-                sys.modules.pop('config', None)
-                import config as imported_config
-                self.config = imported_config
+                self.config = load(self.config_path)
             except ImportError:
                 LOG.error("A10Config couldn't find config.py in %s", self.config_dir)
                 self.config = blank_config
-            finally:
-                sys.path = real_sys_path
 
         self.devices = {}
         for k, v in self.config.devices.items():

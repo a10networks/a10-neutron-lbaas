@@ -38,7 +38,7 @@ def patient_http(original):
         sleep_time = 1
         lock_time = 600
         skip_errs = [errno.EHOSTUNREACH, errno.ECONNREFUSED]
-        skip_err_codes = [errno.errorcode[e] for e in skip_errs]
+        skip_err_codes = [errno.errorcode[e] for e in skip_errs] + ['BadStatusLine']
         time_end = time.time() + lock_time
 
         while time.time() < time_end:
