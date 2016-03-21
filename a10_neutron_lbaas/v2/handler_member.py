@@ -12,15 +12,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import binascii
+import re
+
 import acos_client.errors as acos_errors
 import handler_base_v2
 import v2_context as a10
+
+# tenant names allow some funky characters; we do not, as of 4.1.0
+non_alpha = re.compile('[^0-9a-zA-Z_-]')
 
 
 class MemberHandler(handler_base_v2.HandlerBaseV2):
 
     def _get_name(self, member, ip_address):
         tenant_label = member.tenant_id[:5]
+        if non_alpha.search(tenant_label) is not None:
+            # This corner-case likely only occurs with silly unit tests
+            tenant_label = binascii.hexlify(tenant_label)
         addr_label = str(ip_address).replace(".", "_", 4)
         server_name = "_%s_%s_neutron" % (tenant_label, addr_label)
         return server_name
