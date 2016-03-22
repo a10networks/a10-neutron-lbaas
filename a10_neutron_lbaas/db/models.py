@@ -142,7 +142,8 @@ class A10ApplianceDB(A10ApplianceSLB):
             plumbed_client = nova_plumbing_client.plumbed_client(
                 client,
                 context,
-                self.nova_instance_id)
+                self.nova_instance_id,
+                wrong_ips=[self.host])
             return plumbed_client
 
         return super(A10ApplianceDB, self).client(context)

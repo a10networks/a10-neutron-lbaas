@@ -128,16 +128,11 @@ class InstanceManager(object):
 
         return a10_appliance
 
-    def _get_ip_addresses_from_instance(self, addresses):
-        rv = ""
-        if len(addresses.keys()) > 0:
-            v4addresses = filter(lambda x: x["version"] == 4,
-                                 addresses[addresses.keys()[0]])
-            if len(v4addresses) > 0:
-                addresses = map(lambda x: x["addr"], v4addresses)
-                if len(addresses) > 0:
-                    rv = addresses[0]
-        return rv
+    def _get_ip_addresses_from_instance(self, addresses, mgmt_network_name):
+        address_block = addresses[mgmt_network_name]
+        v4addresses = filter(lambda x: x["version"] == 4,
+                             address_block)
+        return v4addresses[0]["addr"]
 
     def _create_instance(self, context):
         server = self._build_server(context)
@@ -160,7 +155,7 @@ class InstanceManager(object):
 
         server["image"] = image.id
         server["flavor"] = flavor.id
-        server["nics"] = [{'net-id': x} for x in networks]
+        server["nics"] = [{'net-id': x['id']} for x in networks]
 
         created_instance = self._nova_api.servers.create(**server)
 
@@ -168,7 +163,8 @@ class InstanceManager(object):
         created_instance.manager.client.last_request_id = None
         self._create_server_spinlock(created_instance)
 
-        ip_address = self._get_ip_addresses_from_instance(created_instance.addresses)
+        # Get the IP address of the first interface (should be management)
+        ip_address = self._get_ip_addresses_from_instance(created_instance.addresses, networks[0]['name'])
         a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
 
         return a10_record
@@ -288,7 +284,10 @@ class InstanceManager(object):
         if any(missing_networks):
             self._handle_missing_networks(missing_networks)
 
-        return [id_func(available_networks[x]) for x in networks]
+        return [{
+            'id':id_func(available_networks[x]),
+            'name': available_networks[x].get('name', '')
+        } for x in networks]
 
     def _default_instance(self):
         # Get all the a10 images
@@ -333,22 +332,23 @@ class InstanceManager(object):
 
         return self._create_instance(instance_configuration)
 
-    def _plumb_port(self, server, network_id):
+    def _plumb_port(self, server, network_id, wrong_ips):
         """Look for an existing port on the network
         Add one if it doesn't exist
         """
 
-        # Don't plumb things to the management (first) interface
-        for attached_interface in server.interface_list()[1:]:
+        for attached_interface in server.interface_list():
             if attached_interface.net_id == network_id:
+                if any(map(lambda x: x['ip_address'] in wrong_ips, attached_interface.fixed_ips)):
+                    continue
                 return attached_interface
 
         return server.interface_attach(None, network_id, None)
 
-    def plumb_instance(self, instance_id, network_id, allowed_ips):
+    def plumb_instance(self, instance_id, network_id, allowed_ips, wrong_ips=[]):
         server = self._nova_api.servers.get(instance_id)
 
-        interface = self._plumb_port(server, network_id)
+        interface = self._plumb_port(server, network_id, wrong_ips=wrong_ips)
 
         port = self._neutron_api.show_port(interface.port_id)
 
@@ -363,12 +363,12 @@ class InstanceManager(object):
             }
         })
 
-        return interface.fixed_ips[0]
+        return interface.fixed_ips[0]['ip_address']
 
-    def plumb_instance_subnet(self, instance_id, subnet_id, allowed_ip):
+    def plumb_instance_subnet(self, instance_id, subnet_id, allowed_ips, wrong_ips=[]):
         subnet = self._neutron_api.show_subnet(subnet_id)
         network_id = subnet["subnet"]["network_id"]
-        return self.plumb_instance(instance_id, network_id, allowed_ip)
+        return self.plumb_instance(instance_id, network_id, allowed_ips, wrong_ips=wrong_ips)
 
 
 def distinct_dicts(dicts):

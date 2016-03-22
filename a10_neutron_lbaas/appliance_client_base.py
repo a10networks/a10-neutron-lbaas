@@ -31,7 +31,7 @@ class VirtualServer(object):
     """slb.virtual_server mixin"""
 
     def create(self, name, ip_address, status=1, axapi_body={},
-               neutron_subnet_id=None):
+               neutron_subnet_id=None, **kwargs):
         virtual_server = axapi_body.copy()
 
         vrid = self._device_info.get("default_virtual_server_vrid")
@@ -44,4 +44,5 @@ class VirtualServer(object):
             name,
             ip_address,
             status,
-            axapi_args=axapi_args)
+            axapi_args=axapi_args,
+            **kwargs)

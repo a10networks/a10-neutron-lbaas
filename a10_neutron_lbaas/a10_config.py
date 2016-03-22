@@ -15,7 +15,6 @@
 import logging
 import os
 import runpy
-import sys
 
 import a10_neutron_lbaas.install.blank_config as blank_config
 
