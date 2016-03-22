@@ -90,7 +90,7 @@ class TestInstanceManager(test_base.UnitTestBase):
         setattr(self.fake_created, VMSTATE_KEY, vmstate)
 
     def setup_mocks(self):
-        self.fake_created = mock.Mock(addresses={"public": [
+        self.fake_created = mock.Mock(addresses={"network1": [
             {
                 "version": 4,
                 "addr": "127.0.0.1"
@@ -107,7 +107,7 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.fake_instance = self._fake_instance(name="fake-instance-01",
                                                  image=self.fake_image.id,
                                                  flavor=self.fake_flavor.id,
-                                                 nics=self.fake_networks.get("networks"))
+                                                 nics=['network1'])
 
         self.nova_api.servers.list = mock.Mock(return_value=[self._fake_instance()])
         self.nova_api.servers.create = mock.Mock(return_value=self.fake_created)
@@ -250,9 +250,17 @@ class TestInstanceManager(test_base.UnitTestBase):
             self.target.get_networks(networks=["network"])
 
     def test_create_default_instance_returns_host(self):
+        defaults = self.target._config.instance_defaults
+
+        self.fake_created.addresses=dict((network, [
+            {
+                "version": 4,
+                "addr": "127.0.0.1"
+            }
+        ]) for network in defaults['networks'])
 
         self.nova_api.flavors.list.return_value = [self._fake_flavor(
-            name=self.target._config.instance_defaults['flavor'])]
+            name=defaults['flavor'])]
 
         self.neutron_api.list_networks.return_value = {
             "networks": [{"id": x, "name": x}
@@ -261,6 +269,4 @@ class TestInstanceManager(test_base.UnitTestBase):
 
         device = self.target.create_default_instance()
 
-        expected_host = self.fake_created.addresses['public'][0]['addr']
-
-        self.assertEqual(expected_host, device['host'])
+        self.assertEqual('127.0.0.1', device['host'])

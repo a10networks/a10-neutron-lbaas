@@ -17,15 +17,17 @@ import instance_manager
 
 
 class NovaPlumber(object):
-    def __init__(self, nova_instance_id, instance_manager):
-        self.nova_instance_id = nova_instance_id,
+    def __init__(self, nova_instance_id, instance_manager, wrong_ips=[]):
+        self.nova_instance_id = nova_instance_id
         self.instance_manager = instance_manager
+        self.wrong_ips = wrong_ips
 
     def plumb(self, subnet_id, ip_address):
         return self.instance_manager.plumb_instance_subnet(
             self.nova_instance_id,
             subnet_id,
-            ip_address)
+            ip_address,
+            wrong_ips=self.wrong_ips)
 
 
 def plumbed_client(underlying_client, context, nova_instance_id):

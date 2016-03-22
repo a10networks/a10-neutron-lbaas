@@ -16,7 +16,6 @@ import ConfigParser as ini
 import logging
 import os
 import runpy
-import sys
 
 from debtcollector import removals
 
