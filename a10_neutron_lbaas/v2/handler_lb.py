@@ -35,6 +35,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 self._meta_name(lb),
                 lb.vip_address,
                 status,
+                neutron_subnet_id=lb.vip_subnet_id,
                 axapi_body=vip_meta)
         except acos_errors.Exists:
             pass

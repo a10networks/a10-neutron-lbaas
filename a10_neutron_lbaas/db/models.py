@@ -19,6 +19,7 @@ from sqlalchemy.orm import relationship
 import uuid
 
 import a10_neutron_lbaas.acos_client_extensions as acos_client_extensions
+import a10_neutron_lbaas.nova_plumbing_client as nova_plumbing_client
 
 
 def default(cls, **kw):
@@ -138,7 +139,12 @@ class A10ApplianceDB(A10ApplianceSLB):
             acos_client = context.a10_driver.acos_client_class(device_cfg)
             patient_client = acos_client_extensions.patient_client(acos_client)
             client = context.a10_driver.client_class(patient_client, device_cfg)
-            return client
+            plumbed_client = nova_plumbing_client.plumbed_client(
+                client,
+                context,
+                self.nova_instance_id,
+                wrong_ips=[self.host])
+            return plumbed_client
 
         return super(A10ApplianceDB, self).client(context)
 
