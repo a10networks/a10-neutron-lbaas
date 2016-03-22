@@ -1,2 +1,2 @@
-acos_client>=1.2.6
+acos_client>=1.2.9
 SQLAlchemy
