@@ -4,39 +4,44 @@
 A10 Networks LBaaS Driver for Thunder, vThunder and AX Series Appliances
 
 Supported releases:
-  OpenStack: Icehouse, Juno, Kilo, Liberty, Mitaka
-  LBaaS versions: v1, v2
-  ACOS versions: ACOS 2/AxAPI 2.1 (ACOS 2.7.2+), ACOS 4/AxAPI 3.0 (ACOS 4.0.1-GA +)
+
+* OpenStack: Icehouse, Juno, Kilo, Liberty, Mitaka
+* LBaaS versions: v1, v2
+* ACOS versions: ACOS 2/AxAPI 2.1 (ACOS 2.7.2+), ACOS 4/AxAPI 3.0 (ACOS 4.0.1-GA +)
 
 Working but not available for support:
-  OpenStack: git/master
+
+* OpenStack: git/master
 
 Unsupported, but may work with minor tweaking:
-  OpenStack: Havana
+
+* OpenStack: Havana
 
 ## A10 github repos
 
-- [a10-neutron-lbaas](https://github.com/a10networks/a10-neutron-lbaas) - Main A10 LBaaS driver repo. Middleware sitting between the 
+- [a10-neutron-lbaas](https://github.com/a10networks/a10-neutron-lbaas) - Main A10 LBaaS driver repo. Middleware sitting between the
 openstack driver and our API client, mapping openstack constructs to A10's AxAPI.
 - [acos-client](https://github.com/a10networks/acos-client) - AxAPI client used by A10's OpenStack driver
-- [a10-openstack-lbaas](https://github.com/a10networks/a10-openstack-lbaas) - OpenStack LBaaS driver, 
-identical to the files that are currently merged into neutron-lbaas.  Pypi package 
+- [a10-openstack-lbaas](https://github.com/a10networks/a10-openstack-lbaas) - OpenStack LBaaS driver,
+identical to the files that are currently merged into neutron-lbaas.  Pypi package
 'a10-openstack-lbaas'.
-- [a10-openstack-lbaas, havana branch](https://github.com/a10networks/a10-openstack-lbaas/tree/havana) - OpenStack 
+- [a10-openstack-lbaas, havana branch](https://github.com/a10networks/a10-openstack-lbaas/tree/havana) - OpenStack
 LBaaS driver, for the Havana release.  Pypi package 'a10-openstack-lbaas-havana'.
 - [a10networks-ci/project-config](https://github.com/a10networks-ci/project-config) - A10 Networks OpenStack third-party CI setup scripts
+
+## Implementation:
+
+![image2](https://cloud.githubusercontent.com/assets/1424573/2849597/47192238-d0df-11e3-9e1e-9e234be58412.png)
 
 ## Installation steps:
 
 ### Step 1:
 
-Make sure you have the neutron and neutron-server installed, and neutron-lbaas is applicable.
+Make sure you have neutron installed, and neutron-lbaas if applicable. This
+driver will need to be installed on all of your neutron controller nodes
+(anywhere that neutron-server is running.)
 
-### Step 2: 
-
-Download the driver from: <https://github.com/a10networks/a10-neutron-lbaas>
-
-![image5](https://cloud.githubusercontent.com/assets/1424573/2849598/4719501e-d0df-11e3-8408-4b06ce359a43.png)
+### Step 2:
 
 The latest supported version of a10-neutron-lbaas is available via standard pypi repositories and the current development version is available on github.
 
@@ -46,6 +51,11 @@ sudo pip install a10-neutron-lbaas
 ```
 
 ##### Installation from cloned git repository.
+
+Download the driver from: <https://github.com/a10networks/a10-neutron-lbaas>
+
+![screen shot 2016-03-22 at 4 41 04 pm](https://cloud.githubusercontent.com/assets/603553/13970211/ee35777c-f04c-11e5-9cd2-7c4dd8a66a3a.png)
+
 ```sh
 sudo pip install git+https://github.com/a10networks/a10-neutron-lbaas.git
 ```
@@ -64,7 +74,8 @@ Post-installation configuration requires modification of your neutron.conf or ne
 Open `/etc/neutron/neutron.conf` in your preferred text editor.
 Under the `service_plugins` setting, ensure `lbaas` is listed.
 
-In the list of `service_provider` settings, ensure there is only a single entry for LOADBALANCER (you can comment out existing entries) enabled:
+In the list of `service_provider` settings, add a service provider for A10
+Networks:
 `service_provider = LOADBALANCER:A10Networks:neutron_lbaas.services.loadbalancer.drivers.a10networks.driver_v1.ThunderDriver:default`
 
 Save and close neutron.conf
@@ -76,7 +87,8 @@ Save and close neutron.conf.
 
 Open `/etc/neutron/neutron_lbaas.conf` in your preferred text editor.
 
-In the list of `service_provider` settings, ensure there is only a single entry for LOADBALANCERV2 (you can comment out existing entries) enabled:
+In the list of `service_provider` settings, add a service provider for A10
+Networks:
 `service_provider = LOADBALANCERV2:A10Networks:neutron_lbaas.drivers.a10networks.driver_v2.ThunderDriver:default`
 
 ##### Device configuration
@@ -113,11 +125,13 @@ Authentication credentials to control the A10 appliance via the AXAPI.
 
 ###### `api_version` (default `"2.1"`)
 
-Version of the A10 appliance's AXAPI. `"2.1"` for 2.X.X series ACOS versions, `"3.0"` for 4.X versions.
+Version of the A10 appliance's AXAPI. `"2.1"` for 2.X series ACOS versions,
+`"3.0"` for 4.X versions.
 
 ## Install database migrations
 
-If 'use_database' is enabled, after installing the package and after any upgrades, run 
+If 'use_database' is enabled, after installing the package and after any
+upgrades, run:
 
 ```
 a10-manage upgrade
@@ -125,31 +139,27 @@ a10-manage upgrade
 
 ## Restart necessary services
 
-Restart neutron after configuration updates.
+Restart neutron after configuration updates (exact command may vary depending
+  on OpenStack packaging.)
 
 ```sh
 service neutron-server restart
 ```
 
-## A10 Community
+## Example architectures
 
-Feel free to fork, submit pull requests, or join us on freenode IRC, channel #a10-openstack. Serious support escalations and format feature requests must still go through standard A10 processes.
+You must configure the network elements of the Thunder appliance for OpenStack.
 
-## Implementation:
-
-![image2](https://cloud.githubusercontent.com/assets/1424573/2849597/47192238-d0df-11e3-9e1e-9e234be58412.png)
-
-## Network Architecture:
-
-You must configure the network elements of the Thunder appliance for OpenStack’s Havana and Icehouse releases. 
-
-## SNATED:
+### SNAT:
 
 ![image3](https://cloud.githubusercontent.com/assets/1424573/2849593/4708b7ea-d0df-11e3-8ed7-f6bf73b31535.png)
 
-## VLAN:
+### VLAN:
 
 ![image4](https://cloud.githubusercontent.com/assets/1424573/2849595/471863d4-d0df-11e3-87c7-2423aaaaedca.png)
+
+
+## Verifying installation (lbaas v1)
 
 ### Step 1:
 
@@ -163,19 +173,22 @@ Under the “Network” menu, go to the “Load Balancers” tab and select “A
 
 ![image8](https://cloud.githubusercontent.com/assets/1424573/2849594/47169bda-d0df-11e3-9fda-af2da76cdb00.png)
 
-Once you have added a pool, a success message should appear. 
+Once you have added a pool, a success message should appear.
 
 ![image9](https://cloud.githubusercontent.com/assets/1424573/2849599/471a7c14-d0df-11e3-918e-778dbea9be45.png)
 
 ### Step 3:
 
-Login to the GUI on your Thunder or AX device, and validate which configuration was applied if the ADPs are set. The ADP name is the first 13 characters of the tenant ID. 
+Login to the GUI on your Thunder or AX device, and validate which configuration was applied if the ADPs are set. The ADP name is the first 13 characters of the tenant ID.
 
 ![image10](https://cloud.githubusercontent.com/assets/1424573/2849596/4718b0b4-d0df-11e3-9a6b-506bb832dcce.png)
 
 _Repeat this for all configuration steps, then delete all resources if ADPs are configured. They should be deleted when the tenant has no more resources configured._
 
-__Need further clarification on this.__
+## A10 Community
+
+Feel free to fork, submit pull requests, or join us on freenode IRC, channel #a10-openstack. Serious support escalations and formal feature requests must
+still go through standard A10 processes.
 
 ## Contributing
 
@@ -184,5 +197,3 @@ __Need further clarification on this.__
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
-
-
