@@ -20,6 +20,9 @@ import v1_context as a10
 class MemberHandler(handler_base_v1.HandlerBaseV1):
 
     def _get_name(self, member, ip_address):
+        if self.a10_driver.config.member_name_use_uuid:
+            return member['id']
+
         tenant_label = member['tenant_id'][:5]
         addr_label = str(ip_address).replace(".", "_", 4)
         server_name = "_%s_%s_neutron" % (tenant_label, addr_label)
