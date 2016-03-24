@@ -19,22 +19,24 @@ import time
 
 import requests.exceptions
 
+from a10_neutron_lbaas import appliance_client_base
+import acos_client.errors as acos_errors
+
 
 def patient_client(original):
-    self = copy.copy(original)
-
-    self.http = patient_http(self.http)
-    self.session.http = self.http
-
-    return self
+    return PatientProxy(original)
 
 
-def patient_http(original):
-    self = copy.copy(original)
+class PatientProxy(appliance_client_base.StupidSimpleProxy):
+    def __getattr__(self, attr):
+        underlying = getattr(self._underlying, attr)
 
-    underlying_request = self.request
+        if is_builtin(underlying):
+            return underlying
 
-    def request(*args, **kwargs):
+        return PatientProxy(underlying)
+
+    def __call__(self, *args, **kwargs):
         sleep_time = 1
         lock_time = 600
         skip_errs = [errno.EHOSTUNREACH, errno.ECONNREFUSED]
@@ -43,16 +45,15 @@ def patient_http(original):
 
         while time.time() < time_end:
             try:
-                return underlying_request(*args, **kwargs)
+                return self._underlying(*args, **kwargs)
             except (socket.error, requests.exceptions.ConnectionError) as e:
                 if e.errno not in skip_errs and all(ec not in str(e) for ec in skip_err_codes):
                     raise
                     break
+            except acos_errors.InvalidSessionID as e:
+                # Clear the invalid session id so the underlying client will reauthenticate
+                self._underlying.session.id = None
 
             time.sleep(sleep_time)
 
-        return underlying_request(*args, **kwargs)
-
-    self.request = request
-
-    return self
+        return self._underlying(*args, **kwargs)

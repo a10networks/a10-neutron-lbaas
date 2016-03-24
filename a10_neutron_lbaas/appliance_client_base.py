@@ -20,6 +20,9 @@ class StupidSimpleProxy(object):
     def __getattr__(self, attr):
         return getattr(self._underlying, attr)
 
+    def __setattr__(self, attr, value):
+        return setattr(self._underlying, attr, value)
+
 
 class ClientProxy(StupidSimpleProxy):
     def __init__(self, underlying_client, device_info):
