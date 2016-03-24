@@ -103,5 +103,10 @@ devices = {
     # Contains a list of hostnames or IP addresses that the driver will run
     # the 'ha sync' command against whenever a write operation occurs.
     #     "ha_sync_list": [],
+    #
+    # Enable or disable calling write memory directly after any operation that
+    # changes ACOS's running state. Turning this off also disables all ha sync
+    # operations, regardless of the settings in ha_sync_list.
+    #     "write_memory": True,
     # },
 }
