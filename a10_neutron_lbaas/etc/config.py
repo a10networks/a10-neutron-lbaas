@@ -11,6 +11,10 @@
 #    under the License.
 
 
+#
+# Global settings
+#
+
 # Should the driver check that A10 appliances are alive before
 # successfullAy initializing?
 
@@ -21,6 +25,7 @@
 # is changed for any reason. Setting this to true means that you will
 # also need to run "a10-manage upgrade" after installing or upgrading
 # the a10-neutron-lbaas package.
+# Recommended for all new installs.
 
 # use_database = False,
 
@@ -30,11 +35,20 @@
 
 # database_connection = None,
 
-# Sometimes we need things for neutron
+# Sometimes we need things from neutron. We will look in the usual places,
+# but this is here if you need to override the location.
 
 # neutron_conf_dir = '/etc/neutron'
 
+# If True, use the OpenStack lbaas member object UUID as the server name
+# in ACOS. Recommended for all new installs using ACOS 4.0.0 or greater.
+
+# member_name_use_uuid = False
+
+
+#
 # Main devices dictionary, containing a list of available ACOS devices.
+#
 
 devices = {
     # A sample ACOS 2.7.2 box

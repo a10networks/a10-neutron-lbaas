@@ -134,6 +134,10 @@ class A10Config(object):
         return self.config.database_connection
 
     @property
+    def member_name_use_uuid(self):
+        return self.config.member_name_use_uuid
+
+    @property
     def verify_appliances(self):
         if hasattr(self.config, 'verify_appliances'):
             return self.config.verify_appliances

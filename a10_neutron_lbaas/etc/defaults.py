@@ -18,6 +18,7 @@ GLOBAL_DEFAULTS = {
     "use_database": False,
     "database_connection": None,
     "neutron_conf_dir": '/etc/neutron',
+    "member_name_use_uuid": False,
 }
 
 DEVICE_REQUIRED_FIELDS = [
