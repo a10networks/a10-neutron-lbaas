@@ -3,6 +3,8 @@ import six.moves.builtins
 
 from oslo_log.helpers import logging as logging
 
+from a10_neutron_lbaas import appliance_client_base
+
 LOG = logging.getLogger(__name__)
 
 
@@ -11,9 +13,10 @@ def is_builtin(a):
         return False
     return type(a).__module__ == six.moves.builtins.__name__
 
-class LoggingProxy(object):
+
+class LoggingProxy(appliance_client_base.StupidSimpleProxy):
     def __init__(self, underlying, path=[]):
-        self._underlying = underlying
+        super(LoggingProxy, self).__init__(underlying)
         self._path = path
 
     def __getattr__(self, attr):
