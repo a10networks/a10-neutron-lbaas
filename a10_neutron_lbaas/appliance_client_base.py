@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 class StupidSimpleProxy(object):
     def __init__(self, underlying):
         self._underlying = underlying
@@ -21,7 +20,10 @@ class StupidSimpleProxy(object):
         return getattr(self._underlying, attr)
 
     def __setattr__(self, attr, value):
-        return setattr(self._underlying, attr, value)
+        if attr[0:1] == '_':
+            super(StupidSimpleProxy, self).__setattr__(attr, value)
+        else:
+            setattr(self._underlying, attr, value)
 
 
 class ClientProxy(StupidSimpleProxy):
