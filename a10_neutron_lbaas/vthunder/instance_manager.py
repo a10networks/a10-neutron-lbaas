@@ -313,7 +313,12 @@ class InstanceManager(object):
         if flavor is None:
             raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured flavor")
 
-        networks = self._config.instance_defaults.get('networks')
+
+
+        mgmt_network = self._config.instance_defaults.get("mgmt_network")
+
+        networks = [mgmt_network] if mgmt_network else []
+        networks += self._config.instance_defaults.get('networks')
 
         if networks is None or len(networks) < 1:
             raise a10_ex.FeatureNotConfiguredError(
