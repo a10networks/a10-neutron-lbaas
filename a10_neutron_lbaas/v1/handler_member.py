@@ -40,6 +40,7 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
         try:
             server_args = {'server': self.meta(member, 'server', {})}
             c.client.slb.server.create(server_name, server_ip,
+                                       status=status,
                                        axapi_args=server_args)
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
             pass
