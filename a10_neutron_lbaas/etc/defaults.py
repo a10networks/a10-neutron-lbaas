@@ -38,6 +38,7 @@ DEVICE_OPTIONAL_DEFAULTS = {
     "default_virtual_server_vrid": None,
     "ipinip": False,
     "ha_sync_list": [],
+    "write_memory": True,
 
     # "max_instance": 5000,
     # "method": "hash",

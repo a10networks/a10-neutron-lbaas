@@ -104,6 +104,19 @@ devices = {
         "protocol": "https",
         "v_method": "ADP"
     },
+    "ax-nowrite": {
+        "host": "10.10.100.24",
+        "username": "admin",
+        "password": "a10",
+        "protocol": "https",
+        "write_memory": False,
+    },
+    "ax-write": {
+        "host": "10.10.100.24",
+        "username": "admin",
+        "password": "a10",
+        "protocol": "https",
+    },
     "axipinip": {
         "host": "10.48.5.219",
         "protocol": "https",
