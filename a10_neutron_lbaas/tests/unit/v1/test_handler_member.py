@@ -65,13 +65,14 @@ class TestMembers(test_base.UnitTestBase):
         name = self.a.member._get_name(m, ip)
         self.a.member.create(None, m)
 
-        self.a.last_client.slb.server.create.assert_called_with(
-            name, ip,
-            axapi_args={'server': {}})
         if admin_state_up:
             status = self.a.last_client.slb.UP
         else:
             status = self.a.last_client.slb.DOWN
+        self.a.last_client.slb.server.create.assert_called_with(
+            name, ip,
+            status=status,
+            axapi_args={'server': {}})
         pool_name = self.a.member._pool_name(None, m['pool_id'])
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             pool_name, name, m['protocol_port'], status=status,
