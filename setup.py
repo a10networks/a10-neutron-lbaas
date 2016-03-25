@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "a10-neutron-lbaas",
-    version = "1.4.1",
+    version = "1.4.2alpha",
     packages = find_packages(),
 
     author = "A10 Networks",
