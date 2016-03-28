@@ -14,12 +14,12 @@
 
 import logging
 
+import acos_client.errors as acos_errors
+
 from a10_neutron_lbaas.acos import axapi_mappings
 from a10_neutron_lbaas.acos import openstack_mappings
-from neutron_lbaas.services.loadbalancer import constants as lb_const
-
+from a10_neutron_lbaas import constants
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
-import acos_client.errors as acos_errors
 import handler_base_v2
 import handler_persist
 import v2_context as a10
@@ -35,7 +35,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _set(self, set_method, c, context, listener):
         if self.barbican_client is None:
-            self.barbican_client = certwrapper.CertManagerWrapper()
+            self.barbican_client = certwrapper.CertManagerWrapper(handler=self)
 
         status = c.client.slb.UP
         if not listener.admin_state_up:
@@ -46,7 +46,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         server_args = {}
         cert_data = dict()
 
-        if listener.protocol and listener.protocol == lb_const.PROTOCOL_TERMINATED_HTTPS:
+        if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
             if self._set_terminated_https_values(listener, c, cert_data):
                 templates["client_ssl"] = {}
                 template_name = str(cert_data.get('template_name', ''))

@@ -11,27 +11,26 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import neutron_lbaas.common.cert_manager.barbican_cert_manager as bcm
 
 
 class CertManagerWrapper(object):
-    def __init__(self, certmgr=None):
+    def __init__(self, certmgr=None, handler=None):
         if certmgr is not None:
             self.certmgr = certmgr
         else:
-            self.certmgr = bcm.CertManager()
+            self.certmgr = handler.neutron.bcm_factory()
 
     def get_certificate(self, container_id, **kwargs):
         return self.certmgr.get_cert(container_id, **kwargs)
 
     def store_cert(self, certificate, private_key, intermediates=None,
                    private_key_passphrase=None, expiration=None,
-                   name='Octavia TLS Cert', **kwargs):
+                   name='A10-LBaaS TLS Cert', **kwargs):
         return self.certmgr.store_cert(certificate, private_key, intermediates=intermediates,
                                        private_key_passphrase=private_key_passphrase,
                                        expiration=expiration, name=name, kwargs=kwargs)
 
-    def delete_cert(self, cert_ref, service_name='Octavia', resource_ref=None,
+    def delete_cert(self, cert_ref, service_name='A10-LBaaS', resource_ref=None,
                     **kwargs):
         return self.certmgr.delete_cert(cert_ref, service_name=service_name,
                                         resource_ref=resource_ref, kwargs=kwargs)
