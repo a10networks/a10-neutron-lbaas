@@ -1,0 +1,11 @@
+# settings for A10 devstack plugin
+
+# where to write a default config file
+A10_CONF_DIR="/etc/a10"
+
+# what git url to use for the driver; by default uses released
+# version from pypi
+# A10_DRIVER_GIT_URL="https://github.com/a10networks/a10-neutron-lbaas.git"
+
+A10_SERVICE_PROVIDER_V1=${A10_SERVICE_PROVIDER_V1:="LOADBALANCER:A10Networks:neutron_lbaas.services.loadbalancer.drivers.a10networks.driver_v1.ThunderDriver:default"}
+A10_SERVICE_PROVIDER_V2=${A10_SERVICE_PROVIDER_V2:="LOADBALANCERV2:A10Networks:neutron_lbaas.drivers.a10networks.driver_v2.ThunderDriver:default"}
