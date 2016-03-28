@@ -26,9 +26,9 @@ config = context.config
 
 # Override db location
 a10_cfg = a10_config.A10Config()
-if not a10_cfg.use_database:
+if not a10_cfg.get('use_database'):
     raise ex.InternalError("database not enabled")
-config.set_main_option("sqlalchemy.url", a10_cfg.database_connection)
+config.set_main_option("sqlalchemy.url", a10_cfg.get('database_connection'))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

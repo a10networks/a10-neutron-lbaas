@@ -59,7 +59,7 @@ class NeutronOpsV1(object):
         if 'provider' in entity:
             return self._provider(entity)
         elif 'pool_id' in entity:
-            return self._provider(self.pool_get(context, pool_id))
+            return self._provider(self.pool_get(context, entity['pool_id']))
         else:
-            #return self.plugin.default_provider
+            # return self.plugin.default_provider
             raise a10_ex.UnsupportedFeature("failed to determine provider")

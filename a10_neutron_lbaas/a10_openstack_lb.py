@@ -48,7 +48,7 @@ class A10OpenstackLBBase(object):
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
 
-        if self.config.verify_appliances:
+        if self.config.get('verify_appliances'):
             self._verify_appliances()
 
         self.hooks = plumbing_hooks_class(self)
@@ -66,10 +66,10 @@ class A10OpenstackLBBase(object):
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")
 
-        if len(self.config.devices) == 0:
+        if len(self.config.get_devices()) == 0:
             LOG.error("A10Driver: no configured appliances")
 
-        for k, v in self.config.devices.items():
+        for k, v in self.config.get_devices().items():
             try:
                 LOG.info("A10Driver: appliance(%s) = %s", k,
                          self._get_a10_client(v).system.information())
