@@ -51,4 +51,4 @@ class NeutronOpsV2(object):
         return self.plugin.db.get_pool(context, pool_id)
 
     def bcm_factory(self):
-        return bcm
+        return bcm.CertManager()
