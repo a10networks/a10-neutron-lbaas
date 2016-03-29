@@ -61,10 +61,10 @@ class PatientProxy(appliance_client_base.StupidSimpleProxy):
                 before_call = lambda: None
             except acos_errors.InvalidSessionID as e:
                 # Clear the invalid session id so the underlying client will reauthenticate
-                self._device_client.session.id = None
+                self._device_client.session.session_id = None
                 desired_partition = self._device_client.current_partition
                 self._device_client.current_partition = 'shared'
-                before_call = lambda: self._device_client.partition.active(desired_partition)
+                before_call = lambda: self._device_client.system.partition.active(desired_partition)
 
             time.sleep(sleep_time)
 
