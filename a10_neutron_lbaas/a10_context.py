@@ -35,7 +35,7 @@ class A10Context(object):
     def __enter__(self):
         self.get_tenant_id()
         if self.device_name:
-            d = self.a10_driver.config.devices[self.device_name]
+            d = self.a10_driver.config.get_device(self.device_name)
         else:
             d = self.a10_driver._select_a10_device(self.tenant_id)
         self.device_cfg = d

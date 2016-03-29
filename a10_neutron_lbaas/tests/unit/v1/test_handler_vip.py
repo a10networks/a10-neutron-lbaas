@@ -85,7 +85,7 @@ class TestVIP(test_base.UnitTestBase):
         Due to how the config is pulled in, we can't override the config
         version here and just expect it to work.
         """
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
 
@@ -126,7 +126,7 @@ class TestVIP(test_base.UnitTestBase):
         for all of the devices.
         """
 
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             v['api_version'] = api_ver
             v['default_virtual_server_vrid'] = default_vrid
 
@@ -157,7 +157,7 @@ class TestVIP(test_base.UnitTestBase):
         expected = None
 
         expected_tuple = axapi_mappings.ipinip_dictionary.get(api_ver, None)
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             v['ipinip'] = ip_in_ip
             v['api_version'] = api_ver
 

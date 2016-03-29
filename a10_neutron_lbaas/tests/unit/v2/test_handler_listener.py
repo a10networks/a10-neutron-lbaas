@@ -121,7 +121,7 @@ class TestListeners(test_base.UnitTestBase):
         version here and just expect it to work.
         """
 
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
 
@@ -166,7 +166,7 @@ class TestListeners(test_base.UnitTestBase):
         expected_tuple = axapi_mappings.ipinip_dictionary.get(api_ver)
         saw_exception = False
 
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             v['ipinip'] = ip_in_ip
             v['api_version'] = api_ver
 

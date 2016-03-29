@@ -26,7 +26,7 @@ class PlumbingHooks(object):
         if devices is not None:
             self.devices = devices
         else:
-            self.devices = self.driver.config.devices
+            self.devices = self.driver.config.get_devices()
         self.appliance_hash = acos_client.Hash(self.devices.keys())
 
     def select_device_hash(self, tenant_id):
@@ -60,7 +60,7 @@ class PlumbingHooks(object):
         return d
 
     def select_device(self, tenant_id):
-        if self.driver.config.use_database:
+        if self.driver.config.get('use_database'):
             return self.select_device_db(tenant_id)
         else:
             return self.select_device_hash(tenant_id)

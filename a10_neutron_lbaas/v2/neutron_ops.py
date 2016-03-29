@@ -45,3 +45,10 @@ class NeutronOpsV2(object):
 
     def pool_get(self, context, pool_id):
         return self.plugin.db.get_pool(context, pool_id)
+
+    def provider(self, context, entity):
+        lb = entity.root_loadbalancer
+        if lb.provider:
+            return lb.provider.provider_name
+        else:
+            return self.plugin.default_provider

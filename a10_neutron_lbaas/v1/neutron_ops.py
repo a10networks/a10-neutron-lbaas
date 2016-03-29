@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import a10_neutron_lbaas.a10_exceptions as a10_ex
+
 
 class NeutronOpsV1(object):
 
@@ -43,3 +45,21 @@ class NeutronOpsV1(object):
 
     def vip_get_id(self, context, pool_id):
         return self.openstack_driver._pool_get_vip_id(context, pool_id)
+
+    def _provider_from_pool(self, pool):
+        return pool['provider']
+
+    def _provider(self, pool):
+        if 'provider' in pool and pool['provider']:
+            return pool['provider']
+        else:
+            return self.plugin.default_provider
+
+    def provider(self, context, entity):
+        if 'provider' in entity:
+            return self._provider(entity)
+        elif 'pool_id' in entity:
+            return self._provider(self.pool_get(context, entity['pool_id']))
+        else:
+            # return self.plugin.default_provider
+            raise a10_ex.UnsupportedFeature("failed to determine provider")

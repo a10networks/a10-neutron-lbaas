@@ -118,12 +118,12 @@ class TestA10ContextADP(TestA10Context):
         self.reset_v_method('lsi')
 
     def reset_v_method(self, val):
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             v['v_method'] = val
 
     def _test_alternate_partition(self, use_alternate=False):
-        expected = self.a.config.devices["axadp-alt"].get("shared_partition",
-                                                          "shared")
+        expected = self.a.config.get_device("axadp-alt").get("shared_partition",
+                                                             "shared")
 
         self.m.tenant_id = expected if use_alternate else "get-off-my-lawn"
         with a10.A10Context(self.handler, self.ctx, self.m,

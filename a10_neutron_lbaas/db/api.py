@@ -28,9 +28,9 @@ def get_base():
 
 def get_engine(url=None):
     if url is None:
-        if not a10_cfg.use_database:
+        if not a10_cfg.get('use_database'):
             raise ex.InternalError("attempted to use database when it is disabled")
-        url = a10_cfg.database_connection
+        url = a10_cfg.get('database_connection')
 
     return sqlalchemy.create_engine(url)
 
