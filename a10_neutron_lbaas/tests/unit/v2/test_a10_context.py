@@ -153,17 +153,3 @@ class TestA10ContextADP(TestA10Context):
         self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
         self.assertEqual(2, len(self.a.last_client.mock_calls))
         self.a.last_client.session.close.assert_called_with()
-
-    def test_write_v21(self):
-        self._set_api_version("2.1")
-        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
-            c
-        self.a.last_client.system.action.write_active.assert_called_with("get-off-my-la")
-        self.a.last_client.session.close.assert_called_with()
-
-    def test_write_v30(self):
-        self._set_api_version("3.0")
-        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
-            c
-        self.a.last_client.system.action.write_memory.assert_called()
-        self.a.last_client.session.close.assert_called_with()
