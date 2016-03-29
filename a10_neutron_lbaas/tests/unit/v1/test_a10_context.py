@@ -53,7 +53,7 @@ class TestA10Context(test_base.UnitTestBase):
         self._set_api_version()
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.last_client.system.action.write_active.assert_called(None, "shared")
+        self.a.last_client.system.action.activate_and_write.assert_called(None, "shared")
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_v30(self):
