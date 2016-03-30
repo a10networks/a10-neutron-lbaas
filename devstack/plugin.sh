@@ -19,11 +19,11 @@ function configure_a10 {
 
 use_database = True
 devices = {
-    # "host": "replace-me",
-    # "port": 443,
-    # "username": "admin",
-    # "password": "a10",
-    # "api_version": "3.0",    
+    "host": "$A10_DEVICE_HOST",
+    "port": $A10_DEVICE_PORT,
+    "username": "$A10_DEVICE_USER",
+    "password": "$A10_DEVICE_PASSWORD",
+    "api_version": "$A10_DEVICE_AXAPI_VERSION",
 }
 EOF
 }

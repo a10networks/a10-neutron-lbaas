@@ -20,11 +20,11 @@ For example
 
 2a) To enable LBaaS version 2 with the A10 Networks driver:
 
-    ENABLED_SERVICES+=a10-lbaasv2
+    ENABLED_SERVICES+=q-lbaasv2,a10-lbaasv2
 
 2b) To enable LBaaS version 1 with the A10 Networks driver:
 
-    ENABLED_SERVICES+=a10-lbaasv1
+    ENABLED_SERVICES+=q-lbaas,a10-lbaasv1
 
 For more information, see the "Externally Hosted Plugins" section of
 http://docs.openstack.org/developer/devstack/plugins.html.

@@ -1,5 +1,7 @@
 # settings for A10 devstack plugin
 
+enable_plugin neutron-lbaas https://git.openstack.org/openstack/neutron-lbaas
+
 # where to write a default config file
 A10_CONF_DIR="/etc/a10"
 
@@ -9,3 +11,9 @@ A10_CONF_DIR="/etc/a10"
 
 A10_SERVICE_PROVIDER_V1=${A10_SERVICE_PROVIDER_V1:="LOADBALANCER:A10Networks:neutron_lbaas.services.loadbalancer.drivers.a10networks.driver_v1.ThunderDriver:default"}
 A10_SERVICE_PROVIDER_V2=${A10_SERVICE_PROVIDER_V2:="LOADBALANCERV2:A10Networks:neutron_lbaas.drivers.a10networks.driver_v2.ThunderDriver:default"}
+
+A10_DEVICE_HOST==${A10_DEVICE_HOST:=replace-me.example.com}
+A10_DEVICE_PORT==${A10_DEVICE_PORT:=443}
+A10_DEVICE_USER==${A10_DEVICE_USER:=admin}
+A10_DEVICE_PASSWORD==${A10_DEVICE_PASSWORD:=a10}
+A10_DEVICE_AXAPI_VERSION==${A10_DEVICE_AXAPI_VERSION:=3.0}
