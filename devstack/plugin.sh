@@ -29,6 +29,7 @@ devices = {
     "api_version": "$A10_DEVICE_AXAPI_VERSION",
 }
 EOF
+    fi
 }
 
 function configure_a10_v1 {
