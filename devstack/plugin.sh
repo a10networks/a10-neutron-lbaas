@@ -13,7 +13,10 @@ function configure_a10 {
     sudo mkdir -m 755 -p $A10_CONF_DIR
     safe_chown $STACK_USER $A10_CONF_DIR
 
-    cat > $A10_CONF_DIR/config.py <<EOF
+    if [ -n "$A10_DEVICE_CONFIG" ]; then
+        echo "$A10_DEVICE_CONFIG" > $A10_CONF_DIR/config.py
+    else
+        cat > $A10_CONF_DIR/config.py <<EOF
 # For a complete list of configuration options, please refer to:
 # https://github.com/a10networks/a10-neutron-lbaas/blob/master/a10_neutron_lbaas/etc/config.py
 
