@@ -10,8 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.db import l3_db
 try:
+    from neutron.db import l3_db
+except ImportError:
+    pass
+try:
+    import neutron_lbaas.common.cert_manager.barbican_cert_manager as bcm
     from neutron_lbaas.db.loadbalancer import models as lb_db
 except ImportError:
     # v2 does not exist before Kilo
@@ -45,3 +49,6 @@ class NeutronOpsV2(object):
 
     def pool_get(self, context, pool_id):
         return self.plugin.db.get_pool(context, pool_id)
+
+    def bcm_factory(self):
+        return bcm.CertManager()

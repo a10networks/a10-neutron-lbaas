@@ -17,7 +17,7 @@ import mock
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-import neutron_lbaas.services.loadbalancer.constants as lbaas_const
+from a10_neutron_lbaas import constants
 
 
 LOG = logging.getLogger(__name__)
@@ -40,10 +40,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 
     def test_update(self):
-        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
-                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
+        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+                                  constants.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         certmgr = FakeCertManager()
 
@@ -63,10 +63,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertTrue('HTTPS' in s)
 
     def test_delete(self):
-        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
-                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
+        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+                                  constants.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
 
         pool.listener = m
@@ -83,10 +83,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertTrue('HTTPS' in s)
 
     def test_create_protocol_terminated_https(self):
-        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
-                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
+        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+                                  constants.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         m.default_tls_container_id = "CONTAINERID"
         pool.listener = m
@@ -103,10 +103,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         """This tests that the barbican_client dependency is always there."""
         handler = self.a.listener
         handler.barbican_client = None
-        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
-                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
+        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+                                  constants.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         pool.listener = m
         handler.create(None, m)
@@ -120,10 +120,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
         handler = self.a.listener
         handler.barbican_client = certmgr
-        pool = test_base.FakePool(lbaas_const.PROTOCOL_TERMINATED_HTTPS,
-                                  lbaas_const.LB_METHOD_ROUND_ROBIN, None)
+        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+                                  constants.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(lbaas_const.PROTOCOL_TERMINATED_HTTPS, 2222,
+        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         return (certmgr, m, pool, handler)
 
