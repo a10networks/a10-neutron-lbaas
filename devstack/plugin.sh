@@ -44,7 +44,7 @@ if is_service_enabled a10-lbaasv1 -o is_service_enabled a10-lbaasv2; then
     if [[ "$1" == "stack" && "$2" == "pre-install" ]]; then
         # Set up system services
         # no-op
-        ;
+        :
 
     elif [[ "$1" == "stack" && "$2" == "install" ]]; then
         # Perform installation of service source
@@ -59,7 +59,7 @@ if is_service_enabled a10-lbaasv1 -o is_service_enabled a10-lbaasv2; then
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         # Initialize and start the template service
         # no-op
-        ;
+        :
     fi
 
     if [[ "$1" == "unstack" ]]; then
