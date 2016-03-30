@@ -83,12 +83,12 @@ fi
 if is_service_enabled a10-lbaasv1; then
     if [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring A10 v1"
-        configure_10_v1
+        configure_a10_v1
     fi
 
 elif is_service_enabled a10-lbaasv2; then
     if [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring A10 v2"
-        configure_10_v2
+        configure_a10_v2
     fi
 fi
