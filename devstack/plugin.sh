@@ -6,7 +6,7 @@ function install_a10 {
     else
         a="a10-neutron-lbaas"
     fi
-    pip install -U $a
+    sudo pip install -U $a
 }
 
 function configure_a10 {
