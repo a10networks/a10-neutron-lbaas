@@ -53,6 +53,10 @@ enable_service q-l3
 enable_service q-meta
 enable_service q-metering
 enable_service neutron
+
+enable_plugin neutron-lbaas https://git.openstack.org/openstack/neutron-lbaas master
+enable_plugin a10networks https://github.com/a10networks/a10-neutron-lbaas.git master
+
 enable_service q-lbaasv2
 enable_service a10-lbaasv2
 A10_DEVICE_HOST=10.48.7.86
