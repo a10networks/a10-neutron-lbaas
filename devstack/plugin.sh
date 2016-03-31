@@ -22,11 +22,13 @@ function configure_a10 {
 
 use_database = True
 devices = {
-    "host": "$A10_DEVICE_HOST",
-    "port": $A10_DEVICE_PORT,
-    "username": "$A10_DEVICE_USER",
-    "password": "$A10_DEVICE_PASSWORD",
-    "api_version": "$A10_DEVICE_AXAPI_VERSION",
+    "ax1": {
+        "host": "$A10_DEVICE_HOST",
+        "port": $A10_DEVICE_PORT,
+        "username": "$A10_DEVICE_USER",
+        "password": "$A10_DEVICE_PASSWORD",
+        "api_version": "$A10_DEVICE_AXAPI_VERSION",
+    }
 }
 EOF
     fi
