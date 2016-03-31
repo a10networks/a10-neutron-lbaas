@@ -33,15 +33,18 @@ class A10Config(object):
         venv_d = os.path.join(sys.prefix, 'etc/a10')
         has_prefix = (hasattr(sys, 'real_prefix') or hasattr(sys, 'base_prefix'))
 
+        env_override = os.environ.get('A10_CONFIG_DIR', None)
         if config_dir is not None:
             d = config_dir
+        elif env_override is not None:
+            d = env_override
         elif has_prefix and os.path.exists(venv_d):
             d = venv_d
         elif os.path.exists('/etc/neutron/services/loadbalancer/a10networks'):
             d = '/etc/neutron/services/loadbalancer/a10networks'
         else:
             d = '/etc/a10'
-        self._config_dir = os.environ.get('A10_CONFIG_DIR', d)
+        self._config_dir = d
         self._config_path = os.path.join(self._config_dir, "config.py")
 
         real_sys_path = sys.path
