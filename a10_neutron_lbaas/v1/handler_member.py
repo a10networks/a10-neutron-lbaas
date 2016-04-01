@@ -20,7 +20,7 @@ import v1_context as a10
 class MemberHandler(handler_base_v1.HandlerBaseV1):
 
     def _get_name(self, member, ip_address):
-        if self.a10_driver.config.member_name_use_uuid:
+        if self.a10_driver.config.get('member_name_use_uuid'):
             return member['id']
 
         tenant_label = member['tenant_id'][:5]
