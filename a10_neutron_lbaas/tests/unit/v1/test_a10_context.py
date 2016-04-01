@@ -183,3 +183,13 @@ class TestA10ContextADP(TestA10Context):
 
         self.a.last_client.system.action.activate_and_write.assert_called_with(None)
         self.a.last_client.session.close.assert_called_with()
+
+    def test_write_v21_partition(self):
+        self._set_api_version("2.1")
+        expected = "part1"
+        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+            c
+            c.partition_name = expected
+
+        self.a.last_client.system.action.activate_and_write.assert_called_with(expected)
+        self.a.last_client.session.close.assert_called_with()
