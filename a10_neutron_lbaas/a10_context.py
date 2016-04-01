@@ -88,7 +88,9 @@ class A10WriteContext(A10Context):
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None and self.device_cfg.get('write_memory', True):
             try:
-                self.client.system.action.activate_and_write(self.partition_name)
+                partition_deleted = getattr(self, "partition_deleted", False)
+                partition_name = None if partition_deleted else self.partition_name
+                self.client.system.action.activate_and_write(partition_name)
 
             except acos_errors.InvalidSessionID:
                 pass
@@ -119,16 +121,17 @@ class A10DeleteContextBase(A10WriteContext):
         if exc_type is None:
             # self.openstack_manager.db_delete(self.openstack_context,
             #                                  self.openstack_lbaas_obj.id)
+            self.partition_deleted = False
             self.partition_cleanup_check()
 
-        super(A10DeleteContextBase, self).__exit__(exc_type, exc_value,
-                                                   traceback)
+        super(A10DeleteContextBase, self).__exit__(exc_type, exc_value, traceback)
 
     def remaining_root_objects(self):
         return 1
 
     def partition_cleanup_check(self):
         # If we are not using appliance partitions, we are done.
+
         if self.device_cfg['v_method'].lower() != 'adp':
             return
 
@@ -141,5 +144,6 @@ class A10DeleteContextBase(A10WriteContext):
                     return
                 self.hooks.partition_delete(self.client, self.openstack_context, name)
                 LOG.debug("hooks.partition_delete of %s succeeded " % (name))
+                self.partition_deleted = True
             except Exception:
                 LOG.exception("A10Driver: partition cleanup failed; ignoring")
