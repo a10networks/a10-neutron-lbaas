@@ -50,8 +50,8 @@ class TestMembers(test_base.UnitTestBase):
 
     def _test_create(self, admin_state_up=True, uuid_name=False):
         if uuid_name:
-            old = self.a.config.member_name_use_uuid
-            self.a.config.config.member_name_use_uuid = True
+            old = self.a.config.get('member_name_use_uuid')
+            self.a.config._config.member_name_use_uuid = True
 
         m = test_base.FakeMember(admin_state_up=admin_state_up,
                                  pool=mock.MagicMock())
@@ -74,7 +74,7 @@ class TestMembers(test_base.UnitTestBase):
             m.pool.id, name, m.protocol_port, status=status,
             axapi_args={'member': {}})
         if uuid_name:
-            self.a.config.config.member_name_use_uuid = old
+            self.a.config._config.member_name_use_uuid = old
 
     def test_create(self, admin_state_up=True):
         self._test_create()

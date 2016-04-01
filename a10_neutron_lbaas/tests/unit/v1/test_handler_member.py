@@ -61,8 +61,8 @@ class TestMembers(test_base.UnitTestBase):
 
     def _test_create(self, admin_state_up=True, uuid_name=False):
         if uuid_name:
-            old = self.a.config.member_name_use_uuid
-            self.a.config.config.member_name_use_uuid = True
+            old = self.a.config.get('member_name_use_uuid')
+            self.a.config._config.member_name_use_uuid = True
         m = self.fake_member(admin_state_up=admin_state_up)
         ip = self.a.member.neutron.member_get_ip(None, m, True)
         if uuid_name:
@@ -84,7 +84,7 @@ class TestMembers(test_base.UnitTestBase):
             pool_name, name, m['protocol_port'], status=status,
             axapi_args={'member': {}})
         if uuid_name:
-            self.a.config.config.member_name_use_uuid = old
+            self.a.config._config.member_name_use_uuid = old
 
     def test_create(self, admin_state_up=True):
         self._test_create()
