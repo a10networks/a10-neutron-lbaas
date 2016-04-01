@@ -46,7 +46,7 @@ class TestA10Context(test_base.UnitTestBase):
             self.empty_close_mocks()
 
     def _set_api_version(self, api_version="2.1"):
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get("devices").items():
             v['api_version'] = api_version
 
     def test_write_v21(self):
