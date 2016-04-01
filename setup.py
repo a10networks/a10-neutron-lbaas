@@ -33,5 +33,5 @@ setup(
 
     scripts=['scripts/a10-manage', 'scripts/a10-neutron-lbaas-db-manage'],
 
-    install_requires = ['acos-client>=1.3.0']
+    install_requires = ['acos-client>=1.3.2']
 )
