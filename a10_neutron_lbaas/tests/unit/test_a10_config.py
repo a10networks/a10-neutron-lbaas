@@ -18,36 +18,36 @@ import test_base
 class TestA10Config(test_base.UnitTestBase):
 
     def test_verify_appliances(self):
-        self.assertTrue(self.a.config.verify_appliances)
+        self.assertTrue(self.a.config.get('verify_appliances'))
 
     def test_num_appliances(self):
         # Everytime we update the test config, this test has to be updated
         # A better test would seem to be be parsing the JSON structure found in the file
         # and comparing that against what we get in devices.
         # This actually tests the number of devices with status == True
-        self.assertEqual(10, len(self.a.config.devices))
+        self.assertEqual(10, len(self.a.config.get_devices()))
 
     def test_expected_ports(self):
-        self.assertEqual(8443, self.a.config.devices['ax1']['port'])
-        self.assertEqual(80, self.a.config.devices['ax3']['port'])
-        self.assertEqual(443, self.a.config.devices['ax4']['port'])
+        self.assertEqual(8443, self.a.config.get_device('ax1')['port'])
+        self.assertEqual(80, self.a.config.get_device('ax3')['port'])
+        self.assertEqual(443, self.a.config.get_device('ax4')['port'])
 
     def test_expected_protocols(self):
-        self.assertEqual('https', self.a.config.devices['ax1']['protocol'])
-        self.assertEqual('http', self.a.config.devices['ax3']['protocol'])
-        self.assertEqual('https', self.a.config.devices['ax4']['protocol'])
+        self.assertEqual('https', self.a.config.get_device('ax1')['protocol'])
+        self.assertEqual('http', self.a.config.get_device('ax3')['protocol'])
+        self.assertEqual('https', self.a.config.get_device('ax4')['protocol'])
 
     def test_v_method(self):
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             self.assertEqual('LSI', v['v_method'].upper())
 
     def test_alternate_shared_partition(self):
-        self.assertTrue(self.a.config.devices['axadp-alt']['shared_partition'])
+        self.assertTrue(self.a.config.get_device('axadp-alt')['shared_partition'])
 
     def test_ip_in_ip(self):
         expected = True
         actual = False
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             if "ip_in_ip" in v:
                 actual = v['ip_in_ip']
                 self.assertEqual(expected, actual)

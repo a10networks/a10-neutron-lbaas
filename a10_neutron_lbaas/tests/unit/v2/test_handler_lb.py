@@ -48,7 +48,7 @@ class TestLB(test_base.UnitTestBase):
         for all of the devices.
         """
 
-        for k, v in self.a.config.devices.items():
+        for k, v in self.a.config.get_devices().items():
             v['api_version'] = api_ver
             v['default_virtual_server_vrid'] = default_vrid
 
