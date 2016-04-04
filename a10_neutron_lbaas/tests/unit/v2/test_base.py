@@ -84,9 +84,9 @@ class FakePool(FakeModel):
         self.protocol = protocol
         self.lb_algorithm = method
         if persistence is None:
-            self.session_persistence = None
+            self.sessionpersistence = None
         else:
-            self.session_persistence = FakePersistence(persistence)
+            self.sessionpersistence = FakePersistence(persistence)
         if listener:
             self.listener = FakeListener(protocol, 2222, pool=self,
                                          loadbalancer=FakeLoadBalancer())
