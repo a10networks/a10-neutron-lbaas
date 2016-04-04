@@ -40,8 +40,8 @@ class PersistHandler(object):
         if pool:
             self.name = pool.id
 
-        if pool and pool.session_persistence:
-            self.sp = pool.session_persistence
+        if pool and pool.sessionpersistence:
+            self.sp = pool.sessionpersistence
             if self.sp.type == 'HTTP_COOKIE' or self.sp.type == 'APP_COOKIE':
                 self.c_pers = self.name
             elif self.sp.type == 'SOURCE_IP':
