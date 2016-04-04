@@ -55,11 +55,10 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         except acos_errors.Exists:
             pass
 
-        self.hooks.after_member_create(c, context, member)
-
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
             self._create(c, context, member)
+            self.hooks.after_member_create(c, context, member)
 
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
