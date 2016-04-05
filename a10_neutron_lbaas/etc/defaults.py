@@ -19,6 +19,10 @@ GLOBAL_DEFAULTS = {
     "database_connection": None,
     "neutron_conf_dir": '/etc/neutron',
     "member_name_use_uuid": False,
+    "device_scheduling_filters" = [
+        a10_neutron_lbaas.schedulers.tenant_hash.TenantStickyHash,
+        a10_neutron_lbaas.schedulers.tenant_hash.TenantHash
+    ]
 }
 
 DEVICE_REQUIRED_FIELDS = [
