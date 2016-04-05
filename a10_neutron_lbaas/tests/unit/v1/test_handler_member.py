@@ -59,10 +59,16 @@ class TestMembers(test_base.UnitTestBase):
     def fake_member(pool_id='pool1', admin_state_up=True):
         return _fake_member(pool_id, admin_state_up)
 
-    def test_create(self, admin_state_up=True):
+    def _test_create(self, admin_state_up=True, uuid_name=False):
+        if uuid_name:
+            old = self.a.config.get('member_name_use_uuid')
+            self.a.config._config.member_name_use_uuid = True
         m = self.fake_member(admin_state_up=admin_state_up)
         ip = self.a.member.neutron.member_get_ip(None, m, True)
-        name = self.a.member._get_name(m, ip)
+        if uuid_name:
+            name = m['id']
+        else:
+            name = self.a.member._get_name(m, ip)
         self.a.member.create(None, m)
 
         if admin_state_up:
@@ -77,9 +83,17 @@ class TestMembers(test_base.UnitTestBase):
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             pool_name, name, m['protocol_port'], status=status,
             axapi_args={'member': {}})
+        if uuid_name:
+            self.a.config._config.member_name_use_uuid = old
+
+    def test_create(self, admin_state_up=True):
+        self._test_create()
+
+    def test_create_member_uuid(self):
+        self._test_create(uuid_name=True)
 
     def test_create_down(self):
-        self.test_create(False)
+        self._test_create(admin_state_up=False)
 
     def test_update_down(self):
         m = self.fake_member(admin_state_up=False)

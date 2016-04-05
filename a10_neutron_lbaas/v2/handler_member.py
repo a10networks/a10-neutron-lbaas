@@ -26,6 +26,9 @@ non_alpha = re.compile('[^0-9a-zA-Z_-]')
 class MemberHandler(handler_base_v2.HandlerBaseV2):
 
     def _get_name(self, member, ip_address):
+        if self.a10_driver.config.get('member_name_use_uuid'):
+            return member.id
+
         tenant_label = member.tenant_id[:5]
         if non_alpha.search(tenant_label) is not None:
             # This corner-case likely only occurs with silly unit tests
