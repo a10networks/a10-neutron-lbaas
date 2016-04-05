@@ -12,13 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-
 import a10_neutron_lbaas.tests.test_case as test_case
+import a10_neutron_lbaas.tests.unit.unit_config as unit_config
 import mock
 
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
-import a10_neutron_lbaas.plumbing_hooks as hooks
 
 
 def _build_openstack_context():
@@ -37,24 +35,52 @@ def _build_class_instance_mock():
     return (class_mock, instance_mock)
 
 
+def _build_appliance_mock(device):
+    appliance = mock.MagicMock()
+    appliance.device.return_value = device
+    appliance.client.side_effect = lambda c: c.a10_driver._get_a10_client(device)
+    return appliance
+
+
+def _build_inventory_mock():
+    (inventory_class, inventory_mock) = _build_class_instance_mock()
+
+    def find(openstack_lbaas_obj):
+        ((a10_context,), _) = inventory_class.call_args
+        device = a10_context.a10_driver.config.devices.values()[0]
+        return _build_appliance_mock(device)
+
+    inventory_mock.find.side_effect = find
+    return (inventory_class, inventory_mock)
+
+
 class FakeA10OpenstackLB(object):
 
     def __init__(self, openstack_driver, **kw):
+        (inventory_class, inventory_mock) = _build_inventory_mock()
+        self.inventory_mock = inventory_mock
+
+        (db_operations_class, db_operations_mock) = _build_class_instance_mock()
+        db_operations_mock.summon_appliance_configured.side_effect = (
+            lambda x: _build_appliance_mock(self.config.devices[x]))
+        self.db_operations_mock = db_operations_mock
+
         super(FakeA10OpenstackLB, self).__init__(
             mock.MagicMock(),
+            # TODO(dougwig) -- not sure about these client thingies
+            client_class=appliance_client.UniformDeviceClient(self.mock_a10_client),
+            acos_client_class=self.mock_a10_client,
             **kw)
         self.openstack_context = _build_openstack_context()
 
-    def _get_a10_client(self, device_info):
+    def mock_a10_client(self, device_info):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
-        self.plumbing_hooks = hooks.PlumbingHooks(self)
         return self.last_client
 
     def reset_mocks(self):
         self.openstack_driver = mock.MagicMock()
-        self.last_client = self._get_a10_client(self.device_info)
-        return self.last_client
+        return self.mock_a10_client(self.device_info)
 
 
 class FakeA10OpenstackLBV1(FakeA10OpenstackLB, a10_os.A10OpenstackLBV1):
@@ -76,15 +102,13 @@ class UnitTestBase(test_case.TestCase):
     def _build_openstack_context(self):
         return _build_openstack_context()
 
-    def setUp(self):
-        unit_dir = os.path.dirname(__file__)
-        unit_config = os.path.join(unit_dir, "unit_config")
-        os.environ['A10_CONFIG_DIR'] = unit_config
+    def setUp(self, openstack_lb_args={}):
+        unit_config.setUp()
 
         if not hasattr(self, 'version') or self.version == 'v2':
-            self.a = FakeA10OpenstackLBV2(None)
+            self.a = FakeA10OpenstackLBV2(None, **openstack_lb_args)
         else:
-            self.a = FakeA10OpenstackLBV1(None)
+            self.a = FakeA10OpenstackLBV1(None, **openstack_lb_args)
 
     def print_mocks(self):
         print("OPENSTACK ", self.a.openstack_driver.mock_calls)

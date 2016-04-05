@@ -26,6 +26,38 @@ LOG = logging.getLogger(__name__)
 
 class A10Config(object):
 
+    # TODO(dougwig) -- move this
+    IMAGE_DEFAULTS = {
+        "name": None,
+        "id": None,
+        "visibility": "private",
+        "tags": ["a10"],
+        "properties": None,
+        "container_format": "bare",
+        "disk_format": "qcow2",
+        "min_disk": 10,
+        "min_ram": 4096,
+        "protected": False
+    }
+
+    INSTANCE_DEFAULTS = {
+        "flavor": "acos.min",
+        "networks": ["private", "private", "private"]
+    }
+
+    # TODO(dougwig) -- needed?
+    def device_defaults(self, device_config):
+        device = self.DEVICE_DEFAULTS.copy()
+        device.update(device_config)
+
+        # Figure out port
+        protocol = device['protocol']
+        port = device.get(
+            'port', {'http': 80, 'https': 443}[protocol])
+        device['port'] = port
+
+        return device
+
     def __init__(self, config_dir=None):
         # Look for config in the virtual environment
         # virtualenv puts the original prefix in sys.real_prefix
@@ -51,6 +83,7 @@ class A10Config(object):
         sys.path = [self._config_dir]
         try:
             try:
+                sys.modules.pop('config', None)
                 import config
                 self._config = config
             except ImportError:
@@ -101,8 +134,20 @@ class A10Config(object):
             if self._config.use_database and self._config.database_connection is None:
                 self._config.database_connection = self._get_neutron_db_string()
 
+            # TODO(dougwig) -- vet these
+            self.image_defaults = self.IMAGE_DEFAULTS.copy()
+            self.image_defaults.update(getattr(self.config, "image_defaults", {}))
+
+            self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
+            self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
         finally:
             sys.path = real_sys_path
+
+        self.image_defaults = self.IMAGE_DEFAULTS.copy()
+        self.image_defaults.update(getattr(self.config, "image_defaults", {}))
+
+        self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
+        self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
 
     # We don't use oslo.config here, in a weak attempt to avoid pulling in all
     # the many openstack dependencies. If this proves problematic, we should

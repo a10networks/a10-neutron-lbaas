@@ -96,24 +96,24 @@ class TestListeners(test_base.UnitTestBase):
                         self.assertTrue('s_pers_name=None' in s)
 
     def test_create_autosnat_false_v21(self):
-        self._test_create_autosnat("2.1", False)
+        self._test_create_autosnat("2.1", False, key="source_nat_auto")
 
     def test_create_autosnat_true_v21(self):
-        self._test_create_autosnat("2.1", True)
+        self._test_create_autosnat("2.1", True, key="source_nat_auto")
 
     def test_create_autosnat_unspecified_v21(self):
-        self._test_create_autosnat()
+        self._test_create_autosnat(key="source_nat_auto")
 
     def test_create_autosnat_false_v30(self):
-        self._test_create_autosnat("3.0", False)
+        self._test_create_autosnat("3.0", False, key="auto")
 
     def test_create_autosnat_true_v30(self):
-        self._test_create_autosnat("3.0", True)
+        self._test_create_autosnat("3.0", True, key="auto")
 
     def test_create_autosnat_unspecified_v30(self):
-        self._test_create_autosnat()
+        self._test_create_autosnat("3.0", key="auto")
 
-    def _test_create_autosnat(self, api_ver=None, autosnat=None):
+    def _test_create_autosnat(self, api_ver=None, autosnat=None, key=None):
         saw_exception = False
 
         """
@@ -125,29 +125,14 @@ class TestListeners(test_base.UnitTestBase):
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
 
-        # self.a.device_info["api_version"] = api_ver
-        # self.a.device_info["autosnat"] = autosnat
-
         p = 'TCP'
         lb = test_base.FakeLoadBalancer()
         pool = test_base.FakePool(p, 'ROUND_ROBIN', None)
         m = test_base.FakeListener(p, 2222, pool=pool,
                                    loadbalancer=lb)
 
-        auto_expected = None
-
-        expected_tuple = axapi_mappings.auto_dictionary.get(api_ver, None)
-
-        if expected_tuple is not None:
-            key = expected_tuple[0]
-            transform = expected_tuple[1]
-        else:
-            key = None
-            transform = None
-
-        if autosnat and key is not None and transform is not None:
-            auto_format = "'{0}': {1}"
-            auto_expected = auto_format.format(key, transform(autosnat))
+        auto_format = "'{0}': {1}"
+        auto_expected = auto_format.format(key, int(True))
 
         try:
             self.a.listener.create(None, m)
@@ -158,27 +143,15 @@ class TestListeners(test_base.UnitTestBase):
         if not saw_exception:
             s = str(self.a.last_client.mock_calls)
             self.assertTrue('vport.create' in s)
-            if auto_expected is not None:
-                self.assertTrue(auto_expected in s)
+            self.assertEqual(auto_expected in s, True if autosnat else False)
 
-    def _test_create_ipinip(self, api_ver="3.0", ip_in_ip=False):
-        ipinip_expected = None
-        expected_tuple = axapi_mappings.ipinip_dictionary.get(api_ver)
-        saw_exception = False
-
-        for k, v in self.a.config.get_devices().items():
+    def _test_create_ipinip(self, api_ver="3.0", ip_in_ip=False, key="ipinip"):
+        for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
             v['api_version'] = api_ver
 
-        if expected_tuple is not None:
-            key, transform = expected_tuple
-        else:
-            key = None
-            transform = None
-
-        if ip_in_ip and key and transform:
-            ipinip_format = "'{0}': {1}"
-            ipinip_expected = ipinip_format.format(key, transform(ip_in_ip))
+        ipinip_format = "'{0}': {1}"
+        ipinip_expected = ipinip_format.format(key, int(True))
 
         p = 'TCP'
         lb = test_base.FakeLoadBalancer()
@@ -189,23 +162,21 @@ class TestListeners(test_base.UnitTestBase):
         self.a.listener.create(None, m)
         self.print_mocks()
 
-        if not saw_exception:
-            s = str(self.a.last_client.mock_calls)
-            self.assertIn("vport.create", s)
-            if ipinip_expected is not None:
-                self.assertIn(ipinip_expected, s)
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertEqual(ipinip_expected in s, ip_in_ip)
 
     def test_create_ip_in_ip_positive_v21(self):
-        self._test_create_ipinip(api_ver="2.1", ip_in_ip=True)
+        self._test_create_ipinip(api_ver="2.1", ip_in_ip=True, key="ip_in_ip")
 
     def test_create_ip_in_ip_negative_v21(self):
-        self._test_create_ipinip(api_ver="2.1")
+        self._test_create_ipinip(api_ver="2.1", key="ip_in_ip")
 
     def test_create_ip_in_ip_positive_v30(self):
-        self._test_create_ipinip(ip_in_ip=True)
+        self._test_create_ipinip(ip_in_ip=True, key="ipinip")
 
     def test_create_ip_in_ip_negative_v30(self):
-        self._test_create_ipinip("3.0")
+        self._test_create_ipinip("3.0", key="ipinip")
 
     def test_update_no_lb(self):
         m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),

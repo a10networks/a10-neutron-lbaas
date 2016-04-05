@@ -14,6 +14,9 @@ import datetime
 import uuid
 
 import sqlalchemy as sa
+import a10_neutron_lbaas.acos_client_extensions
+import a10_neutron_lbaas.acos_client_extensions as acos_client_extensions
+
 
 from a10_neutron_lbaas.db import api as db_api
 
@@ -26,6 +29,9 @@ def _uuid_str():
 
 def _get_date():
     return datetime.datetime.now()
+
+
+# TODO(dougwig) -- grab this fresh from orchestration branch
 
 
 class A10TenantBinding(Base):

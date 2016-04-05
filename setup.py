@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "a10-neutron-lbaas",
-    version = "1.4.3alpha",
+    version = "1.5.0alpha",
     packages = find_packages(),
 
     author = "A10 Networks",
@@ -30,6 +30,12 @@ setup(
         'a10_neutron_lbaas/db/migration/alembic.ini'
     ]},
     include_package_data=True,
+
+    entry_points = {
+        'neutronclient.extension': [
+            'a10_appliance=a10_neutron_lbaas_client.a10_appliance'
+        ]
+    },
 
     scripts=['scripts/a10-manage', 'scripts/a10-neutron-lbaas-db-manage'],
 

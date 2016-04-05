@@ -65,21 +65,18 @@ class TestVIP(test_base.UnitTestBase):
             pass
 
     def test_create_autosnat_false_v21(self):
-        self._test_create_autosnat("2.1", False)
+        self._test_create_autosnat("2.1", False, "source_nat_auto")
 
     def test_create_autosnat_true_v21(self):
-        self._test_create_autosnat("2.1", True)
+        self._test_create_autosnat("2.1", True, "source_nat_auto")
 
     def test_create_autosnat_true_v30(self):
-        self._test_create_autosnat("3.0", True)
+        self._test_create_autosnat("3.0", True, "auto")
 
     def test_create_autosnat_false_v30(self):
-        self._test_create_autosnat("3.0", False)
+        self._test_create_autosnat("3.0", False, "auto")
 
-    def _test_create_autosnat(self, api_ver=None, autosnat=None):
-        auto_expected = None
-        key = None
-        transform = None
+    def _test_create_autosnat(self, api_ver=None, autosnat=None, key="auto"):
 
         """
         Due to how the config is pulled in, we can't override the config
@@ -89,23 +86,15 @@ class TestVIP(test_base.UnitTestBase):
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
 
-        expected_tuple = axapi_mappings.auto_dictionary.get(api_ver, None)
-
         vip = self.fake_vip()
-        if expected_tuple is not None:
-            key = expected_tuple[0]
-            transform = expected_tuple[1]
-
-        if autosnat and key is not None and transform is not None:
-            auto_format = "'{0}': {1}"
-            auto_expected = auto_format.format(key, transform(autosnat))
 
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('virtual_server.create' in s)
 
-        if auto_expected is not None:
-            self.assertTrue(auto_expected in s)
+        auto_format = "'{0}': {1}"
+        auto_set = auto_format.format(key, int(True))
+        self.assertEqual(auto_set in s, autosnat)
 
     def test_create_default_vrid_none_v21(self):
         self._test_create_default_vrid("2.1", None)
@@ -152,27 +141,20 @@ class TestVIP(test_base.UnitTestBase):
                 foundVrid,
                 'Expected to find no vrid in {0}'.format(str(calls)))
 
-    def _test_create_ipinip(self, ip_in_ip=False, api_ver="3.0"):
+    def _test_create_ipinip(self, ip_in_ip=False, api_ver="3.0", key="ipinip"):
         vip = self.fake_vip()
-        expected = None
 
-        expected_tuple = axapi_mappings.ipinip_dictionary.get(api_ver, None)
-        for k, v in self.a.config.get_devices().items():
+        for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
             v['api_version'] = api_ver
 
-        if expected_tuple is not None:
-            (key, transform) = expected_tuple
-
-        if ip_in_ip and key and transform:
-            ipinip_format = "'{0}': {1}"
-            expected = ipinip_format.format(key, transform(ip_in_ip))
+        ipinip_format = "'{0}': {1}"
+        expected = ipinip_format.format(key, int(True))
 
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
         self.assertIn('vport.create', s)
-        if expected:
-            self.assertIn(expected, s)
+        self.assertEqual(expected in s, ip_in_ip)
 
     def test_create_ip_in_ip_positive_v30(self):
         self._test_create_ipinip(True)
@@ -181,10 +163,10 @@ class TestVIP(test_base.UnitTestBase):
         self._test_create_ipinip()
 
     def test_create_ip_in_ip_positive_v21(self):
-        self._test_create_ipinip(True, api_ver="2.1")
+        self._test_create_ipinip(True, api_ver="2.1", key="ip_in_ip")
 
     def test_create_ip_in_ip_negative_v21(self):
-        self._test_create_ipinip(api_ver="2.1")
+        self._test_create_ipinip(api_ver="2.1", key="ip_in_ip")
 
     def test_update(self):
         self.a.vip.update(None, self.fake_vip(), self.fake_vip())

@@ -74,23 +74,6 @@ class TestLB(test_base.UnitTestBase):
                 foundVrid,
                 'Expected to find no vrid in {0}'.format(str(calls)))
 
-    # def test_create_with_listeners(self):
-    #     pool = test_base.FakePool('HTTP', 'ROUND_ROBIN', None)
-    #     m = test_base.FakeLoadBalancer()
-    #     for x in [1, 2, 3]:
-    #         z = test_base.FakeListener('TCP', 2222+x, pool=pool,
-    #                                    loadbalancer=m)
-    #         m.listeners.append(z)
-    #     self.a.lb.create(None, m)
-    #     s = str(self.a.last_client.mock_calls)
-    #     self.assertTrue('call.slb.virtual_server.create' in s)
-    #     self.assertTrue('fake-lb-id-001' in s)
-    #     self.assertTrue('5.5.5.5' in s)
-    #     self.assertTrue('UP' in s)
-    #     self.assertTrue('vport.create' in s)
-    #     for x in [1, 2, 3]:
-    #         self.assertTrue(str(2222+x) in s)
-
     def test_update_down(self):
         m = test_base.FakeLoadBalancer()
         m.admin_state_up = False
@@ -123,3 +106,31 @@ class TestLB(test_base.UnitTestBase):
         self.print_mocks()
         # self.a.last_client.slb.virtual_server.stats.assert_called_with(
         #     'fake-id-001')
+
+    def test_create_calls_client_proxy(self):
+        m = test_base.FakeLoadBalancer()
+        mock_client = mock.MagicMock()
+        self.a.acos_client_class = lambda x: mock_client
+        self.a.lb.create(None, m)
+        create_call = mock_client.slb.virtual_server.create
+        self.assertEqual(1, create_call.call_count)
+
+    def test_create_failure_raises_exception(self):
+        m = test_base.FakeLoadBalancer()
+        mock_client = mock.MagicMock()
+        self.a.acos_client_class = lambda x: mock_client
+
+        class ExpectedException(Exception):
+            pass
+
+        mock_client.slb.virtual_server.create.side_effect = self.do_raise_exception(
+            ExpectedException)
+
+        with self.assertRaises(ExpectedException):
+            self.a.lb.create(None, m)
+
+    def do_raise_exception(self, e, msg="mock raised exception"):
+        def raise_exception(e, msg="acos broke!"):
+            raise e(msg)
+
+        return lambda *args, **kwargs: raise_exception(e, msg)

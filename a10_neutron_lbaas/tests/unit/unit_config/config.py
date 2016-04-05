@@ -94,7 +94,7 @@ devices = {
         "username": "admin",
         "password": "a10",
         "protocol": "https",
-        "v_method": "ADP",
+        "v_method": "LSI",
         "shared_partition": "mypart",
     },
     "axadp-noalt": {
@@ -102,7 +102,7 @@ devices = {
         "username": "admin",
         "password": "a10",
         "protocol": "https",
-        "v_method": "ADP"
+        "v_method": "LSI"
     },
     "ax-nowrite": {
         "host": "10.10.100.24",
