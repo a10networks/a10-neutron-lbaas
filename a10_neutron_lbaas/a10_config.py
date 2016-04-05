@@ -17,6 +17,8 @@ import logging
 import os
 import sys
 
+from debtcollector import removals
+
 from a10_neutron_lbaas import a10_exceptions as a10_ex
 from a10_neutron_lbaas.etc import config as blank_config
 from a10_neutron_lbaas.etc import defaults
@@ -101,6 +103,9 @@ class A10Config(object):
             if self._config.use_database and self._config.database_connection is None:
                 self._config.database_connection = self._get_neutron_db_string()
 
+            # Setup some backwards compat stuff
+            self.config = OldConfig(self)
+
         finally:
             sys.path = real_sys_path
 
@@ -136,3 +141,51 @@ class A10Config(object):
 
     def get_devices(self):
         return self._devices
+
+    # backwards compat
+    @removals.remove
+    @property
+    def devices(self):
+        return self.config.devices
+
+    @removals.remove
+    @property
+    def use_database(self):
+        return self.config.use_database
+
+    @removals.remove
+    @property
+    def database_connection(self):
+        return self.config.database_connection
+
+    @removals.remove
+    @property
+    def verify_appliances(self):
+        return self.config.verify_appliances
+
+
+# backwards compat
+class OldConfig(object):
+
+    def __init__(self, main_config):
+        self._config = main_config
+
+    @removals.remove
+    @property
+    def devices(self):
+        return self._config.get_devices()
+
+    @removals.remove
+    @property
+    def use_database(self):
+        return self._config.get('use_database')
+
+    @removals.remove
+    @property
+    def database_connection(self):
+        return self._config.get('database_connection')
+
+    @removals.remove
+    @property
+    def verify_appliances(self):
+        return self._config.get('verify_appliances')
