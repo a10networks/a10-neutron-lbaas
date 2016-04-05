@@ -14,6 +14,7 @@
 
 import a10_neutron_lbaas.v1.v1_context as a10
 
+import mock
 import test_base
 
 
@@ -44,10 +45,22 @@ class TestA10Context(test_base.UnitTestBase):
         except FakeException:
             self.empty_close_mocks()
 
-    def test_write(self):
+    def _set_api_version(self, api_version="2.1"):
+        for k, v in self.a.config.get("devices").items():
+            v['api_version'] = api_version
+
+    def test_write_v21(self):
+        self._set_api_version()
         with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
             c
-        self.a.last_client.system.action.write_memory.assert_called_with()
+        self.a.last_client.system.action.activate_and_write.assert_called(None, "shared")
+        self.a.last_client.session.close.assert_called_with()
+
+    def test_write_v30(self):
+        self._set_api_version("3.0")
+        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+            c
+        self.a.last_client.system.action.write_memory.assert_called()
         self.a.last_client.session.close.assert_called_with()
 
     def test_ha(self):
@@ -145,4 +158,38 @@ class TestA10ContextADP(TestA10Context):
         self.print_mocks()
         self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
         self.assertEqual(2, len(self.a.last_client.mock_calls))
+        self.a.last_client.session.close.assert_called_with()
+
+    def test_write_v21(self):
+        self._set_api_version("2.1")
+        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+            c
+        self.a.last_client.system.action.activate_and_write.assert_called_with(
+            mock.ANY)
+        self.a.last_client.session.close.assert_called_with()
+
+    def test_write_v30(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+            c
+        self.a.last_client.system.action.activate_and_write.assert_called_with(mock.ANY)
+        self.a.last_client.session.close.assert_called_with()
+
+    def test_write_v21_deleted_partition(self):
+        self._set_api_version("2.1")
+
+        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+            c
+            c.partition_name = None
+
+        self.a.last_client.system.action.activate_and_write.assert_called_with(None)
+        self.a.last_client.session.close.assert_called_with()
+
+    def test_write_v21_partition(self):
+        self._set_api_version("2.1")
+        expected = "part1"
+        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+            c
+            c.partition_name = expected
+
+        self.a.last_client.system.action.activate_and_write.assert_called_with(expected)
         self.a.last_client.session.close.assert_called_with()
