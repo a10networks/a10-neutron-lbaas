@@ -51,3 +51,16 @@ class TestA10Config(test_base.UnitTestBase):
             if "ip_in_ip" in v:
                 actual = v['ip_in_ip']
                 self.assertEqual(expected, actual)
+
+    def test_backwards_compat(self):
+        self.assertEqual(self.a.config.get_devices(), self.a.config.devices)
+        self.assertEqual(self.a.config.get_devices(), self.a.config.config.devices)
+        self.assertEqual(self.a.config.get(
+            'database_connection'), self.a.config.database_connection)
+        self.assertEqual(self.a.config.get('use_database'), self.a.config.use_database)
+        self.assertEqual(self.a.config.get('verify_appliances'), self.a.config.verify_appliances)
+        self.assertEqual(self.a.config.get(
+            'database_connection'), self.a.config.config.database_connection)
+        self.assertEqual(self.a.config.get('use_database'), self.a.config.config.use_database)
+        self.assertEqual(self.a.config.get(
+            'verify_appliances'), self.a.config.config.verify_appliances)
