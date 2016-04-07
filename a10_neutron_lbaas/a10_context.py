@@ -22,7 +22,7 @@ LOG = logging.getLogger(__name__)
 class A10Context(object):
 
     def __init__(self, handler, openstack_context, openstack_lbaas_obj,
-                 client_class=None,
+                 appliance=None,
                  **kwargs):
         self.handler = handler
         self.openstack_driver = handler.openstack_driver
