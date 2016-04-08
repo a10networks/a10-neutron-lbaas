@@ -124,3 +124,6 @@ devices = {
     #     "write_memory": True,
     # },
 }
+
+# TODO(dougwig) - instance and image stuff
+# TODO(dougwig) - vthunder auto devices

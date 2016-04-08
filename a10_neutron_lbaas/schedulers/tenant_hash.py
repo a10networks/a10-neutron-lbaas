@@ -4,8 +4,9 @@ import base
 
 class TenantHashFilter(base.BaseSchedulerFilter):
 
-    def __init__(self, driver):
-        super(TenantHashFilter, self).__init__(driver)
+    def __init__(self, driver, devices):
+        super(TenantHashFilter, self).__init__(driver, devices)
+        # TODO -- bug -- this can't be global to init anymore
         self.appliance_hash = acos_client.Hash(self.devices.keys())
 
     def select_device(self, a10_context, devices, tenant_id, lbaas_obj):
@@ -16,8 +17,8 @@ class TenantHashFilter(base.BaseSchedulerFilter):
 
 class TenantStickyHashFilter(TenantHashFilter):
 
-    def __init__(self, driver):
-        super(TenantStickHashFilter, self).__init__(driver)
+    def __init__(self, driver, devices):
+        super(TenantStickHashFilter, self).__init__(driver, devices)
         self.db_session = None
 
     def _set_db_session(self, db_session):  # testing hook

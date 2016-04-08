@@ -15,10 +15,6 @@
 import logging
 
 import acos_client.errors as acos_errors
-# renamed now
-import a10_neutron_lbaas.a10_openstack_map as a10_osmap
-# no!
-from neutron_lbaas.services.loadbalancer import constants as lb_const
 
 from a10_neutron_lbaas.acos import axapi_mappings
 from a10_neutron_lbaas.acos import openstack_mappings
