@@ -59,9 +59,8 @@ class A10OpenstackLBBase(object):
 
         self.hooks = plumbing_hooks_class(self)
 
-    # TODO(dougwig) -- more args?
-    def _select_a10_device(self, tenant_id):
-        return self.hooks.select_device(tenant_id)
+    def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None):
+        return self.hooks.select_device(tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj)
 
     def _get_a10_client(self, device_info):
         return acos_client.Client(
