@@ -12,13 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 class StupidSimpleProxy(object):
     def __init__(self, underlying):
         self._underlying = underlying
 
     def __getattr__(self, attr):
         return getattr(self._underlying, attr)
+
+    def __setattr__(self, attr, value):
+        if attr[0:1] == '_':
+            super(StupidSimpleProxy, self).__setattr__(attr, value)
+        else:
+            setattr(self._underlying, attr, value)
 
 
 class ClientProxy(StupidSimpleProxy):
@@ -30,7 +35,8 @@ class ClientProxy(StupidSimpleProxy):
 class VirtualServer(object):
     """slb.virtual_server mixin"""
 
-    def create(self, name, ip_address, status=1, axapi_body={}):
+    def create(self, name, ip_address, status=1, axapi_body={},
+               neutron_subnet_id=None, **kwargs):
         virtual_server = axapi_body.copy()
 
         vrid = self._device_info.get("default_virtual_server_vrid")
@@ -43,4 +49,5 @@ class VirtualServer(object):
             name,
             ip_address,
             status,
-            axapi_args=axapi_args)
+            axapi_args=axapi_args,
+            **kwargs)

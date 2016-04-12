@@ -80,6 +80,8 @@ class A10OpenstackLBBase(object):
             # _plumbing_hooks is used by the migrations to reach the old behaviour
             self._plumbing_hooks = hooks.PlumbingHooks(self)
 
+        scheduling_hooks_class = scheduling_hooks_class or getattr(self.config.config, 'scheduling_hooks_class', None)
+
         if scheduling_hooks_class is None:
             scheduling_hooks_class = (
                 scheduling_hooks.launch_device_per_tenant
