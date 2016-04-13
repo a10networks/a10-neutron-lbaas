@@ -53,6 +53,9 @@ class A10DeviceInstance(A10Base):
     # and will be used as such throughout.
     name = sa.Column(sa.String(1024), nullable=False)
 
+    # TODO(dougwig) - config toggle to assume cloud-init, and then we can
+    # get these from static config, or they're dynamic and need to be
+    # stored.
     username = sa.Column(sa.String(255), nullable=False)
     password = sa.Column(sa.String(255), nullable=False)
     # TODO(dougwig) -- these should come from static config
@@ -62,6 +65,8 @@ class A10DeviceInstance(A10Base):
     nova_instance_id = sa.Column(sa.String(36), nullable=True)
     ip_address = sa.Column(sa.String(255), nullable=False)
 
+    # TODO(dougwig) -- should add state enum here
+
     def to_dict(self):
         # TODO(dougwig) - return device dict entry
         raise Foobar()
@@ -70,11 +75,15 @@ class A10DeviceInstance(A10Base):
 class A10SLB(A10Base):
     __tablename__ = 'a10_slbs'
 
+    # For vip specific binding (as opposed to tenant level binding), this will
+    # differ from A10TenantBinding, if that row exists at all.
     device_name = sa.Column(sa.String(1024), nullable=False)
 
     # LBaaS v1 or v2, only one of these will be defined
     vip_id = sa.Column(sa.String(36))
     loadbalancer_id = sa.Column(sa.String(36))
+
+    # TODO(dougwig) -- should add state enum here
 
     def get_lbaas_root(self):
         # TODO(dougwig), if vip, lookup and return vip, if lb, same
