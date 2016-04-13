@@ -153,11 +153,25 @@ class A10Config(object):
     def get(self, key):
         return getattr(self._config, key)
 
-    def get_device(self, device_name):
-        return self._devices[device_name]
+    def get_device(self, device_name, db_session=None):
+        if device_name in self._devices:
+            return self._devices[device_name]
+        if use_database_todo:
+            z = db.query(todo)
+            if z is not None:
+                # TODO - merge together static info and db info
+                # TODO - set host to ip_address
+                return some_new_dict
+        return None
 
-    def get_devices(self):
-        return self._devices
+        return self.get_devices().get(device_name, {})
+
+    def get_devices(self, db_session=None):
+        if use_database_todo:
+            db = db_session or db_api.get_session()
+            return self._devices + db.query(todo)
+        else:
+            return self._devices
 
     # backwards compat
     @removals.remove

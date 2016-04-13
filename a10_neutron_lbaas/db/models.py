@@ -68,9 +68,8 @@ class A10DeviceInstance(A10Base):
 
     # TODO(dougwig) -- should add state enum here
 
-    def to_dict(self):
-        # TODO(dougwig) - return device dict entry
-        raise Foobar()
+    # For "device" dicts, use a10_config.get_device()
+    # For client objects, use _get_a10_client with the a10_config device dict
 
 
 class A10SLB(A10Base):

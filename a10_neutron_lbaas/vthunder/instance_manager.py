@@ -21,7 +21,7 @@ try:
 except ImportError:
     pass
 
-from keystoneclient.auth.identity import generic as auth_plugin
+from keystoneauth1.identity import v2
 from keystoneclient import session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
@@ -110,6 +110,7 @@ class InstanceManager(object):
         """Build an a10_appliances_db record from Nova instance/image"""
         import json
 
+        # TODO(dougwig) -- fix this
         imgprops = json.loads(image.metadata["properties"])
 
         a10_appliance = {
@@ -382,15 +383,14 @@ def distinct_dicts(dicts):
 
 
 def context_instance_manager(a10_context):
-        tenant_id = a10_context.tenant_id
-        auth_token = a10_context.openstack_context.auth_token
+    cfg = a10_context.a10_driver.config
+    tenant = cfg.get('vthunder_tenant')
 
-        auth_url = cfg.CONF.keystone_authtoken.auth_uri
+    auth = v2.Password(
+        username=cfg.get('vthunder_admin_username'),
+        password=cfg.get('vthunder_admin_password'),
+        tenant_name=tenant,
+        auth_url=cfg.get('keystone_auth_url'))
+    session = keystone_session.Session(auth=auth)
 
-        token = auth_plugin.Token(token=auth_token,
-                                  tenant_id=tenant_id,
-                                  auth_url=auth_url)
-        session = keystone_session.Session(auth=token)
-
-        instance_manager = InstanceManager(tenant_id, session=session)
-        return instance_manager
+    return InstanceManager(tenant_id, session=session)

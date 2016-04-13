@@ -39,7 +39,7 @@ LOG = logging.getLogger(__name__)
 class A10OpenstackLBBase(object):
 
     def __init__(self, openstack_driver,
-                 plumbing_hooks_class=hooks.DefaultPlumbingHooks,
+                 plumbing_hooks_class=None,
                  neutron_hooks_module=None,
                  barbican_client=None,
                  config=None,
@@ -55,10 +55,13 @@ class A10OpenstackLBBase(object):
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
 
+        if plumbing_hooks_class is not None:
+            self.hooks = plumbing_hooks_class(self)
+        else:
+            self.hooks = self.config.get('plumbing_hooks_class')(self)
+
         if self.config.get('verify_appliances'):
             self._verify_appliances()
-
-        self.hooks = plumbing_hooks_class(self)
 
     def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None):
         return self.hooks.select_device(tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj)

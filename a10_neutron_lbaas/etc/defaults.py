@@ -22,7 +22,13 @@ GLOBAL_DEFAULTS = {
     "device_scheduling_filters" = [
         a10_neutron_lbaas.schedulers.tenant_hash.TenantStickyHash,
         a10_neutron_lbaas.schedulers.tenant_hash.TenantHash
-    ]
+    ],
+    "plumbing_hooks_class" = a10_neutron_lbaas.plumbing_hooks.PlumbingHooks
+    # TODO(dougwig) -- move this example to config.py
+    # "device_scheduling_filters" = [
+    #     a10_neutron_lbaas.schedulers.vthunder.ServiceTenant
+    # ]
+
 }
 
 DEVICE_REQUIRED_FIELDS = [
@@ -56,3 +62,34 @@ DEVICE_OPTIONAL_DEFAULTS = {
     # "vlan": 0,
     # "gateway_mode": 1,
 }
+
+VTHUNDER_REQUIRED_FIELDS = [
+    'username',
+    'password',
+
+    'nova_flavor',
+
+    'vthunder_tenant_id',
+    'vthunder_tenant_username'
+    'vthunder_tenant_password',
+    'keystone_auth_url',
+
+    'vip_subnet_id',
+]
+
+VTHUNDER_OPTIONAL_DEFAULTS = DEVICE_OPTIONAL_DEFAULTS
+
+# TODO(dougwig) -- remove below
+# vthunder = {
+#     username: '',
+#     password: '',
+
+#     glance_image_id: '',
+#     glance_image_tag: '',
+#     nova_flavor: '',
+    
+#     service_tenant_id: '',
+#     networks: [],
+#     mgmt_network: '',
+#     vip_subnet_id: '',
+# }

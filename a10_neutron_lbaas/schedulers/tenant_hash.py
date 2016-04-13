@@ -10,7 +10,6 @@ class TenantHashFilter(base.BaseSchedulerFilter):
         self.appliance_hash = acos_client.Hash(self.devices.keys())
 
     def select_device(self, a10_context=None, devices, tenant_id, lbaas_obj=None):
-        # Must return device dict from config.py
         s = self.appliance_hash.get_server(tenant_id)
         return [self.devices[s]]
 
