@@ -152,6 +152,7 @@ class A10Config(object):
         return self._devices
 
 
+# TODO(dougwig) -- is this used?
 # Wrapper class for use with python contexts; used by tests right now
 class A10ConfigContext(object):
 

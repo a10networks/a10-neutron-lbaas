@@ -31,14 +31,51 @@ def _get_date():
     return datetime.datetime.now()
 
 
-# TODO(dougwig) -- grab this fresh from orchestration branch
-
-
-class A10TenantBinding(Base):
-    __tablename__ = "a10_tenant_bindings"
-
-    id = sa.Column(sa.String(36), default=_uuid_str, primary_key=True)
+class A10Base(Base):
+    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=uuid_str)
+    tenant_id = sa.Column(sa.String(36), nullable=False)
     created_at = sa.Column(sa.DateTime, default=_get_date)
     updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date)
-    tenant_id = sa.Column(sa.String(36), nullable=False)
+
+
+class A10TenantBinding(A10Base):
+    __tablename__ = "a10_tenant_bindings"
+
     device_name = sa.Column(sa.String(1024), nullable=False)
+
+
+class A10DeviceInstance(A10Base):
+    """An orchestrated vThunder that is being used as a device."""
+
+    __tablename__ = 'a10_device_instances'
+
+    # This field is directly analagous to the device name in config.py;
+    # and will be used as such throughout.
+    name = sa.Column(sa.String(1024), nullable=False)
+
+    username = sa.Column(sa.String(255), nullable=False)
+    password = sa.Column(sa.String(255), nullable=False)
+    # TODO(dougwig) -- these should come from static config
+    # api_version = sa.Column(sa.String(12), nullable=False)
+    # api_protocol = sa.Column(sa.String(255), nullable=False)
+    # api_port = sa.Column(sa.Integer, nullable=False)
+    nova_instance_id = sa.Column(sa.String(36), nullable=True)
+    ip_address = sa.Column(sa.String(255), nullable=False)
+
+    def to_dict(self):
+        # TODO(dougwig) - return device dict entry
+        raise Foobar()
+
+
+class A10SLB(A10Base):
+    __tablename__ = 'a10_slbs'
+
+    device_name = sa.Column(sa.String(1024), nullable=False)
+
+    # LBaaS v1 or v2, only one of these will be defined
+    vip_id = sa.Column(sa.String(36))
+    lbaas_loadbalancer_id = sa.Column(sa.String(36))
+
+    def get_lbaas_root(self):
+        # TODO(dougwig), if vip, lookup and return vip, if lb, same
+        raise Foobar()

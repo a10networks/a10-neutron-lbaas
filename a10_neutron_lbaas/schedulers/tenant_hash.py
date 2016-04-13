@@ -9,7 +9,7 @@ class TenantHashFilter(base.BaseSchedulerFilter):
         # TODO -- bug -- this can't be global to init anymore
         self.appliance_hash = acos_client.Hash(self.devices.keys())
 
-    def select_device(self, a10_context, devices, tenant_id, lbaas_obj):
+    def select_device(self, a10_context=None, devices, tenant_id, lbaas_obj=None):
         # Must return device dict from config.py
         s = self.appliance_hash.get_server(tenant_id)
         return [self.devices[s]]
@@ -24,7 +24,7 @@ class TenantStickyHashFilter(TenantHashFilter):
     def _set_db_session(self, db_session):  # testing hook
         self.db_session = db_session
 
-    def select_device(self, a10_context, devices, tenant_id, lbaas_obj):
+    def select_device(self, a10_context=None, devices, tenant_id, lbaas_obj=None):
         if not self.driver.config.get('use_database'):
             # pass-through
             return devices
