@@ -74,7 +74,7 @@ class A10SLB(A10Base):
 
     # LBaaS v1 or v2, only one of these will be defined
     vip_id = sa.Column(sa.String(36))
-    lbaas_loadbalancer_id = sa.Column(sa.String(36))
+    loadbalancer_id = sa.Column(sa.String(36))
 
     def get_lbaas_root(self):
         # TODO(dougwig), if vip, lookup and return vip, if lb, same
