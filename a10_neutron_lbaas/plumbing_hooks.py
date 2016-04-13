@@ -72,3 +72,18 @@ class PlumbingHooks(object):
 
     def after_vip_delete(self, a10_context, context, vip):
         pass
+
+
+# This next set of plumbing hooks needs to be used when the vthunder
+# scheduler is active.
+
+class VThunderPlumbingHooks(PlumbingHooks):
+
+    def after_vip_create(self, a10_context, context, vip):
+        instance = todo_db_query(find device_cfg['name'])
+
+        return self.instance_manager.plumb_instance_subnet(
+            instance.nova_instance_id,
+            a10_context.device_cfg.get('vip_subnet_id'],
+            vip.ip_address or vip['ip_address'], ## todo, stupid separate obj models
+            wrong_ips=[a10_context.device_cfg['host']])
