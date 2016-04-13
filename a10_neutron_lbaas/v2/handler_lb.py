@@ -12,13 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import logging
 
-# TODO(dougwig) -- this is gone in orchestration branch         
-from a10_neutron_lbaas.acos import axapi_mappings
-
 import acos_client.errors as acos_errors
+
 import handler_base_v2
 import v2_context as a10
 
@@ -35,14 +32,11 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         try:
             vip_meta = self.meta(lb, 'virtual_server', {})
 
-            # TODO(dougwig) -- gone in orc branch
-            vip_args = axapi_mappings._virtual_server(vip_meta, c.device_cfg)
-
             set_method(
                 self._meta_name(lb),
                 lb.vip_address,
                 status,
-                axapi_body=vip_meta)  # vip_args?
+                axapi_body=vip_meta)
         except acos_errors.Exists:
             pass
 

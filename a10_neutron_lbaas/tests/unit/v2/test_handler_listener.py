@@ -19,10 +19,7 @@ import test_base
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 from a10_neutron_lbaas import constants
 
-
 LOG = logging.getLogger(__name__)
-
-from a10_neutron_lbaas.acos import axapi_mappings
 
 
 class TestListeners(test_base.UnitTestBase):

@@ -18,7 +18,7 @@ from a10_neutron_lbaas.acos import openstack_mappings
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
-
+# TODO(dougwig) -- go through abstracted acos-client, and apply named args as needed
 
 LOG = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
 
     def _set(self, set_method, c, context, pool):
         args = {'service_group': self.meta(pool, 'service_group', {})}
+
         set_method(
             self._meta_name(pool),
             protocol=openstack_mappings.service_group_protocol(c, pool['protocol']),
@@ -36,7 +37,6 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
     def create(self, context, pool):
         with a10.A10WriteStatusContext(self, context, pool) as c:
             try:
-
                 self._set(c.client.slb.service_group.create,
                           c, context, pool)
             except acos_errors.Exists:

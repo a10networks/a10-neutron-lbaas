@@ -16,7 +16,6 @@ import logging
 
 import acos_client.errors as acos_errors
 
-from a10_neutron_lbaas.acos import axapi_mappings
 from a10_neutron_lbaas.acos import openstack_mappings
 from a10_neutron_lbaas import constants
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
@@ -90,9 +89,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
 
-        # TODO(dougwig) -- this is gone in orchestration branch         
-        vport_args = axapi_mappings._vport(vport_meta, c.device_cfg)
-
         try:
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
@@ -103,7 +99,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 s_pers_name=persistence.s_persistence(),
                 c_pers_name=persistence.c_persistence(),
                 status=status,
-                axapi_body=vport_meta)  # vport_args?
+                axapi_body=vport_meta)
         except acos_errors.Exists:
             pass
 

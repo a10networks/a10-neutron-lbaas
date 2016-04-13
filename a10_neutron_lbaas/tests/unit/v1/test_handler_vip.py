@@ -17,7 +17,6 @@ import mock
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-from a10_neutron_lbaas.acos import axapi_mappings
 
 
 class TestVIP(test_base.UnitTestBase):
