@@ -18,7 +18,6 @@ from a10_neutron_lbaas.acos import openstack_mappings
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
-# TODO(dougwig) -- go through abstracted acos-client, and apply named args as needed
 
 LOG = logging.getLogger(__name__)
 
