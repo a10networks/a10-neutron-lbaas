@@ -27,10 +27,6 @@ import base
 
 class ServiceTenant(base.BaseSchedulerFilter):
 
-    def __init__(self, driver, devices):
-        super(ServiceTenant, self).__init__(driver, devices)
-        self.instance_manager = instance_manager.Foo(todo)
-
     def select_device(self, a10_context=None, devices, tenant_id, lbaas_obj=None):
         if not self.driver.config.get('use_database'):
             raise MakesNoSenseError()
@@ -45,6 +41,7 @@ class ServiceTenant(base.BaseSchedulerFilter):
         #                           auth_url=auth_url)
         # session = keystone_session.Session(auth=token)
 
+        instance_manager = instance_manager.Foo(todo)
         try:
             device_config = instance_manager.create_default_instance()
         except a10_ex.FeatureNotConfiguredError:

@@ -36,7 +36,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 self._meta_name(lb),
                 lb.vip_address,
                 status,
-                vrid=c.device_cfg.get('default_virtual_server_vrid'),  ## TODO - neutron_subnet_id=lb.vip_subnet_id,
+                vrid=c.device_cfg.get('default_virtual_server_vrid'),
                 axapi_body=vip_meta)
         except acos_errors.Exists:
             pass

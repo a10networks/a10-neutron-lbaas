@@ -82,6 +82,7 @@ class VThunderPlumbingHooks(PlumbingHooks):
     def after_vip_create(self, a10_context, context, vip):
         instance = todo_db_query(find device_cfg['name'])
 
+        instance_manager = instance_manager.Foo(todo)
         return self.instance_manager.plumb_instance_subnet(
             instance.nova_instance_id,
             a10_context.device_cfg.get('vip_subnet_id'],
