@@ -74,6 +74,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                     self._meta_name(vip),
                     vip['address'],
                     status,
+                    vrid=c.device_cfg.get('default_virtual_server_vrid'),
                     axapi_body=vip_meta)
             except acos_errors.Exists:
                 pass
@@ -94,6 +95,8 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                         s_pers_name=p.s_persistence(),
                         c_pers_name=p.c_persistence(),
                         status=status,
+                        autosnat=c.device_cfg.get('autosnat'),
+                        ipinip=c.device_cfg.get('ipinip'),
                         axapi_body=vport)
                 except acos_errors.Exists:
                     pass
@@ -136,6 +139,8 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 s_pers_name=p.s_persistence(),
                 c_pers_name=p.c_persistence(),
                 status=status,
+                autosnat=c.device_cfg.get('autosnat'),
+                ipinip=c.device_cfg.get('ipinip'),
                 axapi_body=vport_meta)
 
             self.hooks.after_vip_update(c, context, vip)

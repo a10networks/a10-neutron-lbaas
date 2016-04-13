@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import errno
 import logging
 
 import acos_client
@@ -66,7 +67,8 @@ class A10OpenstackLBBase(object):
         return acos_client.Client(
             device_info['host'], device_info['api_version'],
             device_info['username'], device_info['password'],
-            port=device_info['port'], protocol=device_info['protocol'])
+            port=device_info['port'], protocol=device_info['protocol'],
+            retry_errno_list=[errno.EHOSTUNREACH])
 
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")

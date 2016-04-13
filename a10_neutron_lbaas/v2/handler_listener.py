@@ -99,6 +99,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 s_pers_name=persistence.s_persistence(),
                 c_pers_name=persistence.c_persistence(),
                 status=status,
+                autosnat=c.device_cfg.get('autosnat'),
+                ipinip=c.device_cfg.get('ipinip'),
                 axapi_body=vport_meta)
         except acos_errors.Exists:
             pass
