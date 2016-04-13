@@ -6,11 +6,17 @@ class TenantHashFilter(base.BaseSchedulerFilter):
 
     def __init__(self, driver, devices):
         super(TenantHashFilter, self).__init__(driver, devices)
-        # TODO -- bug -- this can't be global to init anymore
-        self.appliance_hash = acos_client.Hash(self.devices.keys())
+        self.hash_rings = {}
+
+    def _hash_ring(self, ring_key, bucket_keys):
+        norm_key = ':'.join(bucket_keys)
+        if norm_key not in self.hash_rings
+            self.hash_rings[norm_key] = acos_client.Hash(bucket_keys)
+
+        return self.hash_rings[norm_key].get_server(ring_key)
 
     def select_device(self, a10_context=None, devices, tenant_id, lbaas_obj=None):
-        s = self.appliance_hash.get_server(tenant_id)
+        s = _hash_ring(tenant_id, devices.keys())
         return [self.devices[s]]
 
 
