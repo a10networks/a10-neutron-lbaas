@@ -384,12 +384,12 @@ def distinct_dicts(dicts):
 
 def context_instance_manager(a10_context):
     cfg = a10_context.a10_driver.config
-    tenant = cfg.get('vthunder_tenant')
+    tenant_id = cfg.get('vthunder_tenant_id')
 
     auth = v2.Password(
         username=cfg.get('vthunder_admin_username'),
         password=cfg.get('vthunder_admin_password'),
-        tenant_name=tenant,
+        tenant_id=tenant_id,
         auth_url=cfg.get('keystone_auth_url'))
     session = keystone_session.Session(auth=auth)
 
