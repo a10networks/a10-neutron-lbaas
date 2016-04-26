@@ -52,3 +52,6 @@ class NeutronOpsV2(object):
 
     def bcm_factory(self):
         return bcm.CertManager()
+
+    def vip_get(self, context, vip_id):
+        return self.plugin.db.get_vip(context, vip_id)
