@@ -19,6 +19,7 @@ GLOBAL_DEFAULTS = {
     "database_connection": None,
     "neutron_conf_dir": '/etc/neutron',
     "member_name_use_uuid": False,
+    "keystone_auth_url": None,
     "device_scheduling_filters" = [
         a10_neutron_lbaas.schedulers.tenant_hash.TenantStickyHash,
         a10_neutron_lbaas.schedulers.tenant_hash.TenantHash
@@ -68,28 +69,15 @@ VTHUNDER_REQUIRED_FIELDS = [
     'password',
 
     'nova_flavor',
+    'glance_image',
+    'glance_image_tag',
 
     'vthunder_tenant_id',
     'vthunder_tenant_username'
     'vthunder_tenant_password',
-    'keystone_auth_url',
 
-    'vip_subnet_id',
+    'vthunder_management_network',
+    'vthunder_data_networks',
 ]
 
 VTHUNDER_OPTIONAL_DEFAULTS = DEVICE_OPTIONAL_DEFAULTS
-
-# TODO(dougwig) -- remove below
-# vthunder = {
-#     username: '',
-#     password: '',
-
-#     glance_image_id: '',
-#     glance_image_tag: '',
-#     nova_flavor: '',
-    
-#     service_tenant_id: '',
-#     networks: [],
-#     mgmt_network: '',
-#     vip_subnet_id: '',
-# }

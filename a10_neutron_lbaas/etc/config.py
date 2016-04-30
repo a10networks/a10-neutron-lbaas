@@ -45,6 +45,11 @@
 
 # member_name_use_uuid = False
 
+# If not None, use this keystone auth URL instead of the one from the
+# neutron.conf file.
+
+# keystone_auth_url = None
+
 
 #
 # Main devices dictionary, containing a list of available ACOS devices.
@@ -125,5 +130,18 @@ devices = {
     # },
 }
 
-# TODO(dougwig) - instance and image stuff
-# TODO(dougwig) - vthunder auto devices
+vthunder: {
+    # 'username': 'admin',
+    # 'password': 'a10',
+
+    'nova_flavor': 'vthunder.small',  # 1 core, 4096MB ram, 12GB disk
+    'glance_image': None,
+    'glance_image_tag': 'vthunder',
+
+    # 'vthunder_tenant_id': '',
+    # 'vthunder_tenant_username': '',
+    # 'vthunder_tenant_password': '',
+
+    # 'vthunder_management_network': 'private-mgmt',
+    # 'vthunder_data_networks': [ 'vip-net', 'member-net' ]
+}

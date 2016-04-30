@@ -77,14 +77,23 @@ class PlumbingHooks(object):
 # This next set of plumbing hooks needs to be used when the vthunder
 # scheduler is active.
 
+# TODO(dougwig) -- bind hooks to schedulers
+
 class VThunderPlumbingHooks(PlumbingHooks):
 
     def after_vip_create(self, a10_context, context, vip):
-        instance = todo_db_query(find device_cfg['name'])
+        instance = self.device_cfg
+        if 'nova_instance_id' not in instance:
+            raise NotVirtualWhat()
 
-        instance_manager = instance_manager.Foo(todo)
-        return self.instance_manager.plumb_instance_subnet(
-            instance.nova_instance_id,
-            a10_context.device_cfg.get('vip_subnet_id'],
-            vip.ip_address or vip['ip_address'], ## todo, stupid separate obj models
-            wrong_ips=[a10_context.device_cfg['host']])
+        if hasattr(vip, 'ip_address'):
+            vip_ip_address = vip.ip_address
+        else:
+            vip_ip_address = vip['ip_address']
+
+        imgr = instance_manager.context_instance_manager(a10_context)
+        return imgr.plumb_instance_subnet(
+            instance['nova_instance_id'],
+            instance['vip_subnet_id'],
+            vip_ip_address,
+            wrong_ips=[instance['host']])

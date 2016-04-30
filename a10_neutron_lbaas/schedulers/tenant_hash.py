@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from a10_neutron_lbaas.db import find as db_find
+
 import base
 
 
@@ -45,14 +47,8 @@ class TenantStickyHashFilter(TenantHashFilter):
             # pass-through
             return devices
 
-        if self.db_session is not None:
-            db = self.db_session
-        else:
-            db = db_api.get_session()
-
         # See if we have a saved tenant
-        a10 = db.query(models.A10TenantBinding).filter(
-            models.A10TenantBinding.tenant_id == tenant_id).one_or_none()
+        a10 = db_find.find_tenant_binding_by_tenant_id(tenant_id, self.db_session)
         if a10 is not None:
             if a10.device_name in self.devices:
                 return [self.devices[a10.device_name]]
@@ -62,9 +58,12 @@ class TenantStickyHashFilter(TenantHashFilter):
                     'add it back to config or migrate loadbalancers' %
                     (a10.device_name, tenant_id))
 
+        if self.db_session is not None:
+            db = self.db_session
+        else:
+            db = db_api.get_session()
+
         # Nope, so we hash and save
         d = self.select_device_hash(tenant_id)
-        a10 = models.A10TenantBinding(tenant_id=tenant_id, device_name=d['name'])
-        db.add(a10)
-        db.commit()
+        db_create.create_tenant_binding(tenant_id=tenant_id, device_name=d['name'])
         return [d]

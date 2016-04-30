@@ -20,6 +20,7 @@ import sys
 from debtcollector import removals
 
 from a10_neutron_lbaas import a10_exceptions as a10_ex
+from a10_neutron_lbaas.db import find as db_find
 from a10_neutron_lbaas.etc import config as blank_config
 from a10_neutron_lbaas.etc import defaults
 
@@ -27,8 +28,6 @@ LOG = logging.getLogger(__name__)
 
 
 class A10Config(object):
-
-    # TODO -- networks, mgmt__network, and management_gateway
 
     def __init__(self, config_dir=None):
         # Look for config in the virtual environment
@@ -102,29 +101,34 @@ class A10Config(object):
 
                     LOG.debug("A10Config, device %s=%s", k, self._devices[k])
 
+            self._vthunder = None
+            if has_attr(self._config, 'vthunder'):
+                self._vthunder = self._config.vthunder
+
+                for x in defaults.VTHUNDER_REQUIRED_FIELDS:
+                    if x not in v:
+                        msg = "vthunder definition missing required value %s, skipping" % x
+                        LOG.error(msg)
+                        raise a10_ex.InvalidDeviceConfig(msg)
+
+                # vThunder defaults
+                for vk, vv in defaults.VTHUNDER_OPTIONAL_DEFAULTS.items():
+                    if vk not in self._vthunder:
+                        self._vthunder[vk] = vv
+                for dk, dv in defaults.DEVICE_OPTIONAL_DEFAULTS.items():
+                    if dk not in self._vthunder:
+                        self._vthunder[dk] = dv
+
+
             # Setup db foo
             if self._config.use_database and self._config.database_connection is None:
                 self._config.database_connection = self._get_neutron_db_string()
-
-            # TODO(dougwig) -- instance and image accessors
-            # TODO(dougwig) -- vet these
-            # self.image_defaults = self.IMAGE_DEFAULTS.copy()
-            # self.image_defaults.update(getattr(self.config, "image_defaults", {}))
-
-            # self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
-            # self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
 
             # Setup some backwards compat stuff
             self.config = OldConfig(self)
 
         finally:
             sys.path = real_sys_path
-
-        # self.image_defaults = self.IMAGE_DEFAULTS.copy()
-        # self.image_defaults.update(getattr(self.config, "image_defaults", {}))
-
-        # self.instance_defaults = self.INSTANCE_DEFAULTS.copy()
-        # self.instance_defaults.update(getattr(self.config, "instance_defaults", {}))
 
     # We don't use oslo.config here, in a weak attempt to avoid pulling in all
     # the many openstack dependencies. If this proves problematic, we should
@@ -155,23 +159,23 @@ class A10Config(object):
 
     def get_device(self, device_name, db_session=None):
         if device_name in self._devices:
-            return self._devices[device_name]
-        if use_database_todo:
-            z = db.query(todo)
-            if z is not None:
+            return self._devices.get(device_name, {})
+        if self.get('use_database'):
+            instance = db_find.find_device_instance_by_name(device_name, db_session)
+            if instance is not None:
+                # TODO - translate from instance to device, save in self, return
                 # TODO - merge together static info and db info
                 # TODO - set host to ip_address
                 return some_new_dict
         return None
 
-        return self.get_devices().get(device_name, {})
-
     def get_devices(self, db_session=None):
-        if use_database_todo:
+        if self.get('use_database'):
             db = db_session or db_api.get_session()
-            return self._devices + db.query(todo)
-        else:
-            return self._devices
+            instances = db_find.find_device_instances(db_session)
+            if instances is not None:
+                # TODO -- convert to devices, save in devices
+        return self._devices
 
     # backwards compat
     @removals.remove

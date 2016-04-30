@@ -44,13 +44,15 @@ class A10OpenstackLBBase(object):
                  barbican_client=None,
                  config=None,
                  config_dir=None,
-                 caller_data=None
+                 caller_data=None,
+                 client_wrapper_class=None
                  ):
         self.openstack_driver = openstack_driver
         self.config = config or a10_config.A10Config(config_dir=config_dir)
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
         self.caller_data = caller_data
+        self.client_wrapper_class = client_wrapper_class
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
@@ -66,12 +68,19 @@ class A10OpenstackLBBase(object):
     def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None):
         return self.hooks.select_device(tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj)
 
-    def _get_a10_client(self, device_info):
+    def _get_a10_acos_client(self, device_info):
         return acos_client.Client(
             device_info['host'], device_info['api_version'],
             device_info['username'], device_info['password'],
             port=device_info['port'], protocol=device_info['protocol'],
             retry_errno_list=[errno.EHOSTUNREACH])
+
+    def _get_a10_client(self, device_info):
+        c = self._get_a10_acos_client(device_info)
+        if self.client_wrapper_class is not None:
+            return self.client_wrapper_class(c, device_info)
+        else:
+            return c
 
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")
