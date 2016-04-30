@@ -54,19 +54,17 @@ class A10DeviceInstance(A10Base):
     # and will be used as such throughout.
     name = sa.Column(sa.String(1024), nullable=False)
 
-    # TODO(dougwig) - config toggle to assume cloud-init, and then we can
-    # get these from static config, or they're dynamic and need to be
-    # stored.
     username = sa.Column(sa.String(255), nullable=False)
     password = sa.Column(sa.String(255), nullable=False)
-    # TODO(dougwig) -- these should come from static config
-    # api_version = sa.Column(sa.String(12), nullable=False)
-    # api_protocol = sa.Column(sa.String(255), nullable=False)
-    # api_port = sa.Column(sa.Integer, nullable=False)
+
+    api_version = sa.Column(sa.String(12), nullable=False)
+    api_protocol = sa.Column(sa.String(255), nullable=False)
+    api_port = sa.Column(sa.Integer, nullable=False)
+
     nova_instance_id = sa.Column(sa.String(36), nullable=True)
     ip_address = sa.Column(sa.String(255), nullable=False)
 
-    # TODO(dougwig) -- should add state enum here
+    # TODO(dougwig) -- later - should add state enum here
 
     # For "device" dicts, use a10_config.get_device()
     # For client objects, use _get_a10_client with the a10_config device dict
@@ -83,7 +81,7 @@ class A10SLB(A10Base):
     vip_id = sa.Column(sa.String(36))
     loadbalancer_id = sa.Column(sa.String(36))
 
-    # TODO(dougwig) -- should add state enum here
+    # TODO(dougwig) -- later - should add state enum here
 
     def get_lbaas_root(self):
         # TODO(dougwig), if vip, lookup and return vip, if lb, same

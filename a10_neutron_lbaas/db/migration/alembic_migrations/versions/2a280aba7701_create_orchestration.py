@@ -26,6 +26,9 @@ def upgrade():
         sa.Column('name', sa.String(1024), nullable=False),
         sa.Column('username', sa.String(255), nullable=False),
         sa.Column('password', sa.String(255), nullable=False),
+        sa.Column('api_version', sa.String(255), nullable=False),
+        sa.Column('api_protocol', sa.String(255), nullable=False),
+        sa.Column('api_port', sa.String(255), nullable=False),
         sa.Column('nova_instance_id', sa.String(36), nullable=False),
         sa.Column('ip_address', sa.String(255))
     )
