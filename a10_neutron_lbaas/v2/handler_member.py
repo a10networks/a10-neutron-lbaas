@@ -108,7 +108,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         try:
             if self.neutron.member_count(context, member) > 1:
                 c.client.slb.service_group.member.delete(
-                    self._pool_name(context, pool=member.pool),
+                    self._pool_name(context, pool_id=member.pool_id, pool=member.pool),
                     server_name,
                     member.protocol_port)
             else:
