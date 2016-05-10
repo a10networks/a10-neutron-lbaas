@@ -19,40 +19,54 @@ import time
 
 import requests.exceptions
 
+from a10_neutron_lbaas import appliance_client_base
+from a10_neutron_lbaas.logging_client import is_builtin
+import acos_client.errors as acos_errors
+
 
 def patient_client(original):
-    self = copy.copy(original)
-
-    self.http = patient_http(self.http)
-    self.session.http = self.http
-
-    return self
+    return PatientProxy(original)
 
 
-def patient_http(original):
-    self = copy.copy(original)
+class PatientProxy(appliance_client_base.StupidSimpleProxy):
+    def __init__(self, underlying, device_client=None):
+        super(PatientProxy, self).__init__(underlying)
+        self._device_client = device_client or underlying
 
-    underlying_request = self.request
+    def __getattr__(self, attr):
+        underlying = getattr(self._underlying, attr)
 
-    def request(*args, **kwargs):
+        if is_builtin(underlying):
+            return underlying
+
+        return PatientProxy(underlying, device_client=self._device_client)
+
+    def __call__(self, *args, **kwargs):
         sleep_time = 1
         lock_time = 600
         skip_errs = [errno.EHOSTUNREACH, errno.ECONNREFUSED]
-        skip_err_codes = [errno.errorcode[e] for e in skip_errs]
+        skip_err_codes = [errno.errorcode[e] for e in skip_errs] + ['BadStatusLine']
         time_end = time.time() + lock_time
+
+        before_call = lambda: None
 
         while time.time() < time_end:
             try:
-                return underlying_request(*args, **kwargs)
+                before_call()
+                return self._underlying(*args, **kwargs)
             except (socket.error, requests.exceptions.ConnectionError) as e:
                 if e.errno not in skip_errs and all(ec not in str(e) for ec in skip_err_codes):
                     raise
                     break
+                before_call = lambda: None
+            except acos_errors.InvalidSessionID as e:
+                # Clear the invalid session id so the underlying client will reauthenticate
+                self._device_client.session.session_id = None
+                desired_partition = self._device_client.current_partition
+                self._device_client.current_partition = 'shared'
+                before_call = lambda: self._device_client.system.partition.active(desired_partition)
 
             time.sleep(sleep_time)
 
-        return underlying_request(*args, **kwargs)
-
-    self.request = request
-
-    return self
+        before_call()
+        return self._underlying(*args, **kwargs)

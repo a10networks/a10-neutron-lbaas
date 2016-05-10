@@ -21,9 +21,12 @@ try:
 except ImportError:
     pass
 
+from keystoneclient.auth.identity import generic as auth_plugin
+from keystoneclient import session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
+from oslo_config import cfg
 
 import time
 import uuid
@@ -125,16 +128,11 @@ class InstanceManager(object):
 
         return a10_appliance
 
-    def _get_ip_addresses_from_instance(self, addresses):
-        rv = ""
-        if len(addresses.keys()) > 0:
-            v4addresses = filter(lambda x: x["version"] == 4,
-                                 addresses[addresses.keys()[0]])
-            if len(v4addresses) > 0:
-                addresses = map(lambda x: x["addr"], v4addresses)
-                if len(addresses) > 0:
-                    rv = addresses[0]
-        return rv
+    def _get_ip_addresses_from_instance(self, addresses, mgmt_network_name):
+        address_block = addresses[mgmt_network_name]
+        v4addresses = filter(lambda x: x["version"] == 4,
+                             address_block)
+        return v4addresses[0]["addr"]
 
     def _create_instance(self, context):
         server = self._build_server(context)
@@ -157,7 +155,7 @@ class InstanceManager(object):
 
         server["image"] = image.id
         server["flavor"] = flavor.id
-        server["nics"] = [{'net-id': x} for x in networks]
+        server["nics"] = [{'net-id': x['id']} for x in networks]
 
         created_instance = self._nova_api.servers.create(**server)
 
@@ -165,7 +163,8 @@ class InstanceManager(object):
         created_instance.manager.client.last_request_id = None
         self._create_server_spinlock(created_instance)
 
-        ip_address = self._get_ip_addresses_from_instance(created_instance.addresses)
+        # Get the IP address of the first interface (should be management)
+        ip_address = self._get_ip_addresses_from_instance(created_instance.addresses, networks[0]['name'])
         a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
 
         return a10_record
@@ -285,7 +284,10 @@ class InstanceManager(object):
         if any(missing_networks):
             self._handle_missing_networks(missing_networks)
 
-        return [id_func(available_networks[x]) for x in networks]
+        return [{
+            'id':id_func(available_networks[x]),
+            'name': available_networks[x].get('name', '')
+        } for x in networks]
 
     def _default_instance(self):
         # Get all the a10 images
@@ -311,7 +313,12 @@ class InstanceManager(object):
         if flavor is None:
             raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured flavor")
 
-        networks = self._config.instance_defaults.get('networks')
+
+
+        mgmt_network = self._config.instance_defaults.get("mgmt_network")
+
+        networks = [mgmt_network] if mgmt_network else []
+        networks += self._config.instance_defaults.get('networks')
 
         if networks is None or len(networks) < 1:
             raise a10_ex.FeatureNotConfiguredError(
@@ -329,3 +336,61 @@ class InstanceManager(object):
         instance_configuration = self._default_instance()
 
         return self._create_instance(instance_configuration)
+
+    def _plumb_port(self, server, network_id, wrong_ips):
+        """Look for an existing port on the network
+        Add one if it doesn't exist
+        """
+
+        for attached_interface in server.interface_list():
+            if attached_interface.net_id == network_id:
+                if any(map(lambda x: x['ip_address'] in wrong_ips, attached_interface.fixed_ips)):
+                    continue
+                return attached_interface
+
+        return server.interface_attach(None, network_id, None)
+
+    def plumb_instance(self, instance_id, network_id, allowed_ips, wrong_ips=[]):
+        server = self._nova_api.servers.get(instance_id)
+
+        interface = self._plumb_port(server, network_id, wrong_ips=wrong_ips)
+
+        port = self._neutron_api.show_port(interface.port_id)
+
+        allowed_address_pairs = port["port"].get("allowed_address_pairs", [])
+        new_address_pairs = map(lambda ip: {"ip_address": ip}, allowed_ips)
+
+        merged_address_pairs = distinct_dicts(allowed_address_pairs + new_address_pairs)
+
+        self._neutron_api.update_port(interface.port_id, {
+            "port": {
+                "allowed_address_pairs": merged_address_pairs
+            }
+        })
+
+        return interface.fixed_ips[0]['ip_address']
+
+    def plumb_instance_subnet(self, instance_id, subnet_id, allowed_ips, wrong_ips=[]):
+        subnet = self._neutron_api.show_subnet(subnet_id)
+        network_id = subnet["subnet"]["network_id"]
+        return self.plumb_instance(instance_id, network_id, allowed_ips, wrong_ips=wrong_ips)
+
+
+def distinct_dicts(dicts):
+    hashable = map(lambda x: tuple(sorted(x.items())), dicts)
+    return map(dict, set(hashable))
+
+
+def context_instance_manager(a10_context):
+        tenant_id = a10_context.tenant_id
+        auth_token = a10_context.openstack_context.auth_token
+
+        auth_url = cfg.CONF.keystone_authtoken.auth_uri
+
+        token = auth_plugin.Token(token=auth_token,
+                                  tenant_id=tenant_id,
+                                  auth_url=auth_url)
+        session = keystone_session.Session(auth=token)
+
+        instance_manager = InstanceManager(tenant_id, session=session)
+        return instance_manager

@@ -31,6 +31,7 @@ class TestVIP(test_base.UnitTestBase):
             'address': '1.1.1.1',
             'protocol_port': '80',
             'pool_id': 'pool1',
+            'subnet_id': 'subnet1'
         }
         if pers:
             h['session_persistence'] = {'type': pers}

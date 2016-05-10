@@ -55,11 +55,10 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         except acos_errors.Exists:
             pass
 
-        self.hooks.after_member_create(c, context, member)
-
     def create(self, context, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
             self._create(c, context, member)
+            self.hooks.after_member_create(c, context, member)
 
     def update(self, context, old_member, member):
         with a10.A10WriteStatusContext(self, context, member) as c:
@@ -93,7 +92,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         try:
             if self.neutron.member_count(context, member) > 1:
                 c.client.slb.service_group.member.delete(
-                    self._pool_name(context, pool=member.pool),
+                    self._pool_name(context, pool_id=member.pool_id, pool=member.pool),
                     server_name,
                     member.protocol_port)
             else:
