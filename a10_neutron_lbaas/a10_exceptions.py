@@ -33,6 +33,10 @@ class NoDatabaseURL(Exception):
     pass
 
 
+class RequiresDatabase(Exception):
+    pass
+
+
 class ImageNotFoundError(Exception):
     pass
 

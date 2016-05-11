@@ -32,6 +32,27 @@ def _get_date():
     return datetime.datetime.now()
 
 
+class HelperBase(Base):
+
+    @classmethod
+    def find_by_attribute(cls, attribute_name, attribute, db_session=None):
+        db = db_session or db_api.get_session()
+        return db.query(cls).filter(
+                getattr(cls, attribute_name) == attribute).one_or_none()
+
+    @classmethod
+    def find_all(cls, db_session=None):
+        db = db_session or db_api.get_session()
+        return db.query(cls).all()
+
+    @classmethod
+    def create_and_save(cls, db_session=None, **kwargs):
+        db = db_session or db_api.get_session()
+        m = cls(**kwargs)
+        db.add(m)
+        db.commit()
+
+
 class A10Base(Base):
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=uuid_str)
     tenant_id = sa.Column(sa.String(36), nullable=False)
@@ -43,6 +64,11 @@ class A10TenantBinding(A10Base):
     __tablename__ = "a10_tenant_bindings"
 
     device_name = sa.Column(sa.String(1024), nullable=False)
+
+    # TODO(dougwig) -- later - I bet a decorator could replace this boilerplate
+    @classmethod
+    def find_by_tenant_id(cls, tenant_id, db_session=None):
+        return self.find_by_attribute('tenant_id', tenant_id, db_session)
 
 
 class A10DeviceInstance(A10Base):
@@ -61,9 +87,20 @@ class A10DeviceInstance(A10Base):
     api_protocol = sa.Column(sa.String(255), nullable=False)
     api_port = sa.Column(sa.Integer, nullable=False)
 
+    protocol = sa.Column(sa.String(32), nullable=False)
+    port = sa.Column(sa.Integer, nullable=False)
+    autosnat = sa.Column(sa.Boolean(), nullable=False)
+    v_method = sa.Column(sa.String(32), nullable=False)
+    shared_partition = sa.Column(sa.String(1024), nullable=False)
+    use_float = sa.Column(sa.Boolean(), nullable=False)
+    default_virtual_server_vrid = sa.Column(sa.Integer, nullable=False)
+    ipinip = sa.Column(sa.Boolean(), nullable=False)
+    write_memory = sa.Column(sa.Boolean(), nullable=False)
+
     nova_instance_id = sa.Column(sa.String(36), nullable=True)
     ip_address = sa.Column(sa.String(255), nullable=False)
 
+    # TODO(dougwig) -- later - reference to scheduler, or capacity, or?
     # TODO(dougwig) -- later - should add state enum here
 
     # For "device" dicts, use a10_config.get_device()

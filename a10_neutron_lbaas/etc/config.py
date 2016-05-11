@@ -50,6 +50,9 @@
 
 # keystone_auth_url = None
 
+# TODO
+# plumbing_hooks_class = blah
+# plumbing_hooks_class = blahvirt
 
 #
 # Main devices dictionary, containing a list of available ACOS devices.

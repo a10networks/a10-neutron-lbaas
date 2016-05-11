@@ -175,6 +175,7 @@ class A10Config(object):
             instances = db_find.find_device_instances(db_session)
             if instances is not None:
                 # TODO -- convert to devices, save in devices
+                pass
         return self._devices
 
     # backwards compat
@@ -228,20 +229,20 @@ class OldConfig(object):
 
 # TODO(dougwig) -- is this used?
 # Wrapper class for use with python contexts; used by tests right now
-class A10ConfigContext(object):
+# class A10ConfigContext(object):
 
-    def __init__(self, config, devices=None):
-        self.config = config
-        self.devices_save = None
-        self.devices_override = devices
+#     def __init__(self, config, devices=None):
+#         self.config = config
+#         self.devices_save = None
+#         self.devices_override = devices
 
-    def __enter__(self):
-        if self.devices_override is not None:
-            self.devices_save = self.config._devices
-            self.config._devices = self.devices_override
-        return self.config
+#     def __enter__(self):
+#         if self.devices_override is not None:
+#             self.devices_save = self.config._devices
+#             self.config._devices = self.devices_override
+#         return self.config
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self.devices_save is not None:
-        self.config._devices = self.devices_save
-        self.devices_save = None
+#     def __exit__(self, exc_type, exc_value, traceback):
+#         if self.devices_save is not None:
+#             self.config._devices = self.devices_save
+#             self.devices_save = None

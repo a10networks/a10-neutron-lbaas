@@ -15,7 +15,7 @@
 from a10_neutron_lbaas import a10_exceptions as ex
 
 
-class PlumbingHooks(object):
+class BasePlumbingHooks(object):
 
     def __init__(self, driver, devices=None):
         self.driver = driver
@@ -26,6 +26,9 @@ class PlumbingHooks(object):
         else:
             self.devices = self.driver.config.get_devices()
 
+        self.scheduler = todo
+        self.client_proxy = todo
+        # TODO(dougwig) - get rid of filters for now
         self.scheduling_filters = map(lambda x: x(self.driver, self.devices),
                                       config.get('device_scheduling_filters'))
 
@@ -33,65 +36,111 @@ class PlumbingHooks(object):
     # behavior, it is much easier to use the 'device_scheduling_filters'
     # mechanism, as documented in the config file.
 
-    def select_device(self, tenant_id, a10_context=None, lbaas_obj=None):
-        devices = self.devices
-        for x in self.scheduling_filters:
-            devices = x.select_device(devices, tenant_id, lbaas_obj)
-            if len(devices) == 0:
-                raise Error()
-            elif len(devices) == 1:
-                return devices[0]
-
-        # If we get here, all of our filters ran and we have more than one
-        # device to choose from. Just grab the first.
-        log.WARNING("stuff choosing first your filters are junk")
-        return devices[0]
+    def select_device(self, tenant_id):
+        # Not a terribly useful scheduler
+        return self.devices[self.devices.keys()[0]]
 
     # Network plumbing hooks from here on out
 
-    def partition_create(self, client, context, partition_name, a10_context=None):
+    # TODO(dougwig) -- fix signature to be backwards compat here
+    def partition_create(self, client, context, partition_name):
         client.system.partition.create(partition_name)
 
-    def partition_delete(self, client, context, partition_name, a10_context=None):
+    def partition_delete(self, client, context, partition_name):
         client.system.partition.delete(partition_name)
 
-    def after_member_create(self, a10_context, context, member):
+    def after_member_create(self, client, context, member):
         pass
 
-    def after_member_update(self, a10_context, context, member):
+    def after_member_update(self, client, context, member):
         pass
 
-    def after_member_delete(self, a10_context, context, member):
+    def after_member_delete(self, client, context, member):
         pass
 
-    def after_vip_create(self, a10_context, context, vip):
+    def after_vip_create(self, client, context, vip):
         pass
 
-    def after_vip_update(self, a10_context, context, vip):
+    def after_vip_update(self, client, context, vip):
         pass
 
-    def after_vip_delete(self, a10_context, context, vip):
+    def after_vip_delete(self, client, context, vip):
         pass
+
+
+# The default set of plumbing hooks/scheduler, meant for hardware or manual orchestration
+
+class PlumbingHooks(BasePlumbingHooks):
+
+    def _select_device_hash(self, tenant_id):
+        # Must return device dict from config.py
+        s = self.appliance_hash.get_server(tenant_id)
+        return self.devices[s]
+
+    def _select_device_db(self, tenant_id, db_session=None):
+        # See if we have a saved tenant
+        a10 = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
+        if a10 is not None:
+            if a10.device_name in self.devices:
+                return self.devices[a10.device_name]
+            else:
+                raise ex.DeviceConfigMissing(
+                    'A10 device %s mapped to tenant %s is not present in config; '
+                    'add it back to config or migrate loadbalancers' %
+                    (a10.device_name, tenant_id))
+
+        # Nope, so we hash and save
+        d = self.select_device_hash(tenant_id)
+        models.A10TenantBinding.create_and_save(
+            tenant_id=tenant_id, device_name=d['name'],
+            db_session=db_session)
+
+        return d
+
+    def select_device(self, tenant_id):
+        if self.driver.config.get('use_database'):
+            return self.select_device_db(tenant_id)
+        else:
+            return self.select_device_hash(tenant_id)
 
 
 # This next set of plumbing hooks needs to be used when the vthunder
 # scheduler is active.
 
-# TODO(dougwig) -- bind hooks to schedulers
-
 class VThunderPlumbingHooks(PlumbingHooks):
 
-    def after_vip_create(self, a10_context, context, vip):
+    def select_device(self, tenant_id):
+        if not self.driver.config.get('use_database'):
+            raise ex.RequiresDatabase('vThunder orchestration requires use_database=True')
+
+        instance_manager = instance_manager.InstanceManager(
+            tenant_id=tenant_id, vthunder_config=self.driver.config.get_vthunder_config())
+        device_config = instance_manager.create_default_instance()
+
+        models.A10Instance.create_and_save(device_config, db_session=db_session)
+        models.A10TenantBinding.create_and_save(
+            tenant_id=tenant_id, device_name=device_config['name'],
+            db_session=db_session)
+
+        return device_config
+
+    def after_vip_create(self, client, context, vip):
         instance = self.device_cfg
         if 'nova_instance_id' not in instance:
-            raise NotVirtualWhat()
+            raise ex.InternalError('Attempting virtual plumbing on non-virtual device')
 
         if hasattr(vip, 'ip_address'):
             vip_ip_address = vip.ip_address
         else:
             vip_ip_address = vip['ip_address']
 
-        imgr = instance_manager.context_instance_manager(a10_context)
+        cfg = self.driver.config
+        vth = cfg.get_vthunder_config()
+        imgr = instance_manager.context_instance_manager(
+            keystone_url=cfg.get('keystone_url'),
+            vthunder_tenant_id=vth['vthunder_tenant_id'],
+            user=vth['vthunder_tenant_username'],
+            password=vth['vthunder_tenant_password'])
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],
             instance['vip_subnet_id'],

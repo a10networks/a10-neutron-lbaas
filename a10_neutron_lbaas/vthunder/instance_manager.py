@@ -14,6 +14,8 @@
 
 import logging
 import pprint
+import time
+import uuid
 
 try:
     # glanceclient importing is too fragile to have module initialization depend on it
@@ -26,12 +28,7 @@ from keystoneclient import session as keystone_session
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
-from oslo_config import cfg
 
-import time
-import uuid
-
-import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
@@ -75,16 +72,13 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 class InstanceManager(object):
     def __init__(self, tenant_id, session=None,
-                 nova_api=None, glance_api=None, neutron_api=None, config=None):
+                 nova_api=None, glance_api=None, neutron_api=None,
+                 vthunder_config=None):
         self.tenant_id = tenant_id
-
         self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
-
         self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
-
         self._glance_api = glance_api or glance_client.Client(GLANCE_VERSION, session=session)
-
-        self._config = config or a10_config.A10Config()
+        self._config = vthunder_config
 
     def _build_server(self, instance):
         retval = {}
@@ -309,17 +303,16 @@ class InstanceManager(object):
         image_id = images[0].id
 
         # Get the flavor from config
-        flavor = self._config.instance_defaults.get('flavor')
-
+        flavor = self._config.get('nova_flavor')
         if flavor is None:
             raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured flavor")
 
 
 
-        mgmt_network = self._config.instance_defaults.get("mgmt_network")
+        mgmt_network = self._config.get("vthunder_management_network")
 
         networks = [mgmt_network] if mgmt_network else []
-        networks += self._config.instance_defaults.get('networks')
+        networks += self._config.get('vthunder_data_networks')
 
         if networks is None or len(networks) < 1:
             raise a10_ex.FeatureNotConfiguredError(
@@ -382,15 +375,10 @@ def distinct_dicts(dicts):
     return map(dict, set(hashable))
 
 
-def context_instance_manager(a10_context):
-    cfg = a10_context.a10_driver.config
-    tenant_id = cfg.get('vthunder_tenant_id')
-
+def context_instance_manager(keystone_url, vthunder_tenant_id, user, password):
     auth = v2.Password(
-        username=cfg.get('vthunder_admin_username'),
-        password=cfg.get('vthunder_admin_password'),
-        tenant_id=tenant_id,
-        auth_url=cfg.get('keystone_auth_url'))
+        username=user, password=password, tenant_id=vthunder_tenant_id,
+        auth_url=keystone_url)
     session = keystone_session.Session(auth=auth)
 
     return InstanceManager(tenant_id, session=session)
