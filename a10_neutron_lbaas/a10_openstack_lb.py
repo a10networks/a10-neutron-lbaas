@@ -18,7 +18,6 @@ import logging
 import acos_client
 
 import a10_config
-import plumbing_hooks as hooks
 import version
 
 import v1.handler_hm

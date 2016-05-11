@@ -14,10 +14,6 @@ import datetime
 import uuid
 
 import sqlalchemy as sa
-import a10_neutron_lbaas.acos_client_extensions
-import a10_neutron_lbaas.acos_client_extensions as acos_client_extensions
-import a10_neutron_lbaas.nova_plumbing_client as nova_plumbing_client
-
 
 from a10_neutron_lbaas.db import api as db_api
 
@@ -38,7 +34,7 @@ class HelperBase(Base):
     def find_by_attribute(cls, attribute_name, attribute, db_session=None):
         db = db_session or db_api.get_session()
         return db.query(cls).filter(
-                getattr(cls, attribute_name) == attribute).one_or_none()
+            getattr(cls, attribute_name) == attribute).one_or_none()
 
     @classmethod
     def find_all(cls, db_session=None):
@@ -54,7 +50,7 @@ class HelperBase(Base):
 
 
 class A10Base(Base):
-    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=uuid_str)
+    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     tenant_id = sa.Column(sa.String(36), nullable=False)
     created_at = sa.Column(sa.DateTime, default=_get_date)
     updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date)
@@ -68,7 +64,7 @@ class A10TenantBinding(A10Base):
     # TODO(dougwig) -- later - I bet a decorator could replace this boilerplate
     @classmethod
     def find_by_tenant_id(cls, tenant_id, db_session=None):
-        return self.find_by_attribute('tenant_id', tenant_id, db_session)
+        return cls.find_by_attribute('tenant_id', tenant_id, db_session)
 
 
 class A10DeviceInstance(A10Base):
@@ -108,7 +104,7 @@ class A10DeviceInstance(A10Base):
 
     @classmethod
     def find_by_device_name(cls, device_name, db_session=None):
-        return self.find_by_attribute('device_name', device_name, db_session)
+        return cls.find_by_attribute('device_name', device_name, db_session)
 
 
 class A10SLB(A10Base):

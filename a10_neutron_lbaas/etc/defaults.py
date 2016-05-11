@@ -13,6 +13,9 @@
 # Please refer to a10_neutron_lbaas.etc.config for documentation
 # about these settings.
 
+import a10_neutron_lbaas.plumbing_hooks
+
+
 GLOBAL_DEFAULTS = {
     "verify_appliances": False,
     "use_database": False,
@@ -20,7 +23,7 @@ GLOBAL_DEFAULTS = {
     "neutron_conf_dir": '/etc/neutron',
     "member_name_use_uuid": False,
     "keystone_auth_url": None,
-    "plumbing_hooks_class" = a10_neutron_lbaas.plumbing_hooks.PlumbingHooks
+    "plumbing_hooks_class": a10_neutron_lbaas.plumbing_hooks.PlumbingHooks
 }
 
 DEVICE_REQUIRED_FIELDS = [

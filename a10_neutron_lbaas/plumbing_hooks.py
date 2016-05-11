@@ -12,7 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import acos_client
+
 from a10_neutron_lbaas import a10_exceptions as ex
+from a10_neutron_lbaas.db import models
+from a10_neutron_lbaas.vthunder import instance_manager
 
 
 class BasePlumbingHooks(object):
@@ -59,11 +63,11 @@ class BasePlumbingHooks(object):
 
 class PlumbingHooks(BasePlumbingHooks):
 
-    def __init__(self, driver, devices=None):
+    def __init__(self, driver, devices=None, get_devices_func=None):
         super(PlumbingHooks, self).__init__(driver, devices)
         if devices is not None:
             self.devices = devices
-        elif get_device_func is not None:
+        elif get_devices_func is not None:
             self.devices = get_devices_func()
         else:
             self.devices = self.driver.config.get_devices()
@@ -106,13 +110,13 @@ class PlumbingHooks(BasePlumbingHooks):
 
 class VThunderPlumbingHooks(PlumbingHooks):
 
-    def select_device(self, tenant_id):
+    def select_device(self, tenant_id, db_session=None):
         if not self.driver.config.get('use_database'):
             raise ex.RequiresDatabase('vThunder orchestration requires use_database=True')
 
-        instance_manager = instance_manager.InstanceManager(
+        imgr = instance_manager.InstanceManager(
             tenant_id=tenant_id, vthunder_config=self.driver.config.get_vthunder_config())
-        device_config = instance_manager.create_default_instance()
+        device_config = imgr.create_default_instance()
 
         models.A10Instance.create_and_save(device_config, db_session=db_session)
         models.A10TenantBinding.create_and_save(

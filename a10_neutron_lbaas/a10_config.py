@@ -20,7 +20,7 @@ import sys
 from debtcollector import removals
 
 from a10_neutron_lbaas import a10_exceptions as a10_ex
-from a10_neutron_lbaas.db import find as db_find
+from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.etc import config as blank_config
 from a10_neutron_lbaas.etc import defaults
 
@@ -102,7 +102,7 @@ class A10Config(object):
                     LOG.debug("A10Config, device %s=%s", k, self._devices[k])
 
             self._vthunder = None
-            if has_attr(self._config, 'vthunder'):
+            if hasattr(self._config, 'vthunder'):
                 self._vthunder = self._config.vthunder
 
                 for x in defaults.VTHUNDER_REQUIRED_FIELDS:
@@ -118,7 +118,6 @@ class A10Config(object):
                 for dk, dv in defaults.DEVICE_OPTIONAL_DEFAULTS.items():
                     if dk not in self._vthunder:
                         self._vthunder[dk] = dv
-
 
             # Setup db foo
             if self._config.use_database and self._config.database_connection is None:

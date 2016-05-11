@@ -67,4 +67,3 @@ class NoDevicesAvailableError(Exception):
 
 class NotImplemented(Exception):
     pass
-

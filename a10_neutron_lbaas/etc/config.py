@@ -150,7 +150,7 @@ devices = {
     # },
 }
 
-vthunder: {
+vthunder = {
     # 'username': 'admin',
     # 'password': 'a10',
 
