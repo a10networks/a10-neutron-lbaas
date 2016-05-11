@@ -63,3 +63,8 @@ class FeatureNotConfiguredError(Exception):
 
 class NoDevicesAvailableError(Exception):
     pass
+
+
+class NotImplemented(Exception):
+    pass
+

@@ -161,21 +161,20 @@ class A10Config(object):
         if device_name in self._devices:
             return self._devices.get(device_name, {})
         if self.get('use_database'):
-            instance = db_find.find_device_instance_by_name(device_name, db_session)
+            instance = models.A10Instances.find_by_device_name(device_name, db_session)
             if instance is not None:
-                # TODO - translate from instance to device, save in self, return
-                # TODO - merge together static info and db info
-                # TODO - set host to ip_address
-                return some_new_dict
+                self._devices[device_name] = dict(instance)
+                self._devices[device_name]['host'] = instance.ip_address
+                return self._devices[device_name]
         return None
 
+    # TODO(dougwig) -- later - use of this method should be considered a scalability killer
     def get_devices(self, db_session=None):
         if self.get('use_database'):
-            db = db_session or db_api.get_session()
-            instances = db_find.find_device_instances(db_session)
-            if instances is not None:
-                # TODO -- convert to devices, save in devices
-                pass
+            d = dict(self._devices.items())
+            for x in models.A10Instances.find_all():
+                d[x.name] = dict(x)
+            return d
         return self._devices
 
     # backwards compat

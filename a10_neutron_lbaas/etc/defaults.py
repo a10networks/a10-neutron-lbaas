@@ -20,16 +20,7 @@ GLOBAL_DEFAULTS = {
     "neutron_conf_dir": '/etc/neutron',
     "member_name_use_uuid": False,
     "keystone_auth_url": None,
-    # "device_scheduling_filters" = [
-    #     a10_neutron_lbaas.schedulers.tenant_hash.TenantStickyHash,
-    #     a10_neutron_lbaas.schedulers.tenant_hash.TenantHash
-    # ],
     "plumbing_hooks_class" = a10_neutron_lbaas.plumbing_hooks.PlumbingHooks
-    # TODO(dougwig) -- move this example to config.py
-    # "device_scheduling_filters" = [
-    #     a10_neutron_lbaas.schedulers.vthunder.ServiceTenant
-    # ]
-
 }
 
 DEVICE_REQUIRED_FIELDS = [

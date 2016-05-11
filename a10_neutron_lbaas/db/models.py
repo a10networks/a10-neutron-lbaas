@@ -106,6 +106,10 @@ class A10DeviceInstance(A10Base):
     # For "device" dicts, use a10_config.get_device()
     # For client objects, use _get_a10_client with the a10_config device dict
 
+    @classmethod
+    def find_by_device_name(cls, device_name, db_session=None):
+        return self.find_by_attribute('device_name', device_name, db_session)
+
 
 class A10SLB(A10Base):
     __tablename__ = 'a10_slbs'
@@ -120,6 +124,6 @@ class A10SLB(A10Base):
 
     # TODO(dougwig) -- later - should add state enum here
 
-    def get_lbaas_root(self):
-        # TODO(dougwig), if vip, lookup and return vip, if lb, same
-        raise Foobar()
+    # def get_lbaas_root(self):
+    #     # TODO(dougwig), later - if vip, lookup and return vip, if lb, same
+    #     raise Foobar()

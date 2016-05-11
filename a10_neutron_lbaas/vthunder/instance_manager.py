@@ -102,27 +102,13 @@ class InstanceManager(object):
 
     def _build_a10_appliance_record(self, instance, image, appliance, ip):
         """Build an a10_appliances_db record from Nova instance/image"""
-        import json
 
-        # TODO(dougwig) -- fix this
-        imgprops = json.loads(image.metadata["properties"])
-
-        a10_appliance = {
-            "nova_instance_id": instance.id,
-            "tenant_id": self.tenant_id,
-            "name": appliance["name"],
-            # TODO(mdurrant): not sure this is populated
-            "description": "",
-            # need to get the network data out.
-            "host": ip,
-            "api_version": imgprops["api_version"],
-            "username": imgprops["username"],
-            "password": imgprops["password"],
-            "protocol": imgprops["protocol"],
-            "port": imgprops["port"]
-        }
-
-        return a10_appliance
+        d = copy.copy(self._config)
+        d["name"] = appliance["name"],
+        d["nova_instance_id"] = instance.id
+        d["tenant_id"] = self.tenant_id
+        d["ip_address"] = ip
+        return d
 
     def _get_ip_addresses_from_instance(self, addresses, mgmt_network_name):
         address_block = addresses[mgmt_network_name]

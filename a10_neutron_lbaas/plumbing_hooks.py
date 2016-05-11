@@ -17,20 +17,8 @@ from a10_neutron_lbaas import a10_exceptions as ex
 
 class BasePlumbingHooks(object):
 
-    def __init__(self, driver, devices=None):
+    def __init__(self, driver):
         self.driver = driver
-        if devices is not None:
-            self.devices = devices
-        elif get_device_func is not None:
-            self.devices = get_devices_func()
-        else:
-            self.devices = self.driver.config.get_devices()
-
-        self.scheduler = todo
-        self.client_proxy = todo
-        # TODO(dougwig) - get rid of filters for now
-        self.scheduling_filters = map(lambda x: x(self.driver, self.devices),
-                                      config.get('device_scheduling_filters'))
 
     # While you can override select_device in hooks to get custom selection
     # behavior, it is much easier to use the 'device_scheduling_filters'
@@ -38,11 +26,10 @@ class BasePlumbingHooks(object):
 
     def select_device(self, tenant_id):
         # Not a terribly useful scheduler
-        return self.devices[self.devices.keys()[0]]
+        raise ex.NotImplemented()
 
     # Network plumbing hooks from here on out
 
-    # TODO(dougwig) -- fix signature to be backwards compat here
     def partition_create(self, client, context, partition_name):
         client.system.partition.create(partition_name)
 
@@ -71,6 +58,16 @@ class BasePlumbingHooks(object):
 # The default set of plumbing hooks/scheduler, meant for hardware or manual orchestration
 
 class PlumbingHooks(BasePlumbingHooks):
+
+    def __init__(self, driver, devices=None):
+        super(PlumbingHooks, self).__init__(driver, devices)
+        if devices is not None:
+            self.devices = devices
+        elif get_device_func is not None:
+            self.devices = get_devices_func()
+        else:
+            self.devices = self.driver.config.get_devices()
+        self.appliance_hash = acos_client.Hash(self.devices.keys())
 
     def _select_device_hash(self, tenant_id):
         # Must return device dict from config.py
