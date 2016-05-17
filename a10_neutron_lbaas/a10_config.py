@@ -20,7 +20,6 @@ import sys
 from debtcollector import removals
 
 from a10_neutron_lbaas import a10_exceptions as a10_ex
-from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.etc import config as blank_config
 from a10_neutron_lbaas.etc import defaults
 
@@ -160,6 +159,8 @@ class A10Config(object):
         if device_name in self._devices:
             return self._devices.get(device_name, {})
         if self.get('use_database'):
+            from a10_neutron_lbaas.db import models
+
             instance = models.A10Instances.find_by_device_name(device_name, db_session)
             if instance is not None:
                 self._devices[device_name] = dict(instance)
@@ -170,6 +171,8 @@ class A10Config(object):
     # TODO(dougwig) -- later - use of this method should be considered a scalability killer
     def get_devices(self, db_session=None):
         if self.get('use_database'):
+            from a10_neutron_lbaas.db import models
+
             d = dict(self._devices.items())
             for x in models.A10Instances.find_all():
                 d[x.name] = dict(x)

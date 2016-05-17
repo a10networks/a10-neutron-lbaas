@@ -28,7 +28,7 @@ def _get_date():
     return datetime.datetime.now()
 
 
-class HelperBase(Base):
+class A10BaseMixin(object):
 
     @classmethod
     def find_by_attribute(cls, attribute_name, attribute, db_session=None):
@@ -48,15 +48,13 @@ class HelperBase(Base):
         db.add(m)
         db.commit()
 
-
-class A10Base(Base):
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     tenant_id = sa.Column(sa.String(36), nullable=False)
     created_at = sa.Column(sa.DateTime, default=_get_date)
     updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date)
 
 
-class A10TenantBinding(A10Base):
+class A10TenantBinding(A10BaseMixin, Base):
     __tablename__ = "a10_tenant_bindings"
 
     device_name = sa.Column(sa.String(1024), nullable=False)
@@ -67,7 +65,7 @@ class A10TenantBinding(A10Base):
         return cls.find_by_attribute('tenant_id', tenant_id, db_session)
 
 
-class A10DeviceInstance(A10Base):
+class A10DeviceInstance(A10BaseMixin, Base):
     """An orchestrated vThunder that is being used as a device."""
 
     __tablename__ = 'a10_device_instances'
@@ -107,7 +105,7 @@ class A10DeviceInstance(A10Base):
         return cls.find_by_attribute('device_name', device_name, db_session)
 
 
-class A10SLB(A10Base):
+class A10SLB(A10BaseMixin, Base):
     __tablename__ = 'a10_slbs'
 
     # For vip specific binding (as opposed to tenant level binding), this will

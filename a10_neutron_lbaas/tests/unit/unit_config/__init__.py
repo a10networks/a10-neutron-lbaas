@@ -15,7 +15,7 @@
 import os
 
 from a10_neutron_lbaas import a10_config
-from a10_neutron_lbaas.install import blank_config
+from a10_neutron_lbaas.etc import config as blank_config
 
 
 def setUp():
