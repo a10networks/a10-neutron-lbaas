@@ -65,14 +65,6 @@ class TestA10Openstack(SetupA10OpenstackLBBase, test_case.TestCase):
     def test_sanity(self):
         pass
 
-    def test_plumbing_hooks_for_migrations(self):
-        """The migrations need to be able to to get at the old-style plumbing hooks"""
-
-        self.assertTrue(hasattr(self.a, '_plumbing_hooks'),
-                        "The a10 driver needs to have _plumbing_hooks")
-        self.assertTrue(hasattr(self.a._plumbing_hooks, 'select_device'),
-                        "The a10 driver's _plumbing_hooks needs to have select_device")
-
 
 class TestA10OpenstackPlumbingHooks(SetupPlumbingHooks, TestA10Openstack):
     pass

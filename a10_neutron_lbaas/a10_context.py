@@ -22,7 +22,6 @@ LOG = logging.getLogger(__name__)
 class A10Context(object):
 
     def __init__(self, handler, openstack_context, openstack_lbaas_obj,
-                 appliance=None,
                  **kwargs):
         self.handler = handler
         self.openstack_driver = handler.openstack_driver
@@ -34,15 +33,17 @@ class A10Context(object):
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
         self.partition_name = "shared"
 
-    def __enter__(self):
+    def _get_device(self):
         self.get_tenant_id()
         if self.device_name:
             d = self.a10_driver.config.get_device(self.device_name)
         else:
             d = self.a10_driver._select_a10_device(
                 self.tenant_id, a10_context=self, lbaas_obj=self.openstack_lbaas_obj)
+        return d
 
-        self.device_cfg = d
+    def __enter__(self):
+        self.device_cfg = self._get_device()
         self.client = self.a10_driver._get_a10_client(self.device_cfg)
         self.select_appliance_partition()
         return self

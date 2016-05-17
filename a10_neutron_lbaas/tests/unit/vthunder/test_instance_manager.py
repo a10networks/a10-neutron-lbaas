@@ -41,7 +41,7 @@ sys.modules["openstack_dashboard.api.neutron.NeutronAPIDictWrapper"] = mock.Magi
 
 # a10 client that extends neutronclient.v2_0.client.Client
 
-import a10_neutron_lbaas.instance_manager as im
+import a10_neutron_lbaas.vthunder.instance_manager as im
 
 VMSTATE_KEY = "OS-EXT-STS:vm_state"
 DEFAULT_INSTANCE_STATES = [

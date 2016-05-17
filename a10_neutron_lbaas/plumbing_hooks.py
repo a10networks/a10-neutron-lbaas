@@ -91,7 +91,7 @@ class PlumbingHooks(BasePlumbingHooks):
                     (a10.device_name, tenant_id))
 
         # Nope, so we hash and save
-        d = self.select_device_hash(tenant_id)
+        d = self._select_device_hash(tenant_id)
         models.A10TenantBinding.create_and_save(
             tenant_id=tenant_id, device_name=d['name'],
             db_session=db_session)
@@ -100,9 +100,9 @@ class PlumbingHooks(BasePlumbingHooks):
 
     def select_device(self, tenant_id):
         if self.driver.config.get('use_database'):
-            return self.select_device_db(tenant_id)
+            return self._select_device_db(tenant_id)
         else:
-            return self.select_device_hash(tenant_id)
+            return self._select_device_hash(tenant_id)
 
 
 # This next set of plumbing hooks needs to be used when the vthunder
