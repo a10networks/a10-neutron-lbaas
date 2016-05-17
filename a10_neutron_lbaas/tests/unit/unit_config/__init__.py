@@ -12,21 +12,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
-import os
+# import os
 
-from a10_neutron_lbaas import a10_config
-from a10_neutron_lbaas.etc import config as blank_config
-
-
-def setUp():
-    unit_dir = os.path.dirname(__file__)
-    os.environ['A10_CONFIG_DIR'] = unit_dir
+# from a10_neutron_lbaas import a10_config
+# from a10_neutron_lbaas.etc import config as blank_config
 
 
-def empty_config():
-    return a10_config.A10Config(config=blank_config)
+# def setUp():
+#     unit_dir = os.path.dirname(__file__)
+#     os.environ['A10_CONFIG_DIR'] = unit_dir
 
 
-def config(config_dict):
-    config_constructor = type('config', (object,), config_dict)
-    return a10_config.A10Config(config=config_constructor())
+# def empty_config():
+#     return a10_config.A10Config(config=blank_config)
+
+
+# def config(config_dict):
+#     config_constructor = type('config', (object,), config_dict)
+#     return a10_config.A10Config(config=config_constructor())

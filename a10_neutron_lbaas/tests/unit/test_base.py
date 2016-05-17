@@ -12,11 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 import a10_neutron_lbaas.tests.test_case as test_case
-import a10_neutron_lbaas.tests.unit.unit_config as unit_config
 import mock
 
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
+import a10_neutron_lbaas.plumbing_hooks as hooks
 
 
 def _build_openstack_context():
@@ -33,16 +35,20 @@ class FakeA10OpenstackLB(object):
         super(FakeA10OpenstackLB, self).__init__(
             mock.MagicMock(),
             **kw)
+        self.openstack_driver = mock.MagicMock()
+        self.plumbing_hooks = hooks.PlumbingHooks(self)
         self.openstack_context = _build_openstack_context()
 
-    def mock_a10_client(self, device_info):
+    def _get_a10_client(self, device_info):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
         return self.last_client
 
     def reset_mocks(self):
         self.openstack_driver = mock.MagicMock()
-        return self.mock_a10_client(self.device_info)
+        self.plumbing_hooks = hooks.PlumbingHooks(self)
+        self.last_client = self._get_a10_client(self.device_info)
+        return self.last_client
 
 
 class FakeA10OpenstackLBV1(FakeA10OpenstackLB, a10_os.A10OpenstackLBV1):
@@ -65,12 +71,14 @@ class UnitTestBase(test_case.TestCase):
         return _build_openstack_context()
 
     def setUp(self, openstack_lb_args={}):
-        unit_config.setUp()
+        unit_dir = os.path.dirname(__file__)
+        unit_config = os.path.join(unit_dir, "unit_config")
+        os.environ['A10_CONFIG_DIR'] = unit_config
 
         if not hasattr(self, 'version') or self.version == 'v2':
-            self.a = FakeA10OpenstackLBV2(None, **openstack_lb_args)
+            self.a = FakeA10OpenstackLBV2(mock.MagicMock(), **openstack_lb_args)
         else:
-            self.a = FakeA10OpenstackLBV1(None, **openstack_lb_args)
+            self.a = FakeA10OpenstackLBV1(mock.MagicMock(), **openstack_lb_args)
 
     def print_mocks(self):
         print("OPENSTACK ", self.a.openstack_driver.mock_calls)
