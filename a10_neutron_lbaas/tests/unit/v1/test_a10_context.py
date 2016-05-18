@@ -14,7 +14,7 @@
 
 import a10_neutron_lbaas.v1.v1_context as a10
 
-import a10_neutron_lbaas.tests.unit.unit_config as unit_config
+import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 import mock
 import test_base
 
@@ -105,25 +105,20 @@ class TestA10Context(test_base.UnitTestBase):
             self.empty_close_mocks()
             pass
 
+    def test_partition_name(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
+            self.assertEqual(c.partition_name, 'shared')
+
+    def test_partition_name_withalt(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-alt') as c:
+            self.assertEqual(c.partition_name, 'mypart')
+
 
 # Re-run all the context manager tests with appliance partitioning.
 class TestA10ContextADP(TestA10Context):
 
     def setUp(self):
-        adp_config = {
-            'devices': {
-                "axadp-alt": {
-                    "host": "10.10.100.24",
-                    "username": "admin",
-                    "password": "a10",
-                    "protocol": "https",
-                    "v_method": "ADP"
-                }
-            }
-        }
-        config = unit_config.config(adp_config)
-
-        super(TestA10ContextADP, self).setUp(openstack_lb_args={'config': config})
+        super(TestA10ContextADP, self).setUp()
         self.reset_v_method('adp')
 
     def tearDown(self):
@@ -132,29 +127,6 @@ class TestA10ContextADP(TestA10Context):
     def reset_v_method(self, val):
         for k, v in self.a.config.get_devices().items():
             v['v_method'] = val
-
-    def _test_alternate_partition(self, use_alternate=False):
-        expected = self.a.config.get_device("axadp-alt").get("shared_partition",
-                                                             "shared")
-
-        self.m["tenant_id"] = expected if use_alternate else self.m["tenant_id"]
-        with a10.A10Context(self.handler, self.ctx, self.m) as c:
-            c
-            active_mock = self.a.last_client.system.partition.active
-            self.assertEqual(use_alternate, expected in str(active_mock.mock_calls))
-
-        self.empty_close_mocks()
-
-    def test_use_alternate_partition_named(self):
-        self.a.config.devices["axadp-alt"]["shared_partition"] = "mypart"
-        self._test_alternate_partition(use_alternate=True)
-
-    def test_use_alternate_partition_positive(self):
-        self._test_alternate_partition(use_alternate=True)
-
-    def test_use_alternate_partition_negative(self):
-        self.ctx.is_admin = False
-        self._test_alternate_partition()
 
     def empty_mocks(self):
         self.print_mocks()
@@ -169,58 +141,23 @@ class TestA10ContextADP(TestA10Context):
         self.assertEqual(2, len(self.a.last_client.mock_calls))
         self.a.last_client.session.close.assert_called_with()
 
-
-class TestA10ContextHA(TestA10Context):
-
-    def setUp(self):
-        adp_config = {
-            'devices': {
-                "ax4": {
-                    "host": "10.10.100.23",
-                    "username": "admin",
-                    "password": "a10",
-                    "api_version": "2.1",
-                    "use_float": True,
-                    "ha_sync_list": [
-                        {
-                            "name": "ax5",
-                            "ip": "1.1.1.1",
-                            "username": "admin",
-                            "password": "a10"
-                        }
-                    ]
-                },
-            }
-        }
-        config = unit_config.config(adp_config)
-
-        super(TestA10ContextHA, self).setUp(openstack_lb_args={'config': config})
-
-    def test_ha(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m,
-                                 device_name='ax4') as c:
-            c
-        self.a.last_client.ha.sync.assert_called_with(
-            '1.1.1.1', 'admin', 'a10')
-
     def test_write_v21(self):
         self._set_api_version("2.1")
-        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             c
         self.a.last_client.system.action.activate_and_write.assert_called_with(
             mock.ANY)
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_v30(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             c
         self.a.last_client.system.action.activate_and_write.assert_called_with(mock.ANY)
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_v21_deleted_partition(self):
         self._set_api_version("2.1")
-
-        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             c
             c.partition_name = None
 
@@ -230,9 +167,29 @@ class TestA10ContextHA(TestA10Context):
     def test_write_v21_partition(self):
         self._set_api_version("2.1")
         expected = "part1"
-        with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             c
             c.partition_name = expected
 
         self.a.last_client.system.action.activate_and_write.assert_called_with(expected)
         self.a.last_client.session.close.assert_called_with()
+
+    def test_partition_name(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
+            self.assertEqual(c.partition_name, self.m['tenant_id'][0:13])
+
+    def test_partition_name_withalt(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-alt') as c:
+            # shared_partition has no effect on an ADP configured device
+            self.assertEqual(c.partition_name, self.m['tenant_id'][0:13])
+
+
+class TestA10ContextHA(TestA10Context):
+
+    def setUp(self):
+        super(TestA10ContextHA, self).setUp()
+
+    def test_ha(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='ax4') as c:
+            c
+        self.a.last_client.ha.sync.assert_called_with('1.1.1.1', 'admin', 'a10')

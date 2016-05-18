@@ -56,20 +56,20 @@ def upgrade():
         sa.Column('nova_instance_id', sa.String(36), nullable=False),
         sa.Column('ip_address', sa.String(255))
     )
-    op.create_table(
-        'a10_slbs',
-        sa.Column('id', sa.String(36), primary_key=True, nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
-        sa.Column('tenant_id', sa.String(36), nullable=False),
-        sa.Column('device_name', sa.String(1024), nullable=False),
-        sa.Column('vip_id', sa.String(36)),
-        sa.Column('loadbalancer_id', sa.String(36)),
-    )
+    # op.create_table(
+    #     'a10_slbs',
+    #     sa.Column('id', sa.String(36), primary_key=True, nullable=False),
+    #     sa.Column('created_at', sa.DateTime),
+    #     sa.Column('updated_at', sa.DateTime),
+    #     sa.Column('tenant_id', sa.String(36), nullable=False),
+    #     sa.Column('device_name', sa.String(1024), nullable=False),
+    #     sa.Column('vip_id', sa.String(36)),
+    #     sa.Column('loadbalancer_id', sa.String(36)),
+    # )
     pass
 
 
 def downgrade():
-    op.drop_table('a10_slbs')
+    # op.drop_table('a10_slbs')
     op.drop_table('a10_device_instances')
     pass

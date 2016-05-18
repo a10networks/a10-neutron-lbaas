@@ -89,6 +89,21 @@ devices = {
         "max_instance": 5000,
         "use_float": True,
     },
+    # "axadp": {
+    #     "host": "10.10.100.24",
+    #     "username": "admin",
+    #     "password": "a10",
+    #     "protocol": "https",
+    #     "v_method": "ADP",
+    # },
+    # "axadp-badalt": {
+    #     "host": "10.10.100.24",
+    #     "username": "admin",
+    #     "password": "a10",
+    #     "protocol": "https",
+    #     "v_method": "ADP",
+    #     "shared_partition": "mypart",
+    # },
     "axadp-alt": {
         "host": "10.10.100.24",
         "username": "admin",

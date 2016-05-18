@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.localization as localization
+import neutron.i18n as localization
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
 from a10_neutron_lbaas.neutron_ext.common import resources
 import a10_neutron_lbaas_client.resources.a10_appliance as a10_appliance
