@@ -105,16 +105,18 @@ class A10DeviceInstance(A10BaseMixin, Base):
         return cls.find_by_attribute('device_name', device_name, db_session)
 
 
-# class A10SLB(A10BaseMixin, Base):
-#     __tablename__ = 'a10_slbs'
+class A10SLB(A10BaseMixin, Base):
+    __tablename__ = 'a10_slbs'
 
-#     # For vip specific binding (as opposed to tenant level binding), this will
-#     # differ from A10TenantBinding, if that row exists at all.
-#     device_name = sa.Column(sa.String(1024), nullable=False)
+    # For vip specific binding (as opposed to tenant level binding), this will
+    # differ from A10TenantBinding, if that row exists at all.
+    device_name = sa.Column(sa.String(1024), nullable=False)
 
-#     # LBaaS v1 or v2, only one of these will be defined
-#     vip_id = sa.Column(sa.String(36))
-#     loadbalancer_id = sa.Column(sa.String(36))
+    # LBaaS v1 or v2, only one of these will be defined
+    pool_id = sa.Column(sa.String(36))
+    vip_id = sa.Column(sa.String(36))
+
+    loadbalancer_id = sa.Column(sa.String(36))
 
 #     # TODO(dougwig) -- later - should add state enum here
 

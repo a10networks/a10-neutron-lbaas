@@ -29,6 +29,10 @@ class DeviceConfigMissing(Exception):
     pass
 
 
+class InstanceMissing(Exception):
+    pass
+
+
 class NoDatabaseURL(Exception):
     pass
 

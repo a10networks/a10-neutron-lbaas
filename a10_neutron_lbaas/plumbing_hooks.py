@@ -23,6 +23,7 @@ class BasePlumbingHooks(object):
 
     def __init__(self, driver, **kwargs):
         self.driver = driver
+        self.client_wrapper_class = None
 
     # While you can override select_device in hooks to get custom selection
     # behavior, it is much easier to use the 'device_scheduling_filters'
@@ -111,18 +112,56 @@ class PlumbingHooks(BasePlumbingHooks):
 
 class VThunderPlumbingHooks(PlumbingHooks):
 
-    def select_device(self, tenant_id, db_session=None):
+    def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
+                                     db_session=None):
         if not self.driver.config.get('use_database'):
             raise ex.RequiresDatabase('vThunder orchestration requires use_database=True')
+
+        # If we already have a vThunder, use it.
+
+        if hasattr(lbaas_obj, 'root_loadbalancer'):
+            # lbaas v2
+            root_id = lbaas_obj.root_loadbalancer.id
+            slb = models.A10SLB.find_by_loadbalancer_id(root_id, db_session=db_session)
+            if slb is not None:
+                d = self.driver.config.get(slb.device_name, db_session=db_session)
+                if d is None:
+                    raise ex.InstanceMissing(
+                        'A10 instance mapped to loadbalancer_id %s is not present in db; '
+                        'add it back to config or migrate loadbalancers' % root_id)
+                return d
+        else:
+            # lbaas v1 -- one vthunder per tenant
+            root_id = None
+            tb = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
+            if tb is not None:
+                d = self.driver.config.get(tb.device_name, db_session=db_session)
+                if d is None:
+                    raise ex.InstanceMissing(
+                        'A10 instance mapped to tenant %s is not present in db; '
+                        'add it back to config or migrate loadbalancers' % tenant_id)
+                return d
+
+        # No? Then we need to create one.
 
         imgr = instance_manager.InstanceManager(
             tenant_id=tenant_id, vthunder_config=self.driver.config.get_vthunder_config())
         device_config = imgr.create_default_instance()
 
-        models.A10Instance.create_and_save(device_config, db_session=db_session)
-        models.A10TenantBinding.create_and_save(
-            tenant_id=tenant_id, device_name=device_config['name'],
+        models.A10Instance.create_and_save(
+            device_config,
             db_session=db_session)
+
+        if root_id is not None:
+            models.A10SLB.create_and_save(
+                device_name=device_config['name'],
+                loadbalancer_id=root_id,
+                db_session=db_session)
+        else:
+            models.A10TenantBinding.create_and_save(
+                tenant_id=tenant_id,
+                device_name=device_config['name'],
+                db_session=db_session)
 
         return device_config
 
@@ -143,6 +182,7 @@ class VThunderPlumbingHooks(PlumbingHooks):
             vthunder_tenant_id=vth['vthunder_tenant_id'],
             user=vth['vthunder_tenant_username'],
             password=vth['vthunder_tenant_password'])
+
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],
             instance['vip_subnet_id'],

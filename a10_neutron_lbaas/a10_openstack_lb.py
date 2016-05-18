@@ -42,16 +42,11 @@ class A10OpenstackLBBase(object):
                  neutron_hooks_module=None,
                  barbican_client=None,
                  config=None,
-                 config_dir=None,
-                 caller_data=None,
-                 client_wrapper_class=None
-                 ):
+                 config_dir=None):
         self.openstack_driver = openstack_driver
         self.config = config or a10_config.A10Config(config_dir=config_dir)
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
-        self.caller_data = caller_data
-        self.client_wrapper_class = client_wrapper_class
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
@@ -65,7 +60,11 @@ class A10OpenstackLBBase(object):
             self._verify_appliances()
 
     def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None):
-        return self.hooks.select_device(tenant_id)
+        if hasattr(self.hooks, 'select_device_with_lbaas_obj'):
+            return self.hooks.select_device_with_lbaas_obj(
+                tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj)
+        else:
+            return self.hooks.select_device(tenant_id)
 
     def _get_a10_acos_client(self, device_info):
         return acos_client.Client(
@@ -76,8 +75,8 @@ class A10OpenstackLBBase(object):
 
     def _get_a10_client(self, device_info):
         c = self._get_a10_acos_client(device_info)
-        if self.client_wrapper_class is not None:
-            return self.client_wrapper_class(c, device_info)
+        if self.hooks.client_wrapper_class is not None:
+            return self.hooks.client_wrapper_class(c, device_info)
         else:
             return c
 

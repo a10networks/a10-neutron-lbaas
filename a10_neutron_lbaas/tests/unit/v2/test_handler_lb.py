@@ -130,7 +130,7 @@ class TestLB(test_base.UnitTestBase):
     def test_create_calls_client_proxy(self):
         m = test_base.FakeLoadBalancer()
         mock_client = mock.MagicMock()
-        self.a.client_wrapper_class = lambda x, y: mock_client
+        self.a.hooks.client_wrapper_class = lambda x, y: mock_client
         self.a.lb.create(None, m)
         create_call = mock_client.slb.virtual_server.create
         self.assertEqual(1, create_call.call_count)
@@ -138,7 +138,7 @@ class TestLB(test_base.UnitTestBase):
     def test_create_failure_raises_exception(self):
         m = test_base.FakeLoadBalancer()
         mock_client = mock.MagicMock()
-        self.a.client_wrapper_class = lambda x, y: mock_client
+        self.a.hooks.client_wrapper_class = lambda x, y: mock_client
 
         class ExpectedException(Exception):
             pass
