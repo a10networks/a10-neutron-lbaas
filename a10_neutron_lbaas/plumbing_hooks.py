@@ -72,15 +72,25 @@ class PlumbingHooks(BasePlumbingHooks):
         elif get_devices_func is not None:
             self.devices = get_devices_func()
         else:
+            self.devices = None
+        self.appliance_hash = None
+
+    def _late_init(self):
+        if self.devices is None:
             self.devices = self.driver.config.get_devices()
-        self.appliance_hash = acos_client.Hash(self.devices.keys())
+        if self.appliance_hash is None:
+            self.appliance_hash = acos_client.Hash(self.devices.keys())
 
     def _select_device_hash(self, tenant_id):
+        self._late_init()
+
         # Must return device dict from config.py
         s = self.appliance_hash.get_server(tenant_id)
         return self.devices[s]
 
     def _select_device_db(self, tenant_id, db_session=None):
+        self._late_init()
+
         # See if we have a saved tenant
         a10 = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
         if a10 is not None:
