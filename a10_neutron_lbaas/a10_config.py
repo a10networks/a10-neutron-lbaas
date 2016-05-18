@@ -54,6 +54,8 @@ class A10Config(object):
             LOG.error("A10Config could not find %s", self._config_path)
             self._config = blank_config
 
+        self._load_config()
+
     def _find_config_dir(self, config_dir):
         # Look for config in the virtual environment
         # virtualenv puts the original prefix in sys.real_prefix
