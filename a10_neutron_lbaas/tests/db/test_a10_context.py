@@ -15,11 +15,9 @@
 import mock
 
 import a10_neutron_lbaas.tests.unit.test_a10_openstack_lb as test_a10_openstack_lb
-import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 import test_base
 
 import a10_neutron_lbaas.a10_context as a10_context
-import a10_neutron_lbaas.db.models as models
 import a10_neutron_lbaas.vthunder.instance_manager as instance_manager
 
 
@@ -32,9 +30,10 @@ class TestA10Context(test_a10_openstack_lb.SetupA10OpenstackLBBase, test_base.Un
 
         mock_driver = mock.MagicMock()
         with mock.patch('acos_client.Client'):
-            a10_driver = self.a10_openstack_lb_class(mock_driver,
-                                                     client_wrapper_class=lambda c, d: mock.MagicMock(),
-                                                     **self.a10_openstack_lb_kws)
+            a10_driver = self.a10_openstack_lb_class(
+                mock_driver,
+                client_wrapper_class=lambda c, d: mock.MagicMock(),
+                **self.a10_openstack_lb_kws)
 
         mock_handler = mock.MagicMock(openstack_driver=mock_driver, a10_driver=a10_driver)
 

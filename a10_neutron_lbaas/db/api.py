@@ -20,11 +20,14 @@ from a10_neutron_lbaas import a10_exceptions as ex
 A10_CFG = None
 Base = sqlalchemy.ext.declarative.declarative_base()
 
+
 def get_base():
     return Base
 
 
 def get_engine(url=None):
+    global A10_CFG
+
     if url is None:
         if A10_CFG is None:
             from a10_neutron_lbaas import a10_config

@@ -12,20 +12,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import neutron.i18n as localization
-import a10_neutron_lbaas.neutron_ext.common.constants as constants
-from a10_neutron_lbaas.neutron_ext.common import resources
-import a10_neutron_lbaas_client.resources.a10_appliance as a10_appliance
-
 import abc
+import six
 
 from neutron.api import extensions
 from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
 from neutron.common import exceptions
+import neutron.i18n as localization
 from neutron.services import service_base
 
-import six
+import a10_neutron_lbaas.neutron_ext.common.constants as constants
+from a10_neutron_lbaas.neutron_ext.common import resources
+import a10_neutron_lbaas_client.resources.a10_appliance as a10_appliance
 
 # Neutron is finicky. Sometimes _ is defined, sometimes it isn't
 localization.install()

@@ -252,7 +252,7 @@ class TestInstanceManager(test_base.UnitTestBase):
     def test_create_default_instance_returns_host(self):
         defaults = self.target._config.instance_defaults
 
-        self.fake_created.addresses=dict((network, [
+        self.fake_created.addresses = dict((network, [
             {
                 "version": 4,
                 "addr": "127.0.0.1"

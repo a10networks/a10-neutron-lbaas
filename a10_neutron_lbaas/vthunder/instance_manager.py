@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import logging
 import pprint
 import time
@@ -146,8 +147,10 @@ class InstanceManager(object):
         self._create_server_spinlock(created_instance)
 
         # Get the IP address of the first interface (should be management)
-        ip_address = self._get_ip_addresses_from_instance(created_instance.addresses, networks[0]['name'])
-        a10_record = self._build_a10_appliance_record(created_instance, image, server, ip_address)
+        ip_address = self._get_ip_addresses_from_instance(
+            created_instance.addresses, networks[0]['name'])
+        a10_record = self._build_a10_appliance_record(
+            created_instance, image, server, ip_address)
 
         return a10_record
 
@@ -266,7 +269,7 @@ class InstanceManager(object):
             self._handle_missing_networks(missing_networks)
 
         return [{
-            'id':id_func(available_networks[x]),
+            'id': id_func(available_networks[x]),
             'name': available_networks[x].get('name', '')
         } for x in networks]
 
@@ -292,8 +295,6 @@ class InstanceManager(object):
         flavor = self._config.get('nova_flavor')
         if flavor is None:
             raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured flavor")
-
-
 
         mgmt_network = self._config.get("vthunder_management_network")
 
@@ -367,4 +368,4 @@ def context_instance_manager(keystone_url, vthunder_tenant_id, user, password):
         auth_url=keystone_url)
     session = keystone_session.Session(auth=auth)
 
-    return InstanceManager(tenant_id, session=session)
+    return InstanceManager(vthunder_tenant_id, session=session)

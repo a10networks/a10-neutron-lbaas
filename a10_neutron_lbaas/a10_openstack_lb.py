@@ -72,7 +72,7 @@ class A10OpenstackLBBase(object):
             device_info['host'], device_info['api_version'],
             device_info['username'], device_info['password'],
             port=device_info['port'], protocol=device_info['protocol'],
-            )#retry_errno_list=[errno.EHOSTUNREACH])
+            retry_errno_list=[errno.EHOSTUNREACH])
 
     def _get_a10_client(self, device_info):
         c = self._get_a10_acos_client(device_info)

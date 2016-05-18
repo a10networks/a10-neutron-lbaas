@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 import a10_neutron_lbaas.v2.v2_context as a10
 
-import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
-import mock
 import test_base
 
 

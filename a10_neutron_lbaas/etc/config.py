@@ -151,17 +151,17 @@ devices = {
 }
 
 # vthunder = {
-    # 'username': 'admin',
-    # 'password': 'a10',
+#     'username': 'admin',
+#     'password': 'a10',
 
-    # 'nova_flavor': 'vthunder.small',  # 1 core, 4096MB ram, 12GB disk
-    # 'glance_image': None,
-    # 'glance_image_tag': 'vthunder',
+#     'nova_flavor': 'vthunder.small',  # 1 core, 4096MB ram, 12GB disk
+#     'glance_image': None,
+#     'glance_image_tag': 'vthunder',
 
-    # 'vthunder_tenant_id': '',
-    # 'vthunder_tenant_username': '',
-    # 'vthunder_tenant_password': '',
+#     'vthunder_tenant_id': '',
+#     'vthunder_tenant_username': '',
+#     'vthunder_tenant_password': '',
 
-    # 'vthunder_management_network': 'private-mgmt',
-    # 'vthunder_data_networks': [ 'vip-net', 'member-net' ]
+#     'vthunder_management_network': 'private-mgmt',
+#     'vthunder_data_networks': [ 'vip-net', 'member-net' ]
 # }

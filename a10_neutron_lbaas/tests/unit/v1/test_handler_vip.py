@@ -133,15 +133,12 @@ class TestVIP(test_base.UnitTestBase):
                 foundVrid,
                 'Expected to find no vrid in {0}'.format(str(calls)))
 
-    def _test_create_ipinip(self, ip_in_ip=False, api_ver="3.0", key="ipinip"):
+    def _test_create_ipinip(self, ip_in_ip=False, api_ver="3.0"):
         vip = self.fake_vip()
 
         for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
             v['api_version'] = api_ver
-
-        ipinip_format = "'{0}': {1}"
-        expected = ipinip_format.format(key, int(True))
 
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
@@ -155,10 +152,10 @@ class TestVIP(test_base.UnitTestBase):
         self._test_create_ipinip()
 
     def test_create_ip_in_ip_positive_v21(self):
-        self._test_create_ipinip(True, api_ver="2.1", key="ip_in_ip")
+        self._test_create_ipinip(True, api_ver="2.1")
 
     def test_create_ip_in_ip_negative_v21(self):
-        self._test_create_ipinip(api_ver="2.1", key="ip_in_ip")
+        self._test_create_ipinip(api_ver="2.1")
 
     def test_update(self):
         self.a.vip.update(None, self.fake_vip(), self.fake_vip())

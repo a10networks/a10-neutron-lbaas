@@ -64,7 +64,8 @@ class BasePlumbingHooks(object):
 class PlumbingHooks(BasePlumbingHooks):
 
     def __init__(self, driver, devices=None, get_devices_func=None, **kwargs):
-        super(PlumbingHooks, self).__init__(driver, devices=devices, get_devices_func=get_devices_func, **kwargs)
+        super(PlumbingHooks, self).__init__(
+            driver, devices=devices, get_devices_func=get_devices_func, **kwargs)
         if devices is not None:
             self.devices = devices
         elif get_devices_func is not None:

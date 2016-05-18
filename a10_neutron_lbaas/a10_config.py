@@ -29,12 +29,9 @@ LOG = logging.getLogger(__name__)
 class A10Config(object):
 
     def __init__(self, config_dir=None, config=None):
-
         if config is not None:
             self._config = config
-            print "CONFIG BEFORE LOAD = %s" % vars(self._config)
             self._load_config()
-            print "CONFIG AFTER LOAD = %s" % vars(self._config)
             return
 
         self._config_dir = self._find_config_dir(config_dir)
@@ -142,7 +139,6 @@ class A10Config(object):
         # Setup some backwards compat stuff
         self.config = OldConfig(self)
 
-
     # We don't use oslo.config here, in a weak attempt to avoid pulling in all
     # the many openstack dependencies. If this proves problematic, we should
     # shoot this manual parser in the head and just use the global config
@@ -241,24 +237,3 @@ class OldConfig(object):
     @property
     def verify_appliances(self):
         return self._config.get('verify_appliances')
-
-
-# TODO(dougwig) -- is this used?
-# Wrapper class for use with python contexts; used by tests right now
-# class A10ConfigContext(object):
-
-#     def __init__(self, config, devices=None):
-#         self.config = config
-#         self.devices_save = None
-#         self.devices_override = devices
-
-#     def __enter__(self):
-#         if self.devices_override is not None:
-#             self.devices_save = self.config._devices
-#             self.config._devices = self.devices_override
-#         return self.config
-
-#     def __exit__(self, exc_type, exc_value, traceback):
-#         if self.devices_save is not None:
-#             self.config._devices = self.devices_save
-#             self.devices_save = None
