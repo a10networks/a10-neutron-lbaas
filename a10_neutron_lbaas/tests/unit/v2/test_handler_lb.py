@@ -60,12 +60,7 @@ class TestLB(test_base.UnitTestBase):
         calls = create.call_args_list
 
         if default_vrid is not None:
-            foundVrid = any(
-                x.get('axapi_args', {}).get('virtual_server', {}).get('vrid', {}) is default_vrid
-                for (_, x) in calls)
-            self.assertTrue(
-                foundVrid,
-                'Expected to find vrid {0} in {1}'.format(default_vrid, str(calls)))
+            self.assertIn('vrid=%s' % default_vrid, str(calls))
         if default_vrid is None:
             foundVrid = any(
                 'vrid' in x.get('axapi_args', {}).get('virtual_server', {})
@@ -110,7 +105,7 @@ class TestLB(test_base.UnitTestBase):
     def test_create_calls_client_proxy(self):
         m = test_base.FakeLoadBalancer()
         mock_client = mock.MagicMock()
-        self.a.acos_client_class = lambda x: mock_client
+        self.a.client_wrapper_class = lambda x, y: mock_client
         self.a.lb.create(None, m)
         create_call = mock_client.slb.virtual_server.create
         self.assertEqual(1, create_call.call_count)
@@ -118,7 +113,7 @@ class TestLB(test_base.UnitTestBase):
     def test_create_failure_raises_exception(self):
         m = test_base.FakeLoadBalancer()
         mock_client = mock.MagicMock()
-        self.a.acos_client_class = lambda x: mock_client
+        self.a.client_wrapper_class = lambda x, y: mock_client
 
         class ExpectedException(Exception):
             pass

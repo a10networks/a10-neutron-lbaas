@@ -39,7 +39,7 @@ class FakeA10OpenstackLB(object):
         self.plumbing_hooks = hooks.PlumbingHooks(self)
         self.openstack_context = _build_openstack_context()
 
-    def _get_a10_client(self, device_info):
+    def _get_a10_acos_client(self, device_info):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
         return self.last_client

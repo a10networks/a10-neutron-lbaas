@@ -150,7 +150,7 @@ devices = {
     # },
 }
 
-vthunder = {
+# vthunder = {
     # 'username': 'admin',
     # 'password': 'a10',
 
@@ -164,4 +164,4 @@ vthunder = {
 
     # 'vthunder_management_network': 'private-mgmt',
     # 'vthunder_data_networks': [ 'vip-net', 'member-net' ]
-}
+# }

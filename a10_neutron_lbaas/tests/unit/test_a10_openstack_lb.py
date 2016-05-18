@@ -15,7 +15,6 @@
 import mock
 
 import a10_neutron_lbaas.tests.test_case as test_case
-import a10_neutron_lbaas.tests.unit.unit_config as unit_config
 
 import a10_neutron_lbaas.a10_openstack_lb as a10_openstack_lb
 import a10_neutron_lbaas.plumbing_hooks as plumbing_hooks
@@ -56,8 +55,6 @@ class SetupPlumbingHooks(object):
 class TestA10Openstack(SetupA10OpenstackLBBase, test_case.TestCase):
 
     def setUp(self):
-        unit_config.setUp()
-
         mock_driver = mock.MagicMock()
         with mock.patch('acos_client.Client'):
             self.a = self.a10_openstack_lb_class(mock_driver, **self.a10_openstack_lb_kws)

@@ -14,7 +14,7 @@
 
 import a10_neutron_lbaas.v2.v2_context as a10
 
-import a10_neutron_lbaas.tests.unit.unit_config as unit_config
+import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 import mock
 import test_base
 

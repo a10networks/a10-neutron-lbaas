@@ -91,10 +91,7 @@ class TestVIP(test_base.UnitTestBase):
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('virtual_server.create' in s)
-
-        auto_format = "'{0}': {1}"
-        auto_set = auto_format.format(key, int(True))
-        self.assertEqual(auto_set in s, autosnat)
+        self.assertIn('autosnat=%s' % autosnat, s)
 
     def test_create_default_vrid_none_v21(self):
         self._test_create_default_vrid("2.1", None)
@@ -127,12 +124,7 @@ class TestVIP(test_base.UnitTestBase):
         calls = create.call_args_list
 
         if default_vrid is not None:
-            foundVrid = any(
-                x.get('axapi_args', {}).get('virtual_server', {}).get('vrid', {}) is default_vrid
-                for (_, x) in calls)
-            self.assertTrue(
-                foundVrid,
-                'Expected to find vrid {0} in {1}'.format(default_vrid, str(calls)))
+            self.assertIn('vrid=%s' % default_vrid, str(calls))
         if default_vrid is None:
             foundVrid = any(
                 'vrid' in x.get('axapi_args', {}).get('virtual_server', {})
@@ -154,7 +146,7 @@ class TestVIP(test_base.UnitTestBase):
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
         self.assertIn('vport.create', s)
-        self.assertEqual(expected in s, ip_in_ip)
+        self.assertIn('ipinip=%s' % ip_in_ip, s)
 
     def test_create_ip_in_ip_positive_v30(self):
         self._test_create_ipinip(True)

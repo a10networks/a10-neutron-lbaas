@@ -15,7 +15,7 @@
 import mock
 
 import a10_neutron_lbaas.tests.unit.test_a10_openstack_lb as test_a10_openstack_lb
-import a10_neutron_lbaas.tests.unit.unit_config as unit_config
+import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 import test_base
 
 import a10_neutron_lbaas.a10_context as a10_context
@@ -28,7 +28,7 @@ class TestA10Context(test_a10_openstack_lb.SetupA10OpenstackLBBase, test_base.Un
     def setUp(self):
         super(TestA10Context, self).setUp()
 
-        unit_config.setUp()
+        # unit_config.setUp()
 
         mock_driver = mock.MagicMock()
         with mock.patch('acos_client.Client'):

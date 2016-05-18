@@ -93,24 +93,24 @@ class TestListeners(test_base.UnitTestBase):
                         self.assertTrue('s_pers_name=None' in s)
 
     def test_create_autosnat_false_v21(self):
-        self._test_create_autosnat("2.1", False, key="source_nat_auto")
+        self._test_create_autosnat("2.1", False)
 
     def test_create_autosnat_true_v21(self):
-        self._test_create_autosnat("2.1", True, key="source_nat_auto")
+        self._test_create_autosnat("2.1", True)
 
     def test_create_autosnat_unspecified_v21(self):
-        self._test_create_autosnat(key="source_nat_auto")
+        self._test_create_autosnat()
 
     def test_create_autosnat_false_v30(self):
-        self._test_create_autosnat("3.0", False, key="auto")
+        self._test_create_autosnat("3.0", False)
 
     def test_create_autosnat_true_v30(self):
-        self._test_create_autosnat("3.0", True, key="auto")
+        self._test_create_autosnat("3.0", True)
 
     def test_create_autosnat_unspecified_v30(self):
-        self._test_create_autosnat("3.0", key="auto")
+        self._test_create_autosnat("3.0")
 
-    def _test_create_autosnat(self, api_ver=None, autosnat=None, key=None):
+    def _test_create_autosnat(self, api_ver=None, autosnat=None):
         saw_exception = False
 
         """
@@ -128,9 +128,6 @@ class TestListeners(test_base.UnitTestBase):
         m = test_base.FakeListener(p, 2222, pool=pool,
                                    loadbalancer=lb)
 
-        auto_format = "'{0}': {1}"
-        auto_expected = auto_format.format(key, int(True))
-
         try:
             self.a.listener.create(None, m)
         except Exception as e:
@@ -139,16 +136,13 @@ class TestListeners(test_base.UnitTestBase):
 
         if not saw_exception:
             s = str(self.a.last_client.mock_calls)
-            self.assertTrue('vport.create' in s)
-            self.assertEqual(auto_expected in s, True if autosnat else False)
+            self.assertIn('vport.create', s)
+            self.assertIn('autosnat=%s' % autosnat, s)
 
-    def _test_create_ipinip(self, api_ver="3.0", ip_in_ip=False, key="ipinip"):
+    def _test_create_ipinip(self, api_ver="3.0", ip_in_ip=False):
         for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
             v['api_version'] = api_ver
-
-        ipinip_format = "'{0}': {1}"
-        ipinip_expected = ipinip_format.format(key, int(True))
 
         p = 'TCP'
         lb = test_base.FakeLoadBalancer()
@@ -161,19 +155,19 @@ class TestListeners(test_base.UnitTestBase):
 
         s = str(self.a.last_client.mock_calls)
         self.assertIn("vport.create", s)
-        self.assertEqual(ipinip_expected in s, ip_in_ip)
+        self.assertIn("ipinip=%s" % ip_in_ip, s)
 
     def test_create_ip_in_ip_positive_v21(self):
-        self._test_create_ipinip(api_ver="2.1", ip_in_ip=True, key="ip_in_ip")
+        self._test_create_ipinip(api_ver="2.1", ip_in_ip=True)
 
     def test_create_ip_in_ip_negative_v21(self):
-        self._test_create_ipinip(api_ver="2.1", key="ip_in_ip")
+        self._test_create_ipinip(api_ver="2.1")
 
     def test_create_ip_in_ip_positive_v30(self):
-        self._test_create_ipinip(ip_in_ip=True, key="ipinip")
+        self._test_create_ipinip(ip_in_ip=True)
 
     def test_create_ip_in_ip_negative_v30(self):
-        self._test_create_ipinip("3.0", key="ipinip")
+        self._test_create_ipinip()
 
     def test_update_no_lb(self):
         m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
