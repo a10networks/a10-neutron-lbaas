@@ -1,8 +1,4 @@
-#acos_client>=1.3.3
-## TODO: undo this
--e git+https://github.com/a10networks/acos-client#egg=acos-client
-## TODO: undo this
-
+acos_client>=1.3.4
 debtcollector
 
 # Many of our requirements have to be the same as the underlying neutron,
