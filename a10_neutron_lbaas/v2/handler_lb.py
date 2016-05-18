@@ -66,7 +66,26 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             self.hooks.after_vip_delete(c, context, lb)
 
     def stats(self, context, lb):
-        pass
+        with a10.A10Context(self, context, lb) as c:
+            try:
+                name = self.meta(lb, 'id', lb.id)
+                r = c.client.slb.virtual_server.stats(name)
+
+                return {
+                    "bytes_in": r["virtual_server_stat"]["req_bytes"],
+                    "bytes_out": r["virtual_server_stat"]["resp_bytes"],
+                    "active_connections":
+                        r["virtual_server_stat"]["cur_conns"],
+                    "total_connections": r["virtual_server_stat"]["tot_conns"]
+                }
+            except Exception:
+                return {
+                    "bytes_in": 0,
+                    "bytes_out": 0,
+                    "active_connections": 0,
+                    "total_connections": 0
+                }
 
     def refresh(self, context, lb):
-        pass
+        LOG.debug("LB Refresh called.")
+        # Ensure all elements associated with this LB exist on the device.

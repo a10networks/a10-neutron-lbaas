@@ -126,3 +126,21 @@ class TestPools(test_base.UnitTestBase):
                             (self.a.last_client.slb.template.
                                 cookie_persistence.delete.
                                 assert_called_with(pool.id))
+
+    def _test_stats(self):
+        pool = test_base.FakePool('TCP', 'ROUND_ROBIN', None, False)
+        actual = self.a.pool.stats(None, pool)
+        return pool, actual
+
+    def test_stats_calls_service_group_stats(self):
+        pool, actual = self._test_stats()
+        (self.a.last_client.slb.service_group.stats.
+            assert_called_with(pool.id))
+
+    def test_stats_returns_stats(self):
+        pool, actual = self._test_stats()
+        self.assertIn("stats", actual)
+
+    def test_stats_returns_members(self):
+        pool, actual = self._test_stats()
+        self.assertIn("members", actual)
