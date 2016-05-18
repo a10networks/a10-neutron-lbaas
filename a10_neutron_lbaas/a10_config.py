@@ -172,7 +172,7 @@ class A10Config(object):
         if self.get('use_database'):
             from a10_neutron_lbaas.db import models
 
-            instance = models.A10Instances.find_by_device_name(device_name, db_session)
+            instance = models.A10DeviceInstance.find_by_device_name(device_name, db_session)
             if instance is not None:
                 self._devices[device_name] = dict(instance)
                 self._devices[device_name]['host'] = instance.ip_address
@@ -185,7 +185,7 @@ class A10Config(object):
             from a10_neutron_lbaas.db import models
 
             d = dict(self._devices.items())
-            for x in models.A10Instances.find_all():
+            for x in models.A10DeviceInstance.find_all():
                 d[x.name] = dict(x)
             return d
         return self._devices
