@@ -15,6 +15,7 @@
 import ConfigParser as ini
 import logging
 import os
+import runpy
 import sys
 
 from debtcollector import removals
@@ -24,6 +25,16 @@ from a10_neutron_lbaas.etc import config as blank_config
 from a10_neutron_lbaas.etc import defaults
 
 LOG = logging.getLogger(__name__)
+
+
+class ConfigModule(object):
+    def __init__(self, d):
+        self.__dict__.update(d)
+
+    @classmethod
+    def load(cls, path):
+        d = runpy.run_path(path)
+        return ConfigModule(d)
 
 
 class A10Config(object):
@@ -37,20 +48,13 @@ class A10Config(object):
         self._config_dir = self._find_config_dir(config_dir)
         self._config_path = os.path.join(self._config_dir, "config.py")
 
-        real_sys_path = sys.path
-        sys.path = [self._config_dir]
         try:
-            try:
-                sys.modules.pop('config', None)
-                import config
-                self._config = config
-            except ImportError:
-                LOG.error("A10Config could not find %s/config.py", self._config_dir)
-                self._config = blank_config
+            self._config = ConfigModule.load(self._config_path)
+        except IOError:
+            LOG.error("A10Config could not find %s", self._config_path)
+            self._config = blank_config
 
-            self._load_config()
-        finally:
-            sys.path = real_sys_path
+        self._load_config()
 
     def _find_config_dir(self, config_dir):
         # Look for config in the virtual environment
