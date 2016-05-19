@@ -26,7 +26,8 @@ from a10_neutron_lbaas.neutron_ext.common import resources
 import a10_neutronclient.resources.a10_device_instance as a10_device_instance
 
 
-RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_instance.RESOURCE_ATTRIBUTE_MAP, attributes)
+RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_instance.RESOURCE_ATTRIBUTE_MAP,
+                                                  attributes)
 
 
 class A10DeviceInstance(extensions.ExtensionDescriptor):

@@ -24,7 +24,8 @@ from a10_neutronclient.resources import a10_device_instance as a10_device_instan
 LOG = logging.getLogger(__name__)
 
 
-class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10DeviceInstancePluginBase):
+class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
+                               a10Appliance.A10DeviceInstancePluginBase):
 
     def __init__(self):
         super(A10DeviceInstanceDbMixin, self).__init__()
@@ -56,7 +57,8 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10De
                 filter_by(a10_device_instance_id=a10_device_instance_id).\
                 count()
             LOG.debug(
-                "A10DeviceInstanceDbMixin:_ensure_a10_device_instance_not_in_use(): id={0}, len={1}".
+                "A10DeviceInstanceDbMixin:_ensure_a10_device_instance_not_in_use(): "
+                "id={0}, len={1}".
                 format(a10_device_instance_id, slbs))
 
         if slbs > 0:
@@ -97,8 +99,8 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10De
     def delete_a10_device_instance(self, context, a10_device_instance_id):
         with context.session.begin(subtransactions=True):
             self._ensure_a10_device_instance_not_in_use(context, a10_device_instance_id)
-            LOG.debug("A10DeviceInstanceDbMixin:delete_a10_device_instance(): a10_device_instance_id={0}".format(
-                a10_device_instance_id))
+            LOG.debug("A10DeviceInstanceDbMixin:delete_a10_device_instance(): "
+                      "a10_device_instance_id={0}".format(a10_device_instance_id))
             appliance = self._get_a10_device_instance(context, a10_device_instance_id)
             # Remove tenant affinities
             # The tenant partitions on the appliance should have been removed
@@ -113,9 +115,10 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin, a10Appliance.A10De
         return self._make_a10_device_instance_dict(appliance, fields)
 
     def get_a10_device_instances(self, context, filters=None, fields=None,
-                           sorts=None, limit=None, marker=None,
-                           page_reverse=False):
-        LOG.debug("A10DeviceInstanceDbMixin:get_a10_device_instances() tenant_id=%s" % context.tenant_id)
+                                 sorts=None, limit=None, marker=None,
+                                 page_reverse=False):
+        LOG.debug("A10DeviceInstanceDbMixin:get_a10_device_instances() tenant_id=%s" %
+                  (context.tenant_id))
         return self._get_collection(context, models.A10DeviceInstance,
                                     self._make_a10_device_instance_dict, filters=filters,
                                     fields=fields, sorts=sorts, limit=limit,
