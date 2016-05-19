@@ -72,11 +72,7 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 class InstanceManager(object):
     def __init__(self, ks_version, auth_url, vthunder_tenant_name, user, password,
-                 tenant_id,
-                 nova_api=None, glance_api=None, neutron_api=None,
-                 vthunder_config=None):
-        self.tenant_id = tenant_id
-        self._vth_config = vthunder_config
+                 nova_api=None, glance_api=None, neutron_api=None):
 
         (session, keystone) = self._get_keystone(
             ks_version, auth_url, user, password, vthunder_tenant_name)
@@ -130,20 +126,7 @@ class InstanceManager(object):
                                            sort_keys, sort_dirs)
 
     def create_instance(self, context):
-        a10_record = self._create_instance(context)
-        # TODO(mdurrant): Do something with the result of this call, like validation.
-        self._neutron_api.create_a10_appliance({'a10_appliance': a10_record})
-        return a10_record
-
-    def _build_a10_appliance_record(self, instance, image, appliance, ip):
-        """Build an a10_appliances_db record from Nova instance/image"""
-
-        d = copy.copy(self._config)
-        d["name"] = appliance["name"],
-        d["nova_instance_id"] = instance.id
-        d["tenant_id"] = self.tenant_id
-        d["ip_address"] = ip
-        return d
+        return self._create_instance(context)
 
     def _get_ip_addresses_from_instance(self, addresses, mgmt_network_name):
         address_block = addresses[mgmt_network_name]
@@ -181,10 +164,13 @@ class InstanceManager(object):
         # Get the IP address of the first interface (should be management)
         ip_address = self._get_ip_addresses_from_instance(
             created_instance.addresses, networks[0]['name'])
-        a10_record = self._build_a10_appliance_record(
-            created_instance, image, server, ip_address)
 
-        return a10_record
+        return {
+            'name': server['name'],
+            'instance': created_instance,
+            'ip_address': ip_address,
+            'nova_instance_id': created_instance.id
+        }
 
     def _create_server_spinlock(self, created_instance):
         created_id = created_instance.id
@@ -305,34 +291,35 @@ class InstanceManager(object):
             'name': available_networks[x].get('name', '')
         } for x in networks]
 
-    def _default_instance(self):
+    def _device_instance(self, vthunder_config, name=None):
         # Pick an image, any image
-        image_id = self._vth_config['glance_image']
+        image_id = vthunder_config['glance_image']
+        if image_id is None:
+            raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured image")
 
         # Get the flavor from config
-        flavor = self._vth_config['nova_flavor']
+        flavor = vthunder_config['nova_flavor']
         if flavor is None:
             raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured flavor")
 
-        mgmt_network = self._vth_config.get("vthunder_management_network")
+        mgmt_network = vthunder_config.get("vthunder_management_network")
 
         networks = [mgmt_network] if mgmt_network else []
-        networks += self._vth_config.get('vthunder_data_networks')
+        networks += vthunder_config.get('vthunder_data_networks')
 
         if networks is None or len(networks) < 1:
             raise a10_ex.FeatureNotConfiguredError(
                 "Launching instance requires configured networks")
 
         return {
+            'name': name,
             'image': image_id,
             'flavor': flavor,
             'networks': networks
         }
 
-    def create_default_instance(self):
-        """Create the default instance for this tenant
-        """
-        instance_configuration = self._default_instance()
+    def create_device_instance(self, vthunder_config, name=None):
+        instance_configuration = self._device_instance(vthunder_config, name=name)
 
         return self._create_instance(instance_configuration)
 
@@ -378,3 +365,4 @@ class InstanceManager(object):
 def distinct_dicts(dicts):
     hashable = map(lambda x: tuple(sorted(x.items())), dicts)
     return map(dict, set(hashable))
+

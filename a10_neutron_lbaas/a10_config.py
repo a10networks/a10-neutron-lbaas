@@ -140,6 +140,10 @@ class A10Config(object):
         if self._config.use_database and self._config.database_connection is None:
             self._config.database_connection = self._get_neutron_db_string()
 
+        if self._config.keystone_auth_url is None:
+            self._config.keystone_auth_url = self._get_neutron_conf(
+                'keystone_authtoken', 'auth_uri')
+
         # Setup some backwards compat stuff
         self.config = OldConfig(self)
 
@@ -147,19 +151,21 @@ class A10Config(object):
     # the many openstack dependencies. If this proves problematic, we should
     # shoot this manual parser in the head and just use the global config
     # object.
-    def _get_neutron_db_string(self):
+    def _get_neutron_conf(self, section, option):
         neutron_conf_dir = os.environ.get('NEUTRON_CONF_DIR', self._config.neutron_conf_dir)
         neutron_conf = '%s/neutron.conf' % neutron_conf_dir
 
-        z = None
         if os.path.exists(neutron_conf):
             LOG.debug("found neutron.conf file in /etc")
             n = ini.ConfigParser()
             n.read(neutron_conf)
             try:
-                z = n.get('database', 'connection')
+                return n.get(section, option)
             except (ini.NoSectionError, ini.NoOptionError):
                 pass
+
+    def _get_neutron_db_string(self):
+        z = self._get_neutron_conf('database', 'connection')
 
         if z is None:
             raise a10_ex.NoDatabaseURL('must set db connection url or neutron dir in config.py')

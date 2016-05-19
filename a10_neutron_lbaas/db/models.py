@@ -31,15 +31,26 @@ def _get_date():
 class A10BaseMixin(object):
 
     @classmethod
-    def find_by_attribute(cls, attribute_name, attribute, db_session=None):
+    def query(cls, db_session=None):
         db = db_session or db_api.get_session()
-        return db.query(cls).filter(
+        return db.query(cls)
+
+    @classmethod
+    def find_all_by(cls, db_session=None, **kwargs):
+        return cls.query(db_session).filter_by(**kwargs)
+
+    @classmethod
+    def find_by(cls, db_session=None, **kwargs):
+        return cls.find_all_by(db_session, **kwargs).one_or_none()
+
+    @classmethod
+    def find_by_attribute(cls, attribute_name, attribute, db_session=None):
+        return cls.query(db_session).filter(
             getattr(cls, attribute_name) == attribute).one_or_none()
 
     @classmethod
     def find_all(cls, db_session=None):
-        db = db_session or db_api.get_session()
-        return db.query(cls).all()
+        return cls.query(db_session).all()
 
     @classmethod
     def create_and_save(cls, db_session=None, **kwargs):
