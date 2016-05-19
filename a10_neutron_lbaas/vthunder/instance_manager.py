@@ -24,10 +24,14 @@ try:
 except ImportError:
     pass
 
-# from keystoneauth1.identity import v2
-# from keystoneclient import session as keystone_session
-from keystoneclient.v2_0 import client as keystone_client
+from keystoneauth1.identity import v2
+from keystoneauth1.identity import v3
+from keystoneauth1 import session
+from keystoneclient.v2_0 import client as keystone_v2_client
+from keystoneclient.v3 import client as keystone_v3_client
+
 import neutronclient.neutron.client as neutron_client
+
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
 
@@ -73,21 +77,43 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 
 class InstanceManager(object):
-    def __init__(self, tenant_id, creds,
+    def __init__(self, ks_version, auth_url, vthunder_tenant_name, user, password,
+                 tenant_id,
                  nova_api=None, glance_api=None, neutron_api=None,
                  vthunder_config=None):
         self.tenant_id = tenant_id
         self._config = vthunder_config
 
-        LOG.error("creds = %s", creds)
+        (session, keystone) = self._get_keystone(
+            ks_version, auth_url, user, password, vthunder_tenant_name)
 
-        keystone = keystone_client.Client(**creds)
         glance_endpoint = keystone.service_catalog.url_for(service_type='image',
                                                            endpoint_type='publicURL')
-        self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, **creds)
-        self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, **creds)
+        self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
+        self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
         self._glance_api = glance_api or glance_client.Client(
-            GLANCE_VERSION, endpoint=glance_endpoint, **creds)
+            GLANCE_VERSION, endpoint=glance_endpoint, session=session)
+
+    def _get_keystone(self, ks_version, auth_url, user, password, tenant_name):
+        if int(ks_version) == 2:
+            auth = v2.Password(
+                auth_url=auth_url, username=user, password=password,
+                tenant_name=tenant_name)
+        elif int(ks_version) == 3:
+            auth = v3.Password(
+                auth_url=auth_url, username=user, password=password,
+                project_name=tenant_name)
+        else:
+            raise a10_ex.InvalidConfig('keystone version must be protovol version 2 or 3')
+
+        sess = session.Session(auth=auth)
+
+        if int(ks_version) == 2:
+            ks = keystone_v2_client.Client(session=sess)
+        else:
+            ks = keystone_v3_client.Client(session=sess)
+
+        return (session, ks)
 
     def _build_server(self, instance):
         retval = {}
@@ -368,18 +394,3 @@ class InstanceManager(object):
 def distinct_dicts(dicts):
     hashable = map(lambda x: tuple(sorted(x.items())), dicts)
     return map(dict, set(hashable))
-
-
-def context_instance_manager(keystone_url, vthunder_tenant_id, user, password, vth_cfg):
-    # auth = v2.Password(
-    #     username=user, password=password, tenant_id=vthunder_tenant_id,
-    #     auth_url=keystone_url)
-    # session = keystone_session.Session(auth=auth)
-
-    keystone_creds = {
-        'username': user,
-        'password': password,
-        'auth_url': keystone_url,
-        'tenant_name': vthunder_tenant_id
-    }
-    return InstanceManager(vthunder_tenant_id, creds=keystone_creds, vthunder_config=vth_cfg)

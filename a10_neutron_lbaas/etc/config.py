@@ -50,6 +50,10 @@
 
 # keystone_auth_url = None
 
+# Which version of the keystone protocol to use
+
+# keystone_version = 2
+
 # Certain functions of this driver can be overridden by passing in an alternate
 # set of plumbing hooks, including scheduling where a tenant's VIPs are going
 # to be created, and what to do after object creation.
@@ -158,7 +162,7 @@ devices = {
 #     'glance_image': None,
 #     'glance_image_tag': 'vthunder',
 
-#     'vthunder_tenant_id': '',
+#     'vthunder_tenant_name': '',
 #     'vthunder_tenant_username': '',
 #     'vthunder_tenant_password': '',
 

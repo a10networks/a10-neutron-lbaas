@@ -1,2 +1,8 @@
 - re-do neutron_ext with new models
+- keystone v2 and v3 support
+- CI jobs
 
+
+- matrix of pro/con of each vthunder versions
+
+- 

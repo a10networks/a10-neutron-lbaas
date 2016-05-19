@@ -17,6 +17,10 @@ class InternalError(Exception):
     pass
 
 
+class InvalidConfig(Exception):
+    pass
+
+
 class InvalidDeviceConfig(Exception):
     pass
 
