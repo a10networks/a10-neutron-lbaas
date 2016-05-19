@@ -67,7 +67,7 @@ VTHUNDER_REQUIRED_FIELDS = [
     'glance_image',
     'glance_image_tag',
 
-    'vthunder_tenant_id',
+    'vthunder_tenant_name',
     'vthunder_tenant_username',
     'vthunder_tenant_password',
 

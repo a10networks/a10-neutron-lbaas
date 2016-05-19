@@ -87,12 +87,20 @@ class InstanceManager(object):
         (session, keystone) = self._get_keystone(
             ks_version, auth_url, user, password, vthunder_tenant_name)
 
-        glance_endpoint = keystone.service_catalog.url_for(service_type='image',
-                                                           endpoint_type='publicURL')
+        # glance_endpoint = keystone.service_catalog.url_for(service_type='image',
+        #                                                    endpoint_type='publicURL')
+        # self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
+        # self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
+        # self._glance_api = glance_api or glance_client.Client(
+        #     GLANCE_VERSION, endpoint=glance_endpoint, session=session)
+
+        # glance_endpoint = keystone.service_catalog.url_for(service_type='image',
+        #                                                    endpoint_type='publicURL')
         self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
         self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
         self._glance_api = glance_api or glance_client.Client(
-            GLANCE_VERSION, endpoint=glance_endpoint, session=session)
+            GLANCE_VERSION, session=session)
+
 
     def _get_keystone(self, ks_version, auth_url, user, password, tenant_name):
         if int(ks_version) == 2:
