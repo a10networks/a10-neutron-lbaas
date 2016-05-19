@@ -160,7 +160,6 @@ devices = {
 
 #     'nova_flavor': 'vthunder.small',  # 1 core, 4096MB ram, 12GB disk
 #     'glance_image': None,
-#     'glance_image_tag': 'vthunder',
 
 #     'vthunder_tenant_name': '',
 #     'vthunder_tenant_username': '',

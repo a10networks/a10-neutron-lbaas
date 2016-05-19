@@ -65,7 +65,6 @@ VTHUNDER_REQUIRED_FIELDS = [
 
     'nova_flavor',
     'glance_image',
-    'glance_image_tag',
 
     'vthunder_tenant_name',
     'vthunder_tenant_username',

@@ -18,12 +18,6 @@ import pprint
 import time
 import uuid
 
-try:
-    # glanceclient importing is too fragile to have module initialization depend on it
-    import glanceclient.client as glance_client
-except ImportError:
-    pass
-
 from keystoneauth1.identity import v2
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
@@ -82,7 +76,7 @@ class InstanceManager(object):
                  nova_api=None, glance_api=None, neutron_api=None,
                  vthunder_config=None):
         self.tenant_id = tenant_id
-        self._config = vthunder_config
+        self._vth_config = vthunder_config
 
         (session, keystone) = self._get_keystone(
             ks_version, auth_url, user, password, vthunder_tenant_name)
@@ -98,8 +92,6 @@ class InstanceManager(object):
         #                                                    endpoint_type='publicURL')
         self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
         self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
-        self._glance_api = glance_api or glance_client.Client(
-            GLANCE_VERSION, session=session)
 
 
     def _get_keystone(self, ks_version, auth_url, user, password, tenant_name):
@@ -121,7 +113,7 @@ class InstanceManager(object):
         else:
             ks = keystone_v3_client.Client(session=sess)
 
-        return (session, ks)
+        return (sess, ks)
 
     def _build_server(self, instance):
         retval = {}
@@ -164,7 +156,7 @@ class InstanceManager(object):
         image_id = context.get("image", None)
         flavor_id = context.get("flavor", None)
         net_ids = context.get("networks")
-        image = self.get_image(identifier=image_id)
+        #image = self.get_image(identifier=image_id)
         flavor = self.get_flavor(identifier=flavor_id)
 
         networks = self.get_networks(net_ids)
@@ -178,7 +170,7 @@ class InstanceManager(object):
             msg = map(lambda x: MISSING_ERR_FORMAT.format("Network", x), net_ids)
             raise a10_ex.NetworksNotFoundError(msg)
 
-        server["image"] = image.id
+        server["image"] = image_id
         server["flavor"] = flavor.id
         server["nics"] = [{'net-id': x['id']} for x in networks]
 
@@ -316,32 +308,18 @@ class InstanceManager(object):
         } for x in networks]
 
     def _default_instance(self):
-        # Get all the a10 images
-        image_filter = {
-            "tag": ["a10"]
-        }
-
-        try:
-            images = list(self._glance_api.images.list(filters=image_filter))
-        except Exception as ex:
-            raise a10_ex.ImageNotFoundError(
-                "Unable to retrieve images from glance.  Error %s" % (ex))
-
-        if images is None or len(images) < 1:
-            raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured images")
-
         # Pick an image, any image
-        image_id = images[0].id
+        image_id = self._vth_config['glance_image']
 
         # Get the flavor from config
-        flavor = self._config.get('nova_flavor')
+        flavor = self._vth_config['nova_flavor']
         if flavor is None:
             raise a10_ex.FeatureNotConfiguredError("Launching instance requires configured flavor")
 
-        mgmt_network = self._config.get("vthunder_management_network")
+        mgmt_network = self._vth_config.get("vthunder_management_network")
 
         networks = [mgmt_network] if mgmt_network else []
-        networks += self._config.get('vthunder_data_networks')
+        networks += self._vth_config.get('vthunder_data_networks')
 
         if networks is None or len(networks) < 1:
             raise a10_ex.FeatureNotConfiguredError(
