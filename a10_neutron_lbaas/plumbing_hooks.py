@@ -122,6 +122,17 @@ class PlumbingHooks(BasePlumbingHooks):
 
 class VThunderPlumbingHooks(PlumbingHooks):
 
+    def _instance_manager(self):
+        cfg = self.driver.config
+        vth = cfg.get_vthunder_config()
+        imgr = instance_manager.InstanceManager(
+            ks_version=cfg.get('keystone_version'),
+            auth_url=cfg.get('keystone_auth_url'),
+            vthunder_tenant_name=vth['vthunder_tenant_name'],
+            user=vth['vthunder_tenant_username'],
+            password=vth['vthunder_tenant_password'])
+        return imgr
+
     def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
                                      db_session=None):
         if not self.driver.config.get('use_database'):
@@ -132,7 +143,7 @@ class VThunderPlumbingHooks(PlumbingHooks):
         if hasattr(lbaas_obj, 'root_loadbalancer'):
             # lbaas v2
             root_id = lbaas_obj.root_loadbalancer.id
-            slb = models.A10SLB.find_by_loadbalancer_id(root_id, db_session=db_session)
+            slb = models.A10SLB.find_by(loadbalancer_id=root_id, db_session=db_session)
             if slb is not None:
                 d = self.driver.config.get(slb.device_name, db_session=db_session)
                 if d is None:
@@ -156,19 +167,23 @@ class VThunderPlumbingHooks(PlumbingHooks):
 
         cfg = self.driver.config
         vth = cfg.get_vthunder_config()
-        imgr = instance_manager.InstanceManager(
-            ks_version=cfg.get('keystone_version'),
-            auth_url=cfg.get('keystone_auth_url'),
-            vthunder_tenant_name=vth['vthunder_tenant_name'],
-            user=vth['vthunder_tenant_username'],
-            password=vth['vthunder_tenant_password'],
-            tenant_id=tenant_id,
-            vthunder_config=vth)
-        device_config = imgr.create_default_instance()
+        imgr = self._instance_manager()
+        instance = imgr.create_device_instance(vth)
 
-        models.A10Instance.create_and_save(
-            device_config,
-            db_session=db_session)
+        from a10_neutron_lbaas.etc import defaults
+        device_config = {}
+        for key in vth:
+	    if key in defaults.DEVICE_REQUIRED_FIELDS or key in defaults.DEVICE_OPTIONAL_DEFAULTS:
+                device_config[key] = vth[key]
+        device_config.update({
+            'nova_instance_id': instance['nova_instance_id'],
+            'host': instance['ip_address'],
+            'name': instance['name'] 
+        })
+
+        models.A10DeviceInstance.create_and_save(
+            db_session=db_session,
+            **device_config)
 
         if root_id is not None:
             models.A10SLB.create_and_save(
@@ -193,16 +208,7 @@ class VThunderPlumbingHooks(PlumbingHooks):
         else:
             vip_ip_address = vip['ip_address']
 
-        cfg = self.driver.config
-        vth = cfg.get_vthunder_config()
-        imgr = instance_manager.InstanceManager(
-            ks_version=cfg.get('keystone_version'),
-            auth_url=cfg.get('keystone_auth_url'),
-            vthunder_tenant_name=vth['vthunder_tenant_name'],
-            user=vth['vthunder_tenant_username'],
-            password=vth['vthunder_tenant_password'],
-            tenant_id=context['tenant_id'],
-            vthunder_config=vth)
+        imgr = self._instance_manager()
 
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],
