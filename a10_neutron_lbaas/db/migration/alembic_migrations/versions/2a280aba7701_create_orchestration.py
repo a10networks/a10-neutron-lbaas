@@ -40,9 +40,6 @@ def upgrade():
         sa.Column('password', sa.String(255), nullable=False),
 
         sa.Column('api_version', sa.String(255), nullable=False),
-        sa.Column('api_protocol', sa.String(255), nullable=False),
-        sa.Column('api_port', sa.String(255), nullable=False),
-
         sa.Column('protocol', sa.String(32), nullable=False),
         sa.Column('port', sa.Integer, nullable=False),
         sa.Column('autosnat', sa.Boolean(), nullable=False),

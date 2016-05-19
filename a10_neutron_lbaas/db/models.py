@@ -78,9 +78,6 @@ class A10DeviceInstance(A10BaseMixin, Base):
     password = sa.Column(sa.String(255), nullable=False)
 
     api_version = sa.Column(sa.String(12), nullable=False)
-    api_protocol = sa.Column(sa.String(255), nullable=False)
-    api_port = sa.Column(sa.Integer, nullable=False)
-
     protocol = sa.Column(sa.String(32), nullable=False)
     port = sa.Column(sa.Integer, nullable=False)
     autosnat = sa.Column(sa.Boolean(), nullable=False)
