@@ -160,8 +160,6 @@ class InstanceManager(object):
         flavor = self.get_flavor(identifier=flavor_id)
 
         networks = self.get_networks(net_ids)
-        if image is None:
-            raise a10_ex.ImageNotFoundError(MISSING_ERR_FORMAT.format("Image", image_id))
 
         if flavor is None:
             raise a10_ex.FlavorNotFoundError(MISSING_ERR_FORMAT.format("Flavor", flavor_id))
