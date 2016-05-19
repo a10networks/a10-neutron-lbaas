@@ -118,6 +118,9 @@ class A10SLB(A10BaseMixin, Base):
 
     loadbalancer_id = sa.Column(sa.String(36))
 
+    @classmethod
+    def find_by_loadbalancer_id(cls, loadbalancer_id, db_session=None):
+        return cls.find_by_attribute('loadbalancer_id', loadbalancer_id, db_session)
 #     # TODO(dougwig) -- later - should add state enum here
 
 #     # def get_lbaas_root(self):
