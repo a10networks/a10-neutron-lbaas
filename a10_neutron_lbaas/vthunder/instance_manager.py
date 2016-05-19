@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import logging
 import pprint
 import time
@@ -89,7 +88,6 @@ class InstanceManager(object):
         self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
         self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
 
-
     def _get_keystone(self, ks_version, auth_url, user, password, tenant_name):
         if int(ks_version) == 2:
             auth = v2.Password(
@@ -139,7 +137,6 @@ class InstanceManager(object):
         image_id = context.get("image", None)
         flavor_id = context.get("flavor", None)
         net_ids = context.get("networks")
-        #image = self.get_image(identifier=image_id)
         flavor = self.get_flavor(identifier=flavor_id)
 
         networks = self.get_networks(net_ids)
@@ -365,4 +362,3 @@ class InstanceManager(object):
 def distinct_dicts(dicts):
     hashable = map(lambda x: tuple(sorted(x.items())), dicts)
     return map(dict, set(hashable))
-

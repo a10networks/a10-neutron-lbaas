@@ -173,12 +173,12 @@ class VThunderPlumbingHooks(PlumbingHooks):
         from a10_neutron_lbaas.etc import defaults
         device_config = {}
         for key in vth:
-	    if key in defaults.DEVICE_REQUIRED_FIELDS or key in defaults.DEVICE_OPTIONAL_DEFAULTS:
+            if key in defaults.DEVICE_REQUIRED_FIELDS or key in defaults.DEVICE_OPTIONAL_DEFAULTS:
                 device_config[key] = vth[key]
         device_config.update({
             'nova_instance_id': instance['nova_instance_id'],
             'host': instance['ip_address'],
-            'name': instance['name'] 
+            'name': instance['name']
         })
 
         models.A10DeviceInstance.create_and_save(
