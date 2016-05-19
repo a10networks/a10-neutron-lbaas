@@ -24,8 +24,8 @@ try:
 except ImportError:
     pass
 
-from keystoneauth1.identity import v2
-from keystoneclient import session as keystone_session
+# from keystoneauth1.identity import v2
+# from keystoneclient import session as keystone_session
 from keystoneclient.v2_0 import client as keystone_client
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
