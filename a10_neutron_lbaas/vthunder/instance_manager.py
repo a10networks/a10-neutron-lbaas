@@ -26,6 +26,7 @@ except ImportError:
 
 from keystoneauth1.identity import v2
 from keystoneclient import session as keystone_session
+from keystoneclient.v2_0 import client as keystone_client
 import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
@@ -72,14 +73,21 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 
 class InstanceManager(object):
-    def __init__(self, tenant_id, session=None,
+    def __init__(self, tenant_id, creds,
                  nova_api=None, glance_api=None, neutron_api=None,
                  vthunder_config=None):
         self.tenant_id = tenant_id
-        self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=session)
-        self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, session=session)
-        self._glance_api = glance_api or glance_client.Client(GLANCE_VERSION, session=session)
         self._config = vthunder_config
+
+        LOG.error("creds = %s", creds)
+
+        keystone = keystone_client.Client(**creds)
+        glance_endpoint = keystone.service_catalog.url_for(service_type='image',
+                                                           endpoint_type='publicURL')
+        self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, **creds)
+        self._neutron_api = neutron_api or neutron_client.Client(NEUTRON_VERSION, **creds)
+        self._glance_api = glance_api or glance_client.Client(
+            GLANCE_VERSION, endpoint=glance_endpoint, **creds)
 
     def _build_server(self, instance):
         retval = {}
@@ -362,10 +370,16 @@ def distinct_dicts(dicts):
     return map(dict, set(hashable))
 
 
-def context_instance_manager(keystone_url, vthunder_tenant_id, user, password):
-    auth = v2.Password(
-        username=user, password=password, tenant_id=vthunder_tenant_id,
-        auth_url=keystone_url)
-    session = keystone_session.Session(auth=auth)
+def context_instance_manager(keystone_url, vthunder_tenant_id, user, password, vth_cfg):
+    # auth = v2.Password(
+    #     username=user, password=password, tenant_id=vthunder_tenant_id,
+    #     auth_url=keystone_url)
+    # session = keystone_session.Session(auth=auth)
 
-    return InstanceManager(vthunder_tenant_id, session=session)
+    keystone_creds = {
+        'username': user,
+        'password': password,
+        'auth_url': keystone_url,
+        'tenant_name': vthunder_tenant_id
+    }
+    return InstanceManager(vthunder_tenant_id, creds=keystone_creds, vthunder_config=vth_cfg)

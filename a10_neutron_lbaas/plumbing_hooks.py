@@ -154,8 +154,14 @@ class VThunderPlumbingHooks(PlumbingHooks):
 
         # No? Then we need to create one.
 
-        imgr = instance_manager.InstanceManager(
-            tenant_id=tenant_id, vthunder_config=self.driver.config.get_vthunder_config())
+        cfg = self.driver.config
+        vth = cfg.get_vthunder_config()
+        imgr = instance_manager.context_instance_manager(
+            keystone_url=cfg.get('keystone_auth_url'),
+            vthunder_tenant_id=vth['vthunder_tenant_id'],
+            user=vth['vthunder_tenant_username'],
+            password=vth['vthunder_tenant_password'],
+            vth_cfg=vth)
         device_config = imgr.create_default_instance()
 
         models.A10Instance.create_and_save(
@@ -188,10 +194,11 @@ class VThunderPlumbingHooks(PlumbingHooks):
         cfg = self.driver.config
         vth = cfg.get_vthunder_config()
         imgr = instance_manager.context_instance_manager(
-            keystone_url=cfg.get('keystone_url'),
+            keystone_url=cfg.get('keystone_auth_url'),
             vthunder_tenant_id=vth['vthunder_tenant_id'],
             user=vth['vthunder_tenant_username'],
-            password=vth['vthunder_tenant_password'])
+            password=vth['vthunder_tenant_password'],
+            vth_cfg=vth)
 
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],

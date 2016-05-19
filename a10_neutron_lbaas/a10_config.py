@@ -194,6 +194,9 @@ class A10Config(object):
             return d
         return self._devices
 
+    def get_vthunder_config(self):
+        return self._vthunder
+
     # backwards compat
     @removals.remove
     @property
