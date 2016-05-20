@@ -25,9 +25,6 @@ import base
 class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 
     def _instance_manager(self):
-        if action != 'create':
-            return fake-something-?
-
         cfg = self.driver.config
         vth = cfg.get_vthunder_config()
         imgr = instance_manager.InstanceManager(
@@ -82,6 +79,11 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             return d
 
         # No? Then we need to create one.
+
+        if action != 'create':
+            raise ex.InstanceMissing(
+                'A10 instance mapped to tenant %s is not present in db; '
+                'add it back to config or migrate loadbalancers' % tenant_id)
 
         device_config = self._create_instance(tenant_id, a10_context, lbaas_obj, db_session)
 
