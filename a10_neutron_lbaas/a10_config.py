@@ -195,7 +195,7 @@ class A10Config(object):
 
             d = dict(self._devices.items())
             for x in models.A10DeviceInstance.find_all():
-                d[x.name] = instance.as_dict()
+                d[x.name] = x.as_dict()
             return d
         return self._devices
 

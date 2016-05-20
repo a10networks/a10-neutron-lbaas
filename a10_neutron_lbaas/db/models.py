@@ -60,7 +60,7 @@ class A10BaseMixin(object):
         db.commit()
 
     def as_dict(self):
-        d = dict(self.__dict__ )
+        d = dict(self.__dict__)
         d.pop('_sa_instance_state', None)
         return d
 
