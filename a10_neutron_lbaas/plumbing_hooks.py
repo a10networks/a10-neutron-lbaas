@@ -35,28 +35,28 @@ class BasePlumbingHooks(object):
 
     # Network plumbing hooks from here on out
 
-    def partition_create(self, client, context, partition_name):
+    def partition_create(self, client, os_context, partition_name):
         client.system.partition.create(partition_name)
 
-    def partition_delete(self, client, context, partition_name):
+    def partition_delete(self, client, os_context, partition_name):
         client.system.partition.delete(partition_name)
 
-    def after_member_create(self, client, context, member):
+    def after_member_create(self, a10_context, os_context, member):
         pass
 
-    def after_member_update(self, client, context, member):
+    def after_member_update(self, a10_context, os_context, member):
         pass
 
-    def after_member_delete(self, client, context, member):
+    def after_member_delete(self, a10_context, os_context, member):
         pass
 
-    def after_vip_create(self, client, context, vip):
+    def after_vip_create(self, a10_context, os_context, vip):
         pass
 
-    def after_vip_update(self, client, context, vip):
+    def after_vip_update(self, a10_context, os_context, vip):
         pass
 
-    def after_vip_delete(self, client, context, vip):
+    def after_vip_delete(self, a10_context, os_context, vip):
         pass
 
 
@@ -201,8 +201,8 @@ class VThunderPlumbingHooks(PlumbingHooks):
 
         return device_config
 
-    def after_vip_create(self, client, context, vip):
-        instance = self.device_cfg
+    def after_vip_create(self, a10_context, os_context, vip):
+        instance = self.a10_context.device_cfg
         if 'nova_instance_id' not in instance:
             raise ex.InternalError('Attempting virtual plumbing on non-virtual device')
 

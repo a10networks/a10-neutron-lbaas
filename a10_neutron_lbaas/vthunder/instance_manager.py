@@ -137,9 +137,13 @@ class InstanceManager(object):
         image_id = context.get("image", None)
         flavor_id = context.get("flavor", None)
         net_ids = context.get("networks")
+        image = self.get_image(identifier=image_id)
         flavor = self.get_flavor(identifier=flavor_id)
 
         networks = self.get_networks(net_ids)
+
+        if image is None:
+            raise a10_ex.ImageNotFoundError(MISSING_ERR_FORMAT.format("Image", image_id))
 
         if flavor is None:
             raise a10_ex.FlavorNotFoundError(MISSING_ERR_FORMAT.format("Flavor", flavor_id))
@@ -148,7 +152,7 @@ class InstanceManager(object):
             msg = map(lambda x: MISSING_ERR_FORMAT.format("Network", x), net_ids)
             raise a10_ex.NetworksNotFoundError(msg)
 
-        server["image"] = image_id
+        server["image"] = image.id
         server["flavor"] = flavor.id
         server["nics"] = [{'net-id': x['id']} for x in networks]
 
