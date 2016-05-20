@@ -13,7 +13,22 @@
 #    under the License.
 # flake8: noqa
 
+# Version foo
+
 from version import VERSION
+from version import VERSION as __version__
+
+# Make sure the '_' function works, as others need it
+
+import gettext
+import six
+
+if six.PY2:
+    gettext.install('a10', unicode=1)
+else:
+    gettext.install('a10')
+
+# Automatically export some driver entry points
 
 try:
     import neutron  # noqa

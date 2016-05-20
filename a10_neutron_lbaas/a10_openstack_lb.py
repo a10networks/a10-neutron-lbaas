@@ -12,11 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import errno
 import logging
 
-import a10_config
 import acos_client
-import plumbing_hooks as hooks
+
+import a10_config
 import version
 
 import v1.handler_hm
@@ -37,31 +38,48 @@ LOG = logging.getLogger(__name__)
 class A10OpenstackLBBase(object):
 
     def __init__(self, openstack_driver,
-                 plumbing_hooks_class=hooks.PlumbingHooks,
+                 plumbing_hooks_class=None,
                  neutron_hooks_module=None,
-                 barbican_client=None):
+                 barbican_client=None,
+                 config=None,
+                 config_dir=None):
         self.openstack_driver = openstack_driver
-        self.config = a10_config.A10Config()
+        self.config = config or a10_config.A10Config(config_dir=config_dir)
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
 
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
 
+        if plumbing_hooks_class is not None:
+            self.hooks = plumbing_hooks_class(self)
+        else:
+            self.hooks = self.config.get('plumbing_hooks_class')(self)
+
         if self.config.get('verify_appliances'):
             self._verify_appliances()
 
-        self.hooks = plumbing_hooks_class(self)
+    def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None):
+        if hasattr(self.hooks, 'select_device_with_lbaas_obj'):
+            return self.hooks.select_device_with_lbaas_obj(
+                tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj)
+        else:
+            return self.hooks.select_device(tenant_id)
 
-    def _select_a10_device(self, tenant_id):
-        return self.hooks.select_device(tenant_id)
+    def _get_a10_acos_client(self, device_info):
+        retry = [errno.EHOSTUNREACH, errno.ECONNRESET, errno.ECONNREFUSED, errno.ETIMEDOUT]
+        return acos_client.Client(
+            device_info['host'], device_info['api_version'],
+            device_info['username'], device_info['password'],
+            port=device_info['port'], protocol=device_info['protocol'],
+            retry_errno_list=retry)
 
     def _get_a10_client(self, device_info):
-        d = device_info
-        return acos_client.Client(d['host'],
-                                  d.get('api_version', acos_client.AXAPI_21),
-                                  d['username'], d['password'],
-                                  port=d['port'], protocol=d['protocol'])
+        c = self._get_a10_acos_client(device_info)
+        if self.hooks.client_wrapper_class is not None:
+            return self.hooks.client_wrapper_class(c, device_info)
+        else:
+            return c
 
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")

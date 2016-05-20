@@ -39,3 +39,14 @@ class TestTenantBindings(test_base.UnitTestBase):
         self.assertEqual(z[0].device_name, 'yyy')
         self.assertTrue(len(z[0].id) == 36)
         self.assertEqual(z[0].created_at, dt)
+
+        db = self.open_session()
+        x = models.A10TenantBinding.create_and_save(
+            tenant_id='xxx2',
+            device_name='yyy2',
+            created_at=dt,
+            db_session=db)
+
+        db = self.open_session()
+        t = models.A10TenantBinding.find_by_tenant_id('xxx2', db_session=db)
+        self.assertEqual(t.device_name, 'yyy2')
