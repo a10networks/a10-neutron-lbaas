@@ -61,8 +61,8 @@ class A10BaseMixin(object):
 
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     tenant_id = sa.Column(sa.String(36), nullable=False)
-    created_at = sa.Column(sa.DateTime, default=_get_date)
-    updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date)
+    created_at = sa.Column(sa.DateTime, default=_get_date, nullable=False)
+    updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date, nullable=False)
 
 
 class A10TenantBinding(A10BaseMixin, Base):
@@ -122,7 +122,6 @@ class A10SLB(A10BaseMixin, Base):
 
     # LBaaS v1 or v2, only one of these will be defined
     pool_id = sa.Column(sa.String(36))
-    vip_id = sa.Column(sa.String(36))
 
     loadbalancer_id = sa.Column(sa.String(36))
 

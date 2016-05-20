@@ -32,8 +32,8 @@ def upgrade():
     op.create_table(
         'a10_device_instances',
         sa.Column('id', sa.String(36), primary_key=True, nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('tenant_id', sa.String(36), nullable=False),
         sa.Column('name', sa.String(1024), nullable=False),
         sa.Column('username', sa.String(255), nullable=False),
@@ -51,17 +51,16 @@ def upgrade():
         sa.Column('write_memory', sa.Boolean(), nullable=False),
 
         sa.Column('nova_instance_id', sa.String(36), nullable=False),
-        sa.Column('host', sa.String(255))
+        sa.Column('host', sa.String(255), nullable=False)
     )
     op.create_table(
         'a10_slbs',
         sa.Column('id', sa.String(36), primary_key=True, nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('tenant_id', sa.String(36), nullable=False),
         sa.Column('device_name', sa.String(1024), nullable=False),
         sa.Column('pool_id', sa.String(36)),
-        sa.Column('vip_id', sa.String(36)),
         sa.Column('loadbalancer_id', sa.String(36)),
     )
     pass

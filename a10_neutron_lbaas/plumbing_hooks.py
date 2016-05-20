@@ -180,7 +180,8 @@ class VThunderPlumbingHooks(PlumbingHooks):
         device_config.update({
             'tenant_id': tenant_id,
             'nova_instance_id': instance['nova_instance_id'],
-            'name': instance['name']
+            'name': instance['name'],
+            'host': instance['ip_address']
         })
 
         models.A10DeviceInstance.create_and_save(
