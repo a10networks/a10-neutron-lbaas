@@ -83,8 +83,8 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.vthunder_tenant_name = "tenantive-tenant"
         self.user = "user"
         self.password = "password"
-        self.target = im.InstanceManager(self.ks_version, self.auth_url, self.vthunder_tenant_name, self.user,
-                                         self.password, nova_api=self.nova_api,
+        self.target = im.InstanceManager(self.ks_version, self.auth_url, self.vthunder_tenant_name,
+                                         self.user, self.password, nova_api=self.nova_api,
                                          neutron_api=self.neutron_api)
 
     def server_get_side_effect(self, args):
@@ -265,5 +265,4 @@ class TestInstanceManager(test_base.UnitTestBase):
         }
 
         device = self.target.create_device_instance(defaults)
-
-        self.assertEqual('127.0.0.1', device['host'])
+        self.assertEqual('127.0.0.1', device['ip_address'])
