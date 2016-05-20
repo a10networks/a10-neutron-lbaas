@@ -207,10 +207,11 @@ class VThunderPlumbingHooks(PlumbingHooks):
         if 'nova_instance_id' not in instance:
             raise ex.InternalError('Attempting virtual plumbing on non-virtual device')
 
-        if hasattr(vip, 'ip_address'):
-            vip_ip_address = vip.ip_address
+        if hasattr(vip, 'vip_address'):
+            vip_ip_address = vip.vip_address
         else:
-            vip_ip_address = vip['ip_address']
+            #vip_ip_address = vip['ip_address']  # XXX: must go fetch via port id from neutron
+            raise ex.InternalError('Virtual orchestration not yet supported for lbaasv1')
 
         imgr = self._instance_manager()
 
