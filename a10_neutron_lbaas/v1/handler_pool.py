@@ -19,7 +19,6 @@ import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
 
-
 LOG = logging.getLogger(__name__)
 
 

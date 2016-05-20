@@ -29,30 +29,24 @@ def _build_openstack_context():
     return mock.Mock(admin_context=admin_context)
 
 
-def _build_class_instance_mock():
-    instance_mock = mock.MagicMock()
-    class_mock = mock.MagicMock()
-    class_mock.return_value = instance_mock
-
-    return (class_mock, instance_mock)
-
-
 class FakeA10OpenstackLB(object):
 
     def __init__(self, openstack_driver, **kw):
         super(FakeA10OpenstackLB, self).__init__(
             mock.MagicMock(),
             **kw)
+        self.openstack_driver = mock.MagicMock()
+        self.plumbing_hooks = hooks.PlumbingHooks(self)
         self.openstack_context = _build_openstack_context()
 
-    def _get_a10_client(self, device_info):
+    def _get_a10_acos_client(self, device_info):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
-        self.plumbing_hooks = hooks.PlumbingHooks(self)
         return self.last_client
 
     def reset_mocks(self):
         self.openstack_driver = mock.MagicMock()
+        self.plumbing_hooks = hooks.PlumbingHooks(self)
         self.last_client = self._get_a10_client(self.device_info)
         return self.last_client
 
@@ -76,15 +70,15 @@ class UnitTestBase(test_case.TestCase):
     def _build_openstack_context(self):
         return _build_openstack_context()
 
-    def setUp(self):
+    def setUp(self, openstack_lb_args={}):
         unit_dir = os.path.dirname(__file__)
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
 
         if not hasattr(self, 'version') or self.version == 'v2':
-            self.a = FakeA10OpenstackLBV2(None)
+            self.a = FakeA10OpenstackLBV2(mock.MagicMock(), **openstack_lb_args)
         else:
-            self.a = FakeA10OpenstackLBV1(None)
+            self.a = FakeA10OpenstackLBV1(mock.MagicMock(), **openstack_lb_args)
 
     def print_mocks(self):
         print("OPENSTACK ", self.a.openstack_driver.mock_calls)
