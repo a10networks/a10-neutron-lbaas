@@ -25,7 +25,7 @@ class KeystoneA10(object):
         (self._session, self._keystone_client) = self._get_keystone(
             ks_version=keystone_version,
             auth_url=auth_url,
-            vthunder_tenant_name=vthunder_config['vthunder_tenant_name'],
+            tenant_name=vthunder_config['vthunder_tenant_name'],
             user=vthunder_config['vthunder_tenant_username'],
             password=vthunder_config['vthunder_tenant_password'])
 

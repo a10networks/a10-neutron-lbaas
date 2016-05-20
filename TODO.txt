@@ -1,8 +1,6 @@
 - re-do neutron_ext with new models
-- keystone v2 and v3 support
 - CI jobs
 
 
-- matrix of pro/con of each vthunder versions
+- pass action type into select_device_*, so we can short-circuit if not found
 
-- 
