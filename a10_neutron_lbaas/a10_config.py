@@ -185,7 +185,6 @@ class A10Config(object):
             instance = models.A10DeviceInstance.find_by_device_name(device_name, db_session)
             if instance is not None:
                 self._devices[device_name] = dict(instance)
-                self._devices[device_name]['host'] = instance.ip_address
                 return self._devices[device_name]
         return None
 
