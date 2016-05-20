@@ -145,7 +145,7 @@ class VThunderPlumbingHooks(PlumbingHooks):
             root_id = lbaas_obj.root_loadbalancer.id
             slb = models.A10SLB.find_by(loadbalancer_id=root_id, db_session=db_session)
             if slb is not None:
-                d = self.driver.config.get(slb.device_name, db_session=db_session)
+                d = self.driver.config.get_device(slb.device_name, db_session=db_session)
                 if d is None:
                     raise ex.InstanceMissing(
                         'A10 instance mapped to loadbalancer_id %s is not present in db; '
@@ -156,7 +156,7 @@ class VThunderPlumbingHooks(PlumbingHooks):
             root_id = None
             tb = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
             if tb is not None:
-                d = self.driver.config.get(tb.device_name, db_session=db_session)
+                d = self.driver.config.get_device(tb.device_name, db_session=db_session)
                 if d is None:
                     raise ex.InstanceMissing(
                         'A10 instance mapped to tenant %s is not present in db; '
