@@ -173,11 +173,13 @@ class VThunderPlumbingHooks(PlumbingHooks):
         from a10_neutron_lbaas.etc import defaults
         device_config = {}
         for key in vth:
+            if key in ['status', 'ha_sync_list']:
+                continue
             if key in defaults.DEVICE_REQUIRED_FIELDS or key in defaults.DEVICE_OPTIONAL_DEFAULTS:
                 device_config[key] = vth[key]
         device_config.update({
+            'tenant_id': tenant_id,
             'nova_instance_id': instance['nova_instance_id'],
-            'host': instance['ip_address'],
             'name': instance['name']
         })
 
@@ -187,6 +189,7 @@ class VThunderPlumbingHooks(PlumbingHooks):
 
         if root_id is not None:
             models.A10SLB.create_and_save(
+                tenant_id=tenant_id,
                 device_name=device_config['name'],
                 loadbalancer_id=root_id,
                 db_session=db_session)

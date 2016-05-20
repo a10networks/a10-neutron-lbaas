@@ -95,12 +95,12 @@ class A10DeviceInstance(A10BaseMixin, Base):
     v_method = sa.Column(sa.String(32), nullable=False)
     shared_partition = sa.Column(sa.String(1024), nullable=False)
     use_float = sa.Column(sa.Boolean(), nullable=False)
-    default_virtual_server_vrid = sa.Column(sa.Integer, nullable=False)
+    default_virtual_server_vrid = sa.Column(sa.Integer, nullable=True)
     ipinip = sa.Column(sa.Boolean(), nullable=False)
     write_memory = sa.Column(sa.Boolean(), nullable=False)
 
     nova_instance_id = sa.Column(sa.String(36), nullable=True)
-    ip_address = sa.Column(sa.String(255), nullable=False)
+    host = sa.Column(sa.String(255), nullable=False)
 
     # TODO(dougwig) -- later - reference to scheduler, or capacity, or?
     # TODO(dougwig) -- later - should add state enum here

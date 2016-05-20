@@ -46,12 +46,12 @@ def upgrade():
         sa.Column('v_method', sa.String(32), nullable=False),
         sa.Column('shared_partition', sa.String(1024), nullable=False),
         sa.Column('use_float', sa.Boolean(), nullable=False),
-        sa.Column('default_virtual_server_vrid', sa.Integer, nullable=False),
+        sa.Column('default_virtual_server_vrid', sa.Integer, nullable=True),
         sa.Column('ipinip', sa.Boolean(), nullable=False),
         sa.Column('write_memory', sa.Boolean(), nullable=False),
 
         sa.Column('nova_instance_id', sa.String(36), nullable=False),
-        sa.Column('ip_address', sa.String(255))
+        sa.Column('host', sa.String(255))
     )
     op.create_table(
         'a10_slbs',
@@ -68,6 +68,6 @@ def upgrade():
 
 
 def downgrade():
-    # op.drop_table('a10_slbs')
+    op.drop_table('a10_slbs')
     op.drop_table('a10_device_instances')
     pass
