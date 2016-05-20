@@ -59,10 +59,10 @@ class A10OpenstackLBBase(object):
         if self.config.get('verify_appliances'):
             self._verify_appliances()
 
-    def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None):
+    def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None, action=None):
         if hasattr(self.hooks, 'select_device_with_lbaas_obj'):
             return self.hooks.select_device_with_lbaas_obj(
-                tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj)
+                tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj, action=action)
         else:
             return self.hooks.select_device(tenant_id)
 

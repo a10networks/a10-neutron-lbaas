@@ -165,6 +165,9 @@ class VThunderPlumbingHooks(PlumbingHooks):
 
         # No? Then we need to create one.
 
+        if action != 'create':
+            return fake-something-?
+
         cfg = self.driver.config
         vth = cfg.get_vthunder_config()
         imgr = self._instance_manager()
