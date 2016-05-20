@@ -219,5 +219,5 @@ class VThunderPlumbingHooks(PlumbingHooks):
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],
             vip_subnet_id,
-            vip_ip_address,
+            [vip_ip_address],
             wrong_ips=[instance['host']])
