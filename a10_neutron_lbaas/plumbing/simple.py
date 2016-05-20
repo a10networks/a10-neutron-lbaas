@@ -70,7 +70,7 @@ class PlumbingHooks(base.BasePlumbingHooks):
 
         return d
 
-    def select_device(self, tenant_id):
+    def select_device(self, tenant_id, **kwargs):
         if self.driver.config.get('use_database'):
             return self._select_device_db(tenant_id)
         else:

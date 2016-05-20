@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import acos_client
+
 from a10_neutron_lbaas import a10_exceptions as ex
 
 
@@ -25,9 +27,22 @@ class BasePlumbingHooks(object):
     # behavior, it is much easier to use the 'device_scheduling_filters'
     # mechanism, as documented in the config file.
 
-    def select_device(self, tenant_id):
+    def select_device(self, tenant_id, **kwargs):
         # Not a terribly useful scheduler
         raise ex.NotImplemented()
+
+    # Newer scheduling interface, which is called in favor the one above,
+    # if present.
+
+    # def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
+    #                                  db_session=None, **kwargs):
+    #     raise ex.NotImplemented()
+
+    def get_a10_client(device_info, **kwargs):
+        return acos_client.Client(
+            device_info['host'], device_info['api_version'],
+            device_info['username'], device_info['password'],
+            port=device_info['port'], protocol=device_info['protocol'])
 
     # Network plumbing hooks from here on out
 
