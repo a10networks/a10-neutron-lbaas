@@ -67,11 +67,12 @@ class A10OpenstackLBBase(object):
             return self.hooks.select_device(tenant_id)
 
     def _get_a10_acos_client(self, device_info):
+        retry = [errno.EHOSTUNREACH, errno.ECONNRESET, errno.ECONNREFUSED, errno.ETIMEDOUT]
         return acos_client.Client(
             device_info['host'], device_info['api_version'],
             device_info['username'], device_info['password'],
             port=device_info['port'], protocol=device_info['protocol'],
-            retry_errno_list=[errno.EHOSTUNREACH, errno.ECONNRESET, errno.ECONNREFUSED])
+            retry_errno_list=retry)
 
     def _get_a10_client(self, device_info):
         c = self._get_a10_acos_client(device_info)
