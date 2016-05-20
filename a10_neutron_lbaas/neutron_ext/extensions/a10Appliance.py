@@ -26,8 +26,6 @@ import a10_neutron_lbaas.neutron_ext.common.constants as constants
 from a10_neutron_lbaas.neutron_ext.common import resources
 import a10_neutron_lbaas_client.resources.a10_appliance as a10_appliance
 
-# Neutron is finicky. Sometimes _ is defined, sometimes it isn't
-localization.install()
 
 RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_appliance.RESOURCE_ATTRIBUTE_MAP, attributes)
 

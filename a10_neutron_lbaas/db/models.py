@@ -14,6 +14,7 @@ import datetime
 import uuid
 
 import sqlalchemy as sa
+from sqlalchemy.inspection import inspect
 
 from a10_neutron_lbaas.db import api as db_api
 
@@ -28,12 +29,17 @@ def _get_date():
     return datetime.datetime.now()
 
 
-class A10BaseMixin(object):
+class A10Base(Base):
+    __abstract__ = True
 
     @classmethod
     def query(cls, db_session=None):
         db = db_session or db_api.get_session()
         return db.query(cls)
+
+    @classmethod
+    def get(cls, key, db_session=None):
+        return cls.query(db_session).get(key)
 
     @classmethod
     def find_all_by(cls, db_session=None, **kwargs):
@@ -53,16 +59,31 @@ class A10BaseMixin(object):
         return cls.query(db_session).all()
 
     @classmethod
+    def create(cls, **kwargs):
+        instance = cls(**kwargs)
+        # Populate all the unspecified columns with their defaults
+        for key, column in inspect(cls).columns.items():
+            if key not in kwargs and column.default is not None:
+                arg = column.default.arg
+                column_default = arg if callable(arg) else lambda: arg
+                setattr(instance, key, column_default(instance))
+        return instance
+
+    @classmethod
     def create_and_save(cls, db_session=None, **kwargs):
         db = db_session or db_api.get_session()
-        m = cls(**kwargs)
+        m = cls.create(**kwargs)
         db.add(m)
         db.commit()
+        return m
 
     def as_dict(self):
         d = dict(self.__dict__)
         d.pop('_sa_instance_state', None)
         return d
+
+
+class A10BaseMixin(object):
 
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     tenant_id = sa.Column(sa.String(36), nullable=False)
@@ -70,7 +91,7 @@ class A10BaseMixin(object):
     updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date, nullable=False)
 
 
-class A10TenantBinding(A10BaseMixin, Base):
+class A10TenantBinding(A10BaseMixin, A10Base):
     __tablename__ = "a10_tenant_bindings"
 
     device_name = sa.Column(sa.String(1024), nullable=False)
@@ -81,7 +102,7 @@ class A10TenantBinding(A10BaseMixin, Base):
         return cls.find_by_attribute('tenant_id', tenant_id, db_session)
 
 
-class A10DeviceInstance(A10BaseMixin, Base):
+class A10DeviceInstance(A10BaseMixin, A10Base):
     """An orchestrated vThunder that is being used as a device."""
 
     __tablename__ = 'a10_device_instances'
@@ -114,7 +135,7 @@ class A10DeviceInstance(A10BaseMixin, Base):
     # For client objects, use _get_a10_client with the a10_config device dict
 
 
-class A10SLB(A10BaseMixin, Base):
+class A10SLB(A10BaseMixin, A10Base):
     __tablename__ = 'a10_slbs'
 
     # For vip specific binding (as opposed to tenant level binding), this will
