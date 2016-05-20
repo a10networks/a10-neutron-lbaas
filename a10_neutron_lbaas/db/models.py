@@ -59,6 +59,11 @@ class A10BaseMixin(object):
         db.add(m)
         db.commit()
 
+    def as_dict(self):
+        d = dict(self.__dict__ )
+        d.pop('_sa_instance_state', None)
+        return d
+
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     tenant_id = sa.Column(sa.String(36), nullable=False)
     created_at = sa.Column(sa.DateTime, default=_get_date, nullable=False)

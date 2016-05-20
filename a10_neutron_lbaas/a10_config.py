@@ -184,7 +184,7 @@ class A10Config(object):
 
             instance = models.A10DeviceInstance.find_by(name=device_name, db_session=db_session)
             if instance is not None:
-                self._devices[device_name] = dict(instance)
+                self._devices[device_name] = instance.as_dict()
                 return self._devices[device_name]
         return None
 
@@ -195,7 +195,7 @@ class A10Config(object):
 
             d = dict(self._devices.items())
             for x in models.A10DeviceInstance.find_all():
-                d[x.name] = dict(x)
+                d[x.name] = instance.as_dict()
             return d
         return self._devices
 
