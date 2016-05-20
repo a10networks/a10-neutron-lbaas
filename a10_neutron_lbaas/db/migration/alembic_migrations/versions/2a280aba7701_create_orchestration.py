@@ -70,4 +70,3 @@ def downgrade():
     op.drop_table('a10_slbs')
     op.drop_table('a10_device_instances')
     pass
-

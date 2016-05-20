@@ -209,15 +209,15 @@ class VThunderPlumbingHooks(PlumbingHooks):
 
         if hasattr(vip, 'vip_address'):
             vip_ip_address = vip.vip_address
+            vip_subnet_id = vip.vip_subnet_id
         else:
-            #vip_ip_address = vip['ip_address']  # XXX: must go fetch via port id from neutron
-            raise ex.InternalError('Virtual orchestration not yet supported for lbaasv1')
+            vip_ip_address = vip['address']
+            vip_subnet_id = vip['subnet_id']
 
         imgr = self._instance_manager()
 
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],
-            vip.vip_subnet_id,
+            vip_subnet_id,
             vip_ip_address,
             wrong_ips=[instance['host']])
-
