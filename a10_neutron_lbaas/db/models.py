@@ -108,10 +108,6 @@ class A10DeviceInstance(A10BaseMixin, Base):
     # For "device" dicts, use a10_config.get_device()
     # For client objects, use _get_a10_client with the a10_config device dict
 
-    @classmethod
-    def find_by_device_name(cls, device_name, db_session=None):
-        return cls.find_by_attribute('device_name', device_name, db_session)
-
 
 class A10SLB(A10BaseMixin, Base):
     __tablename__ = 'a10_slbs'
