@@ -38,7 +38,7 @@ class BasePlumbingHooks(object):
     #                                  db_session=None, **kwargs):
     #     raise ex.NotImplemented()
 
-    def get_a10_client(device_info, **kwargs):
+    def get_a10_client(self, device_info, **kwargs):
         return acos_client.Client(
             device_info['host'], device_info['api_version'],
             device_info['username'], device_info['password'],

@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import errno
 import logging
 
 import acos_client
@@ -30,7 +31,7 @@ LOG = logging.getLogger(__name__)
 
 class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 
-    def get_a10_client(device_info, **kwargs):
+    def get_a10_client(self, device_info, **kwargs):
         if kwargs.get('action', None) == 'create':
             retry = [errno.EHOSTUNREACH, errno.ECONNRESET, errno.ECONNREFUSED, errno.ETIMEDOUT]
             return acos_client.Client(
@@ -103,7 +104,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 
         # No? Then we need to create one.
 
-        if action != 'create':
+        if kwargs.get('action') != 'create':
             LOG.error(missing_instance)
             raise ex.InstanceMissing(missing_instance)
 

@@ -28,8 +28,8 @@ LOG = logging.getLogger(__name__)
 
 class VThunderPerVIPPlumbingHooks(vthunder_per_tenant.VThunderPerTenantPlumbingHooks):
 
-    def select_device_with_lbaas_obj(
-        self, tenant_id, a10_context, lbaas_obj, db_session=None, **kwargs):
+    def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
+                                     db_session=None, **kwargs):
 
         if not self.driver.config.get('use_database'):
             raise ex.RequiresDatabase('vThunder orchestration requires use_database=True')
@@ -55,7 +55,7 @@ class VThunderPerVIPPlumbingHooks(vthunder_per_tenant.VThunderPerTenantPlumbingH
 
         # No? Then we need to create one.
 
-        if action != 'create':
+        if kwargs.get('action') != 'create':
             LOG.error(missing_instance)
             raise ex.InstanceMissing(missing_instance)
 
