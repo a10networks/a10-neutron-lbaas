@@ -36,7 +36,7 @@ class FakeInstance(dict):
             "availability_zone": None,
             "block_device_mapping": None,  # optional extension
             "block_device_mapping_v2": None,  # optional extension
-            "networks": ["net01"],  # optional extension
+            "networks": ["mgmt-net"],  # optional extension
             "scheduler_hints": {},  # optional extension
             "config_drive": False,  # optional extension
             "disk_config": "AUTO",   # AUTO or MANUAL # optional extension
