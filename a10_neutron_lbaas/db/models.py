@@ -82,6 +82,14 @@ class A10Base(Base):
         d.pop('_sa_instance_state', None)
         return d
 
+    def update(self, **kwargs):
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def delete(self, db_session=None):
+        db = db_session or inspect(self).session
+        db.delete(self)
+
 
 class A10BaseMixin(object):
 

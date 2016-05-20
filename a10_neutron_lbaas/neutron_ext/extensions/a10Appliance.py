@@ -19,7 +19,6 @@ from neutron.api import extensions
 from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
 from neutron.common import exceptions
-import neutron.i18n as localization
 from neutron.services import service_base
 
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
