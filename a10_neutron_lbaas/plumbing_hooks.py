@@ -203,7 +203,7 @@ class VThunderPlumbingHooks(PlumbingHooks):
         return device_config
 
     def after_vip_create(self, a10_context, os_context, vip):
-        instance = self.a10_context.device_cfg
+        instance = a10_context.device_cfg
         if 'nova_instance_id' not in instance:
             raise ex.InternalError('Attempting virtual plumbing on non-virtual device')
 
