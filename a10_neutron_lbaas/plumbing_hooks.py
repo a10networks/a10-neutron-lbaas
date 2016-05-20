@@ -219,3 +219,4 @@ class VThunderPlumbingHooks(PlumbingHooks):
             instance['vip_subnet_id'],
             vip_ip_address,
             wrong_ips=[instance['host']])
+
