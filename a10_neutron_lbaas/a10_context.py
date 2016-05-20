@@ -30,7 +30,7 @@ class A10Context(object):
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
-        self.action = kwargs.get('action', 'create')
+        self.action = kwargs.get('action', '')
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
         self.partition_name = "shared"
 

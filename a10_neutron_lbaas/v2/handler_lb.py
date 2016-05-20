@@ -45,7 +45,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         self._set(c.client.slb.virtual_server.create, c, context, lb)
 
     def create(self, context, lb):
-        with a10.A10WriteStatusContext(self, context, lb) as c:
+        with a10.A10WriteStatusContext(self, context, lb, action='create') as c:
             self._create(c, context, lb)
             self.hooks.after_vip_create(c, context, lb)
 

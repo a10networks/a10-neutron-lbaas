@@ -34,7 +34,7 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
             axapi_args=args)
 
     def create(self, context, pool):
-        with a10.A10WriteStatusContext(self, context, pool) as c:
+        with a10.A10WriteStatusContext(self, context, pool, action='create') as c:
             try:
                 self._set(c.client.slb.service_group.create,
                           c, context, pool)
