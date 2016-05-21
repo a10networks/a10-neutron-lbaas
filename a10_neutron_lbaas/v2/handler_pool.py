@@ -65,8 +65,7 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10DeleteContext(self, context, pool) as c:
             debug_fmt = "handler_pool.delete(): removing member {0} from pool {1}"
             for member in pool.members:
-                debug_fmt.format(member, member.pool_id)
-                LOG.debug()
+                LOG.debug(debug_fmt.format(member, member.pool_id))
                 self.a10_driver.member._delete(c, context, member)
 
             LOG.debug("handler_pool.delete(): Checking pool health monitor...")
