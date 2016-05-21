@@ -18,6 +18,8 @@ import a10_neutron_lbaas.plumbing_hooks
 
 GLOBAL_DEFAULTS = {
     "verify_appliances": False,
+    "use_worker_thread": True,
+    "worker_sleep_time": 600,
     "use_database": False,
     "database_connection": None,
     "neutron_conf_dir": '/etc/neutron',
