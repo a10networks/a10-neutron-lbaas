@@ -161,10 +161,12 @@ devices = {
 #     'nova_flavor': 'vthunder.small',  # 1 core, 4096MB ram, 12GB disk
 #     'glance_image': None,
 
+#     'vthunder_management_network': 'private-mgmt',
+#     'vthunder_data_networks': [ 'vip-net', 'member-net' ]
+
+#     # The following are required by the vthunder_service_tenant schedulers.
 #     'vthunder_tenant_name': '',
 #     'vthunder_tenant_username': '',
 #     'vthunder_tenant_password': '',
 
-#     'vthunder_management_network': 'private-mgmt',
-#     'vthunder_data_networks': [ 'vip-net', 'member-net' ]
 # }

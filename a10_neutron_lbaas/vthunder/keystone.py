@@ -21,13 +21,20 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 class KeystoneA10(object):
 
-    def __init__(self, keystone_version, auth_url, vthunder_config):
-        (self._session, self._keystone_client) = self._get_keystone(
-            ks_version=keystone_version,
-            auth_url=auth_url,
-            tenant_name=vthunder_config['vthunder_tenant_name'],
-            user=vthunder_config['vthunder_tenant_username'],
-            password=vthunder_config['vthunder_tenant_password'])
+    def __init__(self, keystone_version, auth_url, vthunder_config=None, openstack_context=None):
+        if vthunder_config is not None:
+            (self._session, self._keystone_client) = self._get_keystone_pw(
+                ks_version=keystone_version,
+                auth_url=auth_url,
+                tenant_name=vthunder_config['vthunder_tenant_name'],
+                user=vthunder_config['vthunder_tenant_username'],
+                password=vthunder_config['vthunder_tenant_password'])
+        else if openstack_context is not None:
+            (self._session, self._keystone_client) = self._get_keystone_ctx(
+                ks_version=keystone_version,
+                auth_url=auth_url,
+                tenant_id=openstack_context.tenant_id,
+                auth_token=openstack_context.auth_token)
 
     @property
     def session(self):
@@ -37,7 +44,17 @@ class KeystoneA10(object):
     def client(self):
         return self._keystone_client
 
-    def _get_keystone(self, ks_version, auth_url, user, password, tenant_name):
+    def _get_keystone_stuff(self, ks_version, auth):
+        sess = session.Session(auth=auth)
+
+        if int(ks_version) == 2:
+            ks = keystone_v2_client.Client(session=sess)
+        else:
+            ks = keystone_v3_client.Client(session=sess)
+
+        return (sess, ks)
+
+    def _get_keystone_pw(self, ks_version, auth_url, user, password, tenant_name):
         if int(ks_version) == 2:
             auth = v2.Password(
                 auth_url=auth_url, username=user, password=password,
@@ -49,11 +66,14 @@ class KeystoneA10(object):
         else:
             raise a10_ex.InvalidConfig('keystone version must be protovol version 2 or 3')
 
-        sess = session.Session(auth=auth)
+        return self._get_keystone_stuff(auth)
 
+    def _get_keystone_token(self, ks_version, auth_url, auth_token, tenant_id):
         if int(ks_version) == 2:
-            ks = keystone_v2_client.Client(session=sess)
+            auth = v2.Token(auth_url=auth_url, token=auth_token, tenant_id=tenant_id)
+        elif int(ks_version) == 3:
+            auth = v3.Token(auth_url=auth_url, token=auth_token, tenant_id=tenant_id)
         else:
-            ks = keystone_v3_client.Client(session=sess)
+            raise a10_ex.InvalidConfig('keystone version must be protovol version 2 or 3')
 
-        return (sess, ks)
+        return self._get_keystone_stuff(ks_version, auth)

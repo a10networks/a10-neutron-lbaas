@@ -64,12 +64,25 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 
 class InstanceManager(object):
-    def __init__(self, ks_session,
+    def __init__(self, ks_session, network_ks_session=None,
                  nova_api=None, glance_api=None, neutron_api=None):
 
-        self._nova_api = nova_api or nova_client.Client(NOVA_VERSION, session=ks_session)
+        # This is the keystone session that we use for spawning instances,
+        # aka our "service tenant" user.
+        self._ks_session = ks_session
+
+        # And this is the keystone session that we use for finding the network
+        # that we are going to plumb into, aka the "end user".
+        if network_ks_session is not None:
+            self._network_ks_session = network_ks_session
+        else:
+            self._network_ks_session = ks_session
+
+        # Yes, we really want both of these to use the "service tenant".
+        self._nova_api = nova_api or nova_client.Client(
+            NOVA_VERSION, session=self._ks_session)
         self._neutron_api = neutron_api or neutron_client.Client(
-            NEUTRON_VERSION, session=ks_session)
+            NEUTRON_VERSION, session=self._ks_session)
 
     def _build_server(self, instance):
         retval = {}
@@ -228,7 +241,9 @@ class InstanceManager(object):
                 "Parameter networks must be specified.")
 
         try:
-            network_list = self._neutron_api.list_networks()
+            # Lookup as user, since names are not unique
+            q_api = neutron_client.Client(NEUTRON_VERSION, session=self._network_ks_session)
+            network_list = q_api.list_networks()
             net_list = network_list.get("networks", [])
         # TODO(mdurrant) - Create specific exceptions.
         except Exception as ex:
