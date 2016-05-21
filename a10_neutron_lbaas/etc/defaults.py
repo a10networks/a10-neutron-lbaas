@@ -75,4 +75,8 @@ VTHUNDER_REQUIRED_FIELDS = [
 ]
 
 VTHUNDER_OPTIONAL_DEFAULTS = dict(DEVICE_OPTIONAL_DEFAULTS)
-VTHUNDER_OPTIONAL_DEFAULTS['destroy_on_empty'] = False
+VTHUNDER_OPTIONAL_DEFAULTS.update({
+    'autosnat': True,
+    'destroy_on_empty': False,
+    'v_method': 'LSI',
+})
