@@ -118,6 +118,23 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         LOG.debug("select_device, returning new instance %s", device_config)
         return device_config
 
+    def partition_empty(self, a10_context, os_context, partition_name):
+        if partition_name != 'shared':
+            # abnormal; skip it
+            return
+
+        vth = a10_context.a10_driver.config.get_vthunder_config()
+        if vth['destroy_on_empty'] is not True:
+            return
+
+        # Alright, we have an empty instance, let's clean it up.
+        instance = a10_context.device_cfg
+        if 'nova_instance_id' not in instance:
+            raise ex.InternalError('Attempting virtual plumbing on non-virtual device')
+
+        imgr = self._instance_manager()
+        return imgr.delete_instance(instance['nova_instance_id'])
+
     def after_vip_create(self, a10_context, os_context, vip):
         instance = a10_context.device_cfg
         if 'nova_instance_id' not in instance:

@@ -167,4 +167,6 @@ devices = {
 
 #     'vthunder_management_network': 'private-mgmt',
 #     'vthunder_data_networks': [ 'vip-net', 'member-net' ]
+
+#     'destroy_on_empty': False
 # }

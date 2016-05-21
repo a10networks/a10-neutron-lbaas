@@ -137,18 +137,20 @@ class A10DeleteContextBase(A10WriteContext):
         return 1
 
     def partition_cleanup_check(self):
-        # If we are not using appliance partitions, we are done.
-
-        if self.device_cfg['v_method'].lower() != 'adp':
-            return
-
         n = self.remaining_root_objects()
         LOG.debug("A10DeleteContext.partition_cleanup_check(): n=%s" % (n))
         if n == 0:
+            name = self.tenant_id[0:13]
+            if not name:
+                return
+
+            self.hooks.partition_empty(self, self.openstack_context, name)
+
+            # If we are not using appliance partitions, we are done.
+            if self.device_cfg['v_method'].lower() != 'adp':
+                return
+
             try:
-                name = self.tenant_id[0:13]
-                if not name:
-                    return
                 self.hooks.partition_delete(self.client, self.openstack_context, name)
                 LOG.debug("hooks.partition_delete of %s succeeded " % (name))
                 self.partition_deleted = True

@@ -52,6 +52,9 @@ class BasePlumbingHooks(object):
     def partition_delete(self, client, os_context, partition_name):
         client.system.partition.delete(partition_name)
 
+    def partition_empty(self, a10_context, os_context, partition_name):
+        pass
+
     def after_member_create(self, a10_context, os_context, member):
         pass
 
