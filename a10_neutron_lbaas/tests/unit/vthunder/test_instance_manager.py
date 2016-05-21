@@ -26,7 +26,7 @@ log_mock = mock.MagicMock()
 
 # This is here because I couldn't get mock to actually mock the classes
 # Get rid of this and I'll give you a cookie - MD
-sys.modules["a10_neutron_lbaas_client"] = mock.MagicMock()
+sys.modules["a10_neutronclient"] = mock.MagicMock()
 sys.modules["glanceclient"] = mock.MagicMock()
 sys.modules["glanceclient.client"] = mock.MagicMock()
 sys.modules["logging"] = mock.Mock(getLogger=mock.Mock(return_value=log_mock))
