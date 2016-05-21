@@ -31,8 +31,10 @@ class WorkerThread(threading.Thread):
         self.queue = kwargs.get('queue')
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def run(self):
 >>>>>>> initial worker thread framework
+>>>>>>> run is main loop, not start
         LOG.info("A10 worker thread, starting")
 
         while True:
@@ -43,6 +45,8 @@ class WorkerThread(threading.Thread):
 
             time.sleep(10)
 <<<<<<< HEAD
+<<<<<<< HEAD
     def join(self):
         LOG.info("A10 worker thread, joining")
 >>>>>>> initial worker thread framework
+>>>>>>> run is main loop, not start
