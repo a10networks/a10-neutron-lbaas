@@ -336,5 +336,5 @@ def config_instance_manager(config):
         vth = config.get_vthunder_config()
         ks = a10_keystone.KeystoneA10(
             config.get('keystone_version'), config.get('keystone_auth_url'), vth)
-        imgr = instance_manager.InstanceManager(ks_session=ks.session)
+        imgr = InstanceManager(ks_session=ks.session)
         return imgr

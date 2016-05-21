@@ -20,7 +20,6 @@ import acos_client
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.vthunder import instance_manager
-from a10_neutron_lbaas.vthunder import keystone as a10_keystone
 
 import base
 
