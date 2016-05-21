@@ -127,28 +127,6 @@ class TestLB(test_base.UnitTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.stats' in s)
 
-    def test_create_calls_client_proxy(self):
-        m = test_base.FakeLoadBalancer()
-        mock_client = mock.MagicMock()
-        self.a.hooks.client_wrapper_class = lambda x, y: mock_client
-        self.a.lb.create(None, m)
-        create_call = mock_client.slb.virtual_server.create
-        self.assertEqual(1, create_call.call_count)
-
-    def test_create_failure_raises_exception(self):
-        m = test_base.FakeLoadBalancer()
-        mock_client = mock.MagicMock()
-        self.a.hooks.client_wrapper_class = lambda x, y: mock_client
-
-        class ExpectedException(Exception):
-            pass
-
-        mock_client.slb.virtual_server.create.side_effect = self.do_raise_exception(
-            ExpectedException)
-
-        with self.assertRaises(ExpectedException):
-            self.a.lb.create(None, m)
-
     def do_raise_exception(self, e, msg="mock raised exception"):
         def raise_exception(e, msg="acos broke!"):
             raise e(msg)
