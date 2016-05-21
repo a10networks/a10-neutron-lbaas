@@ -15,9 +15,11 @@
 import logging
 
 import acos_client
+from six.moves import queue
 
 import a10_config
 import version
+import worker.main as worker
 
 import v1.handler_hm
 import v1.handler_member
@@ -70,6 +72,15 @@ class A10OpenstackLBBase(object):
             self.hooks = self.plumbing_hooks_class(self)
         else:
             self.hooks = self.config.get('plumbing_hooks_class')(self)
+
+        if self.config.get('use_worker_thread'):
+            self.worker_queue = queue.Queue()
+            self.worker = worker.WorkerThread(a10_driver=self, queue=self.worker_queue)
+            self.worker.daemon = True
+            self.worker.start()
+        else:
+            self.worker_queue = None
+            self.worker = None
 
         if self.config.get('verify_appliances'):
             self._verify_appliances()
