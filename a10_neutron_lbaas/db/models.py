@@ -90,13 +90,14 @@ class A10Base(Base):
         db = db_session or inspect(self).session
         db.delete(self)
 
+    created_at = sa.Column(sa.DateTime, default=_get_date, nullable=False)
+    updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date, nullable=False)
+
 
 class A10BaseMixin(object):
 
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     tenant_id = sa.Column(sa.String(36), nullable=False)
-    created_at = sa.Column(sa.DateTime, default=_get_date, nullable=False)
-    updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date, nullable=False)
 
 
 class A10TenantBinding(A10BaseMixin, A10Base):
