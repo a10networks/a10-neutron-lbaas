@@ -113,4 +113,4 @@ class TestMembers(test_base.UnitTestBase):
         self.a.member.delete(None, m)
 
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
-            m.pool.id, name, m.protocol_port)
+            m.pool_id, name, m.protocol_port)

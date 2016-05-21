@@ -85,6 +85,7 @@ class FakeMember(FakeModel):
         self.pool = pool
         self.protocol_port = 80
         self.root_loadbalancer = FakeLoadBalancer()
+        self.pool_id = "fake-pool"
 
 
 class FakePool(FakeModel):
