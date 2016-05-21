@@ -15,10 +15,10 @@
 import mock
 import sys
 
-import mocks
+import a10_neutron_lbaas.tests.unit.mocks as mocks
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-import test_base
+import a10_neutron_lbaas.tests.unit.test_base as test_base
 
 # Figure out why this is necessary to make the mock work correctly.
 
@@ -78,9 +78,14 @@ class TestInstanceManager(test_base.UnitTestBase):
                                 "ACTIVE"]
 
         self.setup_mocks()
-
-        self.target = im.InstanceManager('fake-tenant-id', nova_api=self.nova_api,
-                                         glance_api=self.glance_api, neutron_api=self.neutron_api)
+        self.ks_version = 3
+        self.auth_url = "http://localhost:1234"
+        self.vthunder_tenant_name = "tenantive-tenant"
+        self.user = "user"
+        self.password = "password"
+        self.target = im.InstanceManager(self.ks_version, self.auth_url, self.vthunder_tenant_name,
+                                         self.user, self.password, nova_api=self.nova_api,
+                                         neutron_api=self.neutron_api)
 
     def server_get_side_effect(self, args):
         if len(instance_states) > 0:
@@ -90,7 +95,7 @@ class TestInstanceManager(test_base.UnitTestBase):
         setattr(self.fake_created, VMSTATE_KEY, vmstate)
 
     def setup_mocks(self):
-        self.fake_created = mock.Mock(addresses={"network1": [
+        self.fake_created = mock.Mock(addresses={"mgmt-net": [
             {
                 "version": 4,
                 "addr": "127.0.0.1"
@@ -102,12 +107,15 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.servers = mock.Mock()
         self.fake_image = self._fake_image()
         self.fake_flavor = self._fake_flavor()
-        self.fake_networks = {"networks": [{"id": "net01", "name": "network1"}]}
+        self.fake_networks = {
+            "networks": [
+                {"id": "mgmt-net", "name": "mgmt-net"}]
+        }
 
         self.fake_instance = self._fake_instance(name="fake-instance-01",
                                                  image=self.fake_image.id,
                                                  flavor=self.fake_flavor.id,
-                                                 nics=['network1'])
+                                                 nics=['mgmt-net'])
 
         self.nova_api.servers.list = mock.Mock(return_value=[self._fake_instance()])
         self.nova_api.servers.create = mock.Mock(return_value=self.fake_created)
@@ -186,21 +194,11 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.nova_api.servers.list.assert_called_with(detailed, search_opts, marker, limit,
                                                       sort_keys, sort_dirs)
 
-    def test_glanceapi_notnone(self):
-        self.assertIsNotNone(self.target._glance_api)
-
     def test_neutronapi_notnone(self):
         self.assertIsNotNone(self.target._neutron_api)
 
     def test_novaapi_notnone(self):
         self.assertIsNotNone(self.target._nova_api)
-
-    def test_create_instance_image_not_available_throws_exception(self):
-        self.nova_api.images.list.return_value = None
-        self.nova_api.images.list.side_effect = a10_ex.ImageNotFoundError()
-        fake_instance = self.fake_instance
-        with self.assertRaises(a10_ex.ImageNotFoundError):
-            self.target.create_instance(fake_instance)
 
     def test_create_instance_flavor_not_available_throws_exception(self):
         self.nova_api.flavors.list.return_value = [None]
@@ -225,13 +223,6 @@ class TestInstanceManager(test_base.UnitTestBase):
         with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
             self.target.get_image(identifier=None)
 
-    def test_get_image_throws_exception_for_missing_image(self):
-        self.nova_api.images.list.return_value = [None]
-        with self.assertRaises(a10_ex.ImageNotFoundError):
-            self.nova_api.images.list.return_value = None
-            self.nova_api.images.list.side_effect = a10_ex.ImageNotFoundError()
-            self.target.get_image(identifier="invalidimage")
-
     def test_get_flavor_throws_exception_for_unspecified_identifier(self):
         with self.assertRaises(a10_ex.IdentifierUnspecifiedError):
             self.target.get_flavor(identifier=None)
@@ -249,8 +240,14 @@ class TestInstanceManager(test_base.UnitTestBase):
         with self.assertRaises(a10_ex.NetworksNotFoundError):
             self.target.get_networks(networks=["network"])
 
-    def test_create_default_instance_returns_host(self):
-        defaults = self.target._config.instance_defaults
+    def test_create_device_instance_returns_host(self):
+        defaults = im._default_server
+        defaults["flavor"] = "flavor001"
+        defaults["networks"] = ["mgmt-net"]
+        defaults["glance_image"] = "image001"
+        defaults["nova_flavor"] = "flavor001"
+        defaults["vthunder_management_network"] = "mgmt-net"
+        defaults["vthunder_data_networks"] = ["mgmt-net"]
 
         self.fake_created.addresses = dict((network, [
             {
@@ -264,9 +261,8 @@ class TestInstanceManager(test_base.UnitTestBase):
 
         self.neutron_api.list_networks.return_value = {
             "networks": [{"id": x, "name": x}
-                         for x in self.target._config.instance_defaults['networks']]
+                         for x in defaults['networks']]
         }
 
-        device = self.target.create_default_instance()
-
-        self.assertEqual('127.0.0.1', device['host'])
+        device = self.target.create_device_instance(defaults)
+        self.assertEqual('127.0.0.1', device['ip_address'])
