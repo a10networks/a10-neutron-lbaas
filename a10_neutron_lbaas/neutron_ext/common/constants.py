@@ -16,13 +16,13 @@ from neutron.plugins.common import constants as nconstants
 
 from a10_neutronclient.resources import a10_device_instance
 
-A10_APPLIANCE_EXT = a10_device_instance.EXTENSION
-A10_APPLIANCE = a10_device_instance.SERVICE
+A10_DEVICE_INSTANCE_EXT = a10_device_instance.EXTENSION
+A10_DEVICE_INSTANCE = a10_device_instance.SERVICE
 
-nconstants.EXT_TO_SERVICE_MAPPING[A10_APPLIANCE_EXT] = A10_APPLIANCE
+nconstants.EXT_TO_SERVICE_MAPPING[A10_DEVICE_INSTANCE_EXT] = A10_DEVICE_INSTANCE
 try:
-    nconstants.ALLOWED_SERVICES.append(A10_APPLIANCE)
-    nconstants.COMMON_PREFIXES[A10_APPLIANCE] = ""
+    nconstants.ALLOWED_SERVICES.append(A10_DEVICE_INSTANCE)
+    nconstants.COMMON_PREFIXES[A10_DEVICE_INSTANCE] = ""
 except AttributeError:
     # In Liberty and later, ALLOWED_SERVICES is derived from EXT_TO_SERVICE_MAPPING
     # COMMON_PREFIXES are instead gotten from plugin.path_prefix
