@@ -45,12 +45,12 @@ driver will need to be installed on all of your neutron controller nodes
 
 The latest supported version of a10-neutron-lbaas is available via standard pypi repositories and the current development version is available on github.
 
-##### Installation from pypi
+#### Installation from pypi
 ```sh
 sudo pip install a10-neutron-lbaas
 ```
 
-##### Installation from cloned git repository.
+#### Installation from cloned git repository.
 
 Download the driver from: <https://github.com/a10networks/a10-neutron-lbaas>
 
@@ -70,7 +70,7 @@ sudo pip install -e .
 
 Post-installation configuration requires modification of your neutron.conf or neutron_lbaas.conf (neutron_lbaas.conf is only present in LBaaSv2) typically located in `/etc/neutron`.
 
-##### LBaaS v1 configuration
+### LBaaS v1 configuration
 Open `/etc/neutron/neutron.conf` in your preferred text editor.
 Under the `service_plugins` setting, ensure `lbaas` is listed.
 
@@ -80,7 +80,7 @@ Networks:
 
 Save and close neutron.conf
 
-##### LBaaS v2 configuration
+### LBaaS v2 configuration
 Open `/etc/neutron/neutron.conf` in your preferred text editor.
 Under the `service_plugins` setting, ensure `lbaasv2` is listed.
 Save and close neutron.conf.
@@ -91,13 +91,13 @@ In the list of `service_provider` settings, add a service provider for A10
 Networks:
 `service_provider = LOADBALANCERV2:A10Networks:neutron_lbaas.drivers.a10networks.driver_v2.ThunderDriver:default`
 
-##### Extension configuration
+#### Extension configuration
 Open `/etc/neutron/neutron.conf` in your preferred text editor.
 Under the `service_plugins` setting, ensure `a10_neutron_lbaas.neutron_ext.services.a10_appliance.plugin.A10AppliancePlugin` is listed. The `service_plugins` are separated by `,`s.
 
 Under the `api_extensions_path` setting, ensure the path to `a10_neutron_lbaas.neutron_ext.extensions` is listed. The `api_extensions_path`s are separated by `:`s. You can find the path of the installed extension by running `python -c "import os; import a10_neutron_lbaas.neutron_ext.extensions as m; print(os.path.dirname(os.path.abspath(m.__file__)))"`.
 
-##### Device configuration
+#### Device configuration
 
 After installation, you will need to provide configuration for the driver so the driver is aware of the appliances you have configured.  The configuration is a python file stored in `/etc/a10/config.py`.  Below is a sample to show options and formatting, though any legal python can be used to calculate values or define classes:
 ```python
@@ -113,9 +113,84 @@ devices = {
 }
 ```
 
+#### vThunder Appliance Configuration
+
+A10's LBaaS driver supports a default scheduling strategy of "one appliance per tenant".  Below is a sample configuration (stored in `/etc/a10/config.py`):
+```python
+vthunder = {
+    'username': 'admin',
+    'password': 'a10',
+
+    'api_version': '3.0',
+
+    'nova_flavor': 'acos.min',
+    'glance_image': 'c2722746-0c06-48b1-93c3-a9dbc2f6e628',
+
+    'vthunder_tenant_name': 'admina',
+    'vthunder_tenant_username': 'admina',
+    'vthunder_tenant_password': 'password',
+
+    'vthunder_management_network': 'private',
+    'vthunder_data_networks': ['vipnet', 'membernet']
+}
+```
+
+##### `username` (required)
+
+The administrator username on your vThunder appliance image.
+
+##### `password` (required)
+
+The administrator password on your vThunder appliance image.
+
+##### `api_version` (required)
+
+The AXAPI version utilized to access vThunder appliances.  This is dependent on your vThunder appliance image version:
+
+* 2.7.x - `"2.1"`
+* 4.x.x - `"3.0"`
+
+##### `nova_flavor` (required)
+
+The name of the nova flavor used to construct vThunder device instances.  The minimum requirements are dependent on your vThunder appliance image version:
+
+###### 2.7.x
+* CPU: 1 VCPU
+* RAM: 2GB
+* Storage: 12GB
+
+###### 4.x.x
+* CPU: 1 VCPU
+* RAM: 4GB
+* Storage: 12GB
+
+##### `glance_image` (required)
+
+The Glance or Nova image ID of your vThunder appliance image.  This can be obtained through Horizon or the Openstack CLI.
+
+##### `vthunder_tenant_name` (required)
+
+The name of the service tenant where vThunder appliance instances will be created.
+
+##### `vthunder_tenant_username` (required)
+
+The Openstack user login name which has access to the above-named service tenant.
+
+##### `vthunder_tenant_passsword` (required)
+
+The Openstack password of the above-mentioned login.
+
+##### `vthunder_management_networks` (required)
+
+The Openstack network name or ID that the vThunder management interface will be connected to.
+
+##### `vthunder_data_networks` (required)
+
+A list of Openstack network names or IDs that the vThunder data interfaces will be connected to.  A minimum of one is required.
+
 For complete documentation of the a10 config.py file, please refer to the [sample config file](https://github.com/a10networks/a10-neutron-lbaas/blob/master/a10_neutron_lbaas/etc/config.py).
 
-##### Essential device configuration
+#### Essential device configuration
 
 ###### `host` (required)
 
@@ -133,6 +208,47 @@ Authentication credentials to control the A10 appliance via the AXAPI.
 
 Version of the A10 appliance's AXAPI. `"2.1"` for 2.X series ACOS versions,
 `"3.0"` for 4.X versions.
+
+
+#### vThunder License Manager Configuration
+The A10 vThunder virtual load balancing appliance has a flexible system for licensing.  Below is a sample configuration for license management (stored in `/etc/a10/config.py`):
+```python
+license_manager = {
+        "hosts": [
+                {"ip": "pdx.a10cloud.com", "port": 443},
+                {"ip": "sfo.a10cloud.com", "port": 443},
+                {"ip": "iad.a10cloud.com", "port": 443}
+        ],
+        "serial": "SNE64DD9823105C4F7E02B6AF4026C94",
+        "instance-name": "SCALING_INSTANCE",
+        "bandwidth-base": 100,
+        "interval": 3,
+        "use-mgmt-port": True
+}
+```
+
+##### `hosts` (required)
+A list of host entries specifying the IP address or hostname and TCP port of licensing servers.
+
+##### `serial` (required)
+The serial number used for your vThunder appliances
+
+##### `instance-name` (required)
+The instance name attached to the license.
+
+##### `bandwidth-base` (required for Pay-As-You-Go licensing)
+The feature's bandwidth base measured in megabytes.
+
+##### `interval` (required for Pay-As-You-Go licensing)
+The feature's bandwidth allowance interval.
+* 1 - Monthly
+* 2 - Daily
+* 3 - Hourly
+
+##### `use-mgmt-port`
+The appliance will use the management port for communicating with the licensing server if set to True.  By default, the appliance will use the use the first available interface for license server operations.
+
+More details about A10 Licensing can be found at `TODO(Add licensing info url)`.
 
 ## Install database migrations
 
