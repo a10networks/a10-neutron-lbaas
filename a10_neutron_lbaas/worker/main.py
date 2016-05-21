@@ -30,7 +30,9 @@ class WorkerThread(threading.Thread):
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.queue = kwargs.get('queue')
 
+<<<<<<< HEAD
     def run(self):
+>>>>>>> initial worker thread framework
         LOG.info("A10 worker thread, starting")
 
         while True:
@@ -40,3 +42,7 @@ class WorkerThread(threading.Thread):
             # status_update.run(self.a10_driver.config, self.plugin)
 
             time.sleep(10)
+<<<<<<< HEAD
+    def join(self):
+        LOG.info("A10 worker thread, joining")
+>>>>>>> initial worker thread framework
