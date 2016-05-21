@@ -20,6 +20,17 @@
 
 # verify_appliances = False,
 
+# Set this to true if you want certain tasks done by a background worker,
+# including keeping the operating status fields in neutron models
+# up to date.
+
+# use_worker_thread = True
+
+# If using a worker thread, how long to sleep when idle? This affects how
+# often the operating status of neutron models is updated. In seconds.
+
+# worker_sleep_time = 600
+
 # Should the driver store some meta-info in a database?
 # Needed for tenant<->appliance persistence if the number of appliances
 # is changed for any reason. Setting this to true means that you will
