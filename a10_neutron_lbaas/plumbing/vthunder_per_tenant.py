@@ -12,6 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import errno
+import logging
+
+import acos_client
+
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.vthunder import instance_manager
@@ -19,11 +24,24 @@ from a10_neutron_lbaas.vthunder import keystone as a10_keystone
 
 import base
 
+LOG = logging.getLogger(__name__)
+
 
 # This next set of plumbing hooks needs to be used when the vthunder
 # scheduler is active, for one vthunder per tenant.
 
 class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
+
+    def get_a10_client(self, device_info, **kwargs):
+        if kwargs.get('action', None) == 'create':
+            retry = [errno.EHOSTUNREACH, errno.ECONNRESET, errno.ECONNREFUSED, errno.ETIMEDOUT]
+            return acos_client.Client(
+                device_info['host'], device_info['api_version'],
+                device_info['username'], device_info['password'],
+                port=device_info['port'], protocol=device_info['protocol'],
+                retry_errno_list=retry)
+        else:
+            return super(VThunderPerTenantPlumbingHooks, self).get_a10_client(device_info, **kwargs)
 
     def _instance_manager(self):
         cfg = self.driver.config
@@ -60,23 +78,33 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         return device_config
 
     def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
-                                     db_session=None):
+                                     db_session=None, **kwargs):
         if not self.driver.config.get('use_database'):
             raise ex.RequiresDatabase('vThunder orchestration requires use_database=True')
 
         # If we already have a vThunder, use it.
         # one vthunder per tenant
 
+        missing_instance = (
+            'A10 instance mapped to tenant %s is not present in db; '
+            'add it back to config or migrate loadbalancers' % tenant_id
+        )
+
         tb = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
         if tb is not None:
             d = self.driver.config.get_device(tb.device_name, db_session=db_session)
             if d is None:
-                raise ex.InstanceMissing(
-                    'A10 instance mapped to tenant %s is not present in db; '
-                    'add it back to config or migrate loadbalancers' % tenant_id)
+                LOG.error(missing_instance)
+                raise ex.InstanceMissing(missing_instance)
+
+            LOG.debug("select_device, returning cached instance %s", d)
             return d
 
         # No? Then we need to create one.
+
+        if kwargs.get('action') != 'create':
+            LOG.error(missing_instance)
+            raise ex.InstanceMissing(missing_instance)
 
         device_config = self._create_instance(tenant_id, a10_context, lbaas_obj, db_session)
 
@@ -87,6 +115,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             device_name=device_config['name'],
             db_session=db_session)
 
+        LOG.debug("select_device, returning new instance %s", device_config)
         return device_config
 
     def after_vip_create(self, a10_context, os_context, vip):

@@ -12,10 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
 
 import vthunder_per_tenant
+
+LOG = logging.getLogger(__name__)
 
 
 # This next set of plumbing hooks needs to be used when the vthunder
@@ -24,24 +28,36 @@ import vthunder_per_tenant
 
 class VThunderPerVIPPlumbingHooks(vthunder_per_tenant.VThunderPerTenantPlumbingHooks):
 
-    def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj, db_session=None):
+    def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
+                                     db_session=None, **kwargs):
+
         if not self.driver.config.get('use_database'):
             raise ex.RequiresDatabase('vThunder orchestration requires use_database=True')
 
         # If we already have a vThunder, use it.
         # one vthunder per VIP
 
+        missing_instance = (
+            'A10 instance mapped to tenant %s is not present in db; '
+            'add it back to config or migrate loadbalancers' % tenant_id
+        )
+
         root_id = lbaas_obj.root_loadbalancer.id
         slb = models.A10SLB.find_by(loadbalancer_id=root_id, db_session=db_session)
         if slb is not None:
             d = self.driver.config.get_device(slb.device_name, db_session=db_session)
             if d is None:
-                raise ex.InstanceMissing(
-                    'A10 instance mapped to loadbalancer_id %s is not present in db; '
-                    'add it back to config or migrate loadbalancers' % root_id)
+                LOG.error(missing_instance)
+                raise ex.InstanceMissing(missing_instance)
+
+            LOG.debug("select_device, returning cached instance %s", d)
             return d
 
         # No? Then we need to create one.
+
+        if kwargs.get('action') != 'create':
+            LOG.error(missing_instance)
+            raise ex.InstanceMissing(missing_instance)
 
         device_config = self._create_instance(tenant_id, a10_context, lbaas_obj, db_session)
 
@@ -53,4 +69,5 @@ class VThunderPerVIPPlumbingHooks(vthunder_per_tenant.VThunderPerTenantPlumbingH
             loadbalancer_id=root_id,
             db_session=db_session)
 
+        LOG.debug("select_device, returning new instance %s", device_config)
         return device_config

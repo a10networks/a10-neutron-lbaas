@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import errno
 import logging
 
 import acos_client
@@ -59,27 +58,21 @@ class A10OpenstackLBBase(object):
         if self.config.get('verify_appliances'):
             self._verify_appliances()
 
-    def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None):
+    def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None, **kwargs):
         if hasattr(self.hooks, 'select_device_with_lbaas_obj'):
             return self.hooks.select_device_with_lbaas_obj(
-                tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj)
+                tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj, **kwargs)
         else:
-            return self.hooks.select_device(tenant_id)
+            return self.hooks.select_device(tenant_id, **kwargs)
 
-    def _get_a10_acos_client(self, device_info):
-        retry = [errno.EHOSTUNREACH, errno.ECONNRESET, errno.ECONNREFUSED, errno.ETIMEDOUT]
-        return acos_client.Client(
-            device_info['host'], device_info['api_version'],
-            device_info['username'], device_info['password'],
-            port=device_info['port'], protocol=device_info['protocol'],
-            retry_errno_list=retry)
-
-    def _get_a10_client(self, device_info):
-        c = self._get_a10_acos_client(device_info)
-        if self.hooks.client_wrapper_class is not None:
-            return self.hooks.client_wrapper_class(c, device_info)
+    def _get_a10_client(self, device_info, **kwargs):
+        if hasattr(self.hooks, 'get_a10_client'):
+            return self.hooks.get_a10_client(device_info, **kwargs)
         else:
-            return c
+            return acos_client.Client(
+                device_info['host'], device_info['api_version'],
+                device_info['username'], device_info['password'],
+                port=device_info['port'], protocol=device_info['protocol'])
 
     def _verify_appliances(self):
         LOG.info("A10Driver: verifying appliances")
