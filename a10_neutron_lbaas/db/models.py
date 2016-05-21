@@ -11,6 +11,7 @@
 #    under the License.
 
 import datetime
+from contextlib import contextmanager
 import uuid
 
 import sqlalchemy as sa
@@ -33,30 +34,36 @@ class A10Base(Base):
     __abstract__ = True
 
     @classmethod
-    def query(cls, db_session=None):
-        db = db_session or db_api.get_session()
-        return db.query(cls)
+    @contextmanager
+    def _query(cls, db_session=None):
+        with db_api.magic_session(db_session) as db:
+            yield db.query(cls)
 
     @classmethod
     def get(cls, key, db_session=None):
-        return cls.query(db_session).get(key)
+        with cls._query(db_session) as q:
+            return q.get(key)
 
     @classmethod
     def find_all_by(cls, db_session=None, **kwargs):
-        return cls.query(db_session).filter_by(**kwargs)
+        with cls._query(db_session) as q:
+            return q.filter_by(**kwargs).all()
 
     @classmethod
     def find_by(cls, db_session=None, **kwargs):
-        return cls.find_all_by(db_session, **kwargs).one_or_none()
+        with cls._query(db_session) as q:
+            return q.filter_by(**kwargs).one_or_none()
 
     @classmethod
     def find_by_attribute(cls, attribute_name, attribute, db_session=None):
-        return cls.query(db_session).filter(
-            getattr(cls, attribute_name) == attribute).one_or_none()
+        with cls._query(db_session) as q:
+            return q.filter(
+                getattr(cls, attribute_name) == attribute).one_or_none()
 
     @classmethod
     def find_all(cls, db_session=None):
-        return cls.query(db_session).all()
+        with cls._query(db_session) as q:
+            return q.all()
 
     @classmethod
     def create(cls, **kwargs):
@@ -71,11 +78,11 @@ class A10Base(Base):
 
     @classmethod
     def create_and_save(cls, db_session=None, **kwargs):
-        db = db_session or db_api.get_session()
         m = cls.create(**kwargs)
-        db.add(m)
-        db.commit()
-        return m
+        with db_api.magic_session(db_session) as db:
+            db.add(m)
+            db.commit()
+            return m
 
     def as_dict(self):
         d = dict(self.__dict__)

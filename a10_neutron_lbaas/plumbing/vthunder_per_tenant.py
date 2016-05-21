@@ -44,12 +44,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             return super(VThunderPerTenantPlumbingHooks, self).get_a10_client(device_info, **kwargs)
 
     def _instance_manager(self):
-        cfg = self.driver.config
-        vth = cfg.get_vthunder_config()
-        ks = a10_keystone.KeystoneA10(
-            cfg.get('keystone_version'), cfg.get('keystone_auth_url'), vth)
-        imgr = instance_manager.InstanceManager(ks_session=ks.session)
-        return imgr
+        return instance_manager.config_instance_manager(self.driver.config)
 
     def _create_instance(self, tenant_id, a10_context, lbaas_obj, db_session):
         cfg = self.driver.config
