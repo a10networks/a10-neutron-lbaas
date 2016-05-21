@@ -69,5 +69,5 @@ class VThunderPerVIPPlumbingHooks(vthunder_per_tenant.VThunderPerTenantPlumbingH
             loadbalancer_id=root_id,
             db_session=db_session)
 
-        LOG.debug("select_device, returning new instance %s", d)
+        LOG.debug("select_device, returning new instance %s", device_config)
         return device_config

@@ -40,7 +40,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
                 port=device_info['port'], protocol=device_info['protocol'],
                 retry_errno_list=retry)
         else:
-            super(VThunderPerTenantPlumbingHooks, self).get_a10_client(device_info, **kwargs)
+            return super(VThunderPerTenantPlumbingHooks, self).get_a10_client(device_info, **kwargs)
 
     def _instance_manager(self):
         cfg = self.driver.config
@@ -117,7 +117,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             device_name=device_config['name'],
             db_session=db_session)
 
-        LOG.debug("select_device, returning new instance %s", d)
+        LOG.debug("select_device, returning new instance %s", device_config)
         return device_config
 
     def after_vip_create(self, a10_context, os_context, vip):
