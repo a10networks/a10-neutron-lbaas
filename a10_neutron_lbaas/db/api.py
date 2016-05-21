@@ -41,5 +41,5 @@ def get_engine(url=None):
 
 
 def get_session(url=None):
-    DBSession = sqlalchemy.orm.sessionmaker(bind=get_engine())
+    DBSession = sqlalchemy.orm.sessionmaker(bind=get_engine(url=url))
     return DBSession()
