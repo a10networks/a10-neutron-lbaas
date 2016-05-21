@@ -15,7 +15,6 @@ import sys
 import mock
 
 from a10_neutron_lbaas import a10_config
-from a10_neutron_lbaas import a10_exceptions as a10_ex
 from a10_neutron_lbaas.tests.unit import test_base
 
 m = mock.Mock()
@@ -50,7 +49,7 @@ class TestConfig(object):
         'vthunder_tenant_password': 'admin',
 
         'vthunder_management_network': 'mgmt-net',
-        'vthunder_data_networks': [ 'private' ],
+        'vthunder_data_networks': ['private'],
 
         'destroy_on_empty': True
     }
