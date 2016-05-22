@@ -57,7 +57,7 @@ class A10Context(object):
         except acos_errors.InvalidSessionID:
             pass
 
-        if hasattr(self.hooks, 'after_a10_context_exit'):
+        if hasattr(self.hooks, 'a10_context_exit_final'):
             self.hooks.a10_context_exit_final(self)
 
         if exc_type is not None:
