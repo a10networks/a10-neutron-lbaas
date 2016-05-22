@@ -41,9 +41,9 @@ def get_engine(url=None):
     return sqlalchemy.create_engine(url)
 
 
-def get_session(url=None):
+def get_session(url=None, **kwargs):
     DBSession = sqlalchemy.orm.sessionmaker(bind=get_engine(url=url))
-    return DBSession()
+    return DBSession(**kwargs)
 
 
 @contextmanager
@@ -55,7 +55,7 @@ def magic_session(db_session=None, url=None):
     if db_session is not None:
         yield db_session
     else:
-        session = get_session(url)
+        session = get_session(url, expire_on_commit=False)
         try:
             try:
                 yield session
