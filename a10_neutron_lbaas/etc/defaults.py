@@ -13,12 +13,18 @@
 # Please refer to a10_neutron_lbaas.etc.config for documentation
 # about these settings.
 
+import a10_neutron_lbaas.plumbing_hooks
+
+
 GLOBAL_DEFAULTS = {
     "verify_appliances": False,
     "use_database": False,
     "database_connection": None,
     "neutron_conf_dir": '/etc/neutron',
     "member_name_use_uuid": False,
+    "keystone_auth_url": None,
+    "keystone_version": 2,
+    "plumbing_hooks_class": a10_neutron_lbaas.plumbing_hooks.PlumbingHooks
 }
 
 DEVICE_REQUIRED_FIELDS = [
@@ -52,3 +58,20 @@ DEVICE_OPTIONAL_DEFAULTS = {
     # "vlan": 0,
     # "gateway_mode": 1,
 }
+
+VTHUNDER_REQUIRED_FIELDS = [
+    'username',
+    'password',
+
+    'nova_flavor',
+    'glance_image',
+
+    'vthunder_tenant_name',
+    'vthunder_tenant_username',
+    'vthunder_tenant_password',
+
+    'vthunder_management_network',
+    'vthunder_data_networks',
+]
+
+VTHUNDER_OPTIONAL_DEFAULTS = DEVICE_OPTIONAL_DEFAULTS

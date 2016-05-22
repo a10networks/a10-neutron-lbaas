@@ -53,17 +53,17 @@ class TestSelectDevice(test_base.UnitTestBase):
 
     def test_select_device_hash(self):
         h = hooks.PlumbingHooks(None, devices=devices1)
-        d = h.select_device_hash(TENANT_ID)
+        d = h._select_device_hash(TENANT_ID)
         self.assertEqual(d['name'], EXPECTED_DEV1)
 
         h = hooks.PlumbingHooks(None, devices=devices2)
-        d = h.select_device_hash(TENANT_ID)
+        d = h._select_device_hash(TENANT_ID)
         self.assertEqual(d['name'], EXPECTED_DEV2)
 
     def test_select_device_db(self):
         h = hooks.PlumbingHooks(None, devices=devices1)
         db = self.open_session()
-        d = h.select_device_db(TENANT_ID, db_session=db)
+        d = h._select_device_db(TENANT_ID, db_session=db)
         self.assertEqual(d['name'], EXPECTED_DEV1)
 
         db = self.open_session()
@@ -73,5 +73,5 @@ class TestSelectDevice(test_base.UnitTestBase):
 
         h = hooks.PlumbingHooks(None, devices=devices2)
         db = self.open_session()
-        d = h.select_device_db(TENANT_ID, db_session=db)
+        d = h._select_device_db(TENANT_ID, db_session=db)
         self.assertEqual(d['name'], EXPECTED_DEV1)  # 1 is not a typo

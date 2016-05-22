@@ -45,6 +45,35 @@
 
 # member_name_use_uuid = False
 
+# If not None, use this keystone auth URL instead of the one from the
+# neutron.conf file.
+
+# keystone_auth_url = None
+
+# Which version of the keystone protocol to use
+
+# keystone_version = 2
+
+# Certain functions of this driver can be overridden by passing in an alternate
+# set of plumbing hooks, including scheduling where a tenant's VIPs are going
+# to be created, and what to do after object creation.
+#
+# The default hooks class is the first, PlumbingHooks, which is meant for
+# hardware appliances and manually orchestrated A10 devices. This hook
+# primarily makes use of the 'devices' hash table below to find available
+# ACOS devices.
+#
+# The second hooks class provided is the VThunderPlumbingHooks, which will
+# spawn a virtual appliance for every VIP, inside a service tenant space.
+# It's settings primarily come from the 'vthunder' hash defined at the
+# bottom of this file.
+#
+# More advanced hooks/schedulers can be added by the operator or by
+# A10 professional services.
+
+# plumbing_hooks_class = a10_neutron_lbaas.plumbing_hooks.PlumbingHooks
+# plumbing_hooks_class = a10_neutron_lbaas.plumbing_hooks.VThunderPlumbingHooks
+
 
 #
 # Main devices dictionary, containing a list of available ACOS devices.
@@ -124,3 +153,18 @@ devices = {
     #     "write_memory": True,
     # },
 }
+
+# vthunder = {
+#     'username': 'admin',
+#     'password': 'a10',
+
+#     'nova_flavor': 'vthunder.small',  # 1 core, 4096MB ram, 12GB disk
+#     'glance_image': None,
+
+#     'vthunder_tenant_name': '',
+#     'vthunder_tenant_username': '',
+#     'vthunder_tenant_password': '',
+
+#     'vthunder_management_network': 'private-mgmt',
+#     'vthunder_data_networks': [ 'vip-net', 'member-net' ]
+# }

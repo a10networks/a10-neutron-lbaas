@@ -12,8 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.v2.v2_context as a10
 import mock
+
+import a10_neutron_lbaas.v2.v2_context as a10
+
 import test_base
 
 
@@ -30,8 +32,8 @@ class TestA10Context(test_base.UnitTestBase):
 
         return mock.Mock(get_admin_context=mock.Mock(return_value=admin_context))
 
-    def setUp(self):
-        super(TestA10Context, self).setUp()
+    def setUp(self, **kwargs):
+        super(TestA10Context, self).setUp(**kwargs)
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
         self.m = test_base.FakeLoadBalancer()
@@ -106,6 +108,14 @@ class TestA10Context(test_base.UnitTestBase):
             self.empty_close_mocks()
             pass
 
+    def test_partition_name(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
+            self.assertEqual(c.partition_name, 'shared')
+
+    def test_partition_name_withalt(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-alt') as c:
+            self.assertEqual(c.partition_name, 'mypart')
+
 
 # Re-run all the context manager tests with appliance partitioning.
 class TestA10ContextADP(TestA10Context):
@@ -121,26 +131,6 @@ class TestA10ContextADP(TestA10Context):
         for k, v in self.a.config.get_devices().items():
             v['v_method'] = val
 
-    def _test_alternate_partition(self, use_alternate=False):
-        expected = self.a.config.get_device("axadp-alt").get("shared_partition",
-                                                             "shared")
-
-        self.m.tenant_id = expected if use_alternate else "get-off-my-lawn"
-        with a10.A10Context(self.handler, self.ctx, self.m,
-                            use_alternate_partition=use_alternate) as c:
-            c
-            active_mock = self.a.last_client.system.partition.active
-            self.assertEqual(use_alternate, expected in str(active_mock.mock_calls))
-
-        self.empty_close_mocks()
-
-    def test_use_alternate_partition_positive(self):
-        self._test_alternate_partition(use_alternate=True)
-
-    def test_use_alternate_partition_negative(self):
-        self.ctx.is_admin = False
-        self._test_alternate_partition()
-
     def empty_mocks(self):
         self.print_mocks()
         self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
@@ -152,4 +142,22 @@ class TestA10ContextADP(TestA10Context):
         self.print_mocks()
         self.assertEqual(0, len(self.a.openstack_driver.mock_calls))
         self.assertEqual(2, len(self.a.last_client.mock_calls))
+        self.a.last_client.session.close.assert_called_with()
+
+    def test_partition_name(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
+            self.assertEqual(c.partition_name, self.m.tenant_id[0:13])
+
+    def test_partition_name_withalt(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-alt') as c:
+            # shared_partition has no effect on an ADP configured device
+            self.assertEqual(c.partition_name, self.m.tenant_id[0:13])
+
+
+class TestA10ContextHA(TestA10Context):
+
+    def test_ha(self):
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='ax4') as c:
+            c
+        self.a.last_client.ha.sync.assert_called_with('1.1.1.1', 'admin', 'a10')
         self.a.last_client.session.close.assert_called_with()

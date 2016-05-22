@@ -15,7 +15,6 @@
 import logging
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-from a10_neutron_lbaas.acos import axapi_mappings
 from a10_neutron_lbaas.acos import openstack_mappings
 
 import acos_client.errors as acos_errors
@@ -70,12 +69,13 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             try:
                 vip_meta = self.meta(vip, 'virtual_server', {})
                 vport_list = vip_meta.pop('vport_list', None)
-                vip_args = axapi_mappings._virtual_server(vip_meta, c.device_cfg)
+
                 c.client.slb.virtual_server.create(
                     self._meta_name(vip),
                     vip['address'],
                     status,
-                    axapi_args=vip_args)
+                    vrid=c.device_cfg.get('default_virtual_server_vrid'),
+                    axapi_body=vip_meta)
             except acos_errors.Exists:
                 pass
 
@@ -85,7 +85,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             for vport, i in zip(vport_list, range(len(vport_list))):
                 try:
                     vport_name = str(i) if i else ''
-                    vport_args = axapi_mappings._vport(vport, c.device_cfg)
+
                     c.client.slb.virtual_server.vport.create(
                         self._meta_name(vip),
                         self._meta_name(vip) + '_VPORT' + vport_name,
@@ -95,7 +95,9 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                         s_pers_name=p.s_persistence(),
                         c_pers_name=p.c_persistence(),
                         status=status,
-                        axapi_args=vport_args)
+                        autosnat=c.device_cfg.get('autosnat'),
+                        ipinip=c.device_cfg.get('ipinip'),
+                        axapi_body=vport)
                 except acos_errors.Exists:
                     pass
 
@@ -127,7 +129,7 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                     axapi_args=args)
 
             vport_meta = self.vport_meta(vip)
-            vport_args = axapi_mappings._vport(vport_meta, c.device_cfg)
+
             c.client.slb.virtual_server.vport.update(
                 self._meta_name(vip),
                 self._meta_name(vip) + '_VPORT',
@@ -137,7 +139,9 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 s_pers_name=p.s_persistence(),
                 c_pers_name=p.c_persistence(),
                 status=status,
-                axapi_args=vport_args)
+                autosnat=c.device_cfg.get('autosnat'),
+                ipinip=c.device_cfg.get('ipinip'),
+                axapi_body=vport_meta)
 
             self.hooks.after_vip_update(c, context, vip)
 

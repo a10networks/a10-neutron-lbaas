@@ -17,6 +17,10 @@ class InternalError(Exception):
     pass
 
 
+class InvalidConfig(Exception):
+    pass
+
+
 class InvalidDeviceConfig(Exception):
     pass
 
@@ -29,5 +33,45 @@ class DeviceConfigMissing(Exception):
     pass
 
 
+class InstanceMissing(Exception):
+    pass
+
+
 class NoDatabaseURL(Exception):
+    pass
+
+
+class RequiresDatabase(Exception):
+    pass
+
+
+class ImageNotFoundError(Exception):
+    pass
+
+
+class FlavorNotFoundError(Exception):
+    pass
+
+
+class NetworksNotFoundError(Exception):
+    pass
+
+
+class IdentifierUnspecifiedError(Exception):
+    pass
+
+
+class ServiceUnavailableError(Exception):
+    pass
+
+
+class FeatureNotConfiguredError(Exception):
+    pass
+
+
+class NoDevicesAvailableError(Exception):
+    pass
+
+
+class NotImplemented(Exception):
     pass

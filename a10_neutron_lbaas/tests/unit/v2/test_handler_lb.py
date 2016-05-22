@@ -60,12 +60,7 @@ class TestLB(test_base.UnitTestBase):
         calls = create.call_args_list
 
         if default_vrid is not None:
-            foundVrid = any(
-                x.get('axapi_args', {}).get('virtual_server', {}).get('vrid', {}) is default_vrid
-                for (_, x) in calls)
-            self.assertTrue(
-                foundVrid,
-                'Expected to find vrid {0} in {1}'.format(default_vrid, str(calls)))
+            self.assertIn('vrid=%s' % default_vrid, str(calls))
         if default_vrid is None:
             foundVrid = any(
                 'vrid' in x.get('axapi_args', {}).get('virtual_server', {})
@@ -131,3 +126,9 @@ class TestLB(test_base.UnitTestBase):
 
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.stats' in s)
+
+    def do_raise_exception(self, e, msg="mock raised exception"):
+        def raise_exception(e, msg="acos broke!"):
+            raise e(msg)
+
+        return lambda *args, **kwargs: raise_exception(e, msg)
