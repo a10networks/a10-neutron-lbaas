@@ -70,15 +70,15 @@ class UnitTestBase(test_case.TestCase):
     def _build_openstack_context(self):
         return _build_openstack_context()
 
-    def setUp(self, openstack_lb_args={}):
+    def setUp(self, **kwargs):
         unit_dir = os.path.dirname(__file__)
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
 
         if not hasattr(self, 'version') or self.version == 'v2':
-            self.a = FakeA10OpenstackLBV2(mock.MagicMock(), **openstack_lb_args)
+            self.a = FakeA10OpenstackLBV2(mock.MagicMock(), **kwargs)
         else:
-            self.a = FakeA10OpenstackLBV1(mock.MagicMock(), **openstack_lb_args)
+            self.a = FakeA10OpenstackLBV1(mock.MagicMock(), **kwargs)
 
     def print_mocks(self):
         print("OPENSTACK ", self.a.openstack_driver.mock_calls)
