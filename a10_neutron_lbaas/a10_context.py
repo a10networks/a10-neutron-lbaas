@@ -36,7 +36,6 @@ class A10Context(object):
         self.partition_name = "shared"
 
     def _get_device(self):
-        self.get_tenant_id()
         if self.device_name:
             d = self.a10_driver.config.get_device(self.device_name)
         else:
@@ -45,9 +44,13 @@ class A10Context(object):
                                                    action=self.action)
         return d
 
+    def _get_client(self, device_cfg):
+        return self.a10_driver._get_a10_client(device_cfg, action=self.action)
+
     def __enter__(self):
+        self.get_tenant_id()
         self.device_cfg = self._get_device()
-        self.client = self.a10_driver._get_a10_client(self.device_cfg, action=self.action)
+        self.client = self._get_client(self.device_cfg)
         self.select_appliance_partition()
         return self
 
@@ -106,6 +109,19 @@ class A10WriteContext(A10Context):
                 self.client.ha.sync(v['ip'], v['username'], v['password'])
 
         super(A10WriteContext, self).__exit__(exc_type, exc_value, traceback)
+
+
+class A10ReplayContext(A10WriteContext):
+
+    def __init__(self, *args, **kwargs):
+        self._appliance = kwargs.pop('appliance', None)
+        super(A10ReplayContext, self).__init__(*args, **kwargs)
+
+    def _get_device(self):
+        return self._appliance.device(self)
+
+    def _get_client(self, device_cfg):
+        return self._appliance.client(device_cfg)
 
 
 # class A10WriteStatusContext(A10WriteContext):
