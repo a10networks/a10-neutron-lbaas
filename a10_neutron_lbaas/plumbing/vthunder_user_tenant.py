@@ -145,7 +145,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 # scheduler is active, for one vthunder per VIP.
 # LBaaS v2 ONLY.
 
-class VThunderPerVIPPlumbingHooks(vthunder_per_tenant.VThunderPerTenantPlumbingHooks):
+class VThunderPerVIPPlumbingHooks(VThunderPerTenantPlumbingHooks):
 
     def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
                                      db_session=None, **kwargs):

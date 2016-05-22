@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from a10_neutron_lbaas.vthunder import keystone as a10_keystone
+
 import vthunder_user_tenant
 
 

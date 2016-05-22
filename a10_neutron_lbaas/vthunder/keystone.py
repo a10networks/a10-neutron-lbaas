@@ -29,8 +29,8 @@ class KeystoneA10(object):
                 tenant_name=vthunder_config['vthunder_tenant_name'],
                 user=vthunder_config['vthunder_tenant_username'],
                 password=vthunder_config['vthunder_tenant_password'])
-        else if openstack_context is not None:
-            (self._session, self._keystone_client) = self._get_keystone_ctx(
+        elif openstack_context is not None:
+            (self._session, self._keystone_client) = self._get_keystone_token(
                 ks_version=keystone_version,
                 auth_url=auth_url,
                 tenant_id=openstack_context.tenant_id,
@@ -66,7 +66,7 @@ class KeystoneA10(object):
         else:
             raise a10_ex.InvalidConfig('keystone version must be protovol version 2 or 3')
 
-        return self._get_keystone_stuff(auth)
+        return self._get_keystone_stuff(ks_version, auth)
 
     def _get_keystone_token(self, ks_version, auth_url, auth_token, tenant_id):
         if int(ks_version) == 2:
