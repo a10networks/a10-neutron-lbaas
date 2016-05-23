@@ -23,9 +23,9 @@ class A10BaseContext(object):
 
     def __init__(self, plumbing_hooks, tenant_id, device_cfg, client, **kwargs):
         self.hooks = plumbing_hooks
-        self.client = todo
-        self.device_cfg = todo
-        self.tenant_id = todo
+        self.client = client
+        self.device_cfg = device_cfg
+        self.tenant_id = tenant_id
         self.partition_name = "shared"
 
     def __enter__(self):
@@ -68,7 +68,7 @@ class A10BaseContext(object):
         self.client.system.partition.active(name)
 
 
-class A10Context(object):
+class A10Context(A10BaseContext):
 
     def __init__(self, handler, openstack_context, openstack_lbaas_obj,
                  **kwargs):
