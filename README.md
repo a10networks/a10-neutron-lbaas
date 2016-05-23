@@ -219,7 +219,7 @@ license_manager = {
                 {"ip": "sfo.a10cloud.com", "port": 443},
                 {"ip": "iad.a10cloud.com", "port": 443}
         ],
-        "serial": "SNE64DD9823105C4F7E02B6AF4026C94",
+        "serial": "SN0123456789ABCDEF",
         "instance-name": "SCALING_INSTANCE",
         "bandwidth-base": 100,
         "interval": 3,
