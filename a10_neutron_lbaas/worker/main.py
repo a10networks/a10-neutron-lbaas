@@ -22,13 +22,14 @@ LOG = logging.getLogger(__name__)
 
 class WorkerThread(threading.Thread):
 
-    def __init__(self, group=None, target=None, name=None, *args, **kwargs):
+    def __init__(self, context, group=None, target=None, name=None, *args, **kwargs):
         LOG.info("A10 worker thread, initializing")
         super(WorkerThread, self).__init__(
             group=group, target=target, name=name, args=args, kwargs=kwargs)
         self.a10_driver = kwargs.get('a10_driver')
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.queue = kwargs.get('queue')
+        self.context = context
 
     def run(self):
         LOG.info("A10 worker thread, starting")
@@ -38,5 +39,9 @@ class WorkerThread(threading.Thread):
 
             # TODO -- call status update here
             # status_update.run(self.a10_driver.config, self.plugin)
-
+            status_check.status_update(self.context)
             time.sleep(10)
+
+    def join(self, timeout=None):
+        self.halt.set()
+        super(WorkThread, self).join(timeout)
