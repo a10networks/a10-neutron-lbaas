@@ -121,7 +121,7 @@ class A10ReplayContext(A10WriteContext):
         return self._appliance.device(self)
 
     def _get_client(self, device_cfg):
-        return self._appliance.client(device_cfg)
+        return self._appliance.client(self, device_cfg, action=self.action)
 
 
 # class A10WriteStatusContext(A10WriteContext):
