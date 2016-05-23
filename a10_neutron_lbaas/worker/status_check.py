@@ -11,11 +11,13 @@
 #    under the License.
 
 # todo -- file this in
-from neutron_lbaas.db.loadbalancerv2 import LoadBalancerPluginDbv2 as lb_db
+from neutron_lbaas.db.loadbalancer.loadbalancer_dbv2 import LoadBalancerPluginDbv2
 from neutron_lbaas.db.loadbalancer import models
+from neutron import context as ncontext
 
-def status_update(context):
-
+def status_update():
+    lb_db = LoadBalancerPluginDbv2()
+    context = ncontext.get_admin_context()
     for lb in lb_db.get_loadbalancers(context):
         with a10.A10Context(self, context, lb) as c:
             try:
@@ -40,5 +42,5 @@ def status_update(context):
                         server_name = self._meta_name(member, server_ip)
                         oper_stats = c.client.slb.service_group.member.oper(name=server_name)
                         lb_db.update_status(context, model.Member, member.id, operating_status=oper_stats)
-                 except Exception as e:
+                except Exception:
                     pass
