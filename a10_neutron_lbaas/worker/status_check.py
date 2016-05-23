@@ -14,9 +14,6 @@ from a10_neutron_lbaas.v2 import handler_member
 from a10_neutron_lbaas.v2 import handler_pool
 
 from neutron import context as ncontext
-from neutron_lbaas.db.loadbalancer.loadbalancer_dbv2 import LoadBalancerPluginDbv2
-from neutron_lbaas.db.loadbalancer import models
-
 
 import logging
 
