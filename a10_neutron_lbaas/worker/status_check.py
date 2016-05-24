@@ -11,36 +11,35 @@
 #    under the License.
 
 # todo -- file this in
+import logging
+
 from neutron_lbaas.db.loadbalancer.loadbalancer_dbv2 import LoadBalancerPluginDbv2
 from neutron_lbaas.db.loadbalancer import models
 from neutron import context as ncontext
 
-def status_update():
+from a10_neutron_lbaas.v2 import v2_context
+from a10_neutron_lbaas.v2 import handler_hm
+from a10_neutron_lbaas.v2 import handler_lb
+from a10_neutron_lbaas.v2 import handler_listener
+from a10_neutron_lbaas.v2 import handler_member
+from a10_neutron_lbaas.v2 import handler_pool
+
+logging.basicConfig()
+LOG = logging.getLogger(__name__)
+
+def status_update(a10_driver):
     lb_db = LoadBalancerPluginDbv2()
+    LOG.info("TRACER")
     context = ncontext.get_admin_context()
-    for lb in lb_db.get_loadbalancers(context):
-        with a10.A10Context(self, context, lb) as c:
-            try:
-                name = self.meta(lb, 'id', lb.id)
-                oper_stats = c.client.slb.virtual_server.oper(name)
-            
-                lb_db.update_status(context, model.LoadBalancer, lb.id, operating_status=oper_stats)
-            except Exception:
-                pass
-        if lb.get("pool"):
-            pool = lb.get("pool")
-            with a10.A10Context(self, context, pool) as c:
-                name = pool.id
-                if name is not None:
-                    oper_stats = c.client.slb.service_group.oper(name)
-                    lb_db.update_status(context, model.Pool, pool.id, operating_status=oper_stats)
-            for member in pool.get("members"):
-                try:
-                    with a10.A10Context(self, context, member) as c:
-                        server_ip = self.neutron.member_get_ip(context, member,
-                                                               c.device_cfg['use_float'])
-                        server_name = self._meta_name(member, server_ip)
-                        oper_stats = c.client.slb.service_group.member.oper(name=server_name)
-                        lb_db.update_status(context, model.Member, member.id, operating_status=oper_stats)
-                except Exception:
-                    pass
+    for lb in lb_db.get_loadbalancers(context):    
+        #lb_h = handler_lb.LoadbalancerHandler( a10_driver, a10_driver.openstack_driver.load_balancer, neutron=a10_driver.neutron)
+        #lb_h.oper(context, lb, lb_db, models.LoadBalancer)
+        LOG.info("TRACER_LB")
+        for pool in lb.pools:
+            #pool_h = handler_pool.PoolHandler( a10_driver, a10_driver.openstack_driver.pool, neutron=a10_driver.neutron)
+            #pool_h.oper(context, pool, lb_db, models.PoolV2)
+            LOG.info("TRACER_POOL")
+            for member in pool.members:
+                member_h = handler_member.MemberHandler( a10_driver, a10_driver.openstack_driver.member, neutron=a10_driver.neutron)
+                member_h.oper(context, member, lb_db, models.MemberV2, pool)
+                LOG.info("TRACER_MEMBER")
