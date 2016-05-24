@@ -12,18 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
-import a10_neutron_lbaas.tests.db.neutron_ext.db.test_a10_appliance as test_a10_appliance
+from a10_neutron_lbaas.tests.db.neutron_ext.db import test_a10_device_instance
 
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
-import a10_neutron_lbaas.neutron_ext.services.a10_appliance.plugin as plugin
+import a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin as plugin
 
 
-class TestPlugin(test_a10_appliance.TestA10ApplianceDbMixin):
+class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
 
     def setUp(self):
         super(TestPlugin, self).setUp()
-        self.plugin = plugin.A10AppliancePlugin()
+        self.plugin = plugin.A10DeviceInstancePlugin()
 
     def test_supported_extension_aliases(self):
         sea = self.plugin.supported_extension_aliases
-        self.assertEqual([constants.A10_APPLIANCE_EXT], sea)
+        self.assertEqual([constants.A10_DEVICE_INSTANCE_EXT], sea)
