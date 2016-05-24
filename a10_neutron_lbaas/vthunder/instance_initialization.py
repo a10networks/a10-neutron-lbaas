@@ -32,12 +32,6 @@ def initialize_licensing(vthunder_config, client):
 
 def initialize_interfaces(vthunder_config, client):
 
-    # Configuring a management gateway via axapi only works if the
-    # neutron nodes have an interface on the management network/subnet
-    management_gateway = vthunder_config.get("vthunder_management_gateway")
-    if management_gateway is not None:
-        client.interface.management.update(default_gateway=management_gateway)
-
     networks = vthunder_config.get("vthunder_data_networks", [])
     for x in range(1, len(networks) + 1):
         # Statically coded until we can plumb in the right gateway

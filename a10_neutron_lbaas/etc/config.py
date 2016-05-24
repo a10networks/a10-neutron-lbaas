@@ -168,9 +168,6 @@ devices = {
 #     'vthunder_management_network': 'private-mgmt',
 #     'vthunder_data_networks': [ 'vip-net', 'member-net' ],
 
-# # Explicitly set gateway on the management network
-#     'vthunder_management_gateway': '192.168.100.1',
-
 # # License the launched instances
 #
 #     'license_manager': {
