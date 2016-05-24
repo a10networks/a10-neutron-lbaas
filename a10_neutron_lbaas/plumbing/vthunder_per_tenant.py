@@ -114,7 +114,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         LOG.debug("select_device, returning new instance %s", device_config)
         return device_config
 
-    def after_partition_create(self, a10_context):
+    def after_select_partition(self, a10_context):
         instance = a10_context.device_cfg
         client = a10_context.client
 
