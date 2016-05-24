@@ -42,7 +42,7 @@ class WorkerThread(threading.Thread):
 
             # TODO -- call status update here
             # status_update.run(self.a10_driver.config, self.plugin)
-            status_check.status_update()
+            status_check.status_update(self.a10_driver)
             time.sleep(10)
 <<<<<<< HEAD
 <<<<<<< HEAD
