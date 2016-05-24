@@ -22,7 +22,7 @@ LOG = logging.getLogger(__name__)
 
 class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
 
-    supported_extension_aliases = [constants.A10_APPLIANCE_EXT]
+    supported_extension_aliases = [constants.A10_DEVICE_INSTANCE_EXT]
 
     def get_a10_device_instances(self, context, filters=None, fields=None):
         LOG.debug(
@@ -51,7 +51,7 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
             a10_device_instance)
         return super(A10DeviceInstancePlugin, self).a10_device_instance(
             context,
-            a10_device_instance,
+            id,
             a10_device_instance)
 
     def delete_a10_device_instance(self, context, id):
