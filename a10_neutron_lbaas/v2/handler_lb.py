@@ -85,6 +85,16 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                     "active_connections": 0,
                     "total_connections": 0
                 }
+    
+    def oper(self, context, lb, lb_db, model_type):
+        with a10.A10Context(self, context, lb) as c:
+            try:
+                name = self.meta(lb, 'id', lb.id)
+                oper_stats = c.client.slb.virtual_server.oper(name)
+                #lb_db.update_status(context, model_type, lb.id, operating_status=oper_stats)
+                LOG.info("TRACER_OPER")
+            except Exception:
+                pass
 
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")
