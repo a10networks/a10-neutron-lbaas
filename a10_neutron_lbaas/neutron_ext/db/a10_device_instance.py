@@ -18,14 +18,14 @@ from oslo_log import log as logging
 from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.neutron_ext.common import resources
-from a10_neutron_lbaas.neutron_ext.extensions import a10Deviceinstance
+from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
 from a10_neutronclient.resources import a10_device_instance as a10_device_instance_resources
 
 LOG = logging.getLogger(__name__)
 
 
 class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
-                               a10Deviceinstance.A10DeviceInstancePluginBase):
+                               a10DeviceInstance.A10DeviceInstancePluginBase):
 
     def __init__(self):
         super(A10DeviceInstanceDbMixin, self).__init__()
@@ -33,9 +33,9 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
 
     def _get_a10_device_instance(self, context, a10_device_instance_id):
         try:
-            return self._get_by_id(context, models.A10DeviceInstanceDB, a10_device_instance_id)
+            return self._get_by_id(context, models.A10DeviceInstance, a10_device_instance_id)
         except Exception:
-            raise a10Deviceinstance.A10DeviceInstanceNotFoundError(a10_device_instance_id)
+            raise a10DeviceInstance.A10DeviceInstanceNotFoundError(a10_device_instance_id)
 
     def _make_a10_device_instance_dict(self, a10_device_instance_db, fields=None):
         res = {'id': a10_device_instance_db['id'],
@@ -50,11 +50,12 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                'v_method': a10_device_instance_db['v_method'],
                'shared_partition': a10_device_instance_db['shared_partition'],
                'use_float': a10_device_instance_db['use_float'],
-               'default_virtual_serveR_vrid': a10_device_instance_db['default_virtual_server_vrid'],
+               'default_virtual_server_vrid': a10_device_instance_db['default_virtual_server_vrid'],
                'ipinip': a10_device_instance_db['ipinip'],
                # Not all device records are nova instances
                'nova_instance_id': a10_device_instance_db.get('nova_instance_id'),
-               'host': a10_device_instance_db['host']}
+               'host': a10_device_instance_db['host'],
+               'write_memory': a10_device_instance_db.get('write_memory', False)}
         return self._fields(res, fields)
 
     def _ensure_a10_device_instance_not_in_use(self, context, a10_device_instance_id):
@@ -68,7 +69,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                 format(a10_device_instance_id, slbs))
 
         if slbs > 0:
-            raise a10Deviceinstance.A10DeviceInstanceInUseError(a10_device_instance_id)
+            raise a10DeviceInstance.A10DeviceInstanceInUseError(a10_device_instance_id)
 
     def _get_body(self, a10_device_instance):
         body = a10_device_instance[a10_device_instance_resources.RESOURCE]
@@ -76,10 +77,12 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
 
     def create_a10_device_instance(self, context, a10_device_instance):
         body = self._get_body(a10_device_instance)
-        data = self.config.device_defaults(body)
+        data = self.config.get_vthunder_config()
+        data.update(**body)
+
         with context.session.begin(subtransactions=True):
-            instance_record = models.A10DeviceInstanceDB(
-                id=models.uuid_str(),
+            instance_record = models.A10DeviceInstance(
+                id=models._uuid_str(),
                 tenant_id=context.tenant_id,
                 name=body['name'],
                 username=data['username'],

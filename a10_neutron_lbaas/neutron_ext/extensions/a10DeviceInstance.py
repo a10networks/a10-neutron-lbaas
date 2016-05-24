@@ -30,6 +30,7 @@ RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_instance.RESOURCE_A
                                                   attributes)
 
 
+# TODO(rename this to *Extension to avoid config file confusion)
 class A10DeviceInstance(extensions.ExtensionDescriptor):
 
     @classmethod
@@ -38,7 +39,7 @@ class A10DeviceInstance(extensions.ExtensionDescriptor):
 
     @classmethod
     def get_alias(cls):
-        return constants.A10_APPLIANCE_EXT
+        return constants.A10_DEVICE_INSTANCE_EXT
 
     @classmethod
     def get_namespace(cls):
@@ -94,13 +95,13 @@ class A10DeviceInstanceInUseError(exceptions.InUse):
 class A10DeviceInstancePluginBase(service_base.ServicePluginBase):
 
     def get_plugin_name(self):
-        return constants.A10_APPLIANCE
+        return constants.A10_DEVICE_INSTANCE
 
     def get_plugin_description(self):
-        return constants.A10_APPLIANCE
+        return constants.A10_DEVICE_INSTANCE
 
     def get_plugin_type(self):
-        return constants.A10_APPLIANCE
+        return constants.A10_DEVICE_INSTANCE
 
     def __init__(self):
         super(A10DeviceInstancePluginBase, self).__init__()
