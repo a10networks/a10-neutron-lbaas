@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from contextlib import contextmanager
+
 import a10_neutron_lbaas.handler_base as base
 import neutron_ops
 
@@ -25,3 +27,14 @@ class HandlerBaseV2(base.HandlerBase):
             self.neutron = neutron
         else:
             self.neutron = neutron_ops.NeutronOpsV2(self)
+
+
+@contextmanager
+def delete_op(lbaas_obj):
+    try:
+        yield
+    except Exception as e:
+        if lbaas_obj.operating_status == 'ERROR':
+            if 'ConnectionError' in e.msg:
+                return
+        raise e

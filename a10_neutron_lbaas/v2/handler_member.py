@@ -100,6 +100,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
 
             self.hooks.after_member_update(c, context, member)
 
+    @handler_base_v2.delete_op
     def _delete(self, c, context, member):
         server_ip = self.neutron.member_get_ip(
             context, member, c.device_cfg['use_float'])
