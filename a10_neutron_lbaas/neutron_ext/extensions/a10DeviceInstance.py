@@ -110,7 +110,7 @@ class A10DeviceInstancePluginBase(service_base.ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def create_a10_device_instance(self, context, appliance):
+    def create_a10_device_instance(self, context, device_instance):
         pass
 
     @abc.abstractmethod
@@ -118,7 +118,7 @@ class A10DeviceInstancePluginBase(service_base.ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def update_a10_device_instance(self, context, appliance):
+    def update_a10_device_instance(self, context, device_instance):
         pass
 
     @abc.abstractmethod
