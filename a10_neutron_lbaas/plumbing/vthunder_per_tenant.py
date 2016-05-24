@@ -69,6 +69,11 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             db_session=db_session,
             **device_config)
 
+        LOG.debug("A10 vThunder %s: port wait starting", device_config['name'])
+        client = self.get_a10_client(device_config)
+        client.wait_for_connect()
+        LOG.debug("A10 vThunder %s: ready to connect", device_config['name'])
+
         return device_config
 
     def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
