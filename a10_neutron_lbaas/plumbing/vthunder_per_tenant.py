@@ -14,6 +14,7 @@
 
 import errno
 import logging
+import time
 
 import acos_client
 
@@ -46,10 +47,14 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         return instance_manager.config_instance_manager(self.driver.config)
 
     def _create_instance(self, tenant_id, a10_context, lbaas_obj, db_session):
+        start = time.time()
         cfg = self.driver.config
         vth = cfg.get_vthunder_config()
         imgr = self._instance_manager()
         instance = imgr.create_device_instance(vth)
+        end = time.time()
+
+        LOG.debug("A10 vThunder %s: spawned after %d seconds", end - start)
 
         from a10_neutron_lbaas.etc import defaults
         device_config = {}
@@ -70,6 +75,14 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             **device_config)
 
         return device_config
+
+    def _wait_for_instance(self, device_config)
+        start = time.time()
+        client = self.get_a10_client(device_config)
+        client.wait_for_connect()
+        end = time.time()
+
+        LOG.debug("A10 vThunder %s: ready to connect after %d seconds", end - start)
 
     def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
                                      db_session=None, **kwargs):
@@ -101,6 +114,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             raise ex.InstanceMissing(missing_instance)
 
         device_config = self._create_instance(tenant_id, a10_context, lbaas_obj, db_session)
+        self._wait_for_instance(device_config)
 
         # Now make sure that we remember where it is.
 
