@@ -37,11 +37,17 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
     def fake_deviceinstance(self):
         return {
             'name': 'fake-name',
-            'description': 'fake-description',
-            'host': 'fake-host',
+            'ip_address': 'fake-host',
             'api_version': 'fake-version',
             'username': 'fake-username',
             'password': 'fake-password',
+            'autosnat': False,
+            'default_virtual_server_vrid': None,
+            'ipinip': False,
+            'use_float': False,
+            'v_method': 'LSI',
+            'shared_partition': 'shared',
+            'write_memory': False,
             'nova_instance_id': None
         }
 
@@ -76,7 +82,7 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         self.assertEqual(expected, result)
 
     def test_create_a10_device_instance_options(self):
-        instance = self.fake_appliance()
+        instance = self.fake_deviceinstance()
         instance.update(self.fake_deviceinstance_options())
         context = self.context()
         result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
@@ -91,7 +97,8 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         self.assertEqual(expected, result)
 
     def test_create_a10_device_instance_default_port(self):
-        instance = self.fake_appliance()
+        instance = self.fake_deviceinstance()
+        instance['port'] = 80
         instance['protocol'] = 'http'
         context = self.context()
         result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
@@ -100,9 +107,10 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         self.assertEqual(80, result['port'])
 
     def test_get_a10_device_instance(self):
-        instance = self.fake_appliance()
+        instance = self.fake_deviceinstance()
         create_context = self.context()
-        create_result = self.plugin.create_a10_device_instance(create_context, self.envelope(instance))
+        create_result = self.plugin.create_a10_device_instance(create_context,
+                                                               self.envelope(instance))
         create_context.session.commit()
 
         context = self.context()
@@ -119,7 +127,7 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
             'fake-deviceinstance-id')
 
     def test_get_a10_device_instances(self):
-        instance = self.fake_instance()
+        instance = self.fake_deviceinstance()
         create_context = self.context()
         create_result = self.plugin.create_a10_device_instance(create_context, self.envelope(instance))
         create_context.session.commit()
@@ -128,85 +136,6 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         result = self.plugin.get_a10_device_instances(context)
 
         self.assertEqual([create_result], result)
-
-    def test_delete_a10_device_instance(self):
-        instance = self.fake_instance()
-        create_context = self.context()
-        create_result = self.plugin.create_a10_device_instance(create_context, self.envelope(instance))
-        create_context.session.commit()
-
-        context = self.context()
-        self.plugin.delete_a10_device_instance(context, create_result['id'])
-        context.session.commit()
-
-        get_context = self.context()
-        self.assertRaises(
-            a10DeviceInstance.A10ApplianceNotFoundError,
-            self.plugin.get_a10_device_instance,
-            get_context,
-            create_result['id'])
-
-    def test_delete_a10_device_instance_not_found(self):
-        context = self.context()
-        self.assertRaises(
-            a10DeviceInstance.A10ApplianceNotFoundError,
-            self.plugin.delete_a10_device_instance,
-            context,
-            'fake-appliance-id')
-
-    def test_delete_a10_device_instance_in_use(self):
-        appliance = self.fake_appliance()
-        create_context = self.context()
-        create_result = self.plugin.create_a10_device_instance(create_context, self.envelope(appliance))
-        create_context.session.add(
-            models.default(
-                models.A10SLB,
-                a10_device_instance_id=create_result['id']
-            ))
-        create_context.session.commit()
-
-        context = self.context()
-        self.assertRaises(
-            a10DeviceInstance.A10ApplianceInUseError,
-            self.plugin.delete_a10_device_instance,
-            context,
-            create_result['id'])
-
-    def test_update_a10_device_instance(self):
-        appliance = self.fake_appliance()
-        create_context = self.context()
-        create_result = self.plugin.create_a10_device_instance(create_context, self.envelope(appliance))
-        create_context.session.commit()
-
-        change = {
-            'api_version': 'other-version'
-        }
-        expected = create_result.copy()
-        expected.update(change)
-
-        context = self.context()
-        result = self.plugin.update_a10_device_instance(context,
-                                                  create_result['id'],
-                                                  self.envelope(change))
-        context.session.commit()
-
-        self.assertEqual(expected, result)
-
-        get_context = self.context()
-        get_result = self.plugin.get_a10_device_instance(get_context, create_result['id'])
-
-        self.assertEqual(expected, get_result)
-
-    def test_update_a10_device_instance_not_found(self):
-        change = {
-            'api_version': 'other-version'
-        }
-        context = self.context()
-        self.assertRaises(
-            a10DeviceInstance.A10ApplianceNotFoundError,
-            self.plugin.update_a10_device_instance,
-            context,
-            'fake-appliance-id', self.envelope(change))
 
     def test_get_plugin_name(self):
         self.assertIsNot(self.plugin.get_plugin_name(), None)

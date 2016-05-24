@@ -38,38 +38,25 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
             raise a10DeviceInstance.A10DeviceInstanceNotFoundError(a10_device_instance_id)
 
     def _make_a10_device_instance_dict(self, a10_device_instance_db, fields=None):
-        res = {'id': a10_device_instance_db['id'],
-               'name': a10_device_instance_db['name'],
-               'tenant_id': a10_device_instance_db['tenant_id'],
-               'username': a10_device_instance_db['username'],
-               'password': a10_device_instance_db['password'],
-               'api_version': a10_device_instance_db['api_version'],
-               'protocol': a10_device_instance_db['protocol'],
-               'port': a10_device_instance_db['port'],
-               'autosnat': a10_device_instance_db['autosnat'],
-               'v_method': a10_device_instance_db['v_method'],
-               'shared_partition': a10_device_instance_db['shared_partition'],
-               'use_float': a10_device_instance_db['use_float'],
-               'default_virtual_server_vrid': a10_device_instance_db['default_virtual_server_vrid'],
-               'ipinip': a10_device_instance_db['ipinip'],
+        res = {'id': a10_device_instance_db.id,
+               'name': a10_device_instance_db.name,
+               'tenant_id': a10_device_instance_db.tenant_id,
+               'username': a10_device_instance_db.username,
+               'password': a10_device_instance_db.password,
+               'api_version': a10_device_instance_db.api_version,
+               'protocol': a10_device_instance_db.protocol,
+               'port': a10_device_instance_db.port,
+               'autosnat': a10_device_instance_db.autosnat,
+               'v_method': a10_device_instance_db.v_method,
+               'shared_partition': a10_device_instance_db.shared_partition,
+               'use_float': a10_device_instance_db.use_float,
+               'default_virtual_server_vrid': a10_device_instance_db.default_virtual_server_vrid,
+               'ipinip': a10_device_instance_db.ipinip,
                # Not all device records are nova instances
                'nova_instance_id': a10_device_instance_db.get('nova_instance_id'),
-               'host': a10_device_instance_db['host'],
-               'write_memory': a10_device_instance_db.get('write_memory', False)}
+               'ip_address': a10_device_instance_db.ip_address,
+               'write_memory': a10_device_instance_db.write_memory}
         return self._fields(res, fields)
-
-    def _ensure_a10_device_instance_not_in_use(self, context, a10_device_instance_id):
-        with context.session.begin(subtransactions=True):
-            slbs = context.session.query(models.A10SLB).\
-                filter_by(a10_device_instance_id=a10_device_instance_id).\
-                count()
-            LOG.debug(
-                "A10DeviceInstanceDbMixin:_ensure_a10_device_instance_not_in_use(): "
-                "id={0}, len={1}".
-                format(a10_device_instance_id, slbs))
-
-        if slbs > 0:
-            raise a10DeviceInstance.A10DeviceInstanceInUseError(a10_device_instance_id)
 
     def _get_body(self, a10_device_instance):
         body = a10_device_instance[a10_device_instance_resources.RESOURCE]
@@ -97,33 +84,12 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                 default_virtual_server_vrid=data['default_virtual_server_vrid'],
                 ipinip=data['ipinip'],
                 # Not all device records are nova instances
-                nova_instance_id=data.get("nova_instance_id"),
-                host=data["host"])
+                nova_instance_id=data.get('nova_instance_id'),
+                write_memory=data.get('write_memory', False),
+                ip_address=data['ip_address'])
             context.session.add(instance_record)
 
         return self._make_a10_device_instance_dict(instance_record)
-
-    def update_a10_device_instance(self, context, a10_device_instance_id, a10_device_instance):
-        data = self._get_body(a10_device_instance)
-        with context.session.begin(subtransactions=True):
-            a10_device_instance_db = self._get_a10_device_instance(context, a10_device_instance_id)
-            a10_device_instance_db.update(data)
-
-        return self._make_a10_device_instance_dict(a10_device_instance_db)
-
-    def delete_a10_device_instance(self, context, a10_device_instance_id):
-        with context.session.begin(subtransactions=True):
-            self._ensure_a10_device_instance_not_in_use(context, a10_device_instance_id)
-            LOG.debug("A10DeviceInstanceDbMixin:delete_a10_device_instance(): "
-                      "a10_device_instance_id={0}".format(a10_device_instance_id))
-            instance = self._get_a10_device_instance(context, a10_device_instance_id)
-            # Remove tenant affinities
-            # The tenant partitions on the instance should have been removed
-            # when the last object was deleted
-            unused_affinities = context.session.query(models.A10DeviceInstance).\
-                filter_by(a10_device_instance_id=instance.id)
-            models.delete_all(context.session, unused_affinities)
-            context.session.delete(instance)
 
     def get_a10_device_instance(self, context, a10_device_instance_id, fields=None):
         instance = self._get_a10_device_instance(context, a10_device_instance_id)
