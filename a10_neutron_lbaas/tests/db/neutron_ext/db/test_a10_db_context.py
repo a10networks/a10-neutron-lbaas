@@ -14,8 +14,8 @@
 
 import mock
 
-import a10_neutron_lbaas.tests.db.test_base as test_base
 import a10_neutron_lbaas.neutron_ext.db.a10_db_context as a10_db_context
+import a10_neutron_lbaas.tests.db.test_base as test_base
 
 
 class TestA10DbContext(test_base.UnitTestBase):
