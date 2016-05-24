@@ -20,7 +20,7 @@ import a10_neutron_lbaas.tests.db.test_base as test_base
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
 import a10_neutron_lbaas.neutron_ext.db.a10_appliance as a10_appliance
 import a10_neutron_lbaas.neutron_ext.extensions.a10Appliance as a10Appliance
-from a10_neutron_lbaas_client.resources import a10_appliance as a10_appliance_resources
+from a10_neutronclient.resources import a10_appliance as a10_appliance_resources
 
 
 class TestA10ApplianceDbMixin(test_base.UnitTestBase):

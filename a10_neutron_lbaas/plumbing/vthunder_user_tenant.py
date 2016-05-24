@@ -18,7 +18,6 @@ import acos_client
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.vthunder import instance_manager
-from a10_neutron_lbaas.vthunder import keystone as a10_keystone
 
 import base
 
@@ -52,6 +51,9 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         imgr = instance_manager.InstanceManager(
             ks_session=ks.session, network_ks_session=network_ks.session)
         return imgr
+
+#    def _instance_manager(self):
+#        return instance_manager.config_instance_manager(self.driver.config)
 
     def _create_instance(self, tenant_id, a10_context, lbaas_obj, db_session):
         cfg = self.driver.config

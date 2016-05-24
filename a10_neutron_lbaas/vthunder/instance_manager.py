@@ -24,6 +24,8 @@ import novaclient.exceptions as nova_exceptions
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
+import a10_neutron_lbaas.vthunder.keystone as a10_keystone
+
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -343,3 +345,11 @@ class InstanceManager(object):
 def distinct_dicts(dicts):
     hashable = map(lambda x: tuple(sorted(x.items())), dicts)
     return map(dict, set(hashable))
+
+
+def config_instance_manager(config):
+        vth = config.get_vthunder_config()
+        ks = a10_keystone.KeystoneA10(
+            config.get('keystone_version'), config.get('keystone_auth_url'), vth)
+        imgr = InstanceManager(ks_session=ks.session)
+        return imgr

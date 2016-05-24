@@ -69,3 +69,9 @@ class BasePlumbingHooks(object):
 
     def after_vip_delete(self, a10_context, os_context, vip):
         pass
+
+    def a10_context_exit_final(self, a10_context):
+        pass
+
+    def after_select_partition(self, a10_context):
+        pass

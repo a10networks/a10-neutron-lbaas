@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from contextlib import contextmanager
 
 import sqlalchemy
 import sqlalchemy.ext.declarative
@@ -40,6 +41,25 @@ def get_engine(url=None):
     return sqlalchemy.create_engine(url)
 
 
-def get_session(url=None):
-    DBSession = sqlalchemy.orm.sessionmaker(bind=get_engine())
-    return DBSession()
+def get_session(url=None, **kwargs):
+    DBSession = sqlalchemy.orm.sessionmaker(bind=get_engine(url=url))
+    return DBSession(**kwargs)
+
+
+@contextmanager
+def magic_session(db_session=None, url=None):
+    """Either does nothing with the session you already have or
+    makes one that commits and closes no matter what happens
+    """
+
+    if db_session is not None:
+        yield db_session
+    else:
+        session = get_session(url, expire_on_commit=False)
+        try:
+            try:
+                yield session
+            finally:
+                session.commit()
+        finally:
+            session.close()
