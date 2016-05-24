@@ -50,8 +50,8 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                'v_method': a10_device_instance_db['v_method'],
                'shared_partition': a10_device_instance_db['shared_partition'],
                'use_float': a10_device_instance_db['use_float'],
-               'default_virtual_serveR_vrid': data['default_virtual_server_vrid'],
-               'ipinip': data['ipinip'],
+               'default_virtual_serveR_vrid': a10_device_instance_db['default_virtual_server_vrid'],
+               'ipinip': a10_device_instance_db['ipinip'],
                # Not all device records are nova instances
                'nova_instance_id': a10_device_instance_db.get('nova_instance_id'),
                'host': a10_device_instance_db['host']}
@@ -94,7 +94,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                 default_virtual_server_vrid=data['default_virtual_server_vrid'],
                 ipinip=data['ipinip'],
                 # Not all device records are nova instances
-                nova_instance_id=data.get("nova_instance_id")
+                nova_instance_id=data.get("nova_instance_id"),
                 host=data["host"])
             context.session.add(instance_record)
 

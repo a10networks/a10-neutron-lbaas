@@ -15,41 +15,45 @@
 from oslo_log import log as logging
 
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
-import a10_neutron_lbaas.neutron_ext.db.a10_appliance as a10_appliance
+import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
 
 LOG = logging.getLogger(__name__)
 
 
-class A10AppliancePlugin(a10_appliance.A10ApplianceDbMixin):
+class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
 
     supported_extension_aliases = [constants.A10_APPLIANCE_EXT]
 
-    def get_a10_appliances(self, context, filters=None, fields=None):
+    def get_a10_device_instances(self, context, filters=None, fields=None):
         LOG.debug(
-            "A10AppliancePlugin.get_a10_appliances(): filters=%s, fields=%s",
+            "A10DeviceInstancePlugin.get_a10_appliances(): filters=%s, fields=%s",
             filters,
             fields)
-        return super(A10AppliancePlugin, self).get_a10_appliances(
+        return super(A10DeviceInstancePlugin, self).get_a10_device_instances(
             context, filters=filters, fields=fields)
 
-    def create_a10_appliance(self, context, a10_appliance):
-        LOG.debug("A10AppliancePlugin.create(): a10_appliance=%s", a10_appliance)
-        return super(A10AppliancePlugin, self).create_a10_appliance(context, a10_appliance)
+    def create_a10_device_instance(self, context, a10_device_instance):
+        LOG.debug("A10AppliancePlugin.create(): a10_device_instance=%s", a10_device_instance)
+        return super(A10DeviceInstancePlugin, self).create_a10_device_instance(context,
+                                                                               a10_device_instance)
 
-    def get_a10_appliance(self, context, id, fields=None):
-        LOG.debug("A10AppliancePlugin.get_a10_appliance(): id=%s, fields=%s", context, id, fields)
-        return super(A10AppliancePlugin, self).get_a10_appliance(context, id, fields=fields)
+    def get_a10_device_instance(self, context, id, fields=None):
+        LOG.debug("A10DeviceInstancePlugin.get_a10_appliance(): id=%s, fields=%s",
+                  context, id, fields)
+        return super(A10DeviceInstancePlugin, self).get_a10_device_instance(context,
+                                                                            id,
+                                                                            fields=fields)
 
-    def update_a10_appliance(self, context, a10_appliance_id, a10_appliance):
+    def update_a10_device_instance(self, context, id, a10_device_instance):
         LOG.debug(
-            "A10AppliancePlugin.update_a10_appliance(): a10_appliance_id=%s, a10_appliance=%s",
-            a10_appliance_id,
-            a10_appliance)
-        return super(A10AppliancePlugin, self).update_a10_appliance(
+            "A10DeviceInstancePlugin.update_a10_device_instance(): id=%s, instance=%s",
+            id,
+            a10_device_instance)
+        return super(A10DeviceInstancePlugin, self).a10_device_instance(
             context,
-            a10_appliance_id,
-            a10_appliance)
+            a10_device_instance,
+            a10_device_instance)
 
-    def delete_a10_appliance(self, context, id):
-        LOG.debug("A10AppliancePlugin.delete(): id=%s", id)
-        return super(A10AppliancePlugin, self).delete_a10_appliance(context, id)
+    def delete_a10_device_instance(self, context, id):
+        LOG.debug("A10DeviceInstancePlugin.delete(): id=%s", id)
+        return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
