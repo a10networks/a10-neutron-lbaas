@@ -32,6 +32,8 @@ def initialize_licensing(vthunder_config, client):
 
 def initialize_interfaces(vthunder_config, client):
 
+    # Configuring a management gateway via axapi only works if the
+    # neutron nodes have an interface on the management network/subnet
     management_gateway = vthunder_config.get("vthunder_management_gateway")
     if management_gateway is not None:
         client.interface.management.update(default_gateway=management_gateway)
@@ -48,26 +50,28 @@ def initialize_sflow(vthunder_config, client):
 
     collector = vthunder_config.get('sflow_collector')
 
-    if collector is not None:
-        try:
-            client.sflow.collector.ip.create(collector['host'], collector['port'])
-        except acos_errors.Exists:
-            pass
+    if collector is None:
+        return
 
-        try:
-            client.sflow.polling.create(http_counter=1)
-        except acos_errors.Exists:
-            pass
+    try:
+        client.sflow.collector.ip.create(collector['host'], collector['port'])
+    except acos_errors.Exists:
+        pass
 
-        try:
-            client.sflow.setting.create(None, None, None, 1)
-        except acos_errors.Exists:
-            pass
+    try:
+        client.sflow.polling.create(http_counter=1)
+    except acos_errors.Exists:
+        pass
+
+    try:
+        client.sflow.setting.create(None, None, None, 1)
+    except acos_errors.Exists:
+        pass
 
 
 def initialize_vthunder(vthunder_config, client):
     """Perform initialization of system-wide settings"""
 
-    initialize_licensing(vthunder_config, client)
     initialize_interfaces(vthunder_config, client)
+    initialize_licensing(vthunder_config, client)
     initialize_sflow(vthunder_config, client)
