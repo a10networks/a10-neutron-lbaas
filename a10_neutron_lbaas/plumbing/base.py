@@ -72,3 +72,6 @@ class BasePlumbingHooks(object):
 
     def a10_context_exit_final(self, a10_context):
         pass
+
+    def after_select_partition(self, a10_context):
+        pass

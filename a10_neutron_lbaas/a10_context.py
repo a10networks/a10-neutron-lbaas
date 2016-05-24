@@ -52,6 +52,8 @@ class A10Context(object):
         self.device_cfg = self._get_device()
         self.client = self._get_client(self.device_cfg)
         self.select_appliance_partition()
+        if hasattr(self.hooks, 'after_select_partition'):
+            self.hooks.after_select_partition(self)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
