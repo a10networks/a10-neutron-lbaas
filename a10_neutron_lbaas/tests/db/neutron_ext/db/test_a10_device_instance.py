@@ -14,7 +14,6 @@
 
 import mock
 
-import a10_neutron_lbaas.db.models as models
 import a10_neutron_lbaas.tests.db.test_base as test_base
 
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
@@ -129,7 +128,8 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
     def test_get_a10_device_instances(self):
         instance = self.fake_deviceinstance()
         create_context = self.context()
-        create_result = self.plugin.create_a10_device_instance(create_context, self.envelope(instance))
+        create_result = self.plugin.create_a10_device_instance(create_context,
+                                                               self.envelope(instance))
         create_context.session.commit()
 
         context = self.context()
