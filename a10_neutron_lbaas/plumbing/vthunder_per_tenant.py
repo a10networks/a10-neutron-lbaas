@@ -19,6 +19,7 @@ import acos_client
 
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
+from a10_neutron_lbaas.vthunder import instance_initialization
 from a10_neutron_lbaas.vthunder import instance_manager
 
 import base
@@ -62,7 +63,8 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             'tenant_id': tenant_id,
             'nova_instance_id': instance['nova_instance_id'],
             'name': instance['name'],
-            'host': instance['ip_address']
+            'host': instance['ip_address'],
+            '_perform_initialization': True
         })
 
         models.A10DeviceInstance.create_and_save(
@@ -111,6 +113,13 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 
         LOG.debug("select_device, returning new instance %s", device_config)
         return device_config
+
+    def after_partition_create(self, a10_context):
+        instance = a10_context.device_cfg
+        client = a10_context.client
+
+        if instance.get('_perform_initialization'):
+            instance_initialization.initialize_vthunder(instance, client)
 
     def after_vip_create(self, a10_context, os_context, vip):
         instance = a10_context.device_cfg
