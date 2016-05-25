@@ -152,7 +152,7 @@ vthunder = {
     'api_version': '3.0',
 
     'nova_flavor': 'acos.min',
-    'glance_image': '80bf6b06-8481-485b-a3ae-87a21bde2438', 
+    'glance_image': '80bf6b06-8481-485b-a3ae-87a21bde2438',
 
     'vthunder_tenant_name': 'admin',
     'vthunder_tenant_username': 'admin',
