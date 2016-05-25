@@ -54,7 +54,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                'ipinip': a10_device_instance_db.ipinip,
                # Not all device records are nova instances
                'nova_instance_id': a10_device_instance_db.get('nova_instance_id'),
-               'ip_address': a10_device_instance_db.ip_address,
+               'host': a10_device_instance_db.host,
                'write_memory': a10_device_instance_db.write_memory}
         return self._fields(res, fields)
 
@@ -86,7 +86,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                 # Not all device records are nova instances
                 nova_instance_id=data.get('nova_instance_id'),
                 write_memory=data.get('write_memory', False),
-                ip_address=data['ip_address'])
+                host=data['host'])
             context.session.add(instance_record)
 
         return self._make_a10_device_instance_dict(instance_record)
