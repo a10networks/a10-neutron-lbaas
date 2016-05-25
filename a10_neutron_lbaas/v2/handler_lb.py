@@ -91,10 +91,11 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             try:
                 name = self.meta(lb, 'id', lb.id)
                 oper_stats = c.client.slb.virtual_server.oper(name)
-                #lb_db.update_status(context, model_type, lb.id, operating_status=oper_stats)
+                oper_stats = oper_stats["virtual-server"]["oper"]["state"]
+                lb_db.update_status(context, model_type, lb.id, operating_status=str(oper_stats))
                 LOG.info("TRACER_OPER")
-            except Exception:
-                pass
+            except Exception as ex:
+                LOG.info(ex)
 
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")

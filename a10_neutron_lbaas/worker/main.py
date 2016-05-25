@@ -39,9 +39,6 @@ class WorkerThread(threading.Thread):
 
         while True:
             LOG.info("A10 worker, idling")
-
-            # TODO -- call status update here
-            # status_update.run(self.a10_driver.config, self.plugin)
             status_check.status_update(self.a10_driver)
             time.sleep(10)
 <<<<<<< HEAD
