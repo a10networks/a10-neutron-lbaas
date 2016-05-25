@@ -37,7 +37,10 @@ class WorkerThread(threading.Thread):
             LOG.info("A10 worker, idling")
             status_check.status_update(self.a10_driver)
             time.sleep(10)
+<<<<<<< HEAD
 
     def join(self, timeout=None):
         self.halt.set()
         super(WorkerThread, self).join(timeout)
+=======
+>>>>>>> c442dbc... updating operational stats for lb and pool
