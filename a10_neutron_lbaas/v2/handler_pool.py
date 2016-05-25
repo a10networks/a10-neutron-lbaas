@@ -128,7 +128,6 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
                 if name is not None:
                     oper_stats = c.client.slb.service_group.oper(name)
                     oper_stats = oper_stats["service-group"]["oper"]["state"]
-                    LOG.info("TRACER OPER_POOL")
                     lb_db.update_status(context, model_type, pool.id, operating_status=str(oper_stats))
-        except Exception:
-            pass
+        except Exception as ex:
+            LOG.exception(ex)
