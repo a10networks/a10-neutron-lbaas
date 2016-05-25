@@ -166,7 +166,7 @@ class InstanceManager(object):
         created_id = created_instance.id
         timeout = False
         start_time = time.time()
-        sleep_time = 0.25
+        sleep_time = 1
 
         pending_statuses = ["INITALIZED"]
         active_statuses = ["ACTIVE"]
@@ -225,7 +225,7 @@ class InstanceManager(object):
             raise a10_ex.IdentifierUnspecifiedError(
                 "Parameter identifier must specify image id or name")
         img_filter = (lambda x: x is not None and
-                      ((hasattr(x, "name") and x.name == identifier)
+                      ((hasattr(x, "name") and identifier in x.name)
                        or (hasattr(x, "id") and x.id == identifier)))
         try:
             images = self._nova_api.images.list()
@@ -312,7 +312,6 @@ class InstanceManager(object):
 
     def create_device_instance(self, vthunder_config, name=None):
         instance_configuration = self._device_instance(vthunder_config, name=name)
-
         return self._create_instance(instance_configuration)
 
     def _plumb_port(self, server, network_id, wrong_ips):
