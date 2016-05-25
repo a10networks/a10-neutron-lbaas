@@ -22,7 +22,7 @@ class TestA10Config(test_base.UnitTestBase):
 
     def test_num_appliances(self):
         # Everytime we update the test config, this test has to be updated
-        # A better test would seem to be be parsing the JSON structure found in the file
+        # A better test would seem to be be parsnig the JSON structure found in the file
         # and comparing that against what we get in devices.
         # This actually tests the number of devices with status == True
         self.assertEqual(10, len(self.a.config.get_devices()))
@@ -51,6 +51,21 @@ class TestA10Config(test_base.UnitTestBase):
             if "ip_in_ip" in v:
                 actual = v['ip_in_ip']
                 self.assertEqual(expected, actual)
+
+    # TODO(dougwig) -- test new a10_config members
+    # def test_image_defaults(self):
+    #     self.assertIsNotNone(self.a.config.image_defaults)
+
+    # def test_image_defaults_members(self):
+    #     image_defaults = self.a.config.image_defaults
+    #     actual = image_defaults.keys()
+    #     expected = ["name", "id", "visibility", "tags", "min_disk",
+    #                 "min_ram", "container_format", "protected",
+    #                 "properties", "disk_format"]
+    #     self.assertListEqual(sorted(expected), sorted(actual))
+
+    # def test_instance_defaults(self):
+    #     self.assertIsNotNone(self.a.config.instance_defaults)
 
     def test_backwards_compat(self):
         self.assertEqual(self.a.config.get_devices(), self.a.config.devices)

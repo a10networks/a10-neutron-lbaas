@@ -14,9 +14,8 @@
 
 import logging
 
-from a10_neutron_lbaas.acos import axapi_mappings
-
 import acos_client.errors as acos_errors
+
 import handler_base_v2
 import v2_context as a10
 
@@ -32,22 +31,23 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
         try:
             vip_meta = self.meta(lb, 'virtual_server', {})
-            vip_args = axapi_mappings._virtual_server(vip_meta, c.device_cfg)
+
             set_method(
                 self._meta_name(lb),
                 lb.vip_address,
                 status,
-                axapi_args=vip_args)
+                vrid=c.device_cfg.get('default_virtual_server_vrid'),
+                axapi_body=vip_meta)
         except acos_errors.Exists:
             pass
 
     def _create(self, c, context, lb):
         self._set(c.client.slb.virtual_server.create, c, context, lb)
-        self.hooks.after_vip_create(c, context, lb)
 
     def create(self, context, lb):
-        with a10.A10WriteStatusContext(self, context, lb) as c:
+        with a10.A10WriteStatusContext(self, context, lb, action='create') as c:
             self._create(c, context, lb)
+            self.hooks.after_vip_create(c, context, lb)
 
     def update(self, context, old_lb, lb):
         with a10.A10WriteStatusContext(self, context, lb) as c:

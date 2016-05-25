@@ -1,0 +1,125 @@
+# Copyright 2015,  A10 Networks
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+from neutron.db import common_db_mixin
+from oslo_log import log as logging
+
+from a10_neutron_lbaas import a10_config
+from a10_neutron_lbaas.db import models
+from a10_neutron_lbaas.neutron_ext.common import resources
+from a10_neutron_lbaas.neutron_ext.extensions import a10Appliance
+from a10_neutronclient.resources import a10_device_instance as a10_device_instance_resources
+
+LOG = logging.getLogger(__name__)
+
+
+class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
+                               a10Appliance.A10DeviceInstancePluginBase):
+
+    def __init__(self):
+        super(A10DeviceInstanceDbMixin, self).__init__()
+        self.config = a10_config.A10Config()
+
+    def _get_a10_device_instance(self, context, a10_device_instance_id):
+        try:
+            return self._get_by_id(context, models.A10DeviceInstanceDB, a10_device_instance_id)
+        except Exception:
+            raise a10Appliance.A10DeviceInstanceNotFoundError(a10_device_instance_id)
+
+    def _make_a10_device_instance_dict(self, a10_device_instance_db, fields=None):
+        res = {'id': a10_device_instance_db['id'],
+               'name': a10_device_instance_db['name'],
+               'tenant_id': a10_device_instance_db['tenant_id'],
+               'description': a10_device_instance_db['description'],
+               'host': a10_device_instance_db['host'],
+               'api_version': a10_device_instance_db['api_version'],
+               'username': a10_device_instance_db['username'],
+               'password': a10_device_instance_db['password'],
+               'protocol': a10_device_instance_db['protocol'],
+               'port': a10_device_instance_db['port'],
+               'nova_instance_id': a10_device_instance_db.get('nova_instance_id')}
+        return self._fields(res, fields)
+
+    def _ensure_a10_device_instance_not_in_use(self, context, a10_device_instance_id):
+        with context.session.begin(subtransactions=True):
+            slbs = context.session.query(models.A10SLB).\
+                filter_by(a10_device_instance_id=a10_device_instance_id).\
+                count()
+            LOG.debug(
+                "A10DeviceInstanceDbMixin:_ensure_a10_device_instance_not_in_use(): "
+                "id={0}, len={1}".
+                format(a10_device_instance_id, slbs))
+
+        if slbs > 0:
+            raise a10Appliance.A10DeviceInstanceInUseError(a10_device_instance_id)
+
+    def _get_body(self, a10_device_instance):
+        body = a10_device_instance[a10_device_instance_resources.RESOURCE]
+        return resources.remove_attributes_not_specified(body)
+
+    def create_a10_device_instance(self, context, a10_device_instance):
+        body = self._get_body(a10_device_instance)
+        data = self.config.device_defaults(body)
+        with context.session.begin(subtransactions=True):
+            appliance_record = models.A10DeviceInstanceDB(
+                id=models.uuid_str(),
+                name=body['name'],
+                description=body['description'],
+                host=data['host'],
+                api_version=data['api_version'],
+                username=data['username'],
+                password=data['password'],
+                protocol=data['protocol'],
+                port=data['port'],
+                tenant_id=context.tenant_id,
+                nova_instance_id=data.get("nova_instance_id"))
+            context.session.add(appliance_record)
+
+        return self._make_a10_device_instance_dict(appliance_record)
+
+    def update_a10_device_instance(self, context, a10_device_instance_id, a10_device_instance):
+        data = self._get_body(a10_device_instance)
+        with context.session.begin(subtransactions=True):
+            a10_device_instance_db = self._get_a10_device_instance(context, a10_device_instance_id)
+            a10_device_instance_db.update(data)
+
+        return self._make_a10_device_instance_dict(a10_device_instance_db)
+
+    def delete_a10_device_instance(self, context, a10_device_instance_id):
+        with context.session.begin(subtransactions=True):
+            self._ensure_a10_device_instance_not_in_use(context, a10_device_instance_id)
+            LOG.debug("A10DeviceInstanceDbMixin:delete_a10_device_instance(): "
+                      "a10_device_instance_id={0}".format(a10_device_instance_id))
+            appliance = self._get_a10_device_instance(context, a10_device_instance_id)
+            # Remove tenant affinities
+            # The tenant partitions on the appliance should have been removed
+            # when the last object was deleted
+            unused_affinities = context.session.query(models.A10DeviceInstance).\
+                filter_by(a10_device_instance_id=appliance.id)
+            models.delete_all(context.session, unused_affinities)
+            context.session.delete(appliance)
+
+    def get_a10_device_instance(self, context, a10_device_instance_id, fields=None):
+        appliance = self._get_a10_device_instance(context, a10_device_instance_id)
+        return self._make_a10_device_instance_dict(appliance, fields)
+
+    def get_a10_device_instances(self, context, filters=None, fields=None,
+                                 sorts=None, limit=None, marker=None,
+                                 page_reverse=False):
+        LOG.debug("A10DeviceInstanceDbMixin:get_a10_device_instances() tenant_id=%s" %
+                  (context.tenant_id))
+        return self._get_collection(context, models.A10DeviceInstance,
+                                    self._make_a10_device_instance_dict, filters=filters,
+                                    fields=fields, sorts=sorts, limit=limit,
+                                    marker_obj=marker, page_reverse=page_reverse)

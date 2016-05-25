@@ -91,6 +91,12 @@ In the list of `service_provider` settings, add a service provider for A10
 Networks:
 `service_provider = LOADBALANCERV2:A10Networks:neutron_lbaas.drivers.a10networks.driver_v2.ThunderDriver:default`
 
+##### Extension configuration
+Open `/etc/neutron/neutron.conf` in your preferred text editor.
+Under the `service_plugins` setting, ensure `a10_neutron_lbaas.neutron_ext.services.a10_appliance.plugin.A10AppliancePlugin` is listed. The `service_plugins` are separated by `,`s.
+
+Under the `api_extensions_path` setting, ensure the path to `a10_neutron_lbaas.neutron_ext.extensions` is listed. The `api_extensions_path`s are separated by `:`s. You can find the path of the installed extension by running `python -c "import os; import a10_neutron_lbaas.neutron_ext.extensions as m; print(os.path.dirname(os.path.abspath(m.__file__)))"`.
+
 ##### Device configuration
 
 After installation, you will need to provide configuration for the driver so the driver is aware of the appliances you have configured.  The configuration is a python file stored in `/etc/a10/config.py`.  Below is a sample to show options and formatting, though any legal python can be used to calculate values or define classes:

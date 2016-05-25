@@ -48,7 +48,7 @@ class HealthMonitorHandler(handler_base_v1.HandlerBaseV1):
     def create(self, context, hm, pool_id):
         h = hm.copy()
         h['pool_id'] = pool_id
-        with a10.A10WriteHMStatusContext(self, context, h) as c:
+        with a10.A10WriteHMStatusContext(self, context, h, action='create') as c:
             try:
                 self._set(c, c.client.slb.hm.create, context, hm)
             except acos_errors.Exists:

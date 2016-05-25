@@ -30,18 +30,30 @@ class A10Context(object):
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
+        self.action = kwargs.get('action', '')
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
+        LOG.debug("A10Context action=%s", self.action)
         self.partition_name = "shared"
 
-    def __enter__(self):
-        self.get_tenant_id()
+    def _get_device(self):
         if self.device_name:
             d = self.a10_driver.config.get_device(self.device_name)
         else:
-            d = self.a10_driver._select_a10_device(self.tenant_id)
-        self.device_cfg = d
-        self.client = self.a10_driver._get_a10_client(self.device_cfg)
+            d = self.a10_driver._select_a10_device(self.tenant_id, a10_context=self,
+                                                   lbaas_obj=self.openstack_lbaas_obj,
+                                                   action=self.action)
+        return d
+
+    def _get_client(self, device_cfg):
+        return self.a10_driver._get_a10_client(device_cfg, action=self.action)
+
+    def __enter__(self):
+        self.get_tenant_id()
+        self.device_cfg = self._get_device()
+        self.client = self._get_client(self.device_cfg)
         self.select_appliance_partition()
+        if hasattr(self.hooks, 'after_select_partition'):
+            self.hooks.after_select_partition(self)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -49,6 +61,9 @@ class A10Context(object):
             self.client.session.close()
         except acos_errors.InvalidSessionID:
             pass
+
+        if hasattr(self.hooks, 'a10_context_exit_final'):
+            self.hooks.a10_context_exit_final(self)
 
         if exc_type is not None:
             return False
@@ -99,6 +114,19 @@ class A10WriteContext(A10Context):
                 self.client.ha.sync(v['ip'], v['username'], v['password'])
 
         super(A10WriteContext, self).__exit__(exc_type, exc_value, traceback)
+
+
+class A10ReplayContext(A10WriteContext):
+
+    def __init__(self, *args, **kwargs):
+        self._appliance = kwargs.pop('appliance', None)
+        super(A10ReplayContext, self).__init__(*args, **kwargs)
+
+    def _get_device(self):
+        return self._appliance.device(self)
+
+    def _get_client(self, device_cfg):
+        return self._appliance.client(self, device_cfg, action=self.action)
 
 
 # class A10WriteStatusContext(A10WriteContext):
