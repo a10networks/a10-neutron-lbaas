@@ -164,9 +164,10 @@ devices = {
 #     'vthunder_management_network': 'private-mgmt',
 #     'vthunder_data_networks': [ 'vip-net', 'member-net' ]
 
-#     # The following are required by the vthunder_service_tenant schedulers.
-#     'vthunder_tenant_name': '',
-#     'vthunder_tenant_username': '',
-#     'vthunder_tenant_password': '',
-
+#     # The following are required if you wish to use a service tenant.
+#     'service_tenant': {
+#         'tenant_name': 'a10-service',
+#         'username': '',
+#         'password': ''
+#     }
 # }

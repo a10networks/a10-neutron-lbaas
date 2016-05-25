@@ -19,22 +19,10 @@ from keystoneclient.v3 import client as keystone_v3_client
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
-class KeystoneA10(object):
+class KeystoneBase(object):
 
-    def __init__(self, keystone_version, auth_url, vthunder_config=None, openstack_context=None):
-        if vthunder_config is not None:
-            (self._session, self._keystone_client) = self._get_keystone_pw(
-                ks_version=keystone_version,
-                auth_url=auth_url,
-                tenant_name=vthunder_config['vthunder_tenant_name'],
-                user=vthunder_config['vthunder_tenant_username'],
-                password=vthunder_config['vthunder_tenant_password'])
-        elif openstack_context is not None:
-            (self._session, self._keystone_client) = self._get_keystone_token(
-                ks_version=keystone_version,
-                auth_url=auth_url,
-                tenant_id=openstack_context.tenant_id,
-                auth_token=openstack_context.auth_token)
+    def __init__(self, keystone_version, auth_url, vthunder_config):
+        (self._session, self._keystone_client) = (None, None)
 
     @property
     def session(self):
@@ -54,6 +42,18 @@ class KeystoneA10(object):
 
         return (sess, ks)
 
+
+class KeystoneFromConfig(KeystoneBase):
+
+    def __init__(self, a10_config):
+        vth = a10_config.get_vthunder_config()
+        (self._session, self._keystone_client) = self._get_keystone_pw(
+            ks_version=a10_config.get('keystone_version'),
+            auth_url=a10_config.get('keystone_auth_url'),
+            tenant_name=vth['service_tenant']['tenant_name'],
+            user=vth['service_tenant']['username'],
+            password=vth['service_tenant']['password'])
+
     def _get_keystone_pw(self, ks_version, auth_url, user, password, tenant_name):
         if int(ks_version) == 2:
             auth = v2.Password(
@@ -67,6 +67,16 @@ class KeystoneA10(object):
             raise a10_ex.InvalidConfig('keystone version must be protovol version 2 or 3')
 
         return self._get_keystone_stuff(ks_version, auth)
+
+
+class KeystoneFromContext(object):
+
+    def __init__(self, a10_config, openstack_context):
+        (self._session, self._keystone_client) = self._get_keystone_token(
+            ks_version=a10_config.get('keystone_version'),
+            auth_url=a10_config.get('keystone_auth_url'),
+            tenant_id=openstack_context.tenant_id,
+            auth_token=openstack_context.auth_token)
 
     def _get_keystone_token(self, ks_version, auth_url, auth_token, tenant_id):
         if int(ks_version) == 2:

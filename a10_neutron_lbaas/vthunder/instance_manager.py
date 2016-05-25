@@ -86,6 +86,18 @@ class InstanceManager(object):
         self._neutron_api = neutron_api or neutron_client.Client(
             NEUTRON_VERSION, session=self._ks_session)
 
+    @classmethod
+    def from_config(self, config, openstack_context=None):
+        vth = config.get_vthunder_config()
+
+        ks = a10_keystone.KeystoneConfig(config)
+        if 'service_tenant' in vth:
+            network_ks = a10_keystone.KeystoneToken(config, openstack_context)
+        else:
+            network_ks = ks
+
+        return InstanceManager(ks_session=ks.session, network_ks_session=network_ks.session)
+
     def _build_server(self, instance):
         retval = {}
         for k in _default_server:
@@ -347,9 +359,6 @@ def distinct_dicts(dicts):
     return map(dict, set(hashable))
 
 
+# deprecated
 def config_instance_manager(config):
-        vth = config.get_vthunder_config()
-        ks = a10_keystone.KeystoneA10(
-            config.get('keystone_version'), config.get('keystone_auth_url'), vth)
-        imgr = InstanceManager(ks_session=ks.session)
-        return imgr
+    return InstanceManager.from_config(config)
