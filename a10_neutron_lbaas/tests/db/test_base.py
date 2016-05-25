@@ -13,12 +13,14 @@
 #    under the License.
 
 from a10_neutron_lbaas.tests.db import session
-from a10_neutron_lbaas.tests import test_case
+# from a10_neutron_lbaas.tests import test_case
+from a10_neutron_lbaas.tests.unit import test_base
 
 
-class UnitTestBase(test_case.TestCase):
+class UnitTestBase(test_base.UnitTestBase):
 
     def setUp(self):
+        super(UnitTestBase, self).setUp()
         (open_session, close_session) = session.fake_session()
         self.open_session = open_session
         self.close_session = close_session

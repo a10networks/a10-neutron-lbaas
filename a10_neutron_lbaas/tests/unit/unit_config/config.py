@@ -144,3 +144,58 @@ devices = {
         "ipinip": True
     },
 }
+
+vthunder = {
+    'username': 'admin',
+    'password': 'a10',
+
+    'api_version': '3.0',
+
+    'nova_flavor': 'acos.min',
+    'glance_image': '80bf6b06-8481-485b-a3ae-87a21bde2438', # 4.1.0 GA P2 39
+
+    'vthunder_tenant_name': 'admin',
+    'vthunder_tenant_username': 'admin',
+    'vthunder_tenant_password': 'password',
+
+    'vthunder_management_network': 'private',
+    'vthunder_data_networks': ['vipnet', 'membernet'],
+
+    'sflow_collector': {"host": "10.10.10.10", "port": 6343},
+
+    'license_manager': {
+        "hosts": [
+                {"ip": "licenseserver.com", "port": 443}
+        ],
+        "serial": "SNTHISISNOTREAL",
+        "instance-name": "UNITTESTINSTANCE",
+        "bandwidth-base": 100,
+        "interval": 3,
+        "use-mgmt-port": True
+    },
+    'write_memory': False
+
+}
+
+image_defaults = {
+    "name": None,
+    "id": None,
+    "visibility": "private",
+    "tags": ["a10"],
+    "properties": None,
+    "container_format": "bare",
+    "disk_format": "qcow2",
+    "min_disk": 10,
+    "min_ram": 4096,
+    "protected": False
+}
+
+instance_defaults = {
+    "flavor": "acos.min",
+    "networks": ["private", "private", "private"]
+}
+
+use_database = True
+
+neutron_config = "/etc/neutron/neutron.conf"
+scaling_monitor = {"ip": "127.0.0.1", "port": 2358}
