@@ -37,10 +37,16 @@ def initialize_interfaces(vth_cfg, device_cfg, client):
 
     networks = vth_cfg.get("vthunder_data_networks", [])
     for x in range(1, len(networks) + 1):
-        # Statically coded until we can plumb in the right gateway
-        # or, optimally, have devices that correctly configure
-        # mgmt interfaces from dhcp
+        # Statically coded until we have devices that correctly configure
+        # data-plane interfaces from dhcp
         client.interface.ethernet.update(x, dhcp=True, enable=True)
+
+
+def initialize_dns(vth_cfg, device_cfg, client):
+    dns = vth_cfg.get('dns_resolver')
+
+    if dns is not None:
+        client.dns.set(**dns)
 
 
 def initialize_sflow(vth_cfg, device_cfg, client):
@@ -70,5 +76,6 @@ def initialize_vthunder(a10_cfg, device_cfg, client):
 
     vth = a10_cfg.get_vthunder_config()
     initialize_interfaces(vth, device_cfg, client)
+    initialize_dns(vth, device_cfg, client)
     initialize_licensing(vth, device_cfg, client)
     initialize_sflow(vth, device_cfg, client)
