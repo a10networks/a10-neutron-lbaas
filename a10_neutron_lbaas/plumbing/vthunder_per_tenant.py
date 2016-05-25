@@ -1,5 +1,3 @@
-# Copyright 2014, A10 Networks
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -42,13 +40,14 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         else:
             return super(VThunderPerTenantPlumbingHooks, self).get_a10_client(device_info, **kwargs)
 
-    def _instance_manager(self):
-        return instance_manager.config_instance_manager(self.driver.config)
+    def _instance_manager(self, a10_context):
+        return instance_manager.InstanceManager.from_config(
+            self.driver.config, a10_context.openstack_context)
 
     def _create_instance(self, tenant_id, a10_context, lbaas_obj, db_session):
         cfg = self.driver.config
         vth = cfg.get_vthunder_config()
-        imgr = self._instance_manager()
+        imgr = self._instance_manager(a10_context, cfg, vth)
         instance = imgr.create_device_instance(vth)
 
         from a10_neutron_lbaas.etc import defaults
@@ -124,8 +123,8 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             vip_ip_address = vip['address']
             vip_subnet_id = vip['subnet_id']
 
-        imgr = self._instance_manager()
-
+        cfg = self.driver.config
+        imgr = self._instance_manager(a10_context, cfg, cfg.get_vthunder_config())
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],
             vip_subnet_id,

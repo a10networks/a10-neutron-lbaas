@@ -19,5 +19,3 @@
 # Backwards-compat locations
 
 from a10_neutron_lbaas.plumbing.simple import PlumbingHooks  # flake8: noqa
-from a10_neutron_lbaas.plumbing.vthunder_per_tenant import VThunderPerTenantPlumbingHooks \
-    as VThunderPlumbingHooks  # flake8: noqa
