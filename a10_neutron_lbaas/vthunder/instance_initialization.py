@@ -12,27 +12,30 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 from acos_client import errors as acos_errors
 
+LOG = logging.getLogger(__name__)
 
-def initialize_licensing(vthunder_config, client):
 
-    licensing = vthunder_config.get('license_manager')
+def initialize_licensing(vth_cfg, device_cfg, client):
 
+    licensing = vth_cfg.get('license_manager')
     if licensing is not None:
         client.license_manager.paygo(
             llp_hosts=map(lambda host: host['ip'], licensing["hosts"]),
             sn=licensing["serial"],
-            instance_name=vthunder_config.get('name'),
+            instance_name=device_cfg.get('name'),
             use_mgmt_port=licensing["use-mgmt-port"],
             bandwidth_base=licensing["bandwidth-base"],
             interval=licensing["interval"]
         )
 
 
-def initialize_interfaces(vthunder_config, client):
+def initialize_interfaces(vth_cfg, device_cfg, client):
 
-    networks = vthunder_config.get("vthunder_data_networks", [])
+    networks = vth_cfg.get("vthunder_data_networks", [])
     for x in range(1, len(networks) + 1):
         # Statically coded until we can plumb in the right gateway
         # or, optimally, have devices that correctly configure
@@ -40,10 +43,9 @@ def initialize_interfaces(vthunder_config, client):
         client.interface.ethernet.update(x, dhcp=True, enable=True)
 
 
-def initialize_sflow(vthunder_config, client):
+def initialize_sflow(vth_cfg, device_cfg, client):
 
-    collector = vthunder_config.get('sflow_collector')
-
+    collector = vth_cfg.get('sflow_collector')
     if collector is None:
         return
 
@@ -63,9 +65,10 @@ def initialize_sflow(vthunder_config, client):
         pass
 
 
-def initialize_vthunder(vthunder_config, client):
+def initialize_vthunder(a10_cfg, device_cfg, client):
     """Perform initialization of system-wide settings"""
 
-    initialize_interfaces(vthunder_config, client)
-    initialize_licensing(vthunder_config, client)
-    initialize_sflow(vthunder_config, client)
+    vth = a10_cfg.get_vthunder_config()
+    initialize_interfaces(vth, device_cfg, client)
+    initialize_licensing(vth, device_cfg, client)
+    initialize_sflow(vth, device_cfg, client)

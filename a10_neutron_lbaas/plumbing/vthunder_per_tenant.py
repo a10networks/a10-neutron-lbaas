@@ -86,6 +86,9 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         client.wait_for_connect()
         end = time.time()
 
+        # XXX(dougwig) - this is a <=4.1.0 after CM bug is fixed
+        time.sleep(5.0)
+
         LOG.debug("A10 vThunder %s: ready to connect after %d seconds",
                   device_config['nova_instance_id'], end - start)
 
@@ -135,8 +138,11 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         instance = a10_context.device_cfg
         client = a10_context.client
 
+        LOG.debug("after_select_partition, checking instance %s", instance)
+
         if instance.get('_perform_initialization'):
-            instance_initialization.initialize_vthunder(instance, client)
+            instance_initialization.initialize_vthunder(
+                a10_context.a10_driver.config, instance, client)
 
     def after_vip_create(self, a10_context, os_context, vip):
         instance = a10_context.device_cfg
