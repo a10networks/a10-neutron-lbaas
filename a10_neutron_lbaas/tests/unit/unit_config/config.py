@@ -195,7 +195,5 @@ instance_defaults = {
     "networks": ["private", "private", "private"]
 }
 
-use_database = True
-
 neutron_config = "/etc/neutron/neutron.conf"
 scaling_monitor = {"ip": "127.0.0.1", "port": 2358}
