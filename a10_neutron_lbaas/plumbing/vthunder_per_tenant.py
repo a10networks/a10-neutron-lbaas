@@ -1,5 +1,3 @@
-# Copyright 2014, A10 Networks
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -14,11 +12,13 @@
 
 import errno
 import logging
+import time
 
 import acos_client
 
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
+from a10_neutron_lbaas.vthunder import instance_initialization
 from a10_neutron_lbaas.vthunder import instance_manager
 
 import base
@@ -42,14 +42,20 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         else:
             return super(VThunderPerTenantPlumbingHooks, self).get_a10_client(device_info, **kwargs)
 
-    def _instance_manager(self):
-        return instance_manager.config_instance_manager(self.driver.config)
+    def _instance_manager(self, a10_context):
+        return instance_manager.InstanceManager.from_config(
+            self.driver.config, a10_context.openstack_context)
 
     def _create_instance(self, tenant_id, a10_context, lbaas_obj, db_session):
+        start = time.time()
         cfg = self.driver.config
         vth = cfg.get_vthunder_config()
-        imgr = self._instance_manager()
+        imgr = self._instance_manager(a10_context)
         instance = imgr.create_device_instance(vth)
+        end = time.time()
+
+        LOG.debug("A10 vThunder %s: spawned after %d seconds", instance['nova_instance_id'],
+                  end - start)
 
         from a10_neutron_lbaas.etc import defaults
         device_config = {}
@@ -62,14 +68,29 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             'tenant_id': tenant_id,
             'nova_instance_id': instance['nova_instance_id'],
             'name': instance['name'],
-            'host': instance['ip_address']
+            'host': instance['ip_address'],
         })
 
         models.A10DeviceInstance.create_and_save(
             db_session=db_session,
             **device_config)
 
+        device_config.update({
+            '_perform_initialization': True
+        })
         return device_config
+
+    def _wait_for_instance(self, device_config):
+        start = time.time()
+        client = self.get_a10_client(device_config)
+        client.wait_for_connect()
+        end = time.time()
+
+        # XXX(dougwig) - this is a <=4.1.0 after CM bug is fixed
+        time.sleep(5.0)
+
+        LOG.debug("A10 vThunder %s: ready to connect after %d seconds",
+                  device_config['nova_instance_id'], end - start)
 
     def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
                                      db_session=None, **kwargs):
@@ -101,6 +122,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             raise ex.InstanceMissing(missing_instance)
 
         device_config = self._create_instance(tenant_id, a10_context, lbaas_obj, db_session)
+        self._wait_for_instance(device_config)
 
         # Now make sure that we remember where it is.
 
@@ -111,6 +133,16 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 
         LOG.debug("select_device, returning new instance %s", device_config)
         return device_config
+
+    def after_select_partition(self, a10_context):
+        instance = a10_context.device_cfg
+        client = a10_context.client
+
+        LOG.debug("after_select_partition, checking instance %s", instance)
+
+        if instance.get('_perform_initialization'):
+            instance_initialization.initialize_vthunder(
+                a10_context.a10_driver.config, instance, client)
 
     def after_vip_create(self, a10_context, os_context, vip):
         instance = a10_context.device_cfg
@@ -124,8 +156,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             vip_ip_address = vip['address']
             vip_subnet_id = vip['subnet_id']
 
-        imgr = self._instance_manager()
-
+        imgr = self._instance_manager(a10_context)
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],
             vip_subnet_id,

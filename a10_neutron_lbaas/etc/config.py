@@ -161,10 +161,35 @@ devices = {
 #     'nova_flavor': 'vthunder.small',  # 1 core, 4096MB ram, 12GB disk
 #     'glance_image': None,
 
-#     'vthunder_tenant_name': '',
-#     'vthunder_tenant_username': '',
-#     'vthunder_tenant_password': '',
-
 #     'vthunder_management_network': 'private-mgmt',
-#     'vthunder_data_networks': [ 'vip-net', 'member-net' ]
+#     'vthunder_data_networks': [ 'vip-net', 'member-net' ],
+
+# # License the launched instances
+#
+#     'license_manager': {
+#              "hosts": [
+#                     {"ip": "pdx.a10cloud.com", "port": 443},
+#                     {"ip": "sfo.a10cloud.com", "port": 443},
+#                     {"ip": "iad.a10cloud.com", "port": 443}
+#             ],
+#             "serial": "SNxxxxxxxxxxxxxxxx",
+#             "instance-name": "openstack_instance",
+#             "bandwidth-base": 100,
+#             "interval": 3,
+#             "use-mgmt-port": True
+#     },
+
+# # Configure statistics collection
+#
+#     'sflow_collector': {
+#          'host': '10.20.100.7',
+#          'port': 6343
+#     }
+
+#     # The following are required if you wish to use a service tenant.
+#     'service_tenant': {
+#         'tenant_name': 'a10-service',
+#         'username': '',
+#         'password': ''
+#     }
 # }

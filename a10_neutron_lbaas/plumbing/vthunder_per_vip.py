@@ -1,5 +1,3 @@
-# Copyright 2014, A10 Networks
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -60,6 +58,7 @@ class VThunderPerVIPPlumbingHooks(vthunder_per_tenant.VThunderPerTenantPlumbingH
             raise ex.InstanceMissing(missing_instance)
 
         device_config = self._create_instance(tenant_id, a10_context, lbaas_obj, db_session)
+        self._wait_for_instance(device_config)
 
         # Now make sure that we remember where it is.
 
