@@ -167,6 +167,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10WriteStatusContext(self, context, listener) as c:
             self._update(c, context, listener)
 
+    @handler_base_v2.delete_op
     def _delete(self, c, context, listener):
         try:
             c.client.slb.virtual_server.vport.delete(

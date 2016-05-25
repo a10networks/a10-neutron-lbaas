@@ -94,10 +94,12 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
                                                   health_check_disable=False)
             self._set(c, c.client.slb.hm.update, context, hm)
 
+    @handler_base_v2.delete_op
     def _delete(self, c, context, hm):
         LOG.debug("HealthMonitorHandler.delete(): hm=%s, context=%s" % (hm, context))
         pool_name = self._pool_name(context, pool=hm.pool)
         LOG.debug("HealthMonitorHandler.delete(): Updating Pool %s" % (pool_name))
+
         c.client.slb.service_group.update(pool_name, health_monitor="",
                                           health_check_disable=True)
         c.client.slb.hm.delete(self._meta_name(hm))

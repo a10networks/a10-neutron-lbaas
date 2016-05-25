@@ -61,6 +61,7 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
             self._set(c.client.slb.service_group.update,
                       c, context, pool, old_pool)
 
+    @handler_base_v2.delete_op
     def delete(self, context, pool):
         with a10.A10DeleteContext(self, context, pool) as c:
             debug_fmt = "handler_pool.delete(): removing member {0} from pool {1}"

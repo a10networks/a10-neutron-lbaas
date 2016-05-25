@@ -54,6 +54,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             self._set(c.client.slb.virtual_server.update, c, context, lb)
             self.hooks.after_vip_update(c, context, lb)
 
+    @handler_base_v2.delete_op
     def _delete(self, c, context, lb):
         try:
             c.client.slb.virtual_server.delete(self._meta_name(lb))
