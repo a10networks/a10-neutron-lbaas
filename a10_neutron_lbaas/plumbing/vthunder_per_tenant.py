@@ -50,11 +50,12 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         start = time.time()
         cfg = self.driver.config
         vth = cfg.get_vthunder_config()
-        imgr = self._instance_manager(a10_context, cfg, vth)
+        imgr = self._instance_manager(a10_context)
         instance = imgr.create_device_instance(vth)
         end = time.time()
 
-        LOG.debug("A10 vThunder %s: spawned after %d seconds", end - start)
+        LOG.debug("A10 vThunder %s: spawned after %d seconds", instance['nova_instance_id'],
+                  end - start)
 
         from a10_neutron_lbaas.etc import defaults
         device_config = {}
@@ -68,13 +69,15 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             'nova_instance_id': instance['nova_instance_id'],
             'name': instance['name'],
             'host': instance['ip_address'],
-            '_perform_initialization': True
         })
 
         models.A10DeviceInstance.create_and_save(
             db_session=db_session,
             **device_config)
 
+        device_config.update({
+            '_perform_initialization': True
+        })
         return device_config
 
     def _wait_for_instance(self, device_config):
@@ -83,7 +86,8 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         client.wait_for_connect()
         end = time.time()
 
-        LOG.debug("A10 vThunder %s: ready to connect after %d seconds", end - start)
+        LOG.debug("A10 vThunder %s: ready to connect after %d seconds",
+                  device_config['nova_instance_id'], end - start)
 
     def select_device_with_lbaas_obj(self, tenant_id, a10_context, lbaas_obj,
                                      db_session=None, **kwargs):
@@ -146,8 +150,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             vip_ip_address = vip['address']
             vip_subnet_id = vip['subnet_id']
 
-        cfg = self.driver.config
-        imgr = self._instance_manager(a10_context, cfg, cfg.get_vthunder_config())
+        imgr = self._instance_manager(a10_context)
         return imgr.plumb_instance_subnet(
             instance['nova_instance_id'],
             vip_subnet_id,

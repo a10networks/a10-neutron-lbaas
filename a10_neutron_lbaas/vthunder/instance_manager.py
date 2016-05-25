@@ -90,13 +90,13 @@ class InstanceManager(object):
     def from_config(self, config, openstack_context=None):
         vth = config.get_vthunder_config()
 
-        ks = a10_keystone.KeystoneConfig(config)
+        ks = a10_keystone.KeystoneFromContext(config, openstack_context)
         if 'service_tenant' in vth:
-            network_ks = a10_keystone.KeystoneToken(config, openstack_context)
+            service_ks = a10_keystone.KeystoneFromConfig(config)
         else:
-            network_ks = ks
+            service_ks = ks
 
-        return InstanceManager(ks_session=ks.session, network_ks_session=network_ks.session)
+        return InstanceManager(ks_session=service_ks.session, network_ks_session=ks.session)
 
     def _build_server(self, instance):
         retval = {}
@@ -357,8 +357,3 @@ class InstanceManager(object):
 def distinct_dicts(dicts):
     hashable = map(lambda x: tuple(sorted(x.items())), dicts)
     return map(dict, set(hashable))
-
-
-# deprecated
-def config_instance_manager(config):
-    return InstanceManager.from_config(config)

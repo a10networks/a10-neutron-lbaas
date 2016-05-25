@@ -69,7 +69,7 @@ class KeystoneFromConfig(KeystoneBase):
         return self._get_keystone_stuff(ks_version, auth)
 
 
-class KeystoneFromContext(object):
+class KeystoneFromContext(KeystoneBase):
 
     def __init__(self, a10_config, openstack_context):
         (self._session, self._keystone_client) = self._get_keystone_token(

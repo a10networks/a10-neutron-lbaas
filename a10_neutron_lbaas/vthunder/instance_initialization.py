@@ -23,7 +23,7 @@ def initialize_licensing(vthunder_config, client):
         client.license_manager.paygo(
             llp_hosts=map(lambda host: host['ip'], licensing["hosts"]),
             sn=licensing["serial"],
-            instance_name=vthunder_config.get('name') or licensing["instance-name"],
+            instance_name=vthunder_config.get('name'),
             use_mgmt_port=licensing["use-mgmt-port"],
             bandwidth_base=licensing["bandwidth-base"],
             interval=licensing["interval"]
