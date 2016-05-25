@@ -77,7 +77,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 
         return device_config
 
-    def _wait_for_instance(self, device_config)
+    def _wait_for_instance(self, device_config):
         start = time.time()
         client = self.get_a10_client(device_config)
         client.wait_for_connect()
