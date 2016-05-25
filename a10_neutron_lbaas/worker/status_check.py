@@ -29,17 +29,13 @@ LOG = logging.getLogger(__name__)
 
 def status_update(a10_driver):
     lb_db = LoadBalancerPluginDbv2()
-    LOG.info("TRACER")
     context = ncontext.get_admin_context()
     for lb in lb_db.get_loadbalancers(context):    
-        #lb_h = handler_lb.LoadbalancerHandler( a10_driver, a10_driver.openstack_driver.load_balancer, neutron=a10_driver.neutron)
-        #lb_h.oper(context, lb, lb_db, models.LoadBalancer)
-        LOG.info("TRACER_LB")
+        lb_h = handler_lb.LoadbalancerHandler( a10_driver, a10_driver.openstack_driver.load_balancer, neutron=a10_driver.neutron)
+        lb_h.oper(context, lb, lb_db, models.LoadBalancer)
         for pool in lb.pools:
-            #pool_h = handler_pool.PoolHandler( a10_driver, a10_driver.openstack_driver.pool, neutron=a10_driver.neutron)
-            #pool_h.oper(context, pool, lb_db, models.PoolV2)
-            LOG.info("TRACER_POOL")
+            pool_h = handler_pool.PoolHandler( a10_driver, a10_driver.openstack_driver.pool, neutron=a10_driver.neutron)
+            pool_h.oper(context, pool, lb_db, models.PoolV2)
             for member in pool.members:
                 member_h = handler_member.MemberHandler( a10_driver, a10_driver.openstack_driver.member, neutron=a10_driver.neutron)
                 member_h.oper(context, member, lb_db, models.MemberV2, pool)
-                LOG.info("TRACER_MEMBER")
