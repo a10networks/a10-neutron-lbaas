@@ -48,5 +48,6 @@ class WorkerThread(threading.Thread):
 >>>>>>> run is main loop, not start
     def join(self, timeout=None):
         self.halt.set()
-        super(WorkThread, self).join(timeout)
->>>>>>> status_update added
+<<<<<<< HEAD
+        super(WorkerThread, self).join(timeout)
+>>>>>>> Pep8 fixes and added required dependency
