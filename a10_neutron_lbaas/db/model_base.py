@@ -52,13 +52,13 @@ class A10Base(Base):
     @classmethod
     def find_by(cls, db_session=None, **kwargs):
         with cls._query(db_session) as q:
-            return q.filter_by(**kwargs).one_or_none()
+            return q.filter_by(**kwargs).first()
 
     @classmethod
     def find_by_attribute(cls, attribute_name, attribute, db_session=None):
         with cls._query(db_session) as q:
             return q.filter(
-                getattr(cls, attribute_name) == attribute).one_or_none()
+                getattr(cls, attribute_name) == attribute).first()
 
     @classmethod
     def find_all(cls, db_session=None):

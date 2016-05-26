@@ -77,6 +77,10 @@
 # import a10_neutron_lbaas.plumbing.vthunder_per_vip as hooks
 # plumbing_hooks_class = hooks.VThunderPerVIPPlumbingHooks
 
+# Nova API version; defaults to '2.1' (hint: use '2' for kilo.)
+
+# nova_api_version = '2.1'
+
 #
 # Main devices dictionary, containing a list of available ACOS devices.
 #
