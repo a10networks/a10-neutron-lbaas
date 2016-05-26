@@ -40,4 +40,4 @@ class WorkerThread(threading.Thread):
 
     def join(self, timeout=None):
         self.halt.set()
-        super(WorkThread, self).join(timeout)
+        super(WorkerThread, self).join(timeout)

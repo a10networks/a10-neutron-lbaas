@@ -85,7 +85,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                     "active_connections": 0,
                     "total_connections": 0
                 }
-    
+
     def oper(self, context, lb, lb_db, model_type):
         with a10.A10Context(self, context, lb) as c:
             try:
