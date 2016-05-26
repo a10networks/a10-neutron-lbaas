@@ -67,7 +67,8 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 class InstanceManager(object):
     def __init__(self, ks_session, network_ks_session=None,
-                 nova_api=None, glance_api=None, neutron_api=None):
+                 nova_api=None, nova_version=NOVA_VERSION,
+                 glance_api=None, neutron_api=None):
 
         # This is the keystone session that we use for spawning instances,
         # aka our "service tenant" user.
@@ -82,7 +83,7 @@ class InstanceManager(object):
 
         # Yes, we really want both of these to use the "service tenant".
         self._nova_api = nova_api or nova_client.Client(
-            NOVA_VERSION, session=self._ks_session)
+            nova_version, session=self._ks_session)
         self._neutron_api = neutron_api or neutron_client.Client(
             NEUTRON_VERSION, session=self._ks_session)
 
@@ -96,7 +97,10 @@ class InstanceManager(object):
         else:
             service_ks = ks
 
-        return InstanceManager(ks_session=service_ks.session, network_ks_session=ks.session)
+        nova_version = config.get('nova_api_version')
+        return InstanceManager(
+            ks_session=service_ks.session, network_ks_session=ks.session,
+            nova_version=nova_version)
 
     @classmethod
     def from_config(cls, config, openstack_context=None):
@@ -158,7 +162,10 @@ class InstanceManager(object):
         created_instance = self._nova_api.servers.create(**server)
 
         # Next 6 lines -  Added due to insane API on the other side
-        created_instance.manager.client.last_request_id = None
+        if hasattr(created_instance.manager, 'client'):
+            if hasattr(created_instance.manager.client, 'last_request_id'):
+                # This craziness works around a bug in Liberty.
+                created_instance.manager.client.last_request_id = None
         self._create_server_spinlock(created_instance)
 
         # Get the IP address of the first interface (should be management)
