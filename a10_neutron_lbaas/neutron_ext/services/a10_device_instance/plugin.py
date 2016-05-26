@@ -26,19 +26,19 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
 
     def get_a10_device_instances(self, context, filters=None, fields=None):
         LOG.debug(
-            "A10DeviceInstancePlugin.get_a10_appliances(): filters=%s, fields=%s",
+            "A10DeviceInstancePlugin.get_a10_instances(): filters=%s, fields=%s",
             filters,
             fields)
         return super(A10DeviceInstancePlugin, self).get_a10_device_instances(
             context, filters=filters, fields=fields)
 
     def create_a10_device_instance(self, context, a10_device_instance):
-        LOG.debug("A10AppliancePlugin.create(): a10_device_instance=%s", a10_device_instance)
+        LOG.debug("A10DeviceInstancePlugin.create(): a10_device_instance=%s", a10_device_instance)
         return super(A10DeviceInstancePlugin, self).create_a10_device_instance(context,
                                                                                a10_device_instance)
 
     def get_a10_device_instance(self, context, id, fields=None):
-        LOG.debug("A10DeviceInstancePlugin.get_a10_appliance(): id=%s, fields=%s",
+        LOG.debug("A10DeviceInstancePlugin.get_a10_instance(): id=%s, fields=%s",
                   id, fields)
         return super(A10DeviceInstancePlugin, self).get_a10_device_instance(context,
                                                                             id,
