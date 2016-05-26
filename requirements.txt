@@ -1,6 +1,6 @@
-acos_client>=1.3.4
+acos_client>=1.3.5
 debtcollector
--e git+https://github.com/a10networks/a10-neutronclient#egg=a10_neutronclient
+a10-neutronclient
 
 # Many of our requirements have to be the same as the underlying neutron,
 # so while we will list the ones used explicity here, we will not necessarily
