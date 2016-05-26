@@ -71,9 +71,11 @@
 # More advanced hooks/schedulers can be added by the operator or by
 # A10 professional services.
 
-# plumbing_hooks_class = a10_neutron_lbaas.plumbing_hooks.PlumbingHooks
-# plumbing_hooks_class = a10_neutron_lbaas.plumbing_hooks.VThunderPlumbingHooks
+# import a10_neutron_lbaas.plumbing.simple as hooks
+# plumbing_hooks_class = hooks.PlumbingHooks
 
+# import a10_neutron_lbaas.plumbing.vthunder_per_vip as hooks
+# plumbing_hooks_class = hooks.VThunderPerVIPPlumbingHooks
 
 #
 # Main devices dictionary, containing a list of available ACOS devices.

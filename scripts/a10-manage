@@ -1,9 +1,14 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-    echo "`basename $0`: <install|upgrade>"
-    echo "    install - Perform first-time installation steps and checks"
-    echo "    upgrade - Upgrade DB schema after package upgrade"
+    echo "`basename $0`: <install|upgrade|downgrade|validate|vthunder-*>"
+    echo "    install - Automatically upgrade A10 db schema to HEAD"
+    echo "    upgrade - Run 'alembic upgrade' with custom flags"
+    echo "    downgrade - Run 'alembic downgrade' with custom flags"
+    echo "    validate - Test config.py syntax and required elements"
+    echo "    vthunder-info  <tenant> <user> <pass> - Show configured vThunder/nova settings"
+    echo "    vthunder-boot  <tenant> <user> <pass> - Spawn a vThunder (if configured)"
+    echo "    vthunder-destroy <tenant> <user> <pass> <instance-id> - Destroy a spawned vThunder (if configured)"
     echo " All checks are safe to run multiple times."
     exit 1
 fi
@@ -15,11 +20,64 @@ if [ $? -ne 0 ]; then
 fi
 
 if [ ! -d /etc/a10 ]; then
-  echo "error: no /etc/a10 directory; please add a config file. Suggest running the following command and modifying for your site:"
-  echo "  sudo mkdir /etc/a10"
-  echo "  sudo cp $d/etc/config.py /etc/a10"
-  exit 1
+    echo "error: no /etc/a10 directory; please add a config file. Suggest running the following command and modifying for your site:"
+    echo "  sudo mkdir /etc/a10"
+    echo "  sudo cp $d/etc/config.py /etc/a10"
+    exit 1
 fi
 
-cd "${d}/db/migration"
-alembic upgrade head
+boilerplate() {
+    cat - <<EOF
+from a10_neutron_lbaas import a10_config
+from a10_neutron_lbaas.vthunder import instance_manager as imgr
+cfg = a10_config.A10Config()
+im = imgr.InstanceManager.from_cmdline(cfg, "$1", "$2", "$3")
+EOF
+}
+
+if [ "$1" = "install" ]; then
+    cd "${d}/db/migration"
+    alembic upgrade head
+
+elif [ "$1" = "upgrade" ]; then
+    cd "${d}/db/migration"
+    if [ -n "$2" ]; then
+        alembic $*
+    else
+        alembic upgrade head
+    fi
+
+elif [ "$1" = "downgrade" ]; then
+    cd "${d}/db/migration"
+    alembic $*
+
+elif [ "$1" = "validate" ]; then
+    python <<EOF
+from a10_neutron_lbaas import a10_config
+print(a10_config.A10Config())
+EOF
+
+elif [ "$1" = "vthunder-info" ]; then
+    cat - <<EOF
+`boilerplate $2 $3 $4`
+print(im._device_instance(cfg.get_vthunder_config()))
+EOF
+
+    python <<EOF
+`boilerplate $2 $3 $4`
+print(im._device_instance(cfg.get_vthunder_config()))
+EOF
+
+elif [ "$1" = "vthunder-boot" ]; then
+    python <<EOF
+`boilerplate $2 $3 $4`
+print(im.create_device_instance(cfg.get_vthunder_config()))
+EOF
+
+elif [ "$1" = "vthunder-destroy" ]; then
+    python <<EOF
+$boilerplate
+print(im.delete_instance("$5"))
+EOF
+
+fi
