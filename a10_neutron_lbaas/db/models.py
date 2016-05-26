@@ -142,7 +142,7 @@ class A10DeviceInstance(A10BaseMixin, A10Base):
     write_memory = sa.Column(sa.Boolean(), nullable=False)
 
     nova_instance_id = sa.Column(sa.String(36), nullable=True)
-    ip_address = sa.Column(sa.String(255), nullable=False)
+    host = sa.Column(sa.String(255), nullable=False)
 
     # TODO(dougwig) -- later - reference to scheduler, or capacity, or?
     # TODO(dougwig) -- later - should add state enum here
