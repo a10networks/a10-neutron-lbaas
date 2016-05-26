@@ -179,6 +179,13 @@ devices = {
 #             "use-mgmt-port": True
 #     },
 
+# # Configure dns resolver
+#
+#     'dns_resolver': {
+#         'primary': '192.0.2.4',
+#         'secondary': '192.0.2.5',
+#     },
+
 # # Configure statistics collection
 #
 #     'sflow_collector': {
