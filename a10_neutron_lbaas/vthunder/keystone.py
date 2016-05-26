@@ -69,6 +69,15 @@ class KeystoneFromConfig(KeystoneBase):
         return self._get_keystone_stuff(ks_version, auth)
 
 
+class KeystoneFromPassword(KeystoneFromConfig):
+
+    def __init__(self, a10_config, tenant_name, username, password):
+        (self._session, self._keystone_client) = self._get_keystone_pw(
+            ks_version=a10_config.get('keystone_version'),
+            auth_url=a10_config.get('keystone_auth_url'),
+            tenant_name=tenant_name, user=username, password=password)
+
+
 class KeystoneFromContext(KeystoneBase):
 
     def __init__(self, a10_config, openstack_context):

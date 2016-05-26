@@ -87,16 +87,26 @@ class InstanceManager(object):
             NEUTRON_VERSION, session=self._ks_session)
 
     @classmethod
-    def from_config(self, config, openstack_context=None):
-        vth = config.get_vthunder_config()
+    def _factory_with_service_tenant(cls, config, user_keystone_session):
+        ks = user_keystone_session
 
-        ks = a10_keystone.KeystoneFromContext(config, openstack_context)
+        vth = config.get_vthunder_config()
         if 'service_tenant' in vth:
             service_ks = a10_keystone.KeystoneFromConfig(config)
         else:
             service_ks = ks
 
         return InstanceManager(ks_session=service_ks.session, network_ks_session=ks.session)
+
+    @classmethod
+    def from_config(cls, config, openstack_context=None):
+        ks = a10_keystone.KeystoneFromContext(config, openstack_context)
+        return cls._factory_with_service_tenant(config, ks)
+
+    @classmethod
+    def from_cmdline(cls, config, tenant_name, username, password):
+        ks = a10_keystone.KeystoneFromPassword(config, tenant_name, username, password)
+        return cls._factory_with_service_tenant(config, ks)
 
     def _build_server(self, instance):
         retval = {}
@@ -212,7 +222,8 @@ class InstanceManager(object):
         flavor_filter = (lambda x: x is not None and
                          ((hasattr(x, "name") and x.name == identifier)
                           or (hasattr(x, "id") and x.id == identifier)))
-        filtered = filter(flavor_filter, self._nova_api.flavors.list())
+        flavors = self._nova_api.flavors.list()
+        filtered = filter(flavor_filter, flavors)
         # TODO(mdurrant): What if we accidentally hit multiple flavors?
         if filtered and len(filtered) > 0:
             result = filtered[0]
@@ -225,7 +236,7 @@ class InstanceManager(object):
             raise a10_ex.IdentifierUnspecifiedError(
                 "Parameter identifier must specify image id or name")
         img_filter = (lambda x: x is not None and
-                      ((hasattr(x, "name") and identifier in x.name)
+                      ((hasattr(x, "name") and x.name is not None and identifier in x.name)
                        or (hasattr(x, "id") and x.id == identifier)))
         try:
             images = self._nova_api.images.list()
