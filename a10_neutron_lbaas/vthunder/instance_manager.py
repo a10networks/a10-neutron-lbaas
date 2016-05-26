@@ -246,7 +246,7 @@ class InstanceManager(object):
         LOG.exception(ex_msg)
         raise a10_ex.NetworksNotFoundError(ex_msg)
 
-    def get_networks(self, networks=[]):
+    def _get_networks(self, session, networks=[]):
         network_list = {"networks": []}
         net_list = []
 
@@ -256,7 +256,7 @@ class InstanceManager(object):
 
         try:
             # Lookup as user, since names are not unique
-            q_api = neutron_client.Client(NEUTRON_VERSION, session=self._network_ks_session)
+            q_api = neutron_client.Client(NEUTRON_VERSION, session=session)
             network_list = q_api.list_networks()
             net_list = network_list.get("networks", [])
         # TODO(mdurrant) - Create specific exceptions.
@@ -282,6 +282,14 @@ class InstanceManager(object):
             'id': id_func(available_networks[x]),
             'name': available_networks[x].get('name', '')
         } for x in networks]
+
+    def get_networks(self, networks=[]):
+        if self._ks_session != self._network_ks_session:
+            mgmt = self._get_networks(self._ks_session, networks[:1])
+            data = self._get_networks(self._network_ks_session, networks[1:])
+            return mgmt + data
+        else:
+            return self._get_networks(self._ks_session, networks)
 
     def _device_instance(self, vthunder_config, name=None):
         # Pick an image, any image
