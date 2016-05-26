@@ -165,6 +165,7 @@ def upgrade():
                   nullable=False),
     )
 
+
 def downgrade():
     op.drop_table('a10_scaling_group_workers')
     op.drop_table('a10_scaling_group_switches')
