@@ -62,7 +62,7 @@ class A10DeviceInstance(extensions.ExtensionDescriptor):
         attr_map = RESOURCE_ATTRIBUTE_MAP
         resources = resource_helper.build_resource_info(my_plurals,
                                                         attr_map,
-                                                        constants.A10_APPLIANCE)
+                                                        constants.A10_DEVICE_INSTANCE)
 
         return resources
 
