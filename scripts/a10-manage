@@ -49,7 +49,7 @@ if [ -n "$ao" ]; then
 fi
 
 cat - <<EOF
-echo "OpenStack config change examples"
+OpenStack config change examples
 
 ==== neutron_extensions
 
@@ -80,6 +80,7 @@ Your neutron_lbaas.conf file must contain a service_provider for A10. Example:
     service_provider = LOADBALANCERV2:A10Networks:neutron_lbaas.drivers.a10networks.driver_v2.ThunderDriver:default
 
 EOF
+}
 
 boilerplate() {
     cat - <<EOF
