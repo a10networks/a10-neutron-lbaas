@@ -18,6 +18,7 @@ if [ $? -ne 0 ]; then
     echo "error: unable to find a10_neutron_lbaas package"
     exit 1
 fi
+ao=$(python -c 'import a10_openstack; print(a10_openstack.__path__[0])' 2>/dev/null)
 
 if [ ! -d /etc/a10 ]; then
     echo "error: no /etc/a10 directory; please add a config file. Suggest running the following command and modifying for your site:"
@@ -25,6 +26,61 @@ if [ ! -d /etc/a10 ]; then
     echo "  sudo cp $d/etc/config.py /etc/a10"
     exit 1
 fi
+
+config_dir_setup() {
+    if [ ! -d /etc/a10 ]; then
+        echo "Creating /etc/a10 directory"
+        sudo mkdir /etc/a10
+        sudo chown go-rwx /etc/a10
+        echo ""
+    fi
+}
+
+conf_file_spew() {
+
+ae="${d}/neutron_ext/extensions"
+if [ -n "$ao" ]; then
+    ae="${ae}:${ao}/neutron_ext/extensions"
+fi
+
+sp="a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin"
+if [ -n "$ao" ]; then
+    sp="${sp},a10_openstack.neutron_ext.services.a10_scaling_group.plugin.A10ScalingGroupPlugin"
+fi
+
+cat - <<EOF
+OpenStack config change examples
+
+==== neutron_extensions
+
+If using the A10 neutron extensions, your neutron.conf must their api_extension path. Example:
+
+/etc/neutron/neutron.conf:
+    api_extensions_path = $ae
+
+==== service_plugins
+
+Your neutron.conf must contain service plugins for the lbaas service, and optionally
+for the A10 neutron extensions. Example:
+
+/etc/neutron/neutron.conf:
+    service_plugins = neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2,
+    $sp
+
+==== lbaas driver
+
+Your neutron_lbaas.conf file must contain a service_provider for A10. Example:
+
+/etc/neutron/neutron_lbaas.conf:
+
+    # lbaasv1
+    # service_provider = LOADBALANCER:A10Networks:neutron_lbaas.services.loadbalancer.drivers.a10networks.driver_v1.ThunderDriver:default
+
+    # lbaasv2
+    service_provider = LOADBALANCERV2:A10Networks:neutron_lbaas.drivers.a10networks.driver_v2.ThunderDriver:default
+
+EOF
+}
 
 boilerplate() {
     cat - <<EOF
@@ -36,8 +92,14 @@ EOF
 }
 
 if [ "$1" = "install" ]; then
+    echo "Running database migrations to head"
     cd "${d}/db/migration"
     alembic upgrade head
+    echo ""
+
+    config_dir_setup
+
+    conf_file_spew
 
 elif [ "$1" = "upgrade" ]; then
     cd "${d}/db/migration"
