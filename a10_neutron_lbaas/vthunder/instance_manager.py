@@ -163,9 +163,8 @@ class InstanceManager(object):
 
         # Next 6 lines -  Added due to insane API on the other side
         if hasattr(created_instance.manager, 'client'):
-            if hasattr(created_instance.manager.client, 'last_request_id'):
-                # This craziness works around a bug in Liberty.
-                created_instance.manager.client.last_request_id = None
+            # This craziness works around a bug in Liberty.
+            created_instance.manager.client.last_request_id = None
         self._create_server_spinlock(created_instance)
 
         # Get the IP address of the first interface (should be management)
