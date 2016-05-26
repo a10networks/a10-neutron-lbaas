@@ -35,9 +35,9 @@ def upgrade():
                   sa.String(36),
                   primary_key=True,
                   nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
         sa.Column('tenant_id', sa.String(255), nullable=True),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('name', sa.String(255), nullable=True),
         sa.Column('description', sa.String(255), nullable=True),
 
@@ -52,9 +52,9 @@ def upgrade():
                   sa.String(36),
                   primary_key=True,
                   nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
         sa.Column('tenant_id', sa.String(255), nullable=True),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('name', sa.String(255), nullable=True),
         sa.Column('description', sa.String(255), nullable=True),
 
@@ -73,9 +73,9 @@ def upgrade():
                   sa.String(36),
                   primary_key=True,
                   nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
         sa.Column('tenant_id', sa.String(255), nullable=True),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('name', sa.String(255), nullable=True),
         sa.Column('description', sa.String(255), nullable=True),
 
@@ -89,8 +89,8 @@ def upgrade():
                   sa.String(36),
                   primary_key=True,
                   nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('scaling_policy_id',
                   sa.String(36),
                   sa.ForeignKey('a10_scaling_policies.id'),
@@ -111,13 +111,12 @@ def upgrade():
     op.create_table(
         "a10_scaling_groups",
         sa.Column('id', sa.String(36),
-                  sa.ForeignKey(u'a10_appliances_slb.id'),
                   primary_key=True,
                   nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
 
         sa.Column('tenant_id', sa.String(255), nullable=True),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('name', sa.String(255), nullable=True),
         sa.Column('description', sa.String(255), nullable=True),
 
@@ -132,8 +131,8 @@ def upgrade():
         sa.Column('id', sa.String(36),
                   primary_key=True,
                   nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('type', sa.String(50), nullable=False),
         sa.Column('scaling_group_id', sa.String(36),
                   sa.ForeignKey('a10_scaling_groups.id'),
@@ -156,8 +155,6 @@ def upgrade():
                   sa.ForeignKey(u'a10_scaling_group_members.id'),
                   primary_key=True,
                   nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
     )
 
     op.create_table(
@@ -166,10 +163,7 @@ def upgrade():
                   sa.ForeignKey(u'a10_scaling_group_members.id'),
                   primary_key=True,
                   nullable=False),
-        sa.Column('created_at', sa.DateTime),
-        sa.Column('updated_at', sa.DateTime),
     )
-
 
 def downgrade():
     op.drop_table('a10_scaling_group_workers')
