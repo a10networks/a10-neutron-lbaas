@@ -86,6 +86,16 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                     "total_connections": 0
                 }
 
+    def oper(self, context, lb, lb_db, model_type):
+        with a10.A10Context(self, context, lb) as c:
+            try:
+                name = self.meta(lb, 'id', lb.id)
+                oper_stats = c.client.slb.virtual_server.oper(name)
+                oper_stats = oper_stats["virtual-server"]["oper"]["state"]
+                lb_db.update_status(context, model_type, lb.id, operating_status=str(oper_stats))
+            except Exception as ex:
+                LOG.exception(ex)
+
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")
         # Ensure all elements associated with this LB exist on the device.
