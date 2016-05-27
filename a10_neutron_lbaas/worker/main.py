@@ -30,24 +30,14 @@ class WorkerThread(threading.Thread):
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.queue = kwargs.get('queue')
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     def run(self):
->>>>>>> initial worker thread framework
->>>>>>> run is main loop, not start
         LOG.info("A10 worker thread, starting")
 
         while True:
             LOG.info("A10 worker, idling")
             status_check.status_update(self.a10_driver)
             time.sleep(10)
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> initial worker thread framework
->>>>>>> run is main loop, not start
+    
     def join(self, timeout=None):
         self.halt.set()
-<<<<<<< HEAD
         super(WorkerThread, self).join(timeout)
->>>>>>> Pep8 fixes and added required dependency
