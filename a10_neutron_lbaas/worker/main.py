@@ -37,7 +37,7 @@ class WorkerThread(threading.Thread):
             LOG.info("A10 worker, idling")
             status_check.status_update(self.a10_driver)
             time.sleep(10)
-    
+
     def join(self, timeout=None):
         self.halt.set()
         super(WorkerThread, self).join(timeout)
