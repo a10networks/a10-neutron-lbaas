@@ -41,18 +41,18 @@ class WorkerThread(threading.Thread):
             LOG.info("A10 worker, idling")
             status_check.status_update(self.a10_driver)
             time.sleep(10)
-                     self.preform_operation(oper)
+                    self.preform_operation(oper)
 
-                     self.queue.task_done()
-                     self.driver.a10.loadbalancer.update_statuses()
+                    self.queue.task_done()
+                    status_check.status_update(self.a10_driver)
 
                 else:
                     LOG.info("A10 worker, idling")
                     status_check.status_update(self.a10_driver)
                     time.sleep(10)
 
-           except Exception as ex:
-               LOG.exception(ex)
+            except Exception as ex:
+                LOG.exception(ex)
 
     def join(self, timeout=None):
         self.halt.set()

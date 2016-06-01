@@ -28,12 +28,6 @@ import v1.handler_member
 import v1.handler_pool
 import v1.handler_vip
 
-import v2.handler_hm
-import v2.handler_lb
-import v2.handler_listener
-import v2.handler_member
-import v2.handler_pool
-
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
 
@@ -122,7 +116,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def lb(self):
-        return  handler_queue.LoadBalancerQueued(
+        return handler_queue.LoadBalancerQueued(
             self.worker_queue,
             self,
             self.openstack_driver,
@@ -145,7 +139,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
     def pool(self):
         return handler_queue.PoolQueued(
             self.worker_queue,
-            self, 
+            self,
             self.openstack_driver,
             neutron=self.neutron)
 
