@@ -19,6 +19,8 @@ from six.moves import queue
 
 import a10_config
 import version
+
+from worker import handler_queue
 import worker.main as worker
 
 import v1.handler_hm
@@ -120,9 +122,10 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def lb(self):
-        return v2.handler_lb.LoadbalancerHandler(
+        return  handler_queue.LoadBalancerQueued(
+            self.worker_queue,
             self,
-            self.openstack_driver.load_balancer,
+            self.openstack_driver,
             neutron=self.neutron)
 
     @property
@@ -131,30 +134,35 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def listener(self):
-        return v2.handler_listener.ListenerHandler(
+        return handler_queue.ListenerQueued(
+            self.worker_queue,
             self,
-            self.openstack_driver.listener,
+            self.openstack_driver,
             neutron=self.neutron,
             barbican_client=self.barbican_client)
 
     @property
     def pool(self):
-        return v2.handler_pool.PoolHandler(
-            self, self.openstack_driver.pool,
+        return handler_queue.PoolQueued(
+            self.worker_queue,
+            self, 
+            self.openstack_driver,
             neutron=self.neutron)
 
     @property
     def member(self):
-        return v2.handler_member.MemberHandler(
+        return handler_queue.MemberQueued(
+            self.worker_queue,
             self,
-            self.openstack_driver.member,
+            self.openstack_driver,
             neutron=self.neutron)
 
     @property
     def hm(self):
-        return v2.handler_hm.HealthMonitorHandler(
+        return handler_queue.HealthMonitorQueued(
+            self.worker_queue,
             self,
-            self.openstack_driver.health_monitor,
+            self.openstack_driver,
             neutron=self.neutron)
 
 
