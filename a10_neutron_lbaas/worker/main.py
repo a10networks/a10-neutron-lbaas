@@ -29,6 +29,7 @@ class WorkerThread(threading.Thread):
         self.a10_driver = kwargs.get('a10_driver')
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.queue = kwargs.get('queue')
+        self.halt = self.halt = threading.Event()
 
     def run(self):
         LOG.info("A10 worker thread, starting")
@@ -44,12 +45,12 @@ class WorkerThread(threading.Thread):
                     self.preform_operation(oper)
 
                     self.queue.task_done()
-                    status_check.status_update(self.a10_driver)
+                    #status_check.status_update(self.a10_driver)
 
-                else:
-                    LOG.info("A10 worker, idling")
-                    status_check.status_update(self.a10_driver)
-                    time.sleep(10)
+                #else:
+                    #LOG.info("A10 worker, idling")
+                    #status_check.status_update(self.a10_driver)
+                    #time.sleep(10)
 
             except Exception as ex:
                 LOG.exception(ex)
@@ -60,4 +61,5 @@ class WorkerThread(threading.Thread):
     
     def preform_operation(self, oper):
         func = oper[0]
-        func(oper[1:])
+        args = oper[1:]
+        func(*args)

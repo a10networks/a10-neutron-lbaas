@@ -26,6 +26,8 @@ class LoadBalancerQueued(object):
                                                    openstack_driver.load_balancer,
                                                    neutron=neutron)
         self.queue = queue
+        self.openstack_driver = openstack_driver
+        self.neutron = neutron
 
     def create(self, context, lb):
         self.queue.put_nowait([self.lb_h.create, context, lb])
@@ -51,6 +53,9 @@ class ListenerQueued(object):
                                                            neutron=neutron,
                                                            barbican_client=barbican_client)
         self.queue = queue
+        self.a10_driver = a10_driver
+        self.openstack_driver = openstack_driver
+        self.neutron = neutron
 
     def create(self, context, listener):
         self.queue.put_nowait([self.listener_h.create, context, listener])
@@ -69,6 +74,9 @@ class PoolQueued(object):
                                                openstack_driver.pool,
                                                neutron=neutron)
         self.queue = queue
+        self.a10_driver = a10_driver
+        self.openstack_driver = openstack_driver
+        self.neutron = neutron
 
     def create(self, context, pool):
         self.queue.put_nowait([self.pool_h.create, context, pool])
