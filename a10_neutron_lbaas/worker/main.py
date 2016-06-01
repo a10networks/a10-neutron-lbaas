@@ -32,12 +32,32 @@ class WorkerThread(threading.Thread):
 
     def run(self):
         LOG.info("A10 worker thread, starting")
+        while not self.halt.isSet():
+            try:
+                if not self.queue.empty():
+                    oper = self.queue.get(timeout=1)
 
         while True:
             LOG.info("A10 worker, idling")
             status_check.status_update(self.a10_driver)
             time.sleep(10)
+                     self.preform_operation(oper)
+
+                     self.queue.task_done()
+                     self.driver.a10.loadbalancer.update_statuses()
+
+                else:
+                    LOG.info("A10 worker, idling")
+                    status_check.status_update(self.a10_driver)
+                    time.sleep(10)
+
+           except Exception as ex:
+               LOG.exception(ex)
 
     def join(self, timeout=None):
         self.halt.set()
         super(WorkerThread, self).join(timeout)
+    
+    def preform_operation(self, oper):
+        func = oper[0]
+        func(oper[1:])
