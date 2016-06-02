@@ -66,6 +66,21 @@ class A10ScalingGroupBinding(models.A10Base):
                                       nullable=False)
 
 
+class A10ScalingGroupTenantBinding(models.A10Base):
+    __tablename__ = u'a10_scaling_group_tenant_bindings'
+
+    id = sa.Column(sa.String(36),
+                   primary_key=True,
+                   nullable=False,
+                   default=models._uuid_str)
+    scaling_group_id = sa.Column(sa.String(36),
+                                 sa.ForeignKey('a10_scaling_groups.id'),
+                                 nullable=False)
+    scaling_group = relationship(A10ScalingGroup, backref='tenant_bindings')
+
+    tenant_id = sa.Column(sa.String(255), nullable=False)
+
+
 class A10ScalingGroupMember(models.A10Base):
     """A10 Scaling Group Member - switch/worker depending on 'role'"""
     __tablename__ = "a10_scaling_group_members"
