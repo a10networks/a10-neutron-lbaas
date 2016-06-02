@@ -117,7 +117,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
     @property
     def lb(self):
         return handler_queue.LoadBalancerQueued(
-            self.worker_queue,
+            self.worker,
             self,
             self.openstack_driver,
             neutron=self.neutron)
@@ -129,7 +129,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
     @property
     def listener(self):
         return handler_queue.ListenerQueued(
-            self.worker_queue,
+            self.worker,
             self,
             self.openstack_driver,
             neutron=self.neutron,
@@ -138,7 +138,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
     @property
     def pool(self):
         return handler_queue.PoolQueued(
-            self.worker_queue,
+            self.worker,
             self,
             self.openstack_driver,
             neutron=self.neutron)
@@ -146,7 +146,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
     @property
     def member(self):
         return handler_queue.MemberQueued(
-            self.worker_queue,
+            self.worker,
             self,
             self.openstack_driver,
             neutron=self.neutron)
@@ -154,7 +154,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
     @property
     def hm(self):
         return handler_queue.HealthMonitorQueued(
-            self.worker_queue,
+            self.worker,
             self,
             self.openstack_driver,
             neutron=self.neutron)

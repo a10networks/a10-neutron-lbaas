@@ -35,6 +35,8 @@ class WorkerThread(threading.Thread):
         LOG.info("A10 worker thread, starting")
         while not self.halt.isSet():
             try:
+                LOG.info("QUEUE SIZE: " + str(self.queue.qsize()))
+                LOG.info("QUEUE: " + str(self.queue))
                 if not self.queue.empty():
                     oper = self.queue.get(timeout=1)
 
@@ -45,12 +47,12 @@ class WorkerThread(threading.Thread):
                     self.preform_operation(oper)
 
                     self.queue.task_done()
-                    #status_check.status_update(self.a10_driver)
+                    status_check.status_update(self.a10_driver)
 
-                #else:
-                    #LOG.info("A10 worker, idling")
-                    #status_check.status_update(self.a10_driver)
-                    #time.sleep(10)
+                else:
+                    LOG.info("A10 worker, idling")
+                    status_check.status_update(self.a10_driver)
+                    time.sleep(10)
 
             except Exception as ex:
                 LOG.exception(ex)
@@ -63,3 +65,9 @@ class WorkerThread(threading.Thread):
         func = oper[0]
         args = oper[1:]
         func(*args)
+
+    def add_to_queue(self, oper):
+        LOG.info("==========ADD=======")
+        LOG.info(oper)
+        self.queue.put_nowait(oper)
+        LOG.inf("QUEUE: " + str(self.queue.qsize()))
