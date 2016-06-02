@@ -25,10 +25,11 @@ VERSION_TABLE = 'alembic_version_a10'
 config = context.config
 
 # Override db location
-a10_cfg = a10_config.A10Config()
-if not a10_cfg.get('use_database'):
-    raise ex.InternalError("database not enabled")
-config.set_main_option("sqlalchemy.url", a10_cfg.get('database_connection'))
+if getattr(config, 'connection', None) is None:
+    a10_cfg = a10_config.A10Config()
+    if not a10_cfg.get('use_database'):
+        raise ex.InternalError("database not enabled")
+    config.set_main_option("sqlalchemy.url", a10_cfg.get('database_connection'))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -72,10 +73,13 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix='sqlalchemy.',
-        poolclass=pool.NullPool)
+    connectable = getattr(config, 'connection', None)
+
+    if connectable is None:
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section),
+            prefix='sqlalchemy.',
+            poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(

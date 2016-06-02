@@ -12,9 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from sqlalchemy.ext.declarative import clsregistry
 from sqlalchemy.orm import sessionmaker
 
 from a10_neutron_lbaas.db import api as db_api
+
+# Import models to be created by create_all
+import a10_neutron_lbaas.db.models
+import a10_neutron_lbaas.db.models.scaling_group
+
+# Suppress pep8 warnings for unused imports
+assert a10_neutron_lbaas.db.models
+assert a10_neutron_lbaas.db.models.scaling_group
 
 Base = db_api.get_base()
 
@@ -41,15 +50,10 @@ def fake_session(tables=None):
     return (make_session, connection.close)
 
 
-def a10_neutron_lbaas_models():
-    return [model
-            for model in Base._decl_class_registry.values()
-            if model.__module__.startswith('a10_neutron_lbaas.')]
+def a10_models():
+    return [model for model in Base._decl_class_registry.values()
+            if not isinstance(model, clsregistry._ModuleMarker)]
 
 
 def fake_migration_connection():
-    a10_neutron_lbaas_tables = [model.__tablename__ for model in a10_neutron_lbaas_models()]
-    other_tables = [table
-                    for table in Base.metadata.sorted_tables
-                    if table.name not in a10_neutron_lbaas_tables]
-    return fake_connection(other_tables)
+    return fake_connection([])
