@@ -40,22 +40,6 @@ class WorkerThread(threading.Thread):
                 if not self.queue.empty():
                     oper = self.queue.get(timeout=1)
 
-        while True:
-            LOG.info("A10 worker, idling")
-            status_check.status_update(self.a10_driver)
-            time.sleep(10)
-                    self.preform_operation(oper)
-
-                    self.queue.task_done()
-                    status_check.status_update(self.a10_driver)
-
-                else:
-                    LOG.info("A10 worker, idling")
-                    status_check.status_update(self.a10_driver)
-                    time.sleep(10)
-
-            except Exception as ex:
-                LOG.exception(ex)
 
     def join(self, timeout=None):
         self.halt.set()
@@ -67,7 +51,5 @@ class WorkerThread(threading.Thread):
         func(*args)
 
     def add_to_queue(self, oper):
-        LOG.info("==========ADD=======")
-        LOG.info(oper)
         self.queue.put_nowait(oper)
-        LOG.inf("QUEUE: " + str(self.queue.qsize()))
+        LOG.info("========TRACER6======")

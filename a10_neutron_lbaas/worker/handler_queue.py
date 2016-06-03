@@ -36,7 +36,6 @@ class LoadBalancerQueued(object):
 
     def create(self, context, lb):
         self.worker.add_to_queue([self.lb_h.create, context, lb])
-        LOG.info("========TRACER3==========")
 
     def update(self, context, old_lb, lb):
         self.worker.add_to_queue([self.lb_h.update, context, old_lb, lb])
@@ -131,10 +130,10 @@ class HealthMonitorQueued(object):
         self.openstack_driver = openstack_driver
 
     def create(self, context, hm):
-        self.queue.put_nowait([self.hm_h.create, context, hm])
+        self.worker.add_to_queue([self.hm_h.create, context, hm])
 
     def update(self, context, old_hm, hm):
-        self.queue.put_nowait([self.hm_h.update, context, old_hm, hm])
+        self.worker.add_to_queue([self.hm_h.update, context, old_hm, hm])
 
     def delete(self, context, hm):
-        self.queue.put_nowait([self.hm_h.delete, context, hm])
+         self.worker.add_to_queue([self.hm_h.delete, context, hm])
