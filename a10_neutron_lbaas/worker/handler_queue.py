@@ -64,7 +64,7 @@ class ListenerQueued(object):
         self.openstack_manager = openstack_driver
 
     def create(self, context, listener):
-        selfworker.add_to_queue([self.listener_h.create, context, listener])
+        self.worker.add_to_queue([self.listener_h.create, context, listener])
 
     def update(self, context, old_listener, listener):
         self.worker.add_to_queue([self.listener_h.update, context, old_listener, listener])
