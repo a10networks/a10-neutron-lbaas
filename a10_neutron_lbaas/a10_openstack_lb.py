@@ -15,7 +15,6 @@
 import logging
 
 import acos_client
-from six.moves import queue
 
 import a10_config
 import version
@@ -70,12 +69,10 @@ class A10OpenstackLBBase(object):
             self.hooks = self.config.get('plumbing_hooks_class')(self)
 
         if self.config.get('use_worker_thread'):
-            self.worker_queue = queue.Queue()
-            self.worker = worker.WorkerThread(a10_driver=self, queue=self.worker_queue)
+            self.worker = worker.WorkerThread(a10_driver=self)
             self.worker.daemon = False
             self.worker.start()
         else:
-            self.worker_queue = None
             self.worker = None
 
         if self.config.get('verify_appliances'):
