@@ -39,10 +39,10 @@ class ConfigModule(object):
 
 class A10Config(object):
 
-    def __init__(self, config_dir=None, config=None):
+    def __init__(self, config_dir=None, config=None, provider=None):
         if config is not None:
             self._config = config
-            self._load_config()
+            self._load_provider_config(provider)
             return
 
         self._config_dir = self._find_config_dir(config_dir)
@@ -54,7 +54,7 @@ class A10Config(object):
             LOG.error("A10Config could not find %s", self._config_path)
             self._config = blank_config
 
-        self._load_config()
+        self._load_provider_config(provider)
 
     def _find_config_dir(self, config_dir):
         # Look for config in the virtual environment
@@ -77,6 +77,16 @@ class A10Config(object):
 
         return d
 
+    def _load_provider_config(self, provider=None):
+        self._outer_config = self._config
+
+        if (provider is not None and hasattr(self._config, 'providers') and
+                provider in self._config['providers']):
+            self._config = self._config.providers[provider]
+
+        self._load_config()
+
+    # TODO(dougwig) -- implement fallback _config semantics below
     def _load_config(self):
         # Global defaults
         for dk, dv in defaults.GLOBAL_DEFAULTS.items():
