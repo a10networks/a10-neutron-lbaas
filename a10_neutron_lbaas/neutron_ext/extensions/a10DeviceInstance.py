@@ -15,6 +15,7 @@
 import abc
 import six
 
+import a10_openstack_lib.resources.a10_device_instance as a10_device_instance
 from neutron.api import extensions
 from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
@@ -23,8 +24,6 @@ from neutron.services import service_base
 
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
 from a10_neutron_lbaas.neutron_ext.common import resources
-import a10_neutronclient.resources.a10_device_instance as a10_device_instance
-
 
 RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_instance.RESOURCE_ATTRIBUTE_MAP,
                                                   attributes)

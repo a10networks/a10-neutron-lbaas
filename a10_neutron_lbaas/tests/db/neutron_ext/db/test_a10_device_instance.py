@@ -14,10 +14,11 @@
 
 import mock
 
+from a10_openstack_lib.resources import a10_device_instance as a10_device_instance_resources
+
 import a10_neutron_lbaas.tests.db.test_base as test_base
 
 import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
-from a10_neutronclient.resources import a10_device_instance as a10_device_instance_resources
 
 
 class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):

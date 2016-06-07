@@ -12,14 +12,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
+from a10_openstack_lib.resources import a10_device_instance as a10_device_instance_resources
 from neutron.db import common_db_mixin
-from oslo_log import log as logging
 
 from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.neutron_ext.common import resources
 from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
-from a10_neutronclient.resources import a10_device_instance as a10_device_instance_resources
 
 LOG = logging.getLogger(__name__)
 
