@@ -29,26 +29,21 @@ class WorkerThread(threading.Thread):
         self.a10_driver = kwargs.get('a10_driver')
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.worker_queue = queue.Queue()
-        self.halt = threading.Event()
+
 
     def run(self):
         LOG.info("A10 worker thread, starting")
         while True:
-            try:
-                if self.worker_queue.qsize() > 0:
-                    oper = self.queue.get_nowait()
-                    LOG.info("========TRACER5========")
-                    self.preform_operation(oper)
-                    status_check.status_update(self.a10_driver)
-                    self.queue.task_done()
+            while self.worker_queue.qsize() > 0:
+                oper = self.queue.get_nowait()
+                LOG.info("========TRACER5========")
+                self.preform_operation(oper)
+                status_check.status_update(self.a10_driver)
+                self.queue.task_done()
 
-                else:
-                    LOG.info("A10 worker, idling")
-                    status_check.status_update(self.a10_driver)
-                    #time.sleep(10)
-
-            except Exception as ex:
-                LOG.exception(ex)
+            LOG.info("A10 worker, idling")
+            status_check.status_update(self.a10_driver)
+            time.sleep(10)
 
     def join(self, timeout=None):
         self.halt.set()
@@ -60,5 +55,5 @@ class WorkerThread(threading.Thread):
         func(*args)
 
     def add_to_queue(self, oper):
-        self.worker_queue.put_nowait(oper)
+        self.worker_queue.put(oper)
         LOG.info("========TRACER6======")
