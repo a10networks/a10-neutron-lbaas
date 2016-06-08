@@ -9,14 +9,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from a10_neutron_lbaas.v2 import handler_member
+import logging
 
 from neutron import context as ncontext
 from neutron_lbaas.db.loadbalancer.loadbalancer_dbv2 import LoadBalancerPluginDbv2
 from neutron_lbaas.db.loadbalancer import models
 
-
-import logging
+from a10_neutron_lbaas.v2 import handler_member
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)

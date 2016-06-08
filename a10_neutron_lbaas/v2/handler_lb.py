@@ -86,7 +86,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                     "total_connections": 0
                 }
 
-    def oper(self, context, lb, lb_db, model_type):
+    def _update_operating_status(self, context, lb, lb_db, model_type):
         with a10.A10Context(self, context, lb) as c:
             try:
                 name = self.meta(lb, 'id', lb.id)
