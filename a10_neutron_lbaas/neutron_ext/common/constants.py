@@ -14,7 +14,7 @@
 
 from neutron.plugins.common import constants as nconstants
 
-from a10_neutronclient.resources import a10_device_instance
+from a10_openstack_lib.resources import a10_device_instance
 
 A10_DEVICE_INSTANCE_EXT = a10_device_instance.EXTENSION
 A10_DEVICE_INSTANCE = a10_device_instance.SERVICE
