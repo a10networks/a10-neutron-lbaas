@@ -70,7 +70,7 @@ class A10OpenstackLBBase(object):
 
         if self.config.get('use_worker_thread'):
             self.worker = worker.WorkerThread(a10_driver=self)
-            self.worker.daemon = False
+            self.worker.daemon = True
             self.worker.start()
         else:
             self.worker = None

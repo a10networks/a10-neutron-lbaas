@@ -34,12 +34,13 @@ class WorkerThread(threading.Thread):
     def run(self):
         LOG.info("A10 worker thread, starting")
         while True:
-            while self.worker_queue.qsize() > 0:
-                oper = self.queue.get_nowait()
-                LOG.info("========TRACER5========")
+            try:
+                oper = self.worker_queue.get()
                 self.preform_operation(oper)
                 status_check.status_update(self.a10_driver)
-                self.queue.task_done()
+                self.worker_queue.task_done()
+            except queue.Empty:
+                LOG.info("Queue is empty")
 
             LOG.info("A10 worker, idling")
             status_check.status_update(self.a10_driver)
@@ -56,4 +57,3 @@ class WorkerThread(threading.Thread):
 
     def add_to_queue(self, oper):
         self.worker_queue.put(oper)
-        LOG.info("========TRACER6======")
