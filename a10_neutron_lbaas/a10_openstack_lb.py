@@ -19,14 +19,10 @@ import acos_client
 import a10_config
 import version
 
-from worker import handler_queue
+from worker import handler_queue_v1
+from worker import handler_queue_v2
 import worker.main as worker
 import worker.status_check as status_check
-
-import v1.handler_hm
-import v1.handler_member
-import v1.handler_pool
-import v1.handler_vip
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
@@ -117,7 +113,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def lb(self):
-        return handler_queue.LoadBalancerQueued(
+        return handler_queue_v2.LoadBalancerQueuedV2(
             self.worker,
             self,
             self.openstack_driver,
@@ -129,7 +125,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def listener(self):
-        return handler_queue.ListenerQueued(
+        return handler_queue_v2.ListenerQueuedV2(
             self.worker,
             self,
             self.openstack_driver,
@@ -138,7 +134,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def pool(self):
-        return handler_queue.PoolQueued(
+        return handler_queue_v2.PoolQueuedV2(
             self.worker,
             self,
             self.openstack_driver,
@@ -146,7 +142,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def member(self):
-        return handler_queue.MemberQueued(
+        return handler_queue_v2.MemberQueuedV2(
             self.worker,
             self,
             self.openstack_driver,
@@ -154,7 +150,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def hm(self):
-        return handler_queue.HealthMonitorQueued(
+        return handler_queue_v2.HealthMonitorQueuedV2(
             self.worker,
             self,
             self.openstack_driver,
@@ -175,16 +171,32 @@ class A10OpenstackLBV1(A10OpenstackLBBase):
 
     @property
     def pool(self):
-        return v1.handler_pool.PoolHandler(self)
+        return handler_queue_v1.PoolQueueV1(
+            self.worker,
+            self,
+            self.openstack_driver,
+            neutron=self.neutron)
 
     @property
     def vip(self):
-        return v1.handler_vip.VipHandler(self)
+        return handler_queue_v1.VipQueuedV1(
+            self.worker,
+            self,
+            self.openstack_driver,
+            neutron=self.neutron)
 
     @property
     def member(self):
-        return v1.handler_member.MemberHandler(self)
+        return handler_queue_v1.MemberQueuedV1(
+            self.worker,
+            self,
+            self.openstack_driver,
+            neutron=self.neutron)
 
     @property
     def hm(self):
-        return v1.handler_hm.HealthMonitorHandler(self)
+        return handler_queue_v1.HealthMonitorQueuedV1(
+            self.worker,
+            self,
+            self.openstack_driver,
+            neutron=self.neutron)
