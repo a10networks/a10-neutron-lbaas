@@ -109,7 +109,7 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
         with a10.A10DeleteContext(self, context, member) as c:
             self._delete(c, context, member)
 
-    def oper(self, context, member, lb_db, model_type, pool):
+    def _update_operating_status(self, context, member, lb_db, model_type, pool):
         try:
             with a10.A10Context(self, context, member) as c:
                 server_ip = self.neutron.member_get_ip(context, member,

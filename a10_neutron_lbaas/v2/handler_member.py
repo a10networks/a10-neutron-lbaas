@@ -146,7 +146,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
 
         return retval
 
-    def oper(self, context, member, lb_db, model_type, pool):
+    def _update_operating_status(self, context, member, lb_db, model_type, pool):
         try:
             with a10.A10Context(self, context, member) as c:
                 server_ip = self.neutron.member_get_ip(context, member,

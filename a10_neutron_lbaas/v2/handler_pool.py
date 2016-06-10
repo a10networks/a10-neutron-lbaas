@@ -123,7 +123,7 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
 
         return result
 
-    def oper(self, context, pool, lb_db, model_type):
+    def _update_operating_status(self, context, pool, lb_db, model_type):
         try:
             with a10.A10Context(self, context, pool) as c:
                 name = pool.id
