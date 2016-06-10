@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutron import context as ncontext
 
 class NeutronOpsV1(object):
 
@@ -43,3 +44,6 @@ class NeutronOpsV1(object):
 
     def vip_get_id(self, context, pool_id):
         return self.openstack_driver._pool_get_vip_id(context, pool_id)
+
+    def get_neutron_admin_context():
+        return ncontext.get_admin_context()

@@ -21,6 +21,7 @@ import version
 
 from worker import handler_queue
 import worker.main as worker
+import worker.status_check as status_check
 
 import v1.handler_hm
 import v1.handler_member
@@ -106,7 +107,9 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
     
     def __init__(self):
         if self.config.get('use_worker_thread'):
-            self.worker = worker.WorkerThread(a10_driver=self)
+            self.worker = worker.WorkerThread(a10_driver=self,
+                                              sleep_timer=self.config.get("worker_sleep_time"),
+                                              status_update=status_check.status_update_v2)
             self.worker.daemon = True
             self.worker.start()
         else:
@@ -162,7 +165,9 @@ class A10OpenstackLBV1(A10OpenstackLBBase):
 
     def __init__(self):
         if self.config.get('use_worker_thread'):
-            self.worker = worker.WorkerThread(a10_driver=self)
+            self.worker = worker.WorkerThread(a10_driver=self,
+                                              sleep_timer=self.config.get("worker_sleep_time"),
+                                              status_update=status_check.status_update_v1):
             self.worker.daemon = True
             self.worker.start()
         else:

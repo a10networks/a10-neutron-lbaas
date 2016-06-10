@@ -15,8 +15,6 @@ import threading
 import time
 from six.moves import queue
 
-import status_check
-
 LOG = logging.getLogger(__name__)
 
 
@@ -39,7 +37,7 @@ class WorkerThread(threading.Thread):
             try:
                 oper = self.worker_queue.get()
                 self.preform_operation(oper)
-                status_check.status_update(self.a10_driver)
+                self.status_update(self.a10_driver)
                 self.worker_queue.task_done()
             except queue.Empty:
                 LOG.info("Queue is empty")
