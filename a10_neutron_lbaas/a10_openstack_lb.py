@@ -68,13 +68,6 @@ class A10OpenstackLBBase(object):
         else:
             self.hooks = self.config.get('plumbing_hooks_class')(self)
 
-        if self.config.get('use_worker_thread'):
-            self.worker = worker.WorkerThread(a10_driver=self)
-            self.worker.daemon = True
-            self.worker.start()
-        else:
-            self.worker = None
-
         if self.config.get('verify_appliances'):
             self._verify_appliances()
 
@@ -110,6 +103,14 @@ class A10OpenstackLBBase(object):
 
 
 class A10OpenstackLBV2(A10OpenstackLBBase):
+    
+    def __init__(self):
+        if self.config.get('use_worker_thread'):
+            self.worker = worker.WorkerThread(a10_driver=self)
+            self.worker.daemon = True
+            self.worker.start()
+        else:
+            self.worker = None
 
     @property
     def lb(self):
@@ -158,6 +159,14 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
 
 class A10OpenstackLBV1(A10OpenstackLBBase):
+
+    def __init__(self):
+        if self.config.get('use_worker_thread'):
+            self.worker = worker.WorkerThread(a10_driver=self)
+            self.worker.daemon = True
+            self.worker.start()
+        else:
+            self.worker = None
 
     @property
     def pool(self):

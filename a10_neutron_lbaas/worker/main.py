@@ -27,6 +27,8 @@ class WorkerThread(threading.Thread):
         super(WorkerThread, self).__init__(
             group=group, target=target, name=name, args=args, kwargs=kwargs)
         self.a10_driver = kwargs.get('a10_driver')
+        self.sleep_timer = kwargs.get('sleep_timer')
+        self.status_update = kwargs.get('status_update')
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.worker_queue = queue.Queue()
 
@@ -43,8 +45,8 @@ class WorkerThread(threading.Thread):
                 LOG.info("Queue is empty")
 
             LOG.info("A10 worker, idling")
-            status_check.status_update(self.a10_driver)
-            time.sleep(10)
+            self.status_update(self.a10_driver)
+            time.sleep(self.sleep_timer)
 
     def join(self, timeout=None):
         self.halt.set()
