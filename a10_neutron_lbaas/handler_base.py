@@ -14,6 +14,9 @@
 
 import json
 import logging
+import threading
+
+LATE_INIT_LOCK = threading.Lock()
 
 LOG = logging.getLogger(__name__)
 
@@ -24,11 +27,15 @@ class HandlerBase(object):
         self.a10_driver = a10_driver
         self.openstack_driver = self.a10_driver.openstack_driver
 
-        # XXX(dougwig): is this too racy?
         if self.a10_driver.provider is None:
-            for prov, driver in self.openstack_driver.plugin.drivers.items():
-                if driver is self.openstack_driver:
-                    self.a10_driver._late_init(prov)
+            LATE_INIT_LOCK.acquire()
+            try:
+                if self.a10_driver.provider is None:
+                    for prov, driver in self.openstack_driver.plugin.drivers.items():
+                        if driver is self.openstack_driver:
+                            self.a10_driver._late_init(prov)
+            finally:
+                LATE_INIT_LOCK.release()
 
         self.hooks = a10_driver.hooks
 

@@ -75,6 +75,9 @@ class UnitTestBase(test_case.TestCase):
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
 
+        if 'provider' not in openstack_lb_args:
+            openstack_lb_args['provider'] = 'units'
+
         if not hasattr(self, 'version') or self.version == 'v2':
             self.a = FakeA10OpenstackLBV2(mock.MagicMock(), **openstack_lb_args)
         else:

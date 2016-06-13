@@ -197,3 +197,17 @@ instance_defaults = {
 
 neutron_config = "/etc/neutron/neutron.conf"
 scaling_monitor = {"ip": "127.0.0.1", "port": 2358}
+
+# For provider based config testing
+
+who_should_win = 'daleks'
+best_spaceship = 'tardis'
+
+providers = {
+    'prov1': {
+        'who_should_win': 'the-doctor',
+        'vthunder': {
+            'api_version': '9.9'
+        }
+    }
+}

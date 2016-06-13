@@ -41,17 +41,22 @@ class A10OpenstackLBBase(object):
                  neutron_hooks_module=None,
                  barbican_client=None,
                  config=None,
-                 config_dir=None):
+                 config_dir=None,
+                 provider=None):
         self.openstack_driver = openstack_driver
         self.plumbing_hooks_class = plumbing_hooks_class
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
         self.config = config
         self.config_dir = config_dir
-        self.provider = None
+        self.provider = provider
+        self.hooks = None
 
         LOG.info("A10-neutron-lbaas: pre-initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
+
+        if provider is not None:
+            self._late_init(provider)
 
     def _late_init(self, provider):
         LOG.info("A10-neutron-lbaas: initializing, version=%s, acos_client=%s, provider=%s",

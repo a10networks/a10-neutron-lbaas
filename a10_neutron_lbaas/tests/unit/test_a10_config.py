@@ -79,3 +79,18 @@ class TestA10Config(test_base.UnitTestBase):
         self.assertEqual(self.a.config.get('use_database'), self.a.config.config.use_database)
         self.assertEqual(self.a.config.get(
             'verify_appliances'), self.a.config.config.verify_appliances)
+
+
+class TestA10ConfigProvider(test_base.UnitTestBase):
+
+    def setUp(self):
+        super(TestA10ConfigProvider, self).setUp({'provider': 'prov1'})
+
+    def test_top_level(self):
+        self.assertEqual(self.a.config.get('who_should_win'), 'the-doctor')
+        self.assertEqual(self.a.config.get('best_spaceship'), 'tardis')
+
+    def test_vthunder_api_version(self):
+        v = self.a.config.get_vthunder_config()
+        self.assertEqual(v['api_version'], '9.9')
+        self.assertEqual(v['nova_flavor'], 'acos.min')
