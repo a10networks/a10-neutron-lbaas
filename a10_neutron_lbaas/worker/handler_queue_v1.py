@@ -13,7 +13,6 @@
 #    under the License.
 
 from a10_neutron_lbaas.v1 import handler_hm
-from a10_neutron_lbaas.v1 import handler_listener
 from a10_neutron_lbaas.v1 import handler_member
 from a10_neutron_lbaas.v1 import handler_pool
 from a10_neutron_lbaas.v1 import handler_vip
@@ -22,12 +21,13 @@ import logging
 
 LOG = logging.getLogger(__name__)
 
+
 class VipQueuedV1(object):
 
     def __init__(self, worker, a10_driver, openstack_driver, neutron):
         self.vip_h = handler_vip.VipHandler(a10_driver,
-                                                   openstack_driver.vip,
-                                                   neutron=neutron)
+                                            openstack_driver.vip,
+                                            neutron=neutron)
         self.worker = worker
         self.openstack_driver = openstack_driver
         self.neutron = neutron
@@ -42,6 +42,7 @@ class VipQueuedV1(object):
 
     def delete(self, context, vip):
         self.worker.add_to_queue([self.vip_h.delete, context, vip])
+
 
 class PoolQueuedV1(object):
 
@@ -63,6 +64,7 @@ class PoolQueuedV1(object):
 
     def delete(self, context, pool):
         self.worker.add_to_queue([self.pool_h.delete, context, pool])
+
 
 class MemberQueuedV1(object):
 
@@ -105,4 +107,4 @@ class HealthMonitorQueuedV1(object):
         self.worker.add_to_queue([self.hm_h.update, context, old_hm, hm])
 
     def delete(self, context, hm):
-         self.worker.add_to_queue([self.hm_h.delete, context, hm])
+        self.worker.add_to_queue([self.hm_h.delete, context, hm])

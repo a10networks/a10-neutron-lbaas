@@ -100,7 +100,7 @@ class A10OpenstackLBBase(object):
 
 
 class A10OpenstackLBV2(A10OpenstackLBBase):
-    
+
     def __init__(self):
         if self.config.get('use_worker_thread'):
             self.worker = worker.WorkerThread(a10_driver=self,
@@ -163,7 +163,7 @@ class A10OpenstackLBV1(A10OpenstackLBBase):
         if self.config.get('use_worker_thread'):
             self.worker = worker.WorkerThread(a10_driver=self,
                                               sleep_timer=self.config.get("worker_sleep_time"),
-                                              status_update=status_check.status_update_v1):
+                                              status_update=status_check.status_update_v1)
             self.worker.daemon = True
             self.worker.start()
         else:

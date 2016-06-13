@@ -22,6 +22,7 @@ except ImportError:
     pass
 from neutron import context as ncontext
 
+
 class NeutronOpsV2(object):
 
     def __init__(self, handler):
@@ -56,5 +57,8 @@ class NeutronOpsV2(object):
     def vip_get(self, context, vip_id):
         return self.plugin.db.get_vip(context, vip_id)
 
-    def get_neutron_admin_context():
+    def get_neutron_admin_context(self):
         return ncontext.get_admin_context()
+
+    def get_model(self):
+        return lb_db

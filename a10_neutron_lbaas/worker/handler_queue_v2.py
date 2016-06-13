@@ -22,6 +22,7 @@ import logging
 
 LOG = logging.getLogger(__name__)
 
+
 class LoadBalancerQueuedV2(object):
 
     def __init__(self, worker, a10_driver, openstack_driver, neutron):
@@ -136,4 +137,4 @@ class HealthMonitorQueuedV2(object):
         self.worker.add_to_queue([self.hm_h.update, context, old_hm, hm])
 
     def delete(self, context, hm):
-         self.worker.add_to_queue([self.hm_h.delete, context, hm])
+        self.worker.add_to_queue([self.hm_h.delete, context, hm])

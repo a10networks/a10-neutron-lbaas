@@ -12,6 +12,7 @@
 
 from neutron import context as ncontext
 
+
 class NeutronOpsV1(object):
 
     def __init__(self, handler):

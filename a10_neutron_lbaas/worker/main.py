@@ -11,9 +11,9 @@
 #    under the License.
 
 import logging
+from six.moves import queue
 import threading
 import time
-from six.moves import queue
 
 LOG = logging.getLogger(__name__)
 
@@ -30,21 +30,21 @@ class WorkerThread(threading.Thread):
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.worker_queue = queue.Queue()
 
-
     def run(self):
         LOG.info("A10 worker thread, starting")
+
         while True:
             try:
                 oper = self.worker_queue.get()
                 self.preform_operation(oper)
-                self.status_update(self.a10_driver)
                 self.worker_queue.task_done()
             except queue.Empty:
                 LOG.info("Queue is empty")
+                time.sleep(self.sleep_timer)
 
-            LOG.info("A10 worker, idling")
-            self.status_update(self.a10_driver)
-            time.sleep(self.sleep_timer)
+            finally:
+                LOG.info("A10 worker, idling")
+                self.status_update(self.a10_driver)
 
     def join(self, timeout=None):
         self.halt.set()

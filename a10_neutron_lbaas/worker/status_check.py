@@ -26,24 +26,29 @@ from a10_neutron_lbaas.v2 import neutron_ops as v2_ops
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
 
+
 def status_update_v1(a10_driver):
     lb_db = a10_driver.plugin.db
-    v1_nops = v1_ops.NeutronOps(a10_driver)
+    v1_nops = v1_ops.NeutronOpsV1(a10_driver)
     context = v1_nops.get_neutron_admin_context()
-    for member in lb_db.get_members(context):
-        member_h = v1_handler_member.MemberHandler(a10_driver,
-                                                   a10_driver.openstack_driver.member,
-                                                   neutron=a10_driver.neutron)
-        member_h.oper(context, member, lb_db, models.Member, pool)
+    models = v1_nops.get_models()
+    for pool in lb_db.get_pools(context):
+        for member in pool.members:
+            member_h = v1_handler_member.MemberHandler(a10_driver,
+                                                       a10_driver.openstack_driver.member,
+                                                       neutron=a10_driver.neutron)
+            member_h.oper(context, member, lb_db, models.Member, pool)
+
 
 def status_update_v2(a10_driver):
     lb_db = a10_driver.plugin.db
     v2_nops = v2_ops.NeutronOpsV2(a10_driver)
     context = v2_nops.get_neutron_admin_context()
+    models = v2_nops.get_models()
     for lb in lb_db.get_loadbalancers(context):
         for pool in lb.pools:
             for member in pool.members:
                 member_h = v2_handler_member.MemberHandler(a10_driver,
-                                                        a10_driver.openstack_driver.member,
-                                                        neutron=a10_driver.neutron)
+                                                           a10_driver.openstack_driver.member,
+                                                           neutron=a10_driver.neutron)
                 member_h.oper(context, member, lb_db, models.MemberV2, pool)

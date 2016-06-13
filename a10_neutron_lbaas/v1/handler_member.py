@@ -11,10 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import logging
 
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
+
+LOG = logging.getLogger(__name__)
 
 
 class MemberHandler(handler_base_v1.HandlerBaseV1):
@@ -121,5 +124,5 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
                 oper_stats = oper_stats["member"]["oper"]["state"]
                 lb_db.update_status(context, model_type, member.id,
                                     operating_status=str(oper_stats))
-        except Exception as ex: 
+        except Exception as ex:
             LOG.exception(ex)
