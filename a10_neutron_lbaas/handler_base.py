@@ -28,14 +28,12 @@ class HandlerBase(object):
         self.openstack_driver = self.a10_driver.openstack_driver
 
         if self.a10_driver.provider is None:
-            LATE_INIT_LOCK.acquire()
-            try:
+            with LATE_INIT_LOCK:
                 if self.a10_driver.provider is None:
                     for prov, driver in self.openstack_driver.plugin.drivers.items():
                         if driver is self.openstack_driver:
                             self.a10_driver._late_init(prov)
-            finally:
-                LATE_INIT_LOCK.release()
+                            break
 
         self.hooks = a10_driver.hooks
 

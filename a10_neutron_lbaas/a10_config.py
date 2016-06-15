@@ -88,16 +88,6 @@ class A10Config(object):
 
         return d
 
-    # def _load_provider_config(self, provider=None):
-    #     self._outer_config = self._config
-
-    #     if (provider is not None and hasattr(self._config, 'providers') and
-    #             provider in self._config['providers']):
-    #         self._config = self._config.providers[provider]
-
-    #     self._load_config()
-
-    # TODO(dougwig) -- implement fallback _config semantics below
     def _load_config(self):
         # Global defaults
         for dk, dv in defaults.GLOBAL_DEFAULTS.items():
