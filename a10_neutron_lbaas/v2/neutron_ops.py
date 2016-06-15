@@ -60,5 +60,5 @@ class NeutronOpsV2(object):
     def get_neutron_admin_context(self):
         return ncontext.get_admin_context()
 
-    def get_model(self):
+    def get_models(self):
         return lb_db

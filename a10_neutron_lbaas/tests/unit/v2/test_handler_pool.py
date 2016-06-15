@@ -144,3 +144,4 @@ class TestPools(test_base.UnitTestBase):
     def test_stats_returns_members(self):
         pool, actual = self._test_stats()
         self.assertIn("members", actual)
+        LOG.info(actual)

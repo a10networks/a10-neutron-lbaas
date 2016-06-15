@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 def status_update_v1(a10_driver):
-    lb_db = a10_driver.plugin.db
+    lb_db = a10_driver.openstack_driver.plugin.db
     v1_nops = v1_ops.NeutronOpsV1(a10_driver)
     context = v1_nops.get_neutron_admin_context()
     models = v1_nops.get_models()
@@ -41,7 +41,7 @@ def status_update_v1(a10_driver):
 
 
 def status_update_v2(a10_driver):
-    lb_db = a10_driver.plugin.db
+    lb_db = a10_driver.openstack_driver.plugin.db
     v2_nops = v2_ops.NeutronOpsV2(a10_driver)
     context = v2_nops.get_neutron_admin_context()
     models = v2_nops.get_models()

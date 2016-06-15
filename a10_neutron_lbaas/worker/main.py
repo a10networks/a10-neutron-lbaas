@@ -38,6 +38,7 @@ class WorkerThread(threading.Thread):
                 oper = self.worker_queue.get()
                 self.preform_operation(oper)
                 self.worker_queue.task_done()
+                LOG.info("===RAN OPERATIONS==")
             except queue.Empty:
                 LOG.info("Queue is empty")
                 time.sleep(self.sleep_timer)
@@ -51,9 +52,13 @@ class WorkerThread(threading.Thread):
         super(WorkerThread, self).join(timeout)
     
     def preform_operation(self, oper):
-        func = oper[0]
-        args = oper[1:]
-        func(*args)
+        try:
+            func = oper[0]
+            args = oper[1:]
+            func(*args)
+        
+        except Exception as e:
+            LOG.info(e)
 
     def add_to_queue(self, oper):
         self.worker_queue.put(oper)

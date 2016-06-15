@@ -18,6 +18,7 @@ import acos_client
 
 import a10_config
 import version
+import v2
 
 from worker import handler_queue_v1
 from worker import handler_queue_v2
@@ -101,7 +102,25 @@ class A10OpenstackLBBase(object):
 
 class A10OpenstackLBV2(A10OpenstackLBBase):
 
-    def __init__(self):
+    def __init__(self, openstack_driver,
+                 plumbing_hooks_class=None,
+                 neutron_hooks_module=None,
+                 barbican_client=None,
+                 config=None,
+                 config_dir=None):
+        
+        super(A10OpenstackLBV2, self).__init__(openstack_driver,
+                 plumbing_hooks_class=None,
+                 neutron_hooks_module=None,
+                 barbican_client=None,
+                 config=None,
+                 config_dir=None)
+        
+        self.openstack_driver = openstack_driver
+        self.config = config or a10_config.A10Config(config_dir=config_dir)
+        self.neutron = neutron_hooks_module
+        self.barbican_client = barbican_client
+
         if self.config.get('use_worker_thread'):
             self.worker = worker.WorkerThread(a10_driver=self,
                                               sleep_timer=self.config.get("worker_sleep_time"),
@@ -159,7 +178,18 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
 class A10OpenstackLBV1(A10OpenstackLBBase):
 
-    def __init__(self):
+    def __init__(self, openstack_driver,
+                 plumbing_hooks_class=None,
+                 neutron_hooks_module=None,
+                 barbican_client=None,
+                 config=None,
+                 config_dir=None):
+        super(A10OpenstackLBV1, self).__init__(openstack_driver,
+                 plumbing_hooks_class=None,
+                 neutron_hooks_module=None,
+                 barbican_client=None,
+                 config=None,
+                 config_dir=None)
         if self.config.get('use_worker_thread'):
             self.worker = worker.WorkerThread(a10_driver=self,
                                               sleep_timer=self.config.get("worker_sleep_time"),
@@ -169,34 +199,36 @@ class A10OpenstackLBV1(A10OpenstackLBBase):
         else:
             self.worker = None
 
+        self.openstack_driver = openstack_driver
+        self.config = config or a10_config.A10Config(config_dir=config_dir)
+        self.neutron = neutron_hooks_module
+        self.barbican_client = barbican_client
+
     @property
     def pool(self):
-        return handler_queue_v1.PoolQueueV1(
+        return handler_queue_v1.PoolQueuedV1(
             self.worker,
             self,
-            self.openstack_driver,
-            neutron=self.neutron)
+            self.openstack_driver)
+    
 
     @property
     def vip(self):
         return handler_queue_v1.VipQueuedV1(
             self.worker,
             self,
-            self.openstack_driver,
-            neutron=self.neutron)
+            self.openstack_driver)
 
     @property
     def member(self):
         return handler_queue_v1.MemberQueuedV1(
             self.worker,
             self,
-            self.openstack_driver,
-            neutron=self.neutron)
+            self.openstack_driver)
 
     @property
     def hm(self):
         return handler_queue_v1.HealthMonitorQueuedV1(
             self.worker,
             self,
-            self.openstack_driver,
-            neutron=self.neutron)
+            self.openstack_driver) 

@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from a10_neutron_lbaas.v1 import handler_base_v1
 from a10_neutron_lbaas.v1 import handler_hm
 from a10_neutron_lbaas.v1 import handler_member
 from a10_neutron_lbaas.v1 import handler_pool
@@ -22,17 +23,14 @@ import logging
 LOG = logging.getLogger(__name__)
 
 
-class VipQueuedV1(object):
+class VipQueuedV1(handler_base_v1.HandlerBaseV1):
 
-    def __init__(self, worker, a10_driver, openstack_driver, neutron):
-        self.vip_h = handler_vip.VipHandler(a10_driver,
-                                            openstack_driver.vip,
-                                            neutron=neutron)
+    def __init__(self, worker, a10_driver, openstack_driver):
+        super(VipQueuedV1, self).__init__(a10_driver)
+        self.vip_h = handler_vip.VipHandler(a10_driver)
         self.worker = worker
-        self.openstack_driver = openstack_driver
-        self.neutron = neutron
-        self.openstack_manager = openstack_driver
         self.a10_driver = a10_driver
+        self.openstack_driver = openstack_driver
 
     def create(self, context, vip):
         self.worker.add_to_queue([self.vip_h.create, context, vip])
@@ -44,17 +42,14 @@ class VipQueuedV1(object):
         self.worker.add_to_queue([self.vip_h.delete, context, vip])
 
 
-class PoolQueuedV1(object):
+class PoolQueuedV1(handler_base_v1.HandlerBaseV1):
 
-    def __init__(self, worker, a10_driver, openstack_driver, neutron):
-        self.pool_h = handler_pool.PoolHandler(a10_driver,
-                                               openstack_driver.pool,
-                                               neutron=neutron)
+    def __init__(self, worker, a10_driver, openstack_driver):
+        super(PoolQueuedV1, self).__init__(a10_driver)
+        self.pool_h = handler_pool.PoolHandler(a10_driver)
         self.worker = worker
         self.a10_driver = a10_driver
         self.openstack_driver = openstack_driver
-        self.neutron = neutron
-        self.openstack_manager = openstack_driver
 
     def create(self, context, pool):
         self.worker.add_to_queue([self.pool_h.create, context, pool])
@@ -65,46 +60,50 @@ class PoolQueuedV1(object):
     def delete(self, context, pool):
         self.worker.add_to_queue([self.pool_h.delete, context, pool])
 
+    def stats(self, context, pool):
+        self.worker.add_to_queue([self.pool_h.stats, context, pool])
 
-class MemberQueuedV1(object):
-
-    def __init__(self, worker, a10_driver, openstack_driver, neutron):
-        self.pool_h = handler_member.MemberHandler(a10_driver,
-                                                   openstack_driver.member,
-                                                   neutron=neutron)
+class MemberQueuedV1(handler_base_v1.HandlerBaseV1):
+    
+    def __init__(self, worker, a10_driver, openstack_driver):
+        super(MemberQueuedV1, self).__init__(a10_driver)
+        self.member_h = handler_member.MemberHandler(a10_driver)
         self.worker = worker
         self.a10_driver = a10_driver
         self.openstack_driver = openstack_driver
-        self.neutron = neutron
-        self.openstack_manager = openstack_driver
 
     def create(self, context, member):
-        self.worker.add_to_queue([self.pool_h.create, context, member])
+        self.worker.add_to_queue([self.member_h.create, context, member])
 
     def update(self, context, old_member, member):
-        self.worker.add_to_queue([self.pool_h.update, context, old_member, member])
+        self.worker.add_to_queue([self.member_h.update, context, old_member, member])
 
     def delete(self, context, member):
-        self.worker.add_to_queue([self.pool_h.delete, context, member])
+        self.worker.add_to_queue([self.member_h.delete, context, member])
 
+    def _delete(self, c, context, member):
+        self.worker.add_to_queue([self.member_h._delete, c, context, member])
 
-class HealthMonitorQueuedV1(object):
+    def _get_name(self, member, ip):
+        self.worker.add_to_queue([self.member_h._get_name, member, ip])
 
-    def __init__(self, worker, a10_driver, openstack_driver, neutron):
-        self.hm_h = handler_hm.HealthMonitorHandler(a10_driver,
-                                                    openstack_driver.health_monitor,
-                                                    neutron=neutron)
+class HealthMonitorQueuedV1(handler_base_v1.HandlerBaseV1):
+
+    def __init__(self, worker, a10_driver, openstack_driver):
+        super(HealthMonitorQueuedV1, self).__init__(a10_driver)
+        self.hm_h = handler_hm.HealthMonitorHandler(a10_driver)
         self.worker = worker
         self.a10_driver = a10_driver
-        self.neutron = neutron
-        self.openstack_manager = openstack_driver
         self.openstack_driver = openstack_driver
 
-    def create(self, context, hm):
-        self.worker.add_to_queue([self.hm_h.create, context, hm])
+    def create(self, context, hm, pool_id):
+        self.worker.add_to_queue([self.hm_h.create, context, hm, pool_id])
 
-    def update(self, context, old_hm, hm):
-        self.worker.add_to_queue([self.hm_h.update, context, old_hm, hm])
+    def update(self, context, old_hm, hm, pool_id):
+        self.worker.add_to_queue([self.hm_h.update, context, old_hm, hm, pool_id])
 
-    def delete(self, context, hm):
-        self.worker.add_to_queue([self.hm_h.delete, context, hm])
+    def delete(self, context, hm, pool_id):
+        self.worker.add_to_queue([self.hm_h.delete, context, hm, pool_id])
+
+    def dissociate(self, c, context, hm, pool_id):
+        self.worker.add_to_queue([self.hm_h.dissociate, c, context, hm, pool_id])
