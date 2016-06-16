@@ -28,18 +28,29 @@ LOG = logging.getLogger(__name__)
 
 
 class ConfigModule(object):
-    def __init__(self, d):
+    def __init__(self, d, provider=None):
         self.__dict__.update(d)
 
+        if provider is None or 'providers' not in d or provider not in d['providers']:
+            return None
+
+        for k, v in d['providers'][provider].items():
+            if isinstance(v, dict):
+                if k not in self.__dict__:
+                    self.__dict__[k] = {}
+                self.__dict__[k].update(v)
+            else:
+                self.__dict__[k] = v
+
     @classmethod
-    def load(cls, path):
+    def load(cls, path, provider=None):
         d = runpy.run_path(path)
-        return ConfigModule(d)
+        return ConfigModule(d, provider=provider)
 
 
 class A10Config(object):
 
-    def __init__(self, config_dir=None, config=None):
+    def __init__(self, config_dir=None, config=None, provider=None):
         if config is not None:
             self._config = config
             self._load_config()
@@ -49,7 +60,7 @@ class A10Config(object):
         self._config_path = os.path.join(self._config_dir, "config.py")
 
         try:
-            self._config = ConfigModule.load(self._config_path)
+            self._config = ConfigModule.load(self._config_path, provider=provider)
         except IOError:
             LOG.error("A10Config could not find %s", self._config_path)
             self._config = blank_config

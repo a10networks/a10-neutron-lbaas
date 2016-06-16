@@ -13,14 +13,29 @@
 #    under the License.
 
 import json
+import logging
+import threading
+
+LATE_INIT_LOCK = threading.Lock()
+
+LOG = logging.getLogger(__name__)
 
 
 class HandlerBase(object):
 
     def __init__(self, a10_driver):
         self.a10_driver = a10_driver
-        self.hooks = a10_driver.hooks
         self.openstack_driver = self.a10_driver.openstack_driver
+
+        if self.a10_driver.provider is None:
+            with LATE_INIT_LOCK:
+                if self.a10_driver.provider is None:
+                    for prov, driver in self.openstack_driver.plugin.drivers.items():
+                        if driver is self.openstack_driver:
+                            self.a10_driver._late_init(prov)
+                            break
+
+        self.hooks = a10_driver.hooks
 
     def _model_type(self):
         return self.__class__.__name__.lower().replace('handler', '')
