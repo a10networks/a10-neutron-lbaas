@@ -105,7 +105,7 @@ class A10ScalingGroupMember(models.A10Base):
         return inspect(self).session.\
             query(A10ScalingGroupMemberVirtualServer).\
             filter_by(member_id=self.id, neutron_id=neutron_id).\
-            one_or_none()
+            first()
 
     def delete_virtual_server(self, neutron_id):
         vs = self.get_virtual_server(neutron_id)
@@ -171,7 +171,7 @@ class A10ScalingGroupMemberVirtualServer(models.A10Base):
         return inspect(self).session.\
             query(A10ScalingGroupMemberVirtualServerPort).\
             filter_by(virtual_server_id=self.id, port=port).\
-            one_or_none()
+            first()
 
     def delete_port(self, port):
         port = self.get_port(port)
