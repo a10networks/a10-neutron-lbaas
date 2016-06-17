@@ -125,7 +125,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
             self.worker = worker.WorkerThread(a10_driver=self,
                                               sleep_timer=self.config.get("worker_sleep_time"),
                                               status_update=status_check.status_update_v2)
-            self.worker.daemon = True
+            self.worker.daemon = False
             self.worker.start()
         else:
             self.worker = None
@@ -194,7 +194,7 @@ class A10OpenstackLBV1(A10OpenstackLBBase):
             self.worker = worker.WorkerThread(a10_driver=self,
                                               sleep_timer=self.config.get("worker_sleep_time"),
                                               status_update=status_check.status_update_v1)
-            self.worker.daemon = True
+            self.worker.daemon = False
             self.worker.start()
         else:
             self.worker = None

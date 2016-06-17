@@ -62,3 +62,4 @@ class WorkerThread(threading.Thread):
 
     def add_to_queue(self, oper):
         self.worker_queue.put(oper)
+        LOG.info("=====OPER====: {0}".format(oper))
