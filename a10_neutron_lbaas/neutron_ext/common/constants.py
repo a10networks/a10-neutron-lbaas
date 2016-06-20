@@ -19,9 +19,17 @@ from a10_openstack_lib.resources import a10_device_instance
 A10_DEVICE_INSTANCE_EXT = a10_device_instance.EXTENSION
 A10_DEVICE_INSTANCE = a10_device_instance.SERVICE
 
+A10_CERTIFICATE_EXT = a10_certificate.EXTENSION
+A10_CERTIFICATE = a10_certificate.SERVICE
+A10_CERTIFICATE_BINDING = a10_certificate.CERTIFICATE_BINDING
+
+nconstants.EXT_TO_SERVICE_MAPPING[A10_CERTIFICATE_EXT] = A10_CERTIFICATE
 nconstants.EXT_TO_SERVICE_MAPPING[A10_DEVICE_INSTANCE_EXT] = A10_DEVICE_INSTANCE
 try:
+    nconstants.ALLOWED_SERVICES.append(A10_CERTIFICATE)
     nconstants.ALLOWED_SERVICES.append(A10_DEVICE_INSTANCE)
+
+    nconstants.COMMON_PREFIXES[A10_CERTIFICATE] = ""
     nconstants.COMMON_PREFIXES[A10_DEVICE_INSTANCE] = ""
 except AttributeError:
     # In Liberty and later, ALLOWED_SERVICES is derived from EXT_TO_SERVICE_MAPPING
