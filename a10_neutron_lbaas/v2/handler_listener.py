@@ -42,6 +42,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         templates = self.meta(listener, "template", {})
 
+        bindings = []
         server_args = {}
         cert_data = dict()
         template_args = {}
@@ -55,6 +56,19 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 key_filename = str(cert_data.get('key_filename', ''))
             else:
                 LOG.error("Could not created terminated HTTPS endpoint.")
+        elif listener.protocol and listener.protocol == constants.PROTOCOL_HTTP:
+            try:
+                bindings = self.cert_db.get_bindings_for_listener(listener.id)
+            except Exception as ex:
+                LOG.exception(ex)
+
+            if bindings and len(bindings) > 1:
+                if self._set_a10_https_values(listener, c, cert_data, bindings):
+                    templates["client_ssl"] = {}
+                    template_name = str(cert_data.get('template_name', ''))
+                    key_passphrase = str(cert_data.get('cert_pass', ''))
+                    cert_filename = str(cert_data.get('cert_filename', ''))
+                    key_filename = str(cert_data.get('key_filename', ''))
 
         if 'client_ssl' in templates:
             template_args["template_client_ssl"] = template_name
@@ -111,8 +125,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _set_terminated_https_values(self, listener, c, cert_data):
         is_success = False
-        c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
         container = None
+        bindings = []
+
+        c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
 
         # if there's a barbican container ID, check there.
         if c_id:
@@ -148,9 +164,46 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                             action="import")
                 is_success = True
         else:
-            LOG.info("default_tls_container_id unspecified for listener. Checking A10 DB.")
-            bindings = self.cert_db.get_bindings_for_listener(listener.id)
+            LOG.error("default_tls_container_id unspecified for listener.")
         return is_success
+
+    def _set_a10_https_values(self, listener, c, cert_data, bindings):
+        LOG.info("default_tls_container_id unspecified for listener. Checking A10 DB.")
+        try:
+            bindings = self.cert_db.get_bindings_for_listener(listener.id)
+        except Exception as ex:
+            bindings = []
+
+        # If we got bindings back and there is only one - a listener can only have
+        # a single cert bound.
+        if bindings and len(bindings) == 1:
+            binding = bindings[0]
+
+            cert_data["cert_content"] = binding.certificate.get("cert_data")
+            cert_data["key_content"] = binding.certificate.get("key_data")
+            cert_data["cert_pass"] = binding.certificate.get("password")
+
+        else:
+            LOG.error("No Certificate <-> Listener bindings found.")
+
+        # There's gotta be a better way of checking that we have cert content.
+        if len(cert_data["cert_content"]) > 1:
+            cert_data["template_name"] = listener.id
+
+            cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
+            cert_data["key_filename"] = "{0}key.pem".format(base_name)
+
+            self._acos_create_or_update(c.client.file.ssl_cert,
+                                        file=cert_data["cert_filename"],
+                                        cert=cert_data["cert_content"],
+                                        size=len(cert_data["cert_content"]),
+                                        action="import", certificate_type="pem")
+
+            self._acos_create_or_update(c.client.file.ssl_key,
+                                        file=cert_data["key_filename"],
+                                        cert=cert_data["key_content"],
+                                        size=len(cert_data["key_content"]),
+                                        action="import")
 
     def _acos_create_or_update(self, acos_obj, **kwargs):
         try:

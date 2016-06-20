@@ -319,7 +319,6 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
             context.session.delete(cert)
 
     def _get_listener_binding(self, context, binding_id):
-        import pdb; pdb.set_trace()
         try:
             return self._get_by_id(context, CertificateListenerBinding, binding_id)
         except Exception:
@@ -364,7 +363,6 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         return self._make_listener_binding_dict(binding_record)
 
     def delete_a10_certificate_binding(self, context, id):
-        import pdb; pdb.set_trace()
         with context.session.begin(subtransactions=True):
             binding = self._get_listener_binding(context, id)
             if binding is None:
