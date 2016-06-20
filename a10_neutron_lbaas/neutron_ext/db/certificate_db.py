@@ -1,8 +1,5 @@
 # Copyright (C) 2015, A10 Networks Inc. All rights reserved.
 
-from a10_openstack.neutron_ext.common import constants
-from a10_openstack.neutron_ext.extensions import a10Certificate
-
 import gettext
 _ = gettext.NullTranslations().ugettext
 
@@ -16,6 +13,9 @@ from oslo_log.helpers import logging as logging
 from oslo_utils import uuidutils
 from sqlalchemy import orm
 import sqlalchemy as sa
+
+from a10_neutron_lbaas.neutron_ext.common import constants
+from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate
 
 
 LOG = logging.getLogger(__name__)

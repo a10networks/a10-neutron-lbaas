@@ -9,15 +9,16 @@ from neutron.services import service_base
 
 import six
 
+from a10_neutron_lbaas.neutron_ext.common import constants
 import a10_neutron_lbaas.neutron_ext.common.resources as resources
 from a10_openstack_lib.resources import a10_certificate
-from a10_openstack.neutron_ext.common import constants
 
 
 RESOURCE_ATTRIBUTE_MAP = resources.apply_template(
     a10_certificate.RESOURCE_ATTRIBUTE_MAP, attributes)
 
-attributes.validators.update(resources.apply_template(a10_certificate.VALIDATORS, attributes.validators))
+attributes.validators.update(resources.apply_template(a10_certificate.VALIDATORS,
+                                                      attributes.validators))
 
 class A10Certificate(extensions.ExtensionDescriptor):
 

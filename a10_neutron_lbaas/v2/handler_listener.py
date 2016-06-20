@@ -108,7 +108,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def _set_terminated_https_values(self, listener, c, cert_data):
         is_success = False
         c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
+        container = None
 
+        # if there's a barbican container ID, check there.
         if c_id:
             try:
                 container = self.barbican_client.get_certificate(c_id, check_only=True)
@@ -143,7 +145,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                             action="import")
                 is_success = True
         else:
-            LOG.error("default_tls_container_id unspecified for listener. Cannot create listener.")
+            LOG.info("default_tls_container_id unspecified for listener. Checking A10 DB.")
+            bindings = self.cert_db.get_bindings_for_listener(listener.id)
         return is_success
 
     def _acos_create_or_update(self, acos_obj, **kwargs):
