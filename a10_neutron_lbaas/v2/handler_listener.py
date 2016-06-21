@@ -74,6 +74,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 LOG.exception(ex)
 
             if bindings and len(bindings) > 0:
+                import pdb; pdb.set_trace()
                 if self._set_a10_https_values(listener, c, cert_data, bindings):
                     templates["client_ssl"] = {}
                     template_name = str(cert_data.get('template_name', ''))
@@ -190,9 +191,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         if bindings and len(bindings) == 1:
             binding = bindings[0]
 
-            cert_data["cert_content"] = binding.certificate.get("cert_data")
-            cert_data["key_content"] = binding.certificate.get("key_data", None)
-            cert_data["key_pass"] = binding.certificate.get("password", None)
+            cert_data["cert_content"] = binding.certificate.cert_data or None
+            cert_data["key_content"] = binding.certificate.key_data or None
+            cert_data["key_pass"] = binding.certificate.password or None
 
         else:
             LOG.error("No Certificate <-> Listener bindings found.")

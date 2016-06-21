@@ -97,7 +97,7 @@ class CertificateListenerBindingsNotFoundByCertificateListenerComboError(nexcept
                 "Listener ID %(listener_id)s could not be found")
 
 
-class Certificate(model_base.A10BaseMixin):
+class Certificate(model_base.A10BaseMixin, model_base.A10Base):
     __tablename__ = "a10_certificates"
     name = sa.Column(sa.String(255), nullable=False)
     description = sa.Column(sa.Text(1024), nullable=True)
@@ -107,7 +107,7 @@ class Certificate(model_base.A10BaseMixin):
     password = sa.Column(sa.String(1024), nullable=True)
 
 
-class CertificateListenerBinding(model_base.A10BaseMixin):
+class CertificateListenerBinding(model_base.A10BaseMixin, model_base.A10Base):
     __tablename__ = "a10_certificatelistenerbindings"
     certificate_id = sa.Column(sa.String(36), sa.ForeignKey("a10_certificates.id"),
                                nullable=False)
@@ -137,14 +137,14 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
             raise CertificateNotFoundError(certificate_id=certificate_id)
 
     def _make_certificate_dict(self, certificate_db, fields=None):
-        res = {'id': certificate_db['id'],
-               'name': certificate_db['name'],
-               'tenant_id': certificate_db['tenant_id'],
-               'description': certificate_db['description'],
-               'cert_data': certificate_db['cert_data'],
-               'key_data': certificate_db['key_data'],
-               'intermediate_data': certificate_db['intermediate_data'],
-               'password': certificate_db['password']}
+        res = {'id': certificate_db.id,
+               'name': certificate_db.name,
+               'tenant_id': certificate_db.tenant_id,
+               'description': certificate_db.description,
+               'cert_data': certificate_db.cert_data,
+               'key_data': certificate_db.key_data,
+               'intermediate_data': certificate_db.intermediate_data,
+               'password': certificate_db.password}
         return self._fields(res, fields)
 
     def _ensure_certificate_not_in_use(self, context, certificate_id):
@@ -159,11 +159,11 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
             raise CertificateInUseError(certificate_id)
 
     def _make_listener_binding_dict(self, binding, fields=None):
-        res = {'id': binding['id'],
-               'tenant_id': binding['tenant_id'],
-               'certificate_id': binding['certificate_id'],
-               'listener_id': binding['listener_id'],
-               'certificate_name': binding.certificate['name']}
+        res = {'id': binding.id,
+               'tenant_id': binding.tenant_id,
+               'certificate_id': binding.certificate_id,
+               'listener_id': binding.listener_id,
+               'certificate_name': binding.certificate.name}
         return self._fields(res, fields)
 
     def create_a10_certificate(self, context, a10_certificate):
