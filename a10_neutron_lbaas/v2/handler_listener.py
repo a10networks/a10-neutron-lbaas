@@ -46,7 +46,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         if not listener.admin_state_up:
             status = c.client.slb.DOWN
 
-        import pdb; pdb.set_trace()
         templates = self.meta(listener, "template", {})
 
         bindings = []
@@ -63,7 +62,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 key_passphrase = str(cert_data.get('key_pass', ''))
                 cert_filename = str(cert_data.get('cert_filename', ''))
                 key_filename = str(cert_data.get('key_filename', ''))
-                template_args["template-client-ssl"] = template_name
             else:
                 LOG.error("Could not created terminated HTTPS endpoint.")
         # Else, set it up as an HTTP endpoint and attach the A10 cert data.
@@ -82,7 +80,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                     cert_filename = str(cert_data.get('cert_filename', ''))
                     key_filename = str(cert_data.get('key_filename', ''))
                     template_args["template-client-ssl"] = template_name
-
 
         if 'client_ssl' in templates:
             try:
@@ -143,7 +140,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def _set_terminated_https_values(self, listener, c, cert_data):
         is_success = False
         container = None
-        bindings = []
 
         c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
 
