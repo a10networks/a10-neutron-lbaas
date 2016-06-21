@@ -15,14 +15,14 @@
 """v2 SSL Certificates
 
 Revision ID: 08dacae1fb67
-Revises: 2a280aba7701
+Revises: 3c7123f2aeba 
 Create Date: 2016-06-21 06:18:58.773598
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '08dacae1fb67'
-down_revision = '2a280aba7701'
+down_revision = '3c7123f2aeba'
 branch_labels = None
 depends_on = None
 
