@@ -116,15 +116,3 @@ class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
 
     def delete_a10_certificate_listener_binding(self, context, id):
         return super(A10CertificatePlugin, self).delete_a10_certificate_binding(context, id)
-
-    def create_certificate_listener_binding(self, context, a10_certificate_binding):
-        raise NotImplementedError()
-
-    def get_certificate_listener_binding(self, context, id):
-        raise NotImplementedError()
-
-    def get_certificate_listener_bindings(self, context, filters=None, fields=None):
-        raise NotImplementedError()
-
-    def delete_certificate_listener_binding(self, context, id):
-        raise NotImplementedError()

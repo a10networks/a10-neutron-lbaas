@@ -153,19 +153,3 @@ class A10CertificatePluginBase(service_base.ServicePluginBase):
     @abc.abstractmethod
     def delete_a10_certificate_listener_binding(self, context, id):
         pass
-
-    # @abc.abstractmethod
-    # def create_certificate_listener_binding(self, context, a10_certificate_binding):
-    #     pass
-
-    # @abc.abstractmethod
-    # def get_certificate_listener_binding(self, context, id):
-    #     pass
-
-    # @abc.abstractmethod
-    # def get_certificate_listener_bindings(self, context, filters=None, fields=None):
-    #     pass
-
-    # @abc.abstractmethod
-    # def delete_certificate_listener_binding(self, context, id):
-    #     pass
