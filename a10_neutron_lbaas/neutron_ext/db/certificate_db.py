@@ -88,7 +88,7 @@ class CertificateListenerBindingsNotFoundByCertificateListenerComboError(nexcept
 
 
 class Certificate(model_base.BASEV2, models_v2.HasId, models_v2.HasTenant):
-    __tablename__ = "certificates"
+    __tablename__ = "a10_certificates"
     name = sa.Column(sa.String(255), nullable=False)
     description = sa.Column(sa.Text(1024), nullable=True)
     cert_data = sa.Column(sa.Text(8000), nullable=False)
@@ -97,22 +97,12 @@ class Certificate(model_base.BASEV2, models_v2.HasId, models_v2.HasTenant):
     password = sa.Column(sa.String(1024), nullable=True)
 
 
-class CertificateVipBinding(model_base.BASEV2, models_v2.HasId, models_v2.HasTenant):
-    __tablename__ = "certificatevipbindings"
-    certificate_id = sa.Column(sa.String(36), sa.ForeignKey("certificates.id"),
-                               nullable=False)
-    certificate = orm.relationship(Certificate, uselist=False)
-    vip = orm.relationship(lbdb.Vip, uselist=False)
-    vip_id = sa.Column(sa.String(36), sa.ForeignKey("vips.id"), nullable=False)
-
-
 class CertificateListenerBinding(model_base.BASEV2, models_v2.HasId, models_v2.HasTenant):
     __tablename__ = "a10_certificatelistenerbindings"
-    certificate_id = sa.Column(sa.String(36), sa.ForeignKey("certificates.id"),
+    certificate_id = sa.Column(sa.String(36), sa.ForeignKey("a10_certificates.id"),
                                nullable=False)
     certificate = orm.relationship(Certificate, uselist=False)
-    listener_id = sa.Column(sa.String(36), sa.ForeignKey("lbaas_listeners.id"))
-    listener = orm.relationship(lbmodels.Listener, uselist=False)
+    listener_id = sa.Column(sa.String(36))
 
 
 class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10CertificatePluginBase):
@@ -149,142 +139,23 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
 
     def _ensure_certificate_not_in_use(self, context, certificate_id):
         with context.session.begin(subtransactions=True):
-            vips = (context.session.query(CertificateVipBinding)
+            bindings = (context.session.query(CertificateListenerBinding)
                     .filter_by(certificate_id=certificate_id)
-                    .join(lbdb.Vip, lbdb.Vip.id == CertificateVipBinding.vip_id)
-                    ).all()
+                    .all())
             LOG.debug("CertificateDbMixin:_ensure_certificate_not_in_use(): id={0}, len={1}".format(
-                certificate_id, len(vips)))
+                certificate_id, len(bindings)))
 
-        if vips is not None and len(vips) > 0:
+        if bindings is not None and len(bindings) > 0:
             raise CertificateInUseError(certificate_id)
 
-    def create_certificate(self, context, certificate):
-        cert = certificate['certificate']
-        with context.session.begin(subtransactions=True):
-            cert_record = Certificate(id=uuidutils.generate_uuid(),
-                                      name=cert['name'],
-                                      description=cert['description'],
-                                      cert_data=cert['cert_data'],
-                                      key_data=cert['key_data'],
-                                      intermediate_data=cert['intermediate_data'],
-                                      password=cert['password'],
-                                      tenant_id=context.tenant_id)
-            context.session.add(cert_record)
-
-        return self._make_certificate_dict(cert_record)
-
-    def update_certificate(self, context, certificate_id, certificate):
-        data = certificate['certificate']
-        with context.session.begin(subtransactions=True):
-            certificate_db = self._get_certificate(context, certificate_id)
-            certificate_db.update(data)
-
-        return self._make_certificate_dict(certificate_db)
-
-    def delete_certificate(self, context, certificate_id):
-        with context.session.begin(subtransactions=True):
-            self._ensure_certificate_not_in_use(context, certificate_id)
-            LOG.debug("CertificateDbMixin:delete_certificate(): certificate_id={0}".format(
-                certificate_id))
-            cert = self._get_certificate(context, certificate_id)
-            context.session.delete(cert)
-
-    def get_certificate(self, context, certificate_id, fields=None):
-        cert = self._get_certificate(context, certificate_id)
-        return self._make_certificate_dict(cert, fields)
-
-    def get_certificates_for_vip(self, context, vip_id):
-        with context.session.begin(subtransactions=True):
-            certs = (context.session.query(CertificateVipBinding)
-                     .filter_by(vip_id=vip_id)
-                     .join(Certificate, Certificate.id == CertificateVipBinding.certificate_id)
-                     ).all()
-
-        return certs
-
-    def get_vips_for_certificate(self, context, certificate_id):
-        with context.session.begin(subtransactions=True):
-            vips = (context.session.query(CertificateVipBinding)
-                    .filter_by(id=certificate_id)
-                    .join(lbdb.Vip, lbdb.Vip.id == CertificateVipBinding.vip_id)
-                    ).all()
-
-        return vips
-
-    def get_certificates(self, context, filters=None, fields=None,
-                         sorts=None, limit=None, marker=None,
-                         page_reverse=False):
-        LOG.debug("NDB: CertificateDbMixin:get_certificates() tenant_id=%s" % context.tenant_id)
-        return self._get_collection(context, Certificate,
-                                    self._make_certificate_dict, filters=filters,
-                                    fields=fields, sorts=sorts, limit=limit,
-                                    marker_obj=marker, page_reverse=page_reverse)
-
-    def _get_binding(self, context, binding_id):
-        try:
-            return self._get_by_id(context, CertificateVipBinding, binding_id)
-        except Exception:
-            raise CertificateVipBindingNotFoundByIdError(id=binding_id)
-
-    def _make_binding_dict(self, binding, fields=None):
-        res = {'id': binding['id'],
-               'tenant_id': binding['tenant_id'],
-               'certificate_id': binding['certificate_id'],
-               'vip_id': binding['vip_id'],
-               'certificate_name': binding.certificate['name'],
-               'vip_name': binding.vip['name']}
-        return self._fields(res, fields)
 
     def _make_listener_binding_dict(self, binding, fields=None):
         res = {'id': binding['id'],
                'tenant_id': binding['tenant_id'],
                'certificate_id': binding['certificate_id'],
                'listener_id': binding['listener_id'],
-               'certificate_name': binding.certificate['name'],
-               'listener_name': binding.listener['name']}
+               'certificate_name': binding.certificate['name']}
         return self._fields(res, fields)
-
-
-    def get_certificate_binding(self, context, id, fields=None):
-        binding = self._get_binding(context, id)
-        LOG.debug("CertificateDbMixin:get_certificate_binding(): %s" % binding)
-        return self._make_binding_dict(binding, fields)
-
-    def create_certificate_binding(self, context, certificate_binding):
-        binding = certificate_binding['certificate_binding']
-        certificate_id = binding['certificate_id']
-        vip_id = binding['vip_id']
-        with context.session.begin(subtransactions=True):
-            existing = (context.session.query(CertificateVipBinding)
-                        .filter_by(certificate_id=certificate_id, vip_id=vip_id)
-                        .first())
-            if existing is not None:
-                raise CertificateVipBindingExistsError(certificate_id=certificate_id,
-                                                       vip_id=vip_id)
-            binding_record = CertificateVipBinding(id=uuidutils.generate_uuid(),
-                                                   certificate_id=certificate_id,
-                                                   vip_id=vip_id,
-                                                   tenant_id=context.tenant_id)
-            context.session.add(binding_record)
-
-        return self._make_binding_dict(binding_record)
-
-    def delete_certificate_binding(self, context, id):
-        with context.session.begin(subtransactions=True):
-            binding = self._get_binding(context, id)
-            if binding is None:
-                raise CertificateVipBindingNotFoundByIdError(id=id)
-            context.session.delete(binding)
-
-    def get_certificate_bindings(self, context, filters=None, fields=None,
-                                 sorts=None, limit=None, marker=None,
-                                 page_reverse=False):
-        bindings = self._get_collection(context, CertificateVipBinding,
-                                        self._make_binding_dict, filters=filters,
-                                        fields=fields, sorts=sorts, limit=limit,
-                                        marker_obj=marker, page_reverse=page_reverse)
-        return bindings
 
     def create_a10_certificate(self, context, a10_certificate):
         # TODO replace string with ref to res
