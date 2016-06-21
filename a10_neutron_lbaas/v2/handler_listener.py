@@ -18,6 +18,7 @@ import acos_client.errors as acos_errors
 
 from a10_neutron_lbaas.acos import openstack_mappings
 from a10_neutron_lbaas import constants
+from a10_neutron_lbaas.neutron_ext.services.a10_certificate.plugin import A10CertificatePlugin
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
 import handler_base_v2
 import handler_persist
@@ -28,13 +29,18 @@ LOG = logging.getLogger(__name__)
 
 
 class ListenerHandler(handler_base_v2.HandlerBaseV2):
-    def __init__(self, a10_driver, openstack_manager, neutron=None, barbican_client=None):
+    def __init__(self, a10_driver, openstack_manager, neutron=None, barbican_client=None,
+                 cert_db=None):
         super(ListenerHandler, self).__init__(a10_driver, openstack_manager, neutron)
         self.barbican_client = barbican_client
+        self.cert_db = cert_db
 
     def _set(self, set_method, c, context, listener):
         if self.barbican_client is None:
             self.barbican_client = certwrapper.CertManagerWrapper(handler=self)
+
+        if self.cert_db is None:
+            self.cert_db = A10CertificatePlugin()
 
         status = c.client.slb.UP
         if not listener.admin_state_up:
@@ -56,13 +62,14 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 key_filename = str(cert_data.get('key_filename', ''))
             else:
                 LOG.error("Could not created terminated HTTPS endpoint.")
-        elif listener.protocol and listener.protocol == constants.PROTOCOL_HTTP:
+        elif listener.protocol and listener.protocol in [constants.PROTOCOL_HTTP,
+                                                         constants.PROTOCOL_TCP]:
             try:
-                bindings = self.cert_db.get_bindings_for_listener(listener.id)
+                bindings = self.cert_db.get_bindings_for_listener(context, listener.id)
             except Exception as ex:
                 LOG.exception(ex)
 
-            if bindings and len(bindings) > 1:
+            if bindings and len(bindings) > 0:
                 if self._set_a10_https_values(listener, c, cert_data, bindings):
                     templates["client_ssl"] = {}
                     template_name = str(cert_data.get('template_name', ''))
@@ -169,10 +176,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _set_a10_https_values(self, listener, c, cert_data, bindings):
         LOG.info("default_tls_container_id unspecified for listener. Checking A10 DB.")
-        try:
-            bindings = self.cert_db.get_bindings_for_listener(listener.id)
-        except Exception as ex:
-            bindings = []
+        is_success = False
 
         # If we got bindings back and there is only one - a listener can only have
         # a single cert bound.
@@ -186,8 +190,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         else:
             LOG.error("No Certificate <-> Listener bindings found.")
 
-        # There's gotta be a better way of checking that we have cert content.
         if len(cert_data["cert_content"]) > 1:
+            base_name = listener.id
             cert_data["template_name"] = listener.id
 
             cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
@@ -204,6 +208,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                         cert=cert_data["key_content"],
                                         size=len(cert_data["key_content"]),
                                         action="import")
+            is_success = True
+
+        return is_success
 
     def _acos_create_or_update(self, acos_obj, **kwargs):
         try:

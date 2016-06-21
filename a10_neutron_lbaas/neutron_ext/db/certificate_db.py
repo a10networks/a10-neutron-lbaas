@@ -377,3 +377,12 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                                         fields=fields, sorts=sorts, limit=limit,
                                         marker_obj=marker, page_reverse=page_reverse)
         return bindings
+
+    def get_bindings_for_listener(self, context, listener_id):
+        existing = []
+
+        with context.session.begin(subtransactions=True):
+            existing = (context.session.query(CertificateListenerBinding)
+                        .filter_by(listener_id=listener_id))
+
+        return list(existing)
