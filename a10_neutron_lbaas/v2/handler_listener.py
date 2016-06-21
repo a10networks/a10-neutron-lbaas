@@ -65,8 +65,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             else:
                 LOG.error("Could not created terminated HTTPS endpoint.")
         # Else, set it up as an HTTP endpoint and attach the A10 cert data.
-        elif listener.protocol and listener.protocol in [constants.PROTOCOL_HTTP,
-                                                         constants.PROTOCOL_TCP]:
+        elif c.device_cfg.get('use_database') and listener.protocol
+             and listener.protocol in [constants.PROTOCOL_HTTP,
+                                       constants.PROTOCOL_TCP]:
             try:
                 bindings = self.cert_db.get_bindings_for_listener(context, listener.id)
             except Exception as ex:
@@ -116,7 +117,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         # This doesn't do anything anymore.
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
-        # vport_meta.update(template_args)
 
         try:
             set_method(
