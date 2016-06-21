@@ -35,6 +35,8 @@ def upgrade():
         'a10_certificates',
         sa.Column('tenant_id', sa.String(255), nullable=True),
         sa.Column('id', sa.String(36), primary_key=True, nullable=False),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('name', sa.String(255), nullable=False),
         sa.Column('description', sa.Text(1024), nullable=True),
         sa.Column('cert_data', sa.Text(8000), nullable=False),
