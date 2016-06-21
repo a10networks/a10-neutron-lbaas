@@ -1,13 +1,25 @@
-# Copyright (C) 2015, A10 Networks Inc. All rights reserved.
+# Copyright (C) 2016, A10 Networks Inc. All rights reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
 
 import abc
+import logging
+import six
 
 from neutron.api import extensions
 from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
 from neutron.services import service_base
-
-import six
 
 from a10_neutron_lbaas.neutron_ext.common import constants
 import a10_neutron_lbaas.neutron_ext.common.resources as resources
@@ -19,6 +31,9 @@ RESOURCE_ATTRIBUTE_MAP = resources.apply_template(
 
 attributes.validators.update(resources.apply_template(a10_certificate.VALIDATORS,
                                                       attributes.validators))
+
+LOG = logging.getLogger(__name__)
+
 
 class A10Certificate(extensions.ExtensionDescriptor):
 
@@ -50,8 +65,8 @@ class A10Certificate(extensions.ExtensionDescriptor):
         attributes.PLURALS.update(my_plurals)
         attr_map = RESOURCE_ATTRIBUTE_MAP
         ext_resources = resource_helper.build_resource_info(my_plurals,
-                                                        attr_map,
-                                                        constants.A10_CERTIFICATE)
+                                                            attr_map,
+                                                            constants.A10_CERTIFICATE)
 
         return ext_resources
 
@@ -80,43 +95,7 @@ class A10CertificatePluginBase(service_base.ServicePluginBase):
         return constants.A10_CERTIFICATE
 
     def __init__(self):
-        super(CertificatePluginBase, self).__init__()
-
-    @abc.abstractmethod
-    def get_certificates(self, context, filters=None, fields=None):
-        pass
-
-    @abc.abstractmethod
-    def create_certificate(self, context, certificate):
-        pass
-
-    @abc.abstractmethod
-    def get_certificate(self, context, id, fields=None):
-        pass
-
-    @abc.abstractmethod
-    def update_certificate(self, context, certificate):
-        pass
-
-    @abc.abstractmethod
-    def delete_certificate(self, context, id):
-        pass
-
-    @abc.abstractmethod
-    def get_certificate_bindings(self, context, filters=None, fields=None):
-        pass
-
-    @abc.abstractmethod
-    def create_certificate_binding(self, context, binding):
-        pass
-
-    @abc.abstractmethod
-    def get_certificate_binding(self, context, id):
-        pass
-
-    @abc.abstractmethod
-    def delete_certificate_binding(self, context, id):
-        pass
+        super(A10CertificatePluginBase, self).__init__()
 
     @abc.abstractmethod
     def get_a10_certificates(self, context, filters=None, fields=None):

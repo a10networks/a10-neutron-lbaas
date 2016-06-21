@@ -55,6 +55,3 @@ class NeutronOpsV2(object):
 
     def vip_get(self, context, vip_id):
         return self.plugin.db.get_vip(context, vip_id)
-
-    def listener_get(self, context, listener_id):
-        return self.plugin.db.get_listener(context, listener_id)
