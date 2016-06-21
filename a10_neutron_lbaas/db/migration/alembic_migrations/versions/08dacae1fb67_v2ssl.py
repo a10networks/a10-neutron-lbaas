@@ -15,7 +15,7 @@
 """v2 SSL Certificates
 
 Revision ID: 08dacae1fb67
-Revises: 3c7123f2aeba 
+Revises: 3c7123f2aeba
 Create Date: 2016-06-21 06:18:58.773598
 
 """
@@ -34,7 +34,7 @@ def upgrade():
     op.create_table(
         'a10_certificates',
         sa.Column('tenant_id', sa.String(255), nullable=True),
-        sa.Column('id', sa.String(36), nullable=False),
+        sa.Column('id', sa.String(36), primary_key=True, nullable=False),
         sa.Column('name', sa.String(255), nullable=False),
         sa.Column('description', sa.Text(1024), nullable=True),
         sa.Column('cert_data', sa.Text(8000), nullable=False),
@@ -49,7 +49,8 @@ def upgrade():
         sa.Column('created_at', sa.DateTime, nullable=False),
         sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('tenant_id', sa.String(36), nullable=False),
-        sa.Column('certificate_id', sa.String(36), sa.ForeignKey('a10_certificates.id'),
+        sa.Column('certificate_id', sa.String(36),
+                  sa.ForeignKey(u'a10_certificates.id'),
                   nullable=False),
         sa.Column('listener_id', sa.String(36), nullable=False)
     )
