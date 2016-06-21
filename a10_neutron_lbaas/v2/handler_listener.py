@@ -46,6 +46,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         if not listener.admin_state_up:
             status = c.client.slb.DOWN
 
+        import pdb; pdb.set_trace()
         templates = self.meta(listener, "template", {})
 
         bindings = []
@@ -53,6 +54,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         cert_data = dict()
         template_args = {}
 
+        # Try Barbican first.  TERMINATED HTTPS requires a default TLS container ID that is
+        # checked by the API so we can't fake it out.
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
             if self._set_terminated_https_values(listener, c, cert_data):
                 templates["client_ssl"] = {}
@@ -60,8 +63,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 key_passphrase = str(cert_data.get('key_pass', ''))
                 cert_filename = str(cert_data.get('cert_filename', ''))
                 key_filename = str(cert_data.get('key_filename', ''))
+                template_args["template-client-ssl"] = template_name
             else:
                 LOG.error("Could not created terminated HTTPS endpoint.")
+        # Else, set it up as an HTTP endpoint and attach the A10 cert data.
         elif listener.protocol and listener.protocol in [constants.PROTOCOL_HTTP,
                                                          constants.PROTOCOL_TCP]:
             try:
@@ -73,9 +78,11 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 if self._set_a10_https_values(listener, c, cert_data, bindings):
                     templates["client_ssl"] = {}
                     template_name = str(cert_data.get('template_name', ''))
-                    key_passphrase = str(cert_data.get('cert_pass', ''))
+                    key_passphrase = str(cert_data.get('key_pass', ''))
                     cert_filename = str(cert_data.get('cert_filename', ''))
                     key_filename = str(cert_data.get('key_filename', ''))
+                    template_args["template-client-ssl"] = template_name
+
 
         if 'client_ssl' in templates:
             template_args["template_client_ssl"] = template_name
@@ -90,7 +97,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         if 'server_ssl' in templates:
             server_args = {'server_ssl_template': templates['server_ssl']}
-            template_args["template_server_ssl"] = template_name
+            template_args["template-server-ssl"] = template_name
+
             try:
                 c.client.slb.template.server_ssl.create(
                     template_name,
@@ -111,7 +119,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
 
+        # This doesn't do anything anymore.
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
+        # vport_meta.update(template_args)
 
         try:
             set_method(
@@ -125,6 +135,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 status=status,
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
+                template_client_ssl=template_args.get("template-client-ssl"),
+                template_server_ssl=template_args.get("template-server-ssl"),
                 axapi_body=vport_meta,
                 **template_args)
         except acos_errors.Exists:
@@ -184,18 +196,18 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             binding = bindings[0]
 
             cert_data["cert_content"] = binding.certificate.get("cert_data")
-            cert_data["key_content"] = binding.certificate.get("key_data")
-            cert_data["cert_pass"] = binding.certificate.get("password")
+            cert_data["key_content"] = binding.certificate.get("key_data", None)
+            cert_data["key_pass"] = binding.certificate.get("password", None)
 
         else:
             LOG.error("No Certificate <-> Listener bindings found.")
+            return is_success
 
         if len(cert_data["cert_content"]) > 1:
             base_name = listener.id
-            cert_data["template_name"] = listener.id
+            cert_data["template_name"] = base_name
 
             cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
-            cert_data["key_filename"] = "{0}key.pem".format(base_name)
 
             self._acos_create_or_update(c.client.file.ssl_cert,
                                         file=cert_data["cert_filename"],
@@ -203,11 +215,14 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                         size=len(cert_data["cert_content"]),
                                         action="import", certificate_type="pem")
 
-            self._acos_create_or_update(c.client.file.ssl_key,
-                                        file=cert_data["key_filename"],
-                                        cert=cert_data["key_content"],
-                                        size=len(cert_data["key_content"]),
-                                        action="import")
+            if len(cert_data.get("key_content", None)) > 0:
+                cert_data["key_filename"] = "{0}key.pem".format(base_name)
+                self._acos_create_or_update(c.client.file.ssl_key,
+                                            file=cert_data["key_filename"],
+                                            cert=cert_data["key_content"],
+                                            size=len(cert_data["key_content"]),
+                                            action="import")
+
             is_success = True
 
         return is_success
