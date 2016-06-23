@@ -27,6 +27,7 @@ class WorkerThread(threading.Thread):
         self.a10_driver = kwargs.get('a10_driver')
         self.sleep_timer = kwargs.get('sleep_timer')
         self.status_update = kwargs.get('status_update')
+        LOG.info("====A10_DRIVER:  {0}".format(self.a10_driver.openstack_driver))
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.worker_queue = queue.Queue()
 
@@ -45,12 +46,8 @@ class WorkerThread(threading.Thread):
 
             finally:
                 LOG.info("A10 worker, idling")
-                self.status_update(self.a10_driver)
+                #self.status_update(self.a10_driver)
 
-    def join(self, timeout=None):
-        self.halt.set()
-        super(WorkerThread, self).join(timeout)
-    
     def preform_operation(self, oper):
         try:
             func = oper[0]

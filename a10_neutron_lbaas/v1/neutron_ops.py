@@ -11,7 +11,11 @@
 #    under the License.
 
 from neutron import context as ncontext
-from neutron_lbaas.db.loadbalancer import models as lb_db
+
+try:
+    from neutron_lbaas.db.loadbalancer import models as lb_db
+except ImportError:
+    pass
 
 class NeutronOpsV1(object):
 

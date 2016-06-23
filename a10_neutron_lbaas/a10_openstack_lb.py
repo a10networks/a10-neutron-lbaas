@@ -107,14 +107,16 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
                  neutron_hooks_module=None,
                  barbican_client=None,
                  config=None,
-                 config_dir=None):
+                 config_dir=None,
+                 provider=None):
         
         super(A10OpenstackLBV2, self).__init__(openstack_driver,
-                 plumbing_hooks_class=None,
-                 neutron_hooks_module=None,
-                 barbican_client=None,
-                 config=None,
-                 config_dir=None)
+                 plumbing_hooks_class,
+                 neutron_hooks_module,
+                 barbican_client,
+                 config,
+                 config_dir,
+                 provider)
         
         self.openstack_driver = openstack_driver
         self.config = config or a10_config.A10Config(config_dir=config_dir)
@@ -183,13 +185,15 @@ class A10OpenstackLBV1(A10OpenstackLBBase):
                  neutron_hooks_module=None,
                  barbican_client=None,
                  config=None,
-                 config_dir=None):
+                 config_dir=None,
+                 provider=None):
         super(A10OpenstackLBV1, self).__init__(openstack_driver,
-                 plumbing_hooks_class=None,
-                 neutron_hooks_module=None,
-                 barbican_client=None,
-                 config=None,
-                 config_dir=None)
+                 plumbing_hooks_class,
+                 neutron_hooks_module,
+                 barbican_client,
+                 config,
+                 config_dir,
+                 provider)
         if self.config.get('use_worker_thread'):
             self.worker = worker.WorkerThread(a10_driver=self,
                                               sleep_timer=self.config.get("worker_sleep_time"),

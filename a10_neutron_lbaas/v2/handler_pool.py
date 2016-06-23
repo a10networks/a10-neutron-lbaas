@@ -48,6 +48,8 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
             pass
 
     def create(self, context, pool):
+        LOG.info("====CONTEXT : {0}".format(context))
+        LOG.info("====POOL : {0}".format(pool))
         with a10.A10WriteStatusContext(self, context, pool) as c:
             try:
                 self._set(c.client.slb.service_group.create,
