@@ -13,6 +13,7 @@
 #    under the License.
 
 import mock
+import time
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -49,12 +50,12 @@ class TestPools(test_base.UnitTestBase):
                         pool = test_base.FakePool(p, m, pers, listener)
                         try:
                             self.a.pool.create(None, pool)
+                            time.sleep(5)
                         except a10_ex.UnsupportedFeature as e:
                             if pers == 'APP_COOKIE':
                                 saw_exception = True
                             else:
                                 raise e
-
                         self.print_mocks()
 
                         # (self.a.last_client.slb.service_group.create.
@@ -88,6 +89,7 @@ class TestPools(test_base.UnitTestBase):
         old_pool = test_base.FakePool('TCP', 'LEAST_CONNECTIONS', pers1, True)
         pool = test_base.FakePool('TCP', 'ROUND_ROBIN', pers2, True)
         self.a.pool.update(None, pool, old_pool)
+        time.sleep(5)
         self.print_mocks()
         self.a.last_client.slb.service_group.update.assert_called_with(
             pool.id,
@@ -112,7 +114,7 @@ class TestPools(test_base.UnitTestBase):
                                                   members=m,
                                                   hm=hm)
                         self.a.pool.delete(None, pool)
-
+                        time.sleep(5)
                         self.print_mocks()
 
                         (self.a.last_client.slb.service_group.delete.
@@ -130,6 +132,7 @@ class TestPools(test_base.UnitTestBase):
     def _test_stats(self):
         pool = test_base.FakePool('TCP', 'ROUND_ROBIN', None, False)
         actual = self.a.pool.stats(None, pool)
+        time.sleep(5)
         return pool, actual
 
     def test_stats_calls_service_group_stats(self):

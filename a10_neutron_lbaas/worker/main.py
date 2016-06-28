@@ -27,7 +27,6 @@ class WorkerThread(threading.Thread):
         self.a10_driver = kwargs.get('a10_driver')
         self.sleep_timer = kwargs.get('sleep_timer')
         self.status_update = kwargs.get('status_update')
-        LOG.info("====A10_DRIVER:  {0}".format(self.a10_driver.openstack_driver))
         self.plugin = self.a10_driver.openstack_driver.plugin
         self.worker_queue = queue.Queue()
 
@@ -36,27 +35,22 @@ class WorkerThread(threading.Thread):
 
         while True:
             try:
+                LOG.info("===QUEUE SIZE: {0}".format(self.worker_queue.qsize()))
                 oper = self.worker_queue.get()
-                self.preform_operation(oper)
                 self.worker_queue.task_done()
-                LOG.info("===RAN OPERATIONS==")
+                self.preform_operation(oper)
             except queue.Empty:
                 LOG.info("Queue is empty")
-                time.sleep(self.sleep_timer)
-
+                #time.sleep(self.sleep_timer)
             finally:
                 LOG.info("A10 worker, idling")
                 #self.status_update(self.a10_driver)
 
     def preform_operation(self, oper):
-        try:
-            func = oper[0]
-            args = oper[1:]
-            func(*args)
-        
-        except Exception as e:
-            LOG.info(e)
+        LOG.info("=====OPERATION RAN======")
+        func = oper[0]
+        args = oper[1:]
+        func(*args)
 
     def add_to_queue(self, oper):
         self.worker_queue.put(oper)
-        LOG.info("=====OPER====: {0}".format(oper))

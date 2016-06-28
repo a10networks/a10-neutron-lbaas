@@ -25,12 +25,10 @@ LOG = logging.getLogger(__name__)
 
 class VipQueuedV1(handler_base_v1.HandlerBaseV1):
 
-    def __init__(self, worker, a10_driver, openstack_driver):
+    def __init__(self, a10_driver):
         super(VipQueuedV1, self).__init__(a10_driver)
         self.vip_h = handler_vip.VipHandler(a10_driver)
-        self.worker = worker
-        self.a10_driver = a10_driver
-        self.openstack_driver = openstack_driver
+        self.worker = a10_driver.worker
 
     def create(self, context, vip):
         self.worker.add_to_queue([self.vip_h.create, context, vip])
@@ -44,12 +42,10 @@ class VipQueuedV1(handler_base_v1.HandlerBaseV1):
 
 class PoolQueuedV1(handler_base_v1.HandlerBaseV1):
 
-    def __init__(self, worker, a10_driver, openstack_driver):
+    def __init__(self, a10_driver):
         super(PoolQueuedV1, self).__init__(a10_driver)
         self.pool_h = handler_pool.PoolHandler(a10_driver)
-        self.worker = worker
-        self.a10_driver = a10_driver
-        self.openstack_driver = openstack_driver
+        self.worker = a10_driver.worker
 
     def create(self, context, pool):
         self.worker.add_to_queue([self.pool_h.create, context, pool])
@@ -65,12 +61,10 @@ class PoolQueuedV1(handler_base_v1.HandlerBaseV1):
 
 class MemberQueuedV1(handler_base_v1.HandlerBaseV1):
     
-    def __init__(self, worker, a10_driver, openstack_driver):
+    def __init__(self, a10_driver):
         super(MemberQueuedV1, self).__init__(a10_driver)
         self.member_h = handler_member.MemberHandler(a10_driver)
-        self.worker = worker
-        self.a10_driver = a10_driver
-        self.openstack_driver = openstack_driver
+        self.worker = a10_driver.worker
 
     def create(self, context, member):
         self.worker.add_to_queue([self.member_h.create, context, member])
@@ -89,12 +83,10 @@ class MemberQueuedV1(handler_base_v1.HandlerBaseV1):
 
 class HealthMonitorQueuedV1(handler_base_v1.HandlerBaseV1):
 
-    def __init__(self, worker, a10_driver, openstack_driver):
+    def __init__(self, a10_driver):
         super(HealthMonitorQueuedV1, self).__init__(a10_driver)
         self.hm_h = handler_hm.HealthMonitorHandler(a10_driver)
-        self.worker = worker
-        self.a10_driver = a10_driver
-        self.openstack_driver = openstack_driver
+        self.worker = a10_driver.worker
 
     def create(self, context, hm, pool_id):
         self.worker.add_to_queue([self.hm_h.create, context, hm, pool_id])

@@ -31,12 +31,10 @@ def _build_openstack_context():
 
 class FakeA10OpenstackLB(object):
 
-    def __init__(self, openstack_driver, provider, **kw):
+    def __init__(self, openstack_driver, **kw):
         
         super(FakeA10OpenstackLB, self).__init__(
-            openstack_driver,
             mock.MagicMock(),
-            provider=provider,
             **kw)
         self.openstack_driver = mock.MagicMock()
         self.plumbing_hooks = hooks.PlumbingHooks(self)
@@ -60,10 +58,9 @@ class FakeA10OpenstackLBV1(FakeA10OpenstackLB, a10_os.A10OpenstackLBV1):
 
 class FakeA10OpenstackLBV2(FakeA10OpenstackLB, a10_os.A10OpenstackLBV2):
 
-    def __init__(self, openstack_driver, provider,  **kw):
+    def __init__(self, openstack_driver, **kw):
         super(FakeA10OpenstackLBV2, self).__init__(
              openstack_driver,
-             provider=provider,
              neutron_hooks_module=mock.MagicMock(),
              **kw)
         self.certmgr = mock.Mock()

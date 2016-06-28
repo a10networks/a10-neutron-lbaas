@@ -69,6 +69,15 @@ class A10OpenstackLBBase(object):
         if self.config.get('verify_appliances'):
             self._verify_appliances()
 
+        if self.config.get('use_worker_thread'):
+            self.worker = worker.WorkerThread(a10_driver=self,
+                                              sleep_timer=self.config.get("worker_sleep_time"),
+                                              status_update=self.status_check)
+            self.worker.daemon = True
+            self.worker.start()
+        else:
+            self.worker = None
+
     def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None, **kwargs):
         if hasattr(self.hooks, 'select_device_with_lbaas_obj'):
             return self.hooks.select_device_with_lbaas_obj(
@@ -102,42 +111,11 @@ class A10OpenstackLBBase(object):
 
 class A10OpenstackLBV2(A10OpenstackLBBase):
 
-    def __init__(self, openstack_driver,
-                 plumbing_hooks_class=None,
-                 neutron_hooks_module=None,
-                 barbican_client=None,
-                 config=None,
-                 config_dir=None,
-                 provider=None):
-        
-        super(A10OpenstackLBV2, self).__init__(openstack_driver,
-                 plumbing_hooks_class,
-                 neutron_hooks_module,
-                 barbican_client,
-                 config,
-                 config_dir,
-                 provider)
-        
-        self.openstack_driver = openstack_driver
-        self.config = config or a10_config.A10Config(config_dir=config_dir)
-        self.neutron = neutron_hooks_module
-        self.barbican_client = barbican_client
-
-        if self.config.get('use_worker_thread'):
-            self.worker = worker.WorkerThread(a10_driver=self,
-                                              sleep_timer=self.config.get("worker_sleep_time"),
-                                              status_update=status_check.status_update_v2)
-            self.worker.daemon = False
-            self.worker.start()
-        else:
-            self.worker = None
-
     @property
     def lb(self):
         return handler_queue_v2.LoadBalancerQueuedV2(
-            self.worker,
             self,
-            self.openstack_driver,
+            self.openstack_driver.load_balancer,
             neutron=self.neutron)
 
     @property
@@ -147,92 +125,54 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
     @property
     def listener(self):
         return handler_queue_v2.ListenerQueuedV2(
-            self.worker,
             self,
-            self.openstack_driver,
+            self.openstack_driver.listener,
             neutron=self.neutron,
             barbican_client=self.barbican_client)
 
     @property
     def pool(self):
         return handler_queue_v2.PoolQueuedV2(
-            self.worker,
             self,
-            self.openstack_driver,
+            self.openstack_driver.pool,
             neutron=self.neutron)
 
     @property
     def member(self):
         return handler_queue_v2.MemberQueuedV2(
-            self.worker,
             self,
-            self.openstack_driver,
+            self.openstack_driver.member,
             neutron=self.neutron)
 
     @property
     def hm(self):
         return handler_queue_v2.HealthMonitorQueuedV2(
-            self.worker,
             self,
-            self.openstack_driver,
+            self.openstack_driver.healthmonitor,
             neutron=self.neutron)
 
+    @property
+    def status_check(self):
+        return status_check.status_update_v2
 
 class A10OpenstackLBV1(A10OpenstackLBBase):
 
-    def __init__(self, openstack_driver,
-                 plumbing_hooks_class=None,
-                 neutron_hooks_module=None,
-                 barbican_client=None,
-                 config=None,
-                 config_dir=None,
-                 provider=None):
-        super(A10OpenstackLBV1, self).__init__(openstack_driver,
-                 plumbing_hooks_class,
-                 neutron_hooks_module,
-                 barbican_client,
-                 config,
-                 config_dir,
-                 provider)
-        if self.config.get('use_worker_thread'):
-            self.worker = worker.WorkerThread(a10_driver=self,
-                                              sleep_timer=self.config.get("worker_sleep_time"),
-                                              status_update=status_check.status_update_v1)
-            self.worker.daemon = False
-            self.worker.start()
-        else:
-            self.worker = None
-
-        self.openstack_driver = openstack_driver
-        self.config = config or a10_config.A10Config(config_dir=config_dir)
-        self.neutron = neutron_hooks_module
-        self.barbican_client = barbican_client
-
     @property
     def pool(self):
-        return handler_queue_v1.PoolQueuedV1(
-            self.worker,
-            self,
-            self.openstack_driver)
-    
+        return handler_queue_v1.PoolQueuedV1(self)
 
     @property
     def vip(self):
-        return handler_queue_v1.VipQueuedV1(
-            self.worker,
-            self,
-            self.openstack_driver)
+        return handler_queue_v1.VipQueuedV1(self)
 
     @property
     def member(self):
-        return handler_queue_v1.MemberQueuedV1(
-            self.worker,
-            self,
-            self.openstack_driver)
+        return handler_queue_v1.MemberQueuedV1(self)
 
     @property
     def hm(self):
-        return handler_queue_v1.HealthMonitorQueuedV1(
-            self.worker,
-            self,
-            self.openstack_driver) 
+        return handler_queue_v1.HealthMonitorQueuedV1(self)
+
+    @property
+    def status_check(self):
+        return status_check.status_update_v1

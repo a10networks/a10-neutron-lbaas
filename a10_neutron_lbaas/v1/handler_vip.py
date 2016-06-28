@@ -174,9 +174,7 @@ class PersistHandler(object):
             'HTTP_COOKIE': "cookie_persistence",
             'SOURCE_IP': "src_ip_persistence",
         }
-
         self.sp = vip.get("session_persistence")
-
         if self.sp is not None:
             if self.sp['type'] == 'HTTP_COOKIE':
                 self.c_pers = self.name

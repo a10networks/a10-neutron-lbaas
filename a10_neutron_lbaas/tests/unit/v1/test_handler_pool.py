@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
+
 import test_base
 import test_handler_member
 
@@ -63,7 +65,7 @@ class TestPools(test_base.UnitTestBase):
 
                 pool = self.fake_pool(p, m)
                 self.a.pool.create(None, pool)
-
+                time.sleep(5)
                 self.print_mocks()
                 (self.a.last_client.slb.service_group.create.
                     assert_called())
@@ -77,11 +79,13 @@ class TestPools(test_base.UnitTestBase):
         old_pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         pool = self.fake_pool('TCP', 'ROUND_ROBIN')
         self.a.pool.update(None, old_pool, pool)
+        time.sleep(5)
         self.print_mocks()
         self.a.last_client.slb.service_group.update.assert_called()
 
     def _test_delete(self, pool):
         self.a.pool.delete(None, pool)
+        time.sleep(5)
         self.print_mocks()
 
     def test_delete(self):
@@ -89,9 +93,9 @@ class TestPools(test_base.UnitTestBase):
         pool['members'] = [test_handler_member._fake_member()]
         pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools": [pool]}]
         self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = test_base.FakeHM()
-
+        time.sleep(5)
         self._test_delete(pool)
-
+        time.sleep(5)
         (self.a.last_client.slb.service_group.delete.
             assert_called_with(pool['id']))
 
@@ -103,8 +107,9 @@ class TestPools(test_base.UnitTestBase):
         pool['health_monitors_status'] = [{'monitor_id': 'hm1', "pools": [pool]}]
 
         self.a.pool.neutron.openstack_driver._pool_get_hm.return_value = hm
-
+        time.sleep(5)
         self._test_delete(pool)
+        time.sleep(5)
         self.a.last_client.slb.service_group.update.assert_called_with(
             "id1",
             health_monitor="",
@@ -115,6 +120,7 @@ class TestPools(test_base.UnitTestBase):
         pool['members'] = [test_handler_member._fake_member()]
         pool['health_monitors_status'] = []
         self._test_delete(pool)
+        time.sleep(5)
         (self.a.last_client.slb.service_group.delete.
             assert_called_with(pool['id']))
 
@@ -123,14 +129,17 @@ class TestPools(test_base.UnitTestBase):
         pool['members'] = [test_handler_member._fake_member()]
         pool['health_monitors_status'] = [{'monitor_id': "hm1"}]
         self.a.pool.delete(None, pool)
+        time.sleep(5)
         self.a.last_client.slb.hm.delete.assert_called()
 
     def test_stats(self):
         pool = self.fake_pool('TCP', 'LEAST_CONNECTIONS')
         z = self.a.pool
+        time.sleep(5)
         z.neutron.pool_get_tenant_id = lambda x, y: 'hello'
         z._get_vip_id = lambda x, y: '2.2.2.2'
         z.stats(None, pool['id'])
+        time.sleep(5)
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue(s.index('slb.virtual_server.stats') >= 0)

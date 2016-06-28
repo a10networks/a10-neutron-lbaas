@@ -15,6 +15,7 @@
 import mock
 import test_base
 
+import time
 
 def return_one(*args):
     return 1
@@ -35,6 +36,7 @@ class TestMembers(test_base.UnitTestBase):
     def test_get_ip(self):
         m = test_base.FakeMember(pool=mock.MagicMock())
         self.a.member.neutron.member_get_ip(None, m, False)
+        time.sleep(5)
         self.print_mocks()
         self.a.neutron.member_get_ip.assert_called_with(
             None, m, False)
@@ -42,6 +44,8 @@ class TestMembers(test_base.UnitTestBase):
     def test_get_name(self):
         m = test_base.FakeMember(pool=mock.MagicMock())
         z = self.a.member._get_name(m, '1.1.1.1')
+        time.sleep(5)
+        self.print_mocks()
         self.assertEqual(z, '_get-o_1_1_1_1_neutron')
 
     def test_count(self):
@@ -61,7 +65,7 @@ class TestMembers(test_base.UnitTestBase):
         else:
             name = self.a.member._get_name(m, ip)
         self.a.member.create(None, m)
-
+        time.sleep(5)
         if admin_state_up:
             status = self.a.last_client.slb.UP
         else:
@@ -90,7 +94,7 @@ class TestMembers(test_base.UnitTestBase):
         ip = self.a.member.neutron.member_get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
         self.a.member.update(None, m, m)
-
+        time.sleep(5)
         self.a.last_client.slb.service_group.member.update.assert_called_with(
             m.pool.id, name, m.protocol_port, self.a.last_client.slb.DOWN,
             axapi_args={'member': {}})
@@ -101,16 +105,16 @@ class TestMembers(test_base.UnitTestBase):
 
         self.set_count_1()
         self.a.member.delete(None, m)
-
+        time.sleep(5)
         self.a.last_client.slb.server.delete(ip)
 
     def test_delete_count_gt_one(self):
         m = test_base.FakeMember(False, pool=mock.MagicMock())
         ip = self.a.member.neutron.member_get_ip(None, m, True)
         name = self.a.member._get_name(m, ip)
-
+        time.sleep(5)
         self.set_count_2()
         self.a.member.delete(None, m)
-
+        time.sleep(5)
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
             m.pool_id, name, m.protocol_port)

@@ -15,7 +15,7 @@
 import logging
 import mock
 import test_base
-
+import time
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 from a10_neutron_lbaas import constants
 
@@ -30,6 +30,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
                                    loadbalancer=None)
         try:
             self.a.listener.update(None, m, m)
+            time.sleep(5)
         except a10_ex.UnsupportedFeature:
             pass
 
@@ -37,6 +38,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         m = test_base.FakeListener('HTTP', 8080, pool=None,
                                    loadbalancer=test_base.FakeLoadBalancer())
         self.a.listener.create(None, m)
+        time.sleep(5)
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 
     def test_update(self):
@@ -53,7 +55,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         pool.listener = m
 
         self.a.listener.update(None, m, m)
-
+        time.sleep(5)
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
@@ -72,7 +74,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         pool.listener = m
 
         self.a.listener.delete(None, m)
-
+        time.sleep(5)
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         LOG.debug("DELETE RESULT %s" % s)
@@ -94,7 +96,9 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         certmgr = FakeCertManager()
 
         self.a.barbican_client = certmgr
+        time.sleep(5)
         self.a.listener.create(None, m)
+        time.sleep(5)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('HTTPS' in s)
 
@@ -102,6 +106,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
     def test_barbican_client_not_null(self, certmgr):
         """This tests that the barbican_client dependency is always there."""
         handler = self.a.listener
+        time.sleep(5)
         handler.barbican_client = None
         pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
@@ -110,6 +115,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
                                    pool=pool, loadbalancer=lb)
         pool.listener = m
         handler.create(None, m)
+        time.sleep(5)
         self.assertTrue(handler.barbican_client is not None)
 
     def _tls_container_shared(self):
@@ -119,7 +125,9 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         certmgr.private_key_passphrase = "SECRETPASSWORD"
 
         handler = self.a.listener
+        time.sleep(5)
         handler.barbican_client = certmgr
+        time.sleep(5)
         pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
         lb = test_base.FakeLoadBalancer()
@@ -134,6 +142,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
         pool.listener = listener
         handler.create(None, listener)
+        time.sleep(5)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue(certmgr.certificate in s)
         self.assertTrue(certmgr.private_key in s)
@@ -147,6 +156,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
         pool.listener = listener
         handler.create(None, listener)
+        time.sleep(5)
         s = str(self.a.last_client.mock_calls)
         self.assertFalse("cert=" in s)
         self.assertFalse("key=" in s)

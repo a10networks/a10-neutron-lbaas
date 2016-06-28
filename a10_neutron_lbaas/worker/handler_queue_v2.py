@@ -26,15 +26,14 @@ LOG = logging.getLogger(__name__)
 
 class LoadBalancerQueuedV2(handler_base_v2.HandlerBaseV2):
 
-    def __init__(self, worker, a10_driver, openstack_driver, neutron):
+    def __init__(self, a10_driver, openstack_manager, neutron):
         super(LoadBalancerQueuedV2, self).__init__(a10_driver, 
-                                                   openstack_driver, 
+                                                   openstack_manager, 
                                                    neutron=neutron)
         self.lb_h = handler_lb.LoadbalancerHandler(a10_driver,
-                                                   openstack_driver.load_balancer,
+                                                   openstack_manager,
                                                    neutron=neutron)
-        self.worker = worker
-        self.neutron = neutron
+        self.worker = a10_driver.worker
 
     def create(self, context, lb):
         self.worker.add_to_queue([self.lb_h.create, context, lb])
@@ -56,16 +55,15 @@ class LoadBalancerQueuedV2(handler_base_v2.HandlerBaseV2):
 
 class ListenerQueuedV2(handler_base_v2.HandlerBaseV2):
 
-    def __init__(self, worker, a10_driver, openstack_driver, neutron, barbican_client):
+    def __init__(self, a10_driver, openstack_manager, neutron, barbican_client):
         super(ListenerQueuedV2, self).__init__(a10_driver, 
-                                               openstack_driver, 
+                                               openstack_manager, 
                                                neutron=neutron)
         self.listener_h = handler_listener.ListenerHandler(a10_driver,
-                                                           openstack_driver.listener,
+                                                           openstack_manager,
                                                            neutron=neutron,
                                                            barbican_client=barbican_client)
-        self.worker = worker
-        self.neutron = neutron
+        self.worker = a10_driver.worker
 
     def create(self, context, listener):
         self.worker.add_to_queue([self.listener_h.create, context, listener])
@@ -81,15 +79,14 @@ class ListenerQueuedV2(handler_base_v2.HandlerBaseV2):
 
 class PoolQueuedV2(handler_base_v2.HandlerBaseV2):
 
-    def __init__(self, worker, a10_driver, openstack_driver, neutron):
+    def __init__(self,  a10_driver, openstack_manager, neutron):
         super(PoolQueuedV2, self).__init__(a10_driver, 
-                                           openstack_driver, 
+                                           openstack_manager, 
                                            neutron=neutron)
         self.pool_h = handler_pool.PoolHandler(a10_driver,
-                                               openstack_driver.pool,
+                                               openstack_manager,
                                                neutron=neutron)
-        self.worker = worker
-        self.neutron = neutron
+        self.worker = a10_driver.worker
 
     def create(self, context, pool):
         self.worker.add_to_queue([self.pool_h.create, context, pool])
@@ -105,21 +102,23 @@ class PoolQueuedV2(handler_base_v2.HandlerBaseV2):
 
 class MemberQueuedV2(handler_base_v2.HandlerBaseV2):
 
-    def __init__(self, worker, a10_driver, openstack_driver, neutron):
+    def __init__(self, a10_driver, openstack_manager, neutron):
         super(MemberQueuedV2, self).__init__(a10_driver, 
-                                             openstack_driver, 
+                                             openstack_manager, 
                                              neutron=neutron)
         self.member_h = handler_member.MemberHandler(a10_driver,
-                                                     openstack_driver.member,
+                                                     openstack_manager,
                                                      neutron=neutron)
-        self.worker = worker
-        self.neutron = neutron
+        self.worker = a10_driver.worker
 
     def create(self, context, member):
         self.worker.add_to_queue([self.member_h.create, context, member])
 
     def update(self, context, old_member, member):
         self.worker.add_to_queue([self.member_h.update, context, old_member, member])
+
+    def _delete(self, c, context, member):
+        self.worker.add_to_queue([self.member_h._delete, c, context, member])
 
     def delete(self, context, member):
         self.worker.add_to_queue([self.member_h.delete, context, member])
@@ -129,14 +128,14 @@ class MemberQueuedV2(handler_base_v2.HandlerBaseV2):
 
 class HealthMonitorQueuedV2(handler_base_v2.HandlerBaseV2):
 
-    def __init__(self, worker, a10_driver, openstack_driver, neutron):
+    def __init__(self, a10_driver, openstack_driver, neutron):
         super(HealthMonitorQueuedV2, self).__init__(a10_driver, 
-                                                    openstack_driver, 
+                                                    openstack_driver.health_monitor, 
                                                     neutron=neutron)
         self.hm_h = handler_hm.HealthMonitorHandler(a10_driver,
                                                     openstack_driver.health_monitor,
                                                     neutron=neutron)
-        self.worker = worker
+        self.worker = a10_driver.worker
         self.neutron = neutron
 
     def create(self, context, hm):
@@ -147,6 +146,9 @@ class HealthMonitorQueuedV2(handler_base_v2.HandlerBaseV2):
 
     def delete(self, context, hm):
         self.worker.add_to_queue([self.hm_h.delete, context, hm])
+
+    def _delete(self, c, context, hm):
+        self.worker.add_to_queue([self.hm_h._delete, c, context, hm])
 
     def dissociate(self, c, context, hm, pool_id):
         self.worker.add_to_queue([self.hm_h.dissociate, c, context, hm, pool_id])
