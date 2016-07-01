@@ -13,6 +13,7 @@
 #    under the License.
 
 import mock
+import time
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -23,6 +24,7 @@ class TestLB(test_base.UnitTestBase):
     def test_create(self):
         m = test_base.FakeLoadBalancer()
         self.a.lb.create(None, m)
+        time.sleep(5)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.create' in s)
         self.assertTrue('fake-lb-id-001' in s)
@@ -54,8 +56,9 @@ class TestLB(test_base.UnitTestBase):
 
         lb = test_base.FakeLoadBalancer()
         self.a.lb.create(None, lb)
-
+        time.sleep(5)
         create = self.a.last_client.slb.virtual_server.create
+        time.sleep(5)
         create.assert_has_calls([mock.ANY])
         calls = create.call_args_list
 
@@ -95,6 +98,7 @@ class TestLB(test_base.UnitTestBase):
         m = test_base.FakeLoadBalancer()
         m.admin_state_up = False
         self.a.lb.update(None, m, m)
+        time.sleep(5)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.update' in s)
         self.assertTrue('fake-lb-id-001' in s)
@@ -104,6 +108,7 @@ class TestLB(test_base.UnitTestBase):
     def test_delete(self):
         m = test_base.FakeLoadBalancer()
         self.a.lb.delete(None, m)
+        time.sleep(5)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.delete' in s)
         self.assertTrue(m.id in s)
@@ -111,17 +116,19 @@ class TestLB(test_base.UnitTestBase):
     def test_delete_removes_slb(self):
         m = test_base.FakeLoadBalancer()
         self.a.lb.delete(None, m)
+        time.sleep(5)
 
     def test_refresh(self):
         try:
             self.a.lb.refresh(None, test_base.FakeLoadBalancer())
+            time.sleep(5)
         except a10_ex.UnsupportedFeature:
             pass
 
     def test_stats(self):
         test_lb = test_base.FakeLoadBalancer()
         self.a.lb.stats(None, test_lb)
-
+        time.sleep(5)
         self.print_mocks()
 
         s = str(self.a.last_client.mock_calls)

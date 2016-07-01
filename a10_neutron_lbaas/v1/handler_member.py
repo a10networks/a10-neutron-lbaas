@@ -11,10 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import logging
 
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
+
+LOG = logging.getLogger(__name__)
 
 
 class MemberHandler(handler_base_v1.HandlerBaseV1):
@@ -108,3 +111,18 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
     def delete(self, context, member):
         with a10.A10DeleteContext(self, context, member) as c:
             self._delete(c, context, member)
+
+    def _update_operating_status(self, context, member, lb_db, model_type, pool):
+        try:
+            with a10.A10Context(self, context, member) as c:
+                server_ip = self.neutron.member_get_ip(context, member,
+                                                       c.device_cfg['use_float'])
+                server_name = self._meta_name(member, server_ip)
+                oper_stats = c.client.slb.service_group.member.get_oper(pool.id,
+                                                                        server_name,
+                                                                        member.protocol_port)
+                oper_stats = oper_stats["member"]["oper"]["state"]
+                lb_db.update_status(context, model_type, member.id,
+                                    operating_status=str(oper_stats))
+        except Exception as ex:
+            LOG.exception(ex)

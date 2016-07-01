@@ -14,6 +14,8 @@
 
 import logging
 import mock
+
+import time
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -29,6 +31,7 @@ class TestListeners(test_base.UnitTestBase):
                                    loadbalancer=None)
         try:
             self.a.listener.create(None, m)
+            time.sleep(5)
         except a10_ex.UnsupportedFeature:
             pass
 
@@ -36,6 +39,7 @@ class TestListeners(test_base.UnitTestBase):
         m = test_base.FakeListener('HTTP', 8080, pool=None,
                                    loadbalancer=test_base.FakeLoadBalancer())
         self.a.listener.create(None, m)
+        time.sleep(5)
         self.print_mocks()
         self.assertTrue('create' in str(self.a.last_client.mock_calls))
 
@@ -58,6 +62,7 @@ class TestListeners(test_base.UnitTestBase):
 
                     try:
                         self.a.listener.create(None, m)
+                        time.sleep(5)
                     except a10_ex.UnsupportedFeature as e:
                         if pers == 'APP_COOKIE':
                             saw_exception = True
@@ -130,6 +135,7 @@ class TestListeners(test_base.UnitTestBase):
 
         try:
             self.a.listener.create(None, m)
+            time.sleep(5)
         except Exception as e:
             saw_exception = True
             raise e
@@ -151,6 +157,7 @@ class TestListeners(test_base.UnitTestBase):
                                    loadbalancer=lb)
 
         self.a.listener.create(None, m)
+        time.sleep(5)
         self.print_mocks()
 
         s = str(self.a.last_client.mock_calls)
@@ -174,6 +181,7 @@ class TestListeners(test_base.UnitTestBase):
                                    loadbalancer=None)
         try:
             self.a.listener.update(None, m, m)
+            time.sleep(5)
         except a10_ex.UnsupportedFeature:
             pass
 
@@ -181,6 +189,7 @@ class TestListeners(test_base.UnitTestBase):
         m = test_base.FakeListener('HTTP', 8080, pool=None,
                                    loadbalancer=test_base.FakeLoadBalancer())
         self.a.listener.create(None, m)
+        time.sleep(5)
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 
     def test_update(self):
@@ -190,7 +199,7 @@ class TestListeners(test_base.UnitTestBase):
         pool.listener = m
 
         self.a.listener.update(None, m, m)
-
+        time.sleep(5)
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
@@ -206,7 +215,7 @@ class TestListeners(test_base.UnitTestBase):
         pool.listener = m
 
         self.a.listener.delete(None, m)
-
+        time.sleep(5)
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.delete' in s)

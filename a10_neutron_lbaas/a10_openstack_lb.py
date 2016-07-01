@@ -18,17 +18,12 @@ import acos_client
 
 import a10_config
 import version
+import v2
 
-import v1.handler_hm
-import v1.handler_member
-import v1.handler_pool
-import v1.handler_vip
-
-import v2.handler_hm
-import v2.handler_lb
-import v2.handler_listener
-import v2.handler_member
-import v2.handler_pool
+from worker import handler_queue_v1
+from worker import handler_queue_v2
+import worker.main as worker
+import worker.status_check as status_check
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
@@ -74,6 +69,15 @@ class A10OpenstackLBBase(object):
         if self.config.get('verify_appliances'):
             self._verify_appliances()
 
+        if self.config.get('use_worker_thread'):
+            self.worker = worker.WorkerThread(a10_driver=self,
+                                              sleep_timer=self.config.get("worker_sleep_time"),
+                                              status_update=self.status_check)
+            self.worker.daemon = True
+            self.worker.start()
+        else:
+            self.worker = None
+
     def _select_a10_device(self, tenant_id, a10_context=None, lbaas_obj=None, **kwargs):
         if hasattr(self.hooks, 'select_device_with_lbaas_obj'):
             return self.hooks.select_device_with_lbaas_obj(
@@ -109,7 +113,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def lb(self):
-        return v2.handler_lb.LoadbalancerHandler(
+        return handler_queue_v2.LoadBalancerQueuedV2(
             self,
             self.openstack_driver.load_balancer,
             neutron=self.neutron)
@@ -120,7 +124,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def listener(self):
-        return v2.handler_listener.ListenerHandler(
+        return handler_queue_v2.ListenerQueuedV2(
             self,
             self.openstack_driver.listener,
             neutron=self.neutron,
@@ -128,39 +132,47 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def pool(self):
-        return v2.handler_pool.PoolHandler(
-            self, self.openstack_driver.pool,
+        return handler_queue_v2.PoolQueuedV2(
+            self,
+            self.openstack_driver.pool,
             neutron=self.neutron)
 
     @property
     def member(self):
-        return v2.handler_member.MemberHandler(
+        return handler_queue_v2.MemberQueuedV2(
             self,
             self.openstack_driver.member,
             neutron=self.neutron)
 
     @property
     def hm(self):
-        return v2.handler_hm.HealthMonitorHandler(
+        return handler_queue_v2.HealthMonitorQueuedV2(
             self,
-            self.openstack_driver.health_monitor,
+            self.openstack_driver.healthmonitor,
             neutron=self.neutron)
 
+    @property
+    def status_check(self):
+        return status_check.status_update_v2
 
 class A10OpenstackLBV1(A10OpenstackLBBase):
 
     @property
     def pool(self):
-        return v1.handler_pool.PoolHandler(self)
+        return handler_queue_v1.PoolQueuedV1(self)
 
     @property
     def vip(self):
-        return v1.handler_vip.VipHandler(self)
+        return handler_queue_v1.VipQueuedV1(self)
 
     @property
     def member(self):
-        return v1.handler_member.MemberHandler(self)
+        return handler_queue_v1.MemberQueuedV1(self)
 
     @property
     def hm(self):
-        return v1.handler_hm.HealthMonitorHandler(self)
+        return handler_queue_v1.HealthMonitorQueuedV1(self)
+
+    @property
+    def status_check(self):
+        return status_check.status_update_v1

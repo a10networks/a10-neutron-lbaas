@@ -71,6 +71,7 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
             health_monitor=self._meta_name(hm), health_check_disable=False)
 
     def create(self, context, hm):
+        LOG.info("=====HM CREATED=====")
         LOG.debug("HealthMonitorHandler.create(): hm=%s, context=%s" % (dir(hm), context))
         with a10.A10WriteStatusContext(self, context, hm) as c:
             self._create(c, context, hm)

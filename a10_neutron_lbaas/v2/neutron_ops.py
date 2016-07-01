@@ -20,6 +20,7 @@ try:
 except ImportError:
     # v2 does not exist before Kilo
     pass
+from neutron import context as ncontext
 
 
 class NeutronOpsV2(object):
@@ -55,3 +56,9 @@ class NeutronOpsV2(object):
 
     def vip_get(self, context, vip_id):
         return self.plugin.db.get_vip(context, vip_id)
+
+    def get_neutron_admin_context(self):
+        return ncontext.get_admin_context()
+
+    def get_models(self):
+        return lb_db

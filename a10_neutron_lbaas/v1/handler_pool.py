@@ -70,6 +70,7 @@ class PoolHandler(handler_base_v1.HandlerBaseV1):
                 pass
 
     def stats(self, context, pool_id):
+        LOG.info("======POOL STATS CALL=======")
         tenant_id = self.neutron.pool_get_tenant_id(context, pool_id)
         pool = {'id': pool_id, 'tenant_id': tenant_id}
         with a10.A10Context(self, context, pool) as c:

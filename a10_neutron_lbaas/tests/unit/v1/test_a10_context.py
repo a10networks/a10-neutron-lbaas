@@ -77,7 +77,7 @@ class TestA10Context(test_base.UnitTestBase):
         with a10.A10WriteStatusContext(self.handler, self.ctx, self.m) as c:
             c
         self.a.openstack_driver._active.assert_called_with(
-            self.ctx, 'pool', 'fake-id-001')
+            self.ctx, 'poolqueuedv1', 'fake-id-001')
 
     def test_write_status_e(self):
         try:
@@ -87,14 +87,14 @@ class TestA10Context(test_base.UnitTestBase):
                 raise FakeException()
         except FakeException:
             self.a.openstack_driver._failed.assert_called_with(
-                self.ctx, 'pool', 'fake-id-001')
+                self.ctx, 'poolqueuedv1', 'fake-id-001')
             pass
 
     def test_delete(self):
         with a10.A10DeleteContext(self.handler, self.ctx, self.m) as c:
             c
         self.a.openstack_driver._db_delete.assert_called_with(
-            self.ctx, 'pool', 'fake-id-001')
+            self.ctx, 'poolqueuedv1', 'fake-id-001')
 
     def test_delete_e(self):
         try:

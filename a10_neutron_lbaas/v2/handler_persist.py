@@ -39,7 +39,8 @@ class PersistHandler(object):
 
         if pool:
             self.name = pool.id
-
+        import pdb
+        pdb.set_trace()
         if pool and pool.sessionpersistence:
             self.sp = pool.sessionpersistence
             if self.sp.type == 'HTTP_COOKIE' or self.sp.type == 'APP_COOKIE':

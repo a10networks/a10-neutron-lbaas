@@ -14,7 +14,7 @@
 
 
 import test_base
-
+import time
 
 class TestHM(test_base.UnitTestBase):
 
@@ -44,8 +44,10 @@ class TestHM(test_base.UnitTestBase):
 
     def test_create_ping(self):
         self.a.hm.create(None, self.fake_hm('PING'), 'p01')
+        time.sleep(5)
         self.assert_hm(self.a.last_client.slb.hm.ICMP, None, None, None)
         pool_name = self.a.hm._pool_name(None, 'p01')
+        time.sleep(5)
         self.a.last_client.slb.service_group.update.assert_called_with(
             pool_name, health_monitor='abcdef')
 
@@ -53,6 +55,7 @@ class TestHM(test_base.UnitTestBase):
         hm = self.fake_hm('TCP')
         hm['pools'] = [{'pool_id': 'p02'}, {'pool_id': 'p01'}]
         self.a.hm.create(None, hm, 'p01')
+        time.sleep(5)
         self.assert_hm(self.a.last_client.slb.hm.TCP, None, None, None)
         pool_name = self.a.hm._pool_name(None, 'p02')
         self.a.last_client.slb.service_group.update.assert_called_with(
@@ -60,15 +63,19 @@ class TestHM(test_base.UnitTestBase):
 
     def test_create_http(self):
         self.a.hm.create(None, self.fake_hm('HTTP'), 'p01')
+        time.sleep(5)
         self.assert_hm(self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
         pool_name = self.a.hm._pool_name(None, 'p01')
+        time.sleep(5)
         self.a.last_client.slb.service_group.update.assert_called_with(
             pool_name, health_monitor='abcdef')
 
     def test_create_https(self):
         self.a.hm.create(None, self.fake_hm('HTTPS'), 'p01')
+        time.sleep(5)
         self.assert_hm(self.a.last_client.slb.hm.HTTPS, 'GET', '/', '200')
         pool_name = self.a.hm._pool_name(None, 'p01')
+        time.sleep(5)
         self.a.last_client.slb.service_group.update.assert_called_with(
             pool_name, health_monitor='abcdef')
 
@@ -79,6 +86,7 @@ class TestHM(test_base.UnitTestBase):
             m = self.fake_hm('TCP')
         m['delay'] = 20
         self.a.hm.update(None, m_old, m, 'p01')
+        time.sleep(5)
         self.a.last_client.slb.hm.update.assert_called_with(
             'abcdef',
             self.a.last_client.slb.hm.TCP, 20, 5, '5',
@@ -91,11 +99,12 @@ class TestHM(test_base.UnitTestBase):
         fakehm['tenant_id'] = 'tenv1'
         fakehm['id'] = 'fedcba'
         fakehm.pools.append(expected)
-
+        time.sleep(5)
         self.a.hm.openstack_driver.plugin.get_pool.return_value = expected
         self.a.hm.openstack_driver._hm_binding_count.return_value = 1
 
         self.a.hm.delete(None, fakehm, 'p01')
+        time.sleep(5)
         self.a.last_client.slb.hm.delete.assert_called_with(fakehm["id"])
 
     def test_delete_updates_pool_health_monitor(self):
@@ -111,8 +120,9 @@ class TestHM(test_base.UnitTestBase):
         self.a.hm.openstack_driver._hm_binding_count.return_value = 1
 
         pool_name = self.a.hm._pool_name(None, 'p01')
+        time.sleep(5)
         self.a.hm.delete(None, fakehm, 'p01')
-
+        time.sleep(5)
         self.a.last_client.slb.service_group.update.assert_called_with(
             pool_name, health_monitor='', health_check_disable=True)
 
@@ -125,6 +135,7 @@ class TestHM(test_base.UnitTestBase):
         fake_hm['tenant_id'] = "tenv1"
 
         self.a.hm.dissociate(self.a.last_client, None, fake_hm, fake_pool.id)
+        time.sleep(5)
         self.a.last_client.slb.service_group.update.assert_called(
             fake_pool.id, health_monitor="", health_check_disable=True)
 
@@ -138,4 +149,5 @@ class TestHM(test_base.UnitTestBase):
         fake_hm['tenant_id'] = "tenv1"
 
         self.a.hm.dissociate(self.a.last_client, None, fake_hm, fake_pool.id)
+        time.sleep(5)
         self.a.last_client.hm.service_group.delete.assert_called(self.a.hm._meta_name(fake_hm))
