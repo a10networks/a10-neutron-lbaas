@@ -105,8 +105,8 @@ def initialize_agalaxy(vth_cfg, device_cfg, device_client):
         LOG.error("Error registering %s with agalaxy. %s" % (host, e))
     finally:
         try:
-            client.close()
-        finally:
+            client.session.close()
+        except:
             pass
 
 
