@@ -17,7 +17,7 @@ import mock
 import a10_neutron_lbaas.v2.v2_context as a10
 
 import test_base
-
+import fake_objs
 
 class FakeException(Exception):
     pass
@@ -36,7 +36,7 @@ class TestA10Context(test_base.UnitTestBase):
         super(TestA10Context, self).setUp(**kwargs)
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
-        self.m = test_base.FakeLoadBalancer()
+        self.m = fake_objs.FakeLoadBalancer()
 
     def test_context(self):
         with a10.A10Context(self.handler, self.ctx, self.m) as c:

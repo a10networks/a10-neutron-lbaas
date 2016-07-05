@@ -14,7 +14,7 @@
 
 import mock
 import test_base
-
+import fake_objs
 
 class TestHM(test_base.UnitTestBase):
 
@@ -35,28 +35,28 @@ class TestHM(test_base.UnitTestBase):
             method=method, url=url, expect_code=expect_code, axapi_args={})
 
     def test_create_ping(self):
-        m = test_base.FakeHM('PING')
+        m = fake_objs.FakeHM('PING')
         self.a.hm.create(None, m)
         self.assert_hm(m, self.a.last_client.slb.hm.ICMP, None, None, None)
 
     def test_create_tcp(self):
-        m = test_base.FakeHM('TCP')
+        m = fake_objs.FakeHM('TCP')
         self.a.hm.create(None, m)
         self.print_mocks()
         self.assert_hm(m, self.a.last_client.slb.hm.TCP, None, None, None)
 
     def test_create_http(self):
-        m = test_base.FakeHM('HTTP')
+        m = fake_objs.FakeHM('HTTP')
         self.a.hm.create(None, m)
         self.assert_hm(m, self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
 
     def test_create_https(self):
-        m = test_base.FakeHM('HTTPS')
+        m = fake_objs.FakeHM('HTTPS')
         self.a.hm.create(None, m)
         self.assert_hm(m, self.a.last_client.slb.hm.HTTPS, 'GET', '/', '200')
 
     def test_create_http_with_pool(self):
-        m = test_base.FakeHM('HTTP', pool=mock.MagicMock())
+        m = fake_objs.FakeHM('HTTP', pool=mock.MagicMock())
         self.a.hm.create(None, m)
         self.assert_hm(m, self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
         self.a.last_client.slb.service_group.update.assert_called_with(
@@ -64,9 +64,9 @@ class TestHM(test_base.UnitTestBase):
 
     def test_update_tcp(self, m_old=None, m=None):
         if m_old is None:
-            m_old = test_base.FakeHM('TCP')
+            m_old = fake_objs.FakeHM('TCP')
         if m is None:
-            m = test_base.FakeHM('TCP')
+            m = fake_objs.FakeHM('TCP')
         m.delay = 20
         self.a.hm.update(None, m_old, m)
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
@@ -76,21 +76,21 @@ class TestHM(test_base.UnitTestBase):
             method=None, url=None, expect_code=None, axapi_args={})
 
     def test_update_tcp_add_pool(self):
-        m = test_base.FakeHM('TCP', pool=mock.MagicMock())
+        m = fake_objs.FakeHM('TCP', pool=mock.MagicMock())
         self.test_update_tcp(m=m)
         self.print_mocks()
         self.a.last_client.slb.service_group.update.assert_called_with(
             m.pool.id, health_monitor='fake-hm-id-001', health_check_disable=False)
 
     def test_update_tcp_delete_pool(self):
-        m_old = test_base.FakeHM('TCP', pool=mock.MagicMock())
+        m_old = fake_objs.FakeHM('TCP', pool=mock.MagicMock())
         self.test_update_tcp(m_old=m_old)
         self.print_mocks()
         self.a.last_client.slb.service_group.update.assert_called_with(
             m_old.pool.id, health_monitor='', health_check_disable=True)
 
     def test_delete(self):
-        m = test_base.FakeHM('HTTP')
+        m = fake_objs.FakeHM('HTTP')
         self.a.hm.tenant_id = "tenant-id"
         self.a.hm.delete(None, m)
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
@@ -98,7 +98,7 @@ class TestHM(test_base.UnitTestBase):
         self.a.last_client.slb.hm.delete.assert_called_with('fake-hm-id-001')
 
     def test_delete_with_pool(self):
-        m = test_base.FakeHM('TCP', pool=mock.MagicMock())
+        m = fake_objs.FakeHM('TCP', pool=mock.MagicMock())
         self.a.hm.delete(None, m)
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, m, delete=True)

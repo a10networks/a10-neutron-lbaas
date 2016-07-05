@@ -15,6 +15,7 @@
 import logging
 import mock
 import test_base
+import fake_objs
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 from a10_neutron_lbaas import constants
@@ -25,7 +26,7 @@ LOG = logging.getLogger(__name__)
 class TestListeners(test_base.UnitTestBase):
 
     def test_create_no_lb(self):
-        m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
+        m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)
         try:
             self.a.listener.create(None, m)
@@ -33,7 +34,7 @@ class TestListeners(test_base.UnitTestBase):
             pass
 
     def test_create_no_pool(self):
-        m = test_base.FakeListener('HTTP', 8080, pool=None,
+        m = fake_objs.FakeListener('HTTP', 8080, pool=None,
                                    loadbalancer=test_base.FakeLoadBalancer())
         self.a.listener.create(None, m)
         self.print_mocks()
@@ -43,16 +44,16 @@ class TestListeners(test_base.UnitTestBase):
         admin_states = [True, False]
         persistences = [None, 'SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE']
         protocols = ['TCP', 'UDP', 'HTTP', 'HTTPS']
-        lb = test_base.FakeLoadBalancer()
+        lb = fake_objs.FakeLoadBalancer()
 
         for a in admin_states:
             for pers in persistences:
                 for p in protocols:
                     self.a.reset_mocks()
 
-                    pool = test_base.FakePool(p, 'ROUND_ROBIN', pers)
-                    m = test_base.FakeListener(p, 2222, pool=pool,
-                                               loadbalancer=lb)
+                    pool = fake_objs.FakePool(p, 'ROUND_ROBIN', pers)
+                    m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                              loadbalancer=lb)
                     pool.listener = m
                     saw_exception = False
 
@@ -123,9 +124,9 @@ class TestListeners(test_base.UnitTestBase):
             v['autosnat'] = autosnat
 
         p = 'TCP'
-        lb = test_base.FakeLoadBalancer()
-        pool = test_base.FakePool(p, 'ROUND_ROBIN', None)
-        m = test_base.FakeListener(p, 2222, pool=pool,
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
                                    loadbalancer=lb)
 
         try:
@@ -145,10 +146,10 @@ class TestListeners(test_base.UnitTestBase):
             v['api_version'] = api_ver
 
         p = 'TCP'
-        lb = test_base.FakeLoadBalancer()
-        pool = test_base.FakePool(p, 'ROUND_ROBIN', None)
-        m = test_base.FakeListener(p, 2222, pool=pool,
-                                   loadbalancer=lb)
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                  loadbalancer=lb)
 
         self.a.listener.create(None, m)
         self.print_mocks()
@@ -170,7 +171,7 @@ class TestListeners(test_base.UnitTestBase):
         self._test_create_ipinip()
 
     def test_update_no_lb(self):
-        m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
+        m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)
         try:
             self.a.listener.update(None, m, m)
@@ -178,15 +179,15 @@ class TestListeners(test_base.UnitTestBase):
             pass
 
     def test_update_no_pool(self):
-        m = test_base.FakeListener('HTTP', 8080, pool=None,
-                                   loadbalancer=test_base.FakeLoadBalancer())
+        m = fake_objs.FakeListener('HTTP', 8080, pool=None,
+                                  loadbalancer=test_base.FakeLoadBalancer())
         self.a.listener.create(None, m)
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 
     def test_update(self):
-        pool = test_base.FakePool('HTTP', 'ROUND_ROBIN', None)
-        lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener('HTTP', 2222, pool=pool, loadbalancer=lb)
+        pool = fake_objs.FakePool('HTTP', 'ROUND_ROBIN', None)
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener('HTTP', 2222, pool=pool, loadbalancer=lb)
         pool.listener = m
 
         self.a.listener.update(None, m, m)
@@ -200,9 +201,9 @@ class TestListeners(test_base.UnitTestBase):
         self.assertTrue('HTTP' in s)
 
     def test_delete(self):
-        pool = test_base.FakePool('HTTP', 'ROUND_ROBIN', None)
-        lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener('HTTP', 2222, pool=pool, loadbalancer=lb)
+        pool = fake_objs.FakePool('HTTP', 'ROUND_ROBIN', None)
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener('HTTP', 2222, pool=pool, loadbalancer=lb)
         pool.listener = m
 
         self.a.listener.delete(None, m)
