@@ -16,8 +16,9 @@ import mock
 
 import a10_neutron_lbaas.v2.v2_context as a10
 
-import test_base
 import fake_objs
+import test_base
+
 
 class FakeException(Exception):
     pass

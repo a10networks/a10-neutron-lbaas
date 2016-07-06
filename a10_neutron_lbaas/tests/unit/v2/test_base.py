@@ -14,8 +14,6 @@
 
 import a10_neutron_lbaas.tests.unit.test_base as test_base
 
-import uuid
-
 
 class UnitTestBase(test_base.UnitTestBase):
 

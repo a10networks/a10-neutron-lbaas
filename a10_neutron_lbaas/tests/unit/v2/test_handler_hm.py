@@ -13,8 +13,10 @@
 #    under the License.
 
 import mock
-import test_base
+
 import fake_objs
+import test_base
+
 
 class TestHM(test_base.UnitTestBase):
 

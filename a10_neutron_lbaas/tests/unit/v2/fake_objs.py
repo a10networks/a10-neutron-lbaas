@@ -14,6 +14,7 @@
 
 import uuid
 
+
 class FakeModel(object):
 
     def __init__(self, **kwargs):
@@ -27,6 +28,7 @@ class FakePort(FakeModel):
         self.id = kwargs.get('id', 'fake-port-01')
         self.tenant_id = kwargs.get('tenant_id', "tenantsruinedmypicnic")
         self.name = id
+
 
 class FakeLoadBalancer(FakeModel):
 
@@ -42,7 +44,8 @@ class FakeLoadBalancer(FakeModel):
         self.vip_port_id = self.vip_port["id"]
         self.root_loadbalancer = self
         self.vip_subnet_id = "fake-subnet-id-001"
-        self.pools = [FakePool('TCP', 'LEAST_CONNECTIONS', True, members=[FakeMember()], root_loadbalancer=self)]
+        self.pools = []
+
 
 class FakeListener(FakeModel):
 
@@ -68,6 +71,7 @@ class FakePersistence(FakeModel):
         self.id = 'fake-pers-id-001'
         self.type = persistence_type
 
+
 class FakeMember(FakeModel):
 
     def __init__(self, admin_state_up=True, pool=None,
@@ -86,7 +90,7 @@ class FakeMember(FakeModel):
 class FakePool(FakeModel):
 
     def __init__(self, protocol, method, persistence, listener=False,
-                 members=[], hm=None, root_loadbalancer=FakeLoadBalancer()):
+                 members=[], hm=None):
         super(FakePool, self).__init__()
         self.id = 'fake-pool-id-001'
         self.protocol = protocol
@@ -106,7 +110,7 @@ class FakePool(FakeModel):
         self.healthmonitor = hm
         if hm is not None:
             self.healthmonitor.pool = self
-        self.root_loadbalancer = root_loadbalancer
+        self.root_loadbalancer = FakeLoadBalancer()
 
 
 class FakeHM(FakeModel):

@@ -14,8 +14,9 @@
 
 import logging
 import mock
-import test_base
+
 import fake_objs
+import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 from a10_neutron_lbaas import constants
@@ -35,7 +36,7 @@ class TestListeners(test_base.UnitTestBase):
 
     def test_create_no_pool(self):
         m = fake_objs.FakeListener('HTTP', 8080, pool=None,
-                                   loadbalancer=test_base.FakeLoadBalancer())
+                                   loadbalancer=fake_objs.FakeLoadBalancer())
         self.a.listener.create(None, m)
         self.print_mocks()
         self.assertTrue('create' in str(self.a.last_client.mock_calls))
@@ -53,7 +54,7 @@ class TestListeners(test_base.UnitTestBase):
 
                     pool = fake_objs.FakePool(p, 'ROUND_ROBIN', pers)
                     m = fake_objs.FakeListener(p, 2222, pool=pool,
-                                              loadbalancer=lb)
+                                               loadbalancer=lb)
                     pool.listener = m
                     saw_exception = False
 
@@ -149,7 +150,7 @@ class TestListeners(test_base.UnitTestBase):
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
         m = fake_objs.FakeListener(p, 2222, pool=pool,
-                                  loadbalancer=lb)
+                                   loadbalancer=lb)
 
         self.a.listener.create(None, m)
         self.print_mocks()
@@ -180,7 +181,7 @@ class TestListeners(test_base.UnitTestBase):
 
     def test_update_no_pool(self):
         m = fake_objs.FakeListener('HTTP', 8080, pool=None,
-                                  loadbalancer=test_base.FakeLoadBalancer())
+                                   loadbalancer=fake_objs.FakeLoadBalancer())
         self.a.listener.create(None, m)
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 

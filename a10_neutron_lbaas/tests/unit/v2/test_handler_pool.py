@@ -13,8 +13,10 @@
 #    under the License.
 
 import mock
-import test_base
+
 import fake_objs
+import test_base
+
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
@@ -96,8 +98,8 @@ class TestPools(test_base.UnitTestBase):
             protocol=mock.ANY)
 
     def test_delete(self):
-        members = [[], [test_base.FakeMember()]]
-        hms = [None, test_base.FakeHM('PING')]
+        members = [[], [fake_objs.FakeMember()]]
+        hms = [None, fake_objs.FakeHM('PING')]
         persistences = [None, 'SOURCE_IP', 'HTTP_COOKIE']
         listeners = [False, True]
 

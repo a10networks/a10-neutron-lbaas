@@ -14,8 +14,9 @@
 
 import logging
 import mock
-import test_base
+
 import fake_objs
+import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 from a10_neutron_lbaas import constants
@@ -36,7 +37,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
     def test_update_no_pool(self):
         m = fake_objs.FakeListener('HTTP', 8080, pool=None,
-                                   loadbalancer=test_base.FakeLoadBalancer())
+                                   loadbalancer=fake_objs.FakeLoadBalancer())
         self.a.listener.create(None, m)
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 

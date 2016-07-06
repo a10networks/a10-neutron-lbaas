@@ -12,13 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-import time
-import test_base
-import fake_objs
 import logging
+import mock
+
+import fake_objs
+import test_base
 
 LOG = logging.getLogger(__name__)
+
 
 def return_one(*args):
     return 1
@@ -118,11 +119,3 @@ class TestMembers(test_base.UnitTestBase):
 
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
             m.pool_id, name, m.protocol_port)
-
-    def test_updating_operating_status(self):
-        test_lb = fake_objs.FakeLoadBalancer()
-        self._test_create()
-        time.sleep(2)
-        self.print_mocks()
-        LOG.info("TESTING: {0}".format(self.a.openstack_driver.member.mock_calls))
-        s = str(self.a.last_client.mock_calls)

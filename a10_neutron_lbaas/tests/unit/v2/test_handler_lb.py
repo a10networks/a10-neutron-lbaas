@@ -13,9 +13,11 @@
 #    under the License.
 
 import mock
-import test_base
-import fake_objs
+
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+
+import fake_objs
+import test_base
 
 
 class TestLB(test_base.UnitTestBase):
@@ -109,12 +111,12 @@ class TestLB(test_base.UnitTestBase):
         self.assertTrue(m.id in s)
 
     def test_delete_removes_slb(self):
-        m = test_base.FakeLoadBalancer()
+        m = fake_objs.FakeLoadBalancer()
         self.a.lb.delete(None, m)
 
     def test_refresh(self):
         try:
-            self.a.lb.refresh(None, test_base.FakeLoadBalancer())
+            self.a.lb.refresh(None, fake_objs.FakeLoadBalancer())
         except a10_ex.UnsupportedFeature:
             pass
 
