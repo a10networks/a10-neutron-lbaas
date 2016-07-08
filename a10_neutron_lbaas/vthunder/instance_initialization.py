@@ -106,7 +106,7 @@ def initialize_agalaxy(vth_cfg, device_cfg, device_client):
     finally:
         try:
             client.session.close()
-        except:
+        except Exception:
             pass
 
 
