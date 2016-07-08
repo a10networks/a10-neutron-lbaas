@@ -12,34 +12,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import mock
-import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+import fake_objs
+import test_base
 
 
 class TestVIP(test_base.UnitTestBase):
     def __init__(self, *args):
         super(TestVIP, self).__init__(*args)
 
-    def fake_vip(self, pers="", vip_id="id1"):
-        h = {
-            'tenant_id': 'ten1',
-            'id': vip_id,
-            'protocol': 'HTTP',
-            'admin_state_up': True,
-            'address': '1.1.1.1',
-            'protocol_port': '80',
-            'pool_id': 'pool1',
-            'subnet_id': 'subnet1'
-        }
-        if pers:
-            h['session_persistence'] = {'type': pers}
-        return h.copy()
-
     def test_create(self):
-        self.a.vip.create(None, self.fake_vip())
+        self.a.vip.create(None, fake_objs.FakeVIP())
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('virtual_server.create' in s)
         self.assertTrue('1.1.1.1' in s)
@@ -51,16 +36,16 @@ class TestVIP(test_base.UnitTestBase):
         self.assertTrue('HTTP' in s)
 
     def test_create_pers(self):
-        self.a.vip.create(None, self.fake_vip('HTTP_COOKIE'))
+        self.a.vip.create(None, fake_objs.FakeVIP('HTTP_COOKIE'))
         s = str(self.a.last_client.mock_calls)
         self.assertTrue("c_pers_name='id1'" in s)
 
     def test_create_adds_slb(self):
-        self.a.vip.create(None, self.fake_vip())
+        self.a.vip.create(None, fake_objs.FakeVIP())
 
     def test_create_unsupported(self):
         try:
-            self.a.vip.create(None, self.fake_vip('APP_COOKIE'))
+            self.a.vip.create(None, fake_objs.FakeVIP('APP_COOKIE'))
         except a10_ex.UnsupportedFeature:
             pass
 
@@ -86,7 +71,7 @@ class TestVIP(test_base.UnitTestBase):
             v['api_version'] = api_ver
             v['autosnat'] = autosnat
 
-        vip = self.fake_vip()
+        vip = fake_objs.FakeVIP()
 
         self.a.vip.create(None, vip)
         s = str(self.a.last_client.mock_calls)
@@ -116,7 +101,7 @@ class TestVIP(test_base.UnitTestBase):
             v['api_version'] = api_ver
             v['default_virtual_server_vrid'] = default_vrid
 
-        vip = self.fake_vip()
+        vip = fake_objs.FakeVIP()
         self.a.vip.create(None, vip)
 
         create = self.a.last_client.slb.virtual_server.create
@@ -134,7 +119,7 @@ class TestVIP(test_base.UnitTestBase):
                 'Expected to find no vrid in {0}'.format(str(calls)))
 
     def _test_create_ipinip(self, ip_in_ip=False, api_ver="3.0"):
-        vip = self.fake_vip()
+        vip = fake_objs.FakeVIP()
 
         for k, v in self.a.config.devices.items():
             v['ipinip'] = ip_in_ip
@@ -158,7 +143,7 @@ class TestVIP(test_base.UnitTestBase):
         self._test_create_ipinip(api_ver="2.1")
 
     def test_update(self):
-        self.a.vip.update(None, self.fake_vip(), self.fake_vip())
+        self.a.vip.update(None, fake_objs.FakeVIP(), fake_objs.FakeVIP())
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
@@ -170,7 +155,7 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_update_delete_pers(self):
         vip_id = "id2"
-        self.a.vip.update(None, self.fake_vip('SOURCE_IP', vip_id=vip_id), self.fake_vip())
+        self.a.vip.update(None, fake_objs.FakeVIP('SOURCE_IP', vip_id=vip_id), fake_objs.FakeVIP())
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
@@ -183,8 +168,8 @@ class TestVIP(test_base.UnitTestBase):
 
     def test_update_change_pers(self):
         vip_id = "id2"
-        self.a.vip.update(None, self.fake_vip('SOURCE_IP', vip_id=vip_id),
-                          self.fake_vip('HTTP_COOKIE'))
+        self.a.vip.update(None, fake_objs.FakeVIP('SOURCE_IP', vip_id=vip_id),
+                          fake_objs.FakeVIP('HTTP_COOKIE'))
         self.print_mocks()
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('vport.update' in s)
@@ -196,15 +181,15 @@ class TestVIP(test_base.UnitTestBase):
         self.assertTrue('HTTP' in s)
 
     def test_delete(self):
-        self.a.vip.delete(None, self.fake_vip())
+        self.a.vip.delete(None, fake_objs.FakeVIP())
         self.a.last_client.slb.virtual_server.delete.assert_called_with('id1')
 
     def test_delete_removes_slb(self):
-        self.a.vip.delete(None, self.fake_vip())
+        self.a.vip.delete(None, fake_objs.FakeVIP())
 
     def test_delete_pers(self):
         vip_id = "idx"
-        self.a.vip.delete(None, self.fake_vip('SOURCE_IP', vip_id=vip_id))
+        self.a.vip.delete(None, fake_objs.FakeVIP('SOURCE_IP', vip_id=vip_id))
         self.a.last_client.slb.virtual_server.delete.assert_called_with(vip_id)
         z = self.a.last_client.slb.template.src_ip_persistence.delete
         z.assert_called_with(vip_id)
