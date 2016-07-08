@@ -13,15 +13,17 @@
 #    under the License.
 
 import mock
-import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
+
+import fake_objs
+import test_base
 
 
 class TestLB(test_base.UnitTestBase):
 
     def test_create(self):
-        m = test_base.FakeLoadBalancer()
+        m = fake_objs.FakeLoadBalancer()
         self.a.lb.create(None, m)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.create' in s)
@@ -52,7 +54,7 @@ class TestLB(test_base.UnitTestBase):
             v['api_version'] = api_ver
             v['default_virtual_server_vrid'] = default_vrid
 
-        lb = test_base.FakeLoadBalancer()
+        lb = fake_objs.FakeLoadBalancer()
         self.a.lb.create(None, lb)
 
         create = self.a.last_client.slb.virtual_server.create
@@ -92,7 +94,7 @@ class TestLB(test_base.UnitTestBase):
     #         self.assertTrue(str(2222+x) in s)
 
     def test_update_down(self):
-        m = test_base.FakeLoadBalancer()
+        m = fake_objs.FakeLoadBalancer()
         m.admin_state_up = False
         self.a.lb.update(None, m, m)
         s = str(self.a.last_client.mock_calls)
@@ -102,24 +104,24 @@ class TestLB(test_base.UnitTestBase):
         self.assertTrue('DOWN' in s)
 
     def test_delete(self):
-        m = test_base.FakeLoadBalancer()
+        m = fake_objs.FakeLoadBalancer()
         self.a.lb.delete(None, m)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.delete' in s)
         self.assertTrue(m.id in s)
 
     def test_delete_removes_slb(self):
-        m = test_base.FakeLoadBalancer()
+        m = fake_objs.FakeLoadBalancer()
         self.a.lb.delete(None, m)
 
     def test_refresh(self):
         try:
-            self.a.lb.refresh(None, test_base.FakeLoadBalancer())
+            self.a.lb.refresh(None, fake_objs.FakeLoadBalancer())
         except a10_ex.UnsupportedFeature:
             pass
 
     def test_stats(self):
-        test_lb = test_base.FakeLoadBalancer()
+        test_lb = fake_objs.FakeLoadBalancer()
         self.a.lb.stats(None, test_lb)
 
         self.print_mocks()

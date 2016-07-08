@@ -14,6 +14,8 @@
 
 import logging
 import mock
+
+import fake_objs
 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
@@ -26,7 +28,7 @@ LOG = logging.getLogger(__name__)
 class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
     def test_update_no_lb(self):
-        m = test_base.FakeListener('TCP', 2222, pool=mock.MagicMock(),
+        m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)
         try:
             self.a.listener.update(None, m, m)
@@ -34,16 +36,16 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
             pass
 
     def test_update_no_pool(self):
-        m = test_base.FakeListener('HTTP', 8080, pool=None,
-                                   loadbalancer=test_base.FakeLoadBalancer())
+        m = fake_objs.FakeListener('HTTP', 8080, pool=None,
+                                   loadbalancer=fake_objs.FakeLoadBalancer())
         self.a.listener.create(None, m)
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 
     def test_update(self):
-        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+        pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
-        lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         certmgr = FakeCertManager()
 
@@ -63,10 +65,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertTrue('HTTPS' in s)
 
     def test_delete(self):
-        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+        pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
-        lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
 
         pool.listener = m
@@ -83,10 +85,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         self.assertTrue('HTTPS' in s)
 
     def test_create_protocol_terminated_https(self):
-        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+        pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
-        lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         m.default_tls_container_id = "CONTAINERID"
         pool.listener = m
@@ -103,10 +105,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         """This tests that the barbican_client dependency is always there."""
         handler = self.a.listener
         handler.barbican_client = None
-        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+        pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
-        lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         pool.listener = m
         handler.create(None, m)
@@ -120,10 +122,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
         handler = self.a.listener
         handler.barbican_client = certmgr
-        pool = test_base.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
+        pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
-        lb = test_base.FakeLoadBalancer()
-        m = test_base.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener(constants.PROTOCOL_TERMINATED_HTTPS, 2222,
                                    pool=pool, loadbalancer=lb)
         return (certmgr, m, pool, handler)
 
