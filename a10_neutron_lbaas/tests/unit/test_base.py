@@ -20,6 +20,12 @@ import mock
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
 import a10_neutron_lbaas.plumbing_hooks as hooks
 
+import a10_neutron_lbaas.v1.neutron_ops as v1_ops
+import a10_neutron_lbaas.v2.neutron_ops as v2_ops
+
+import a10_neutron_lbaas.tests.unit.v1.fake_objs as v1_objs
+import a10_neutron_lbaas.tests.unit.v2.fake_objs as v2_objs
+
 
 def _build_openstack_context():
     admin_context = {
@@ -52,7 +58,14 @@ class FakeA10OpenstackLB(object):
 
 
 class FakeA10OpenstackLBV1(FakeA10OpenstackLB, a10_os.A10OpenstackLBV1):
-    pass
+    def __init__(self, openstack_driver, **kw):
+        super(FakeA10OpenstackLBV1, self).__init__(
+            openstack_driver,
+            neutron_hooks_module=mock.MagicMock(),
+            **kw)
+        pool = v1_objs.FakePool()
+        pool.members = [v1_objs.FakeMember()]
+        self.openstack_driver.plugin.get_pools = lambda mem: [pool]
 
 
 class FakeA10OpenstackLBV2(FakeA10OpenstackLB, a10_os.A10OpenstackLBV2):
@@ -63,6 +76,10 @@ class FakeA10OpenstackLBV2(FakeA10OpenstackLB, a10_os.A10OpenstackLBV2):
             neutron_hooks_module=mock.MagicMock(),
             **kw)
         self.certmgr = mock.Mock()
+        fake_lb = v2_objs.FakeLoadBalancer()
+        fake_lb.pools = [v2_objs.FakePool('HTTP', 'ROUND_ROBIN',
+                         False, members=[v2_objs.FakeMember()])]
+        self.openstack_driver.plugin.db.get_loadbalancers = lambda lb: [fake_lb]
 
 
 class UnitTestBase(test_case.TestCase):
@@ -79,8 +96,14 @@ class UnitTestBase(test_case.TestCase):
             openstack_lb_args['provider'] = 'units'
 
         if not hasattr(self, 'version') or self.version == 'v2':
+            self.v_ops = v2_ops.NeutronOpsV2
+            self.v_ops.get_models = mock.MagicMock()
+            self.v_ops.get_neutron_admin_context = mock.MagicMock()
             self.a = FakeA10OpenstackLBV2(mock.MagicMock(), **openstack_lb_args)
         else:
+            self.v_ops = v1_ops.NeutronOpsV1
+            self.v_ops.get_models = mock.MagicMock()
+            self.v_ops.get_neutron_admin_context = mock.MagicMock()
             self.a = FakeA10OpenstackLBV1(mock.MagicMock(), **openstack_lb_args)
 
     def print_mocks(self):

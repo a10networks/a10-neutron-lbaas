@@ -11,6 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
+import a10_neutron_lbaas.worker.status_check as status_check
 import fake_objs
 import test_base
 
@@ -113,3 +116,8 @@ class TestMembers(test_base.UnitTestBase):
         pool_name = self.a.member._pool_name(None, m['pool_id'])
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
             pool_name, name, m['protocol_port'])
+
+    def test_updating_oper_stats(self):
+        status_check.status_update_v1(self.a)
+        self.a.last_client.slb.service_group.member.get_oper.mock_calls[0].assert_called_with(
+            'fake-pool-id-001', mock.ANY, 80)
