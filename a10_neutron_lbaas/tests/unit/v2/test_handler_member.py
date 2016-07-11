@@ -127,5 +127,7 @@ class TestMembers(test_base.UnitTestBase):
         status_check.status_update_v2(self.a)
         self.a.last_client.slb.service_group.member.get_oper.mock_calls[0].assert_called_with(
             'fake-pool-id-001', mock.ANY, 80)
-        self.a.openstack_driver.plugin.db.update_status(mock.ANY, mock.ANY,
-                                                        'fake-member-id-001', "oper_update")
+        self.a.openstack_driver.plugin.db.update_status.assert_called_with(mock.ANY, mock.ANY,
+                                                                           'fake-member-id-001',
+                                                                           operating_status=mock.ANY
+                                                                           )

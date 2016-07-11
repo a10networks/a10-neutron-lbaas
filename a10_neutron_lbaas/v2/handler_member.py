@@ -157,6 +157,6 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                                                                         member.protocol_port)
                 oper_stats = oper_stats["member"]["oper"]["state"]
                 lb_db.update_status(context, model_type, member.id,
-                                    operating_status=str(oper_stats))
+                                    operating_status=oper_stats)
         except Exception as ex:
             LOG.exception(ex)
