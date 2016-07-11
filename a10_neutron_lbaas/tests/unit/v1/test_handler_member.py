@@ -118,8 +118,6 @@ class TestMembers(test_base.UnitTestBase):
             pool_name, name, m['protocol_port'])
 
     def test_updating_oper_stats(self):
-        self.a.last_client.slb.service_group.member.get_oper = mock.MagicMock(
-            return_value="oper_update")
         status_check.status_update_v1(self.a)
         self.a.last_client.slb.service_group.member.get_oper.mock_calls[0].assert_called_with(
             'fake-pool-id-001', mock.ANY, 80)
