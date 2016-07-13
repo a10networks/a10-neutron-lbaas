@@ -15,7 +15,6 @@ try:
 except ImportError:
     pass
 try:
-    import neutron_lbaas.common.cert_manager.barbican_cert_manager as bcm
     from neutron_lbaas.db.loadbalancer import models as lb_db
 except ImportError:
     # v2 does not exist before Kilo
@@ -51,7 +50,8 @@ class NeutronOpsV2(object):
         return self.plugin.db.get_pool(context, pool_id)
 
     def bcm_factory(self):
-        return bcm.CertManager()
+        from neutron_lbaas.services.loadbalancer.plugin import CERT_MANAGER_PLUGIN
+        return CERT_MANAGER_PLUGIN.CertManager()
 
     def vip_get(self, context, vip_id):
         return self.plugin.db.get_vip(context, vip_id)

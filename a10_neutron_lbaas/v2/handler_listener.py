@@ -44,18 +44,20 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         server_args = {}
         cert_data = dict()
+        template_args = {}
 
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
             if self._set_terminated_https_values(listener, c, cert_data):
                 templates["client_ssl"] = {}
                 template_name = str(cert_data.get('template_name', ''))
-                key_passphrase = str(cert_data.get('cert_pass', ''))
+                key_passphrase = str(cert_data.get('key_pass', ''))
                 cert_filename = str(cert_data.get('cert_filename', ''))
                 key_filename = str(cert_data.get('key_filename', ''))
             else:
                 LOG.error("Could not created terminated HTTPS endpoint.")
 
         if 'client_ssl' in templates:
+            template_args["template_client_ssl"] = template_name
             try:
                 c.client.slb.template.client_ssl.create(
                     template_name,
@@ -67,6 +69,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         if 'server_ssl' in templates:
             server_args = {'server_ssl_template': templates['server_ssl']}
+            template_args["template_server_ssl"] = template_name
             try:
                 c.client.slb.template.server_ssl.create(
                     template_name,
@@ -101,7 +104,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 status=status,
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
-                axapi_body=vport_meta)
+                axapi_body=vport_meta,
+                **template_args)
         except acos_errors.Exists:
             pass
 
@@ -118,12 +122,11 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 LOG.exception(ex)
 
             if container:
-                base_name = (container._cert_container.name if container._cert_container is not None
-                             else "")
+                base_name = getattr(getattr(container, '_cert_container', None), 'name', '') or c_id
 
                 cert_data["cert_content"] = container.get_certificate()
                 cert_data["key_content"] = container.get_private_key()
-                cert_data["cert_pass"] = container.get_private_key_passphrase()
+                cert_data["key_pass"] = container.get_private_key_passphrase()
 
                 cert_data["template_name"] = listener.id
 
@@ -147,10 +150,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         return is_success
 
     def _acos_create_or_update(self, acos_obj, **kwargs):
-        if acos_obj.exists(kwargs["file"]):
-            acos_obj.update(**kwargs)
-        else:
+        try:
             acos_obj.create(**kwargs)
+        except acos_errors.Exists:
+            acos_obj.update(**kwargs)
 
     def _create(self, c, context, listener):
         self._set(c.client.slb.virtual_server.vport.create,
@@ -176,6 +179,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 port=listener.protocol_port)
         except acos_errors.NotFound:
             pass
+
+        # clean up ssl template
+        if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
+            try:
+                c.client.slb.template.client_ssl.delete(listener.id)
+            except acos_errors.NotFound:
+                pass
 
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
