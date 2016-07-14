@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "a10-neutron-lbaas",
-    version = "1.5.2a",
+    version = "1.5.2",
     packages = find_packages(),
 
     author = "A10 Networks",
@@ -33,5 +33,5 @@ setup(
 
     scripts=['scripts/a10-manage', 'scripts/a10-neutron-lbaas-db-manage'],
 
-    install_requires = ['acos-client>=1.3.5', 'a10-openstack-lib>=0.1.0']
+    install_requires = ['acos-client>=1.3.6', 'a10-openstack-lib>=0.1.0']
 )
