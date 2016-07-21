@@ -43,7 +43,6 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         return super(A10DeviceInstancePlugin, self).get_a10_device_instance(context,
                                                                             id,
                                                                             fields=fields)
-
     # def update_a10_device_instance(self, context, id, a10_device_instance):
     #     LOG.debug(
     #         "A10DeviceInstancePlugin.update_a10_device_instance(): id=%s, instance=%s",
@@ -54,6 +53,6 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
     #         id,
     #         a10_device_instance)
 
-    # def delete_a10_device_instance(self, context, id):
-    #     LOG.debug("A10DeviceInstancePlugin.delete(): id=%s", id)
-    #     return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
+    def delete_a10_device_instance(self, context, id):
+        LOG.debug("A10DeviceInstancePlugin.delete(): id=%s", id)
+        return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
