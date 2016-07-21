@@ -96,3 +96,23 @@ class KeystoneFromContext(KeystoneBase):
             raise a10_ex.InvalidConfig('keystone version must be protovol version 2 or 3')
 
         return self._get_keystone_stuff(ks_version, auth)
+
+
+class KeystoneFromHorizonRequest(KeystoneBase):
+    def __init__(self, a10_config, request):
+        self.request = request
+        (self._session, self._keystone_client) = self._get_keystone_token(
+            ks_version=a10_config.get('keystone_version'),
+            auth_url=a10_config.get('keystone_auth_url'),
+            auth_token=request.user.token.unscoped_token,
+            tenant_id=request.user.tenant_id)
+
+    def _get_keystone_token(self, ks_version, auth_url, auth_token, tenant_id):
+        if int(ks_version) == 2:
+            auth = v2.Token(auth_url=auth_url, token=auth_token, tenant_id=tenant_id)
+        elif int(ks_version) == 3:
+            auth = v3.Token(auth_url=auth_url, token=auth_token, tenant_id=tenant_id)
+        else:
+            raise a10_ex.InvalidConfig('keystone version must be protovol version 2 or 3')
+
+        return self._get_keystone_stuff(ks_version, auth)
