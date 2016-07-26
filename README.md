@@ -93,7 +93,7 @@ Networks:
 
 #### Extension configuration
 Open `/etc/neutron/neutron.conf` in your preferred text editor.
-Under the `service_plugins` setting, ensure `a10_neutron_lbaas.neutron_ext.services.a10_appliance.plugin.A10AppliancePlugin` is listed. The `service_plugins` are separated by `,`s.
+Under the `service_plugins` setting, ensure `a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin` is listed. The `service_plugins` are separated by `,`s.
 
 Under the `api_extensions_path` setting, ensure the path to `a10_neutron_lbaas.neutron_ext.extensions` is listed. The `api_extensions_path`s are separated by `:`s. You can find the path of the installed extension by running `python -c "import os; import a10_neutron_lbaas.neutron_ext.extensions as m; print(os.path.dirname(os.path.abspath(m.__file__)))"`.
 
