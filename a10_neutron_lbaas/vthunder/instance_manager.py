@@ -361,9 +361,11 @@ class InstanceManager(object):
         port = self._neutron_api.show_port(interface.port_id)
 
         allowed_address_pairs = port["port"].get("allowed_address_pairs", [])
-        new_address_pairs = map(lambda ip: {"ip_address": ip}, allowed_ips)
+        existing_allowed_ips = set(pair["ip_address"] for pair in allowed_address_pairs)
+        new_allowed_ips = set(allowed_ips) - existing_allowed_ips
+        new_address_pairs = [{"ip_address": ip} for ip in new_allowed_ips]
 
-        merged_address_pairs = distinct_dicts(allowed_address_pairs + new_address_pairs)
+        merged_address_pairs = allowed_address_pairs + new_address_pairs
 
         self._neutron_api.update_port(interface.port_id, {
             "port": {
@@ -377,8 +379,3 @@ class InstanceManager(object):
         subnet = self._neutron_api.show_subnet(subnet_id)
         network_id = subnet["subnet"]["network_id"]
         return self.plumb_instance(instance_id, network_id, allowed_ips, wrong_ips=wrong_ips)
-
-
-def distinct_dicts(dicts):
-    hashable = map(lambda x: tuple(sorted(x.items())), dicts)
-    return map(dict, set(hashable))
