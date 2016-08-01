@@ -9,7 +9,9 @@ mox3
 nose
 nose-exclude
 oslotest
+pifpaf
 pymysql
+sqlalchemy-utils
 testresources
 testscenarios
 # TODO(dougwig) -- can we remove this?

@@ -80,6 +80,7 @@ class TestMigrations(test_base.UnitTestBase):
         a10_models = session.a10_models()
 
         inspection = sqlalchemy.inspect(self.connection)
+
         tables = inspection.get_table_names()
 
         missing_tables = [model.__tablename__ for model in a10_models if

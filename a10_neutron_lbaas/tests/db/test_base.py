@@ -12,18 +12,53 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
+import sqlalchemy
+from sqlalchemy.orm import sessionmaker
+import sqlalchemy_utils as sa_utils
+
 from a10_neutron_lbaas.tests.db import session
 from a10_neutron_lbaas.tests import test_case
 
 
-class UnitTestBase(test_case.TestCase):
+class DbTestBase(test_case.TestCase):
+
+    def setUp(self):
+        self._undo = []
+        url = os.getenv("PIFPAF_URL")
+        if not url:
+            self.skipTest("No database URL set")
+
+        if url.startswith('mysql:'):
+            url = url.replace('mysql', 'mysql+pymysql', 1)
+        if not sa_utils.database_exists(url):
+            sa_utils.create_database(url)
+            self._undo.append(lambda: sa_utils.drop_database(url))
+
+        self.engine = sqlalchemy.create_engine(url)
+        self.connection = self.engine.connect()
+        self._undo.append(self.connection.close)
+
+    def tearDownDb(self):
+        while (self._undo):
+            self._undo.pop()()
+
+    def tearDown(self):
+        self.tearDownDb()
+
+
+class UnitTestBase(DbTestBase):
 
     def setUp(self):
         super(UnitTestBase, self).setUp()
-        (open_session, close_session) = session.fake_session()
-        self.open_session = open_session
-        self.close_session = close_session
 
-    def tearDown(self):
-        super(UnitTestBase, self).tearDown()
-        self.close_session()
+        try:
+            session.create_tables(self.connection)
+        except Exception as e:
+            # tearDown doesn't run if setUp throws an exception!
+            self.tearDownDb()
+            raise e
+
+        Session = sessionmaker(bind=self.connection)
+        self.open_session = Session

@@ -14,15 +14,12 @@
 
 import sqlalchemy.orm
 
-from a10_neutron_lbaas.tests.db import session
-from a10_neutron_lbaas.tests import test_case
+from a10_neutron_lbaas.tests.db import test_base
 
 
-class UnitTestBase(test_case.TestCase):
+class UnitTestBase(test_base.DbTestBase):
 
     def setUp(self):
-        self.connection = session.fake_migration_connection()
-        self.Session = sqlalchemy.orm.sessionmaker(bind=self.connection)
+        super(UnitTestBase, self).setUp()
 
-    def tearDown(self):
-        self.connection.close()
+        self.Session = sqlalchemy.orm.sessionmaker(bind=self.connection)

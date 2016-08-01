@@ -13,7 +13,6 @@
 #    under the License.
 
 from sqlalchemy.ext.declarative import clsregistry
-from sqlalchemy.orm import sessionmaker
 
 from a10_neutron_lbaas.db import api as db_api
 
@@ -28,32 +27,11 @@ assert a10_neutron_lbaas.db.models.scaling_group
 Base = db_api.get_base()
 
 
-def fake_connection(tables=None):
-    # Don't pool connections, use a clean memory database each time
-    engine = db_api.get_engine('sqlite://')
-    # Reuse a single connection so that the created tables exist in the session
-    connection = engine.connect()
+def create_tables(connection, tables=None):
     Base.metadata.create_all(connection, tables=tables)
     return connection
-
-
-def fake_session(tables=None):
-    connection = fake_connection(tables)
-    Session = sessionmaker(bind=connection)
-
-    def make_session():
-        session = Session()
-        # Turn off enforcing foreign key constraints
-        session.execute('PRAGMA foreign_keys=OFF')
-        return session
-
-    return (make_session, connection.close)
 
 
 def a10_models():
     return [model for model in Base._decl_class_registry.values()
             if not isinstance(model, clsregistry._ModuleMarker)]
-
-
-def fake_migration_connection():
-    return fake_connection([])
