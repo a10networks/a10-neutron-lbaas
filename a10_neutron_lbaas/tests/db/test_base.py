@@ -15,8 +15,8 @@
 import os
 
 import sqlalchemy
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import sessionmaker
-import sqlalchemy_utils as sa_utils
 
 from a10_neutron_lbaas.tests.db import session
 from a10_neutron_lbaas.tests import test_case
@@ -30,13 +30,20 @@ class DbTestBase(test_case.TestCase):
         if not url:
             self.skipTest("No database URL set")
 
-        if url.startswith('mysql:'):
-            url = url.replace('mysql', 'mysql+pymysql', 1)
-        if not sa_utils.database_exists(url):
-            sa_utils.create_database(url)
-            self._undo.append(lambda: sa_utils.drop_database(url))
+        sa_url = make_url(url)
 
-        self.engine = sqlalchemy.create_engine(url)
+        if sa_url.drivername == 'mysql':
+            sa_url.drivername = 'mysql+pymysql'
+
+        initial_engine = sqlalchemy.create_engine(str(sa_url))
+        initial_connection = initial_engine.connect()
+        self._undo.append(initial_connection.close)
+
+        initial_connection.execute("CREATE DATABASE a10_test_db")
+        self._undo.append(lambda: initial_engine.execute("DROP DATABASE a10_test_db"))
+
+        sa_url.database = 'a10_test_db'
+        self.engine = sqlalchemy.create_engine(str(sa_url))
         self.connection = self.engine.connect()
         self._undo.append(self.connection.close)
 
