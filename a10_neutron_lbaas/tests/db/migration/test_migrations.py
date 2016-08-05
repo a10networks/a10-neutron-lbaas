@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
+import copy
 import mock
 import os
 
@@ -89,16 +90,33 @@ class TestMigrations(test_base.UnitTestBase):
                          "The following tables weren't created by installing {0}".
                          format(missing_tables))
 
+        def normalize(schema_type):
+            copied_type = copy.copy(schema_type)
+            # We don't care about display width
+            if getattr(copied_type, 'display_width', None) is not None:
+                copied_type.display_width = None
+            normalized_type = copied_type.compile(dialect=self.connection.dialect)
+
+            # mysql has some weird synonyms
+            if self.connection.dialect.name == 'mysql':
+                weird_synonyms = {
+                    'BOOL': 'TINYINT',
+                    'BOOLEAN': 'TINYINT'
+                }
+                normalized_type = weird_synonyms.get(normalized_type, normalized_type)
+
+            return normalized_type
+
         for model in a10_models:
             columns = inspection.get_columns(model.__tablename__)
 
+            # import pdb; pdb.set_trace()
+
             actual_columns = sorted([
                 {
-                    'primary_key': True if c['primary_key'] else False,
                     'nullable': c['nullable'],
                     'default': c['default'],
-                    'autoincrement': c['autoincrement'],
-                    'type': c['type'].compile(dialect=self.connection.dialect),
+                    'type': normalize(c['type']),
                     'name': unicode(c['name'])
                 }
                 for c in columns],
@@ -108,11 +126,9 @@ class TestMigrations(test_base.UnitTestBase):
 
             expected_columns = sorted([
                 {
-                    'primary_key': c.primary_key,
                     'nullable': c.nullable,
                     'default': c.server_default,
-                    'autoincrement': c.autoincrement,
-                    'type': c.type.compile(dialect=self.connection.dialect),
+                    'type': normalize(c.type),
                     'name': unicode(c.name)
                 }
                 for c in mapper.columns
