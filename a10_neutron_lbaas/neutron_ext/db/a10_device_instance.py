@@ -13,6 +13,7 @@
 #    under the License.
 
 import logging
+import uuid
 
 from a10_openstack_lib.resources import a10_device_instance as a10_device_instance_resources
 from neutron.db import common_db_mixin
@@ -22,7 +23,12 @@ from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.neutron_ext.common import resources
 from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
 
+
 LOG = logging.getLogger(__name__)
+
+
+def _uuid_str():
+    return str(uuid.uuid4())
 
 
 class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
@@ -54,7 +60,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                'default_virtual_server_vrid': a10_device_instance_db.default_virtual_server_vrid,
                'ipinip': a10_device_instance_db.ipinip,
                # Not all device records are nova instances
-               'nova_instance_id': a10_device_instance_db.get('nova_instance_id'),
+               'nova_instance_id': a10_device_instance_db.nova_instance_id,
                'host': a10_device_instance_db.host,
                'write_memory': a10_device_instance_db.write_memory}
         return self._fields(res, fields)
@@ -70,7 +76,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
 
         with context.session.begin(subtransactions=True):
             instance_record = models.A10DeviceInstance(
-                id=models._uuid_str(),
+                id=_uuid_str(),
                 tenant_id=context.tenant_id,
                 name=body['name'],
                 username=data['username'],
@@ -105,3 +111,11 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                                     self._make_a10_device_instance_dict, filters=filters,
                                     fields=fields, sorts=sorts, limit=limit,
                                     marker_obj=marker, page_reverse=page_reverse)
+
+    def delete_a10_device_instance(self, context, id):
+        with context.session.begin(subtransactions=True):
+            LOG.debug("A10DeviceInstanceDbMixin:delete_a10_device_instances() id=%s" %
+                      (id))
+            instance = self._get_by_id(context, models.A10DeviceInstance, id)
+            context.session.delete(instance)
+
