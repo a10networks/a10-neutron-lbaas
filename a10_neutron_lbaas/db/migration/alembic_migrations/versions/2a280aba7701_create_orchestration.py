@@ -50,7 +50,7 @@ def upgrade():
         sa.Column('ipinip', sa.Boolean(), nullable=False),
         sa.Column('write_memory', sa.Boolean(), nullable=False),
 
-        sa.Column('nova_instance_id', sa.String(36), nullable=False),
+        sa.Column('nova_instance_id', sa.String(36), nullable=True),
         sa.Column('host', sa.String(255), nullable=False)
     )
     op.create_table(

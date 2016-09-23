@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright 2015,  A10 Networks
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -118,4 +119,8 @@ class A10DeviceInstancePluginBase(service_base.ServicePluginBase):
 
     @abc.abstractmethod
     def get_a10_device_instance(self, context, id, fields=None):
+        pass
+
+    @abc.abstractmethod
+    def delete_a10_device_instance(self, context, id):
         pass
