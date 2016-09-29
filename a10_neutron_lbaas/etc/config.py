@@ -18,7 +18,7 @@
 # Should the driver check that A10 appliances are alive before
 # successfullAy initializing?
 
-# verify_appliances = False,
+# verify_appliances = False
 
 # Should the driver store some meta-info in a database?
 # Needed for tenant<->appliance persistence if the number of appliances
@@ -27,13 +27,13 @@
 # the a10-neutron-lbaas package.
 # Recommended for all new installs.
 
-# use_database = False,
+# use_database = False
 
 # The SQLAlchemy connection string to use to connect to the database.
 # If None, and use_database is True, the driver will attempt to use
 # the configured neutron database.
 
-# database_connection = None,
+# database_connection = None
 
 # Sometimes we need things from neutron. We will look in the usual places,
 # but this is here if you need to override the location.
