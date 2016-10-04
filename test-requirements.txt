@@ -3,6 +3,7 @@ hacking>=0.10,<0.11
 mock>=1.0.1,<1.1.0
 mox
 mox3
+-e git+https://github.com/openstack/neutron-lbaas#egg=neutron-lbaas
 nose
 nose-exclude
 # API and DB test bases use oslotest
