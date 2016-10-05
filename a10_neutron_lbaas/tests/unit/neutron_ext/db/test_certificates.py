@@ -1,26 +1,21 @@
 # Copyright (C) 2014-2015, A10 Networks Inc. All rights reserved.
-import a10_neutron_lbaas
-from a10_neutron_lbaas.neutron_ext.common import constants
-from a10_neutron_lbaas.neutron_ext.db import certificate_db as certs_db
-from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate
-from a10_neutron_lbaas.tests.db import test_base as tbase
+import a10_openstack
+from a10_openstack.neutron_ext.common import constants
+from a10_openstack.neutron_ext.db import certificate_db as certs_db
+from a10_openstack.neutron_ext.extensions import certificate
+from tests import base as tbase
 
 import mock
 from neutron import context
 from neutron.db import models_v2
-# from neutron_lbaas.tests import base
-from neutron.tests.unit.extensions import base
+from neutron_lbaas.tests import base
+
 from neutron.tests.unit.api.v2 import test_base as test_api_v2_extension
 from neutron.tests.unit.db import test_db_base_plugin_v2
-from neutron.tests import base as ntest_base
-from neutron.tests import tools as ntest_tools
-from neutron.tests.unit import testlib_api
-from neutron_lbaas.db.loadbalancer import loadbalancer_dbv2 as lbdb
+from neutron_lbaas.db.loadbalancer import loadbalancer_db as lbdb
 from oslo_config import cfg
 from oslo_log.helpers import logging as logging
 from oslo_utils import uuidutils
-
-import sqlalchemy
 
 import os
 import os.path
@@ -34,7 +29,6 @@ _get_path = test_api_v2_extension._get_path
 
 class CertificateExtensionTestCase(base.ExtensionTestCase):
     """Tests a10_openstack.neutron_ext.extensions.Certificates"""
-
     def setUp(self):
         super(CertificateExtensionTestCase, self).setUp()
         self.plugin = mock.MagicMock()
@@ -127,15 +121,15 @@ class CertificateExtensionTestCase(base.ExtensionTestCase):
 
     def test_get_certificate(self):
         certificate_id = uuidutils.generate_uuid()
-        expected = {'a10_certificate': self._build_test_certificate()}
+        expected = {'certificate': self._build_test_certificate()}
         instance = self.plugin.return_value
-        instance.get_certificate.return_value = expected['a10_certificate']
-        response = self.api.get(_get_path("a10_certificates", id=certificate_id, fmt=self.fmt))
+        instance.get_certificate.return_value = expected['certificate']
+        response = self.api.get(_get_path("certificates", id=certificate_id, fmt=self.fmt))
         instance.get_certificate.assert_called_with(mock.ANY, certificate_id, fields=mock.ANY)
         actual = self.deserialize(response)
         self.assertEqual(1, len(actual))
         self.assertEqual(expected, actual)
-        self.assertEqual(expected['a10_certificate']['name'], actual['a10_certificate']['name'])
+        self.assertEqual(expected['certificate']['name'], actual['certificate']['name'])
 
     def test_get_certificates(self):
         expected = self._build_test_certificate_collection()
@@ -144,9 +138,9 @@ class CertificateExtensionTestCase(base.ExtensionTestCase):
         url = _get_path("certificates", fmt=self.fmt)
         response = self.api.get(url)
 
-        instance.get_a10_certificates.assert_called_with(mock.ANY,
-                                                         fields=mock.ANY,
-                                                         filters=mock.ANY)
+        instance.get_certificates.assert_called_with(mock.ANY,
+                                                     fields=mock.ANY,
+                                                     filters=mock.ANY)
         actual = self.deserialize(response)
         self.assertEqual(expected['certificates'], actual['certificates'])
 
@@ -198,8 +192,8 @@ class CertificateExtensionTestCase(base.ExtensionTestCase):
         instance.delete_certificate_binding.assert_called_with(mock.ANY, binding_id)
 
 
-class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
-                                 tbase.UnitTestBase):
+class CertificateDbMixInTestCase(tbase.CertificateTestBase,
+                                 test_db_base_plugin_v2.NeutronDbPluginV2TestCase):
     """Tests a10_openstack.neutron_ext.db.certificate_db.CertificateManager"""
     _test_name = 'THE CERTIFICATE'
     _test_description = 'THE CERTIFICATE DESCRIBED'
@@ -213,51 +207,47 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
     _test_password = 'password'
 
     # figure out where we're being loaded from
-    _base_path = os.path.abspath(a10_neutron_lbaas.__file__)
+    _base_path = os.path.abspath(a10_openstack.__file__)
     _test_path = _base_path[:_base_path.rfind('/')]
 
-    _test_etc_path = os.path.abspath("{0}/tests/etc".format(_test_path))
+    _test_etc_path = os.path.abspath("{0}/../tests/etc".format(_test_path))
 
     _test_conf_path = "{0}/{1}".format(_test_etc_path, 'neutron.conf.test')
 
     # _test_conf_path =
 
     def setUp(self):
-        self.engine = sqlalchemy.create_engine("sqlite://")
         super(CertificateDbMixInTestCase, self).setUp()
 
         args = ['--config-file', self._test_conf_path]
 
-        # self.config_parse(args=args)
+        self.config_parse(args=args)
         # cfg.CONF.set_override('policy_file', self._neutron_policy)
         cfg.CONF.set_override(
             'core_plugin',
             # TODO(mdurrant) - Move this in to tests or tests/unit
-            'a10_neutron_lbaas.tests.unit.neutron_ext.db.test_certificates.DummyCorePlugin'
+            'tests.unit.neutron_ext.db.test_certificates.DummyCorePlugin'
         )
         cfg.CONF.set_override(
             'service_plugins',
             # TODO(mdurrant) - Move this in to tests or tests/unit
-            ['a10_neutron_lbaas.tests.unit.db.test_certificates.DummyServicePlugin',
-             'a10_neutron_lbaas.neutron_ext.services.a10_certificate.plugin.A10CertificatePlugin']
+            ['a10_openstack.tests.unit.db.test_certificates.DummyServicePlugin',
+             'a10_openstack.neutron_ext.services.certificate.plugin.CertificatePlugin']
         )
-
-        self.plugin = certs_db.A10CertificateDbMixin()  # manager.NeutronManager().get_instance()
-
-        # self.plugin.context.session.get_engine(sqlite_fk=True)
-        # self.session.get_engine(sqlite_fk=True)
+        self.plugin = certs_db.CertificateDbMixin()  # manager.NeutronManager().get_instance()
+        # session.get_engine(sqlite_fk=True)
 
     def _build_certificate(self, name=_test_name, description=_test_description,
                            cert_data=_test_cert_data, key_data=_test_key_data,
                            intermediate_data=_test_intermediate_data,
                            tenant_id='tenant1', password=_test_password):
-        return {'a10_certificate': {'name': name,
-                                    'description': description,
-                                    'cert_data': cert_data,
-                                    'key_data': key_data,
-                                    'intermediate_data': intermediate_data,
-                                    'password': password,
-                                    'tenant_id': tenant_id}}
+        return {'certificate': {'name': name,
+                                'description': description,
+                                'cert_data': cert_data,
+                                'key_data': key_data,
+                                'intermediate_data': intermediate_data,
+                                'password': password,
+                                'tenant_id': tenant_id}}
 
     def _build_binding(self, certificate_id=None, vip_id=None, tenant_id=None):
         return {'certificate_binding': {'certificate_id': certificate_id,
@@ -269,7 +259,8 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
             ctx = context.get_admin_context()
         ctx.tenant_id = tenant_id
         certificate = self._build_certificate()
-        return self.plugin.create_a10_certificate(ctx, certificate), certificate
+
+        return self.plugin.create_certificate(ctx, certificate), certificate
 
     def _create_binding(self, ctx=None, certificate_id=None, vip_id=None, tenant_id=_tenant_id):
         if ctx is None:
@@ -277,7 +268,7 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
         ctx.tenant_id = tenant_id
         binding = self._build_binding(ctx, certificate_id, vip_id, tenant_id)
 
-        return self.plugin.create_a10_certificate_listener_binding(ctx, binding), binding
+        return self.plugin.create_certificate_binding(ctx, binding), binding
 
     def _build_vip_dependencies(self, ctx, tenant_id):
         """Builds Network => Port => Vip to satisfy foreign key constraints"""
@@ -336,7 +327,7 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
                                        'key_data': 'Key data',
                                        'intermediate_data': 'intermediate data',
                                        'password': 'password'}}
-        self.plugin.update_a10_certificate(ctx, cert['id'], certificate)
+        self.plugin.update_certificate(ctx, cert['id'], certificate)
         actual = (ctx.session.query(certs_db.Certificate).filter_by(id=cert['id']).one())
         self.assertEqual('THE SECOND CERTIFICATE', actual['name'])
         self.assertEqual('THE SECOND CERT DESCRIBED', actual['description'])
@@ -345,19 +336,19 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
     def test_delete_certificate(self):
         ctx = context.get_admin_context()
         cert, data = self._create_certificate(ctx=ctx)
-        self.plugin.delete_a10_certificate(ctx, cert['id'])
+        self.plugin.delete_certificate(ctx, cert['id'])
         actual = (ctx.session.query(certs_db.Certificate).filter_by(id=cert['id']).first())
         self.assertTrue(actual is None)
 
     def test_get_certificate(self):
         ctx = context.get_admin_context()
         cert, data = self._create_certificate()
-        actual = self.plugin.get_a10_certificate(ctx, cert['id'])
+        actual = self.plugin.get_certificate(ctx, cert['id'])
         self.assertEqual(cert, actual)
 
     def test_get_throwsexceptionwhenitdoesntexist(self):
         ctx = context.get_admin_context()
-        self.assertRaises(certs_db.CertificateNotFoundError, self.plugin.get_a10_certificate,
+        self.assertRaises(certs_db.CertificateNotFoundError, self.plugin.get_certificate,
                           (self, ctx, uuidutils.generate_uuid()), None)
 
     def test_create_certificate_binding(self):
@@ -366,7 +357,7 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
         vip_uuid = vip['id']
         cert, data = self._create_certificate()
         binding = self._build_binding(cert['id'], vip_uuid)
-        self.plugin.create_a10_certificate_listener_binding(ctx, binding)
+        self.plugin.create_certificate_binding(ctx, binding)
 
         actual = ctx.session.query(certs_db.CertificateVipBinding).filter_by(
             vip_id=vip_uuid, certificate_id=cert['id']).first()
@@ -381,10 +372,10 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
 
         cert, data = self._create_certificate()
         binding = self._build_binding(cert['id'], vip_uuid)
-        self.plugin.create_a10_certificate_listener_binding(ctx, binding)
+        self.plugin.create_certificate_binding(ctx, binding)
         record = ctx.session.query(certs_db.CertificateVipBinding) \
             .filter_by(vip_id=vip_uuid, certificate_id=cert['id']).first()
-        self.plugin.delete_a10_certificate_listener_binding(ctx, record['id'])
+        self.plugin.delete_certificate_binding(ctx, record['id'])
         actual = ctx.session.query(certs_db.CertificateVipBinding).filter_by(
             vip_id=vip_uuid, certificate_id=cert['id']).first()
         self.assertTrue(actual is None)
@@ -399,7 +390,6 @@ class DummyCorePlugin(object):
 # TODO(mdurrant) - Move this in to tests or tests/unit
 class DummyServicePlugin(object):
     """Dummy Neutron Service plugin for unit testing"""
-
     def driver_loaded(self, driver):
         pass
 

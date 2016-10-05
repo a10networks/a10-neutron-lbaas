@@ -33,12 +33,14 @@ LOG = logging.getLogger(__name__)
 
 # Certificate exceptions
 class CertificateNotFoundError(nexception.NotFound):
+
     def __init__(self, certificate_id):
         self.msg = _("Certificate {} could not be found.")
         super(CertificateNotFoundError, self).__init__()
 
 
 class CertificateInUseError(nexception.InUse):
+
     def __init__(self, certificate_id):
         self.message = _("Certificate is in use and cannot be deleted.")
         self.msg = self.message
@@ -117,6 +119,7 @@ class CertificateListenerBinding(model_base.A10BaseMixin, model_base.A10Base):
 
 class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10CertificatePluginBase):
     """Class to support SSL certificates and their association with VIPs."""
+
     def __init__(self):
         # manager = None is used in unit tests where CertificateManager is loaded as a plugin.
         pass
@@ -128,7 +131,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         return constants.A10_CERTIFICATE
 
     def get_plugin_description(self):
-        return "Neutron Certificates and VIPs plugin"
+        return "A10 Networks LBaaS Certificates plugin"
 
     def _get_certificate(self, context, certificate_id):
         try:
@@ -216,12 +219,12 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                                     fields=fields, sorts=sorts, limit=limit,
                                     marker_obj=marker, page_reverse=page_reverse)
 
-    def get_a10_certificate_binding(self, context, id, fields=None):
+    def get_a10_certificate_listener_binding(self, context, id, fields=None):
         binding = self._get_listener_binding(context, id)
         LOG.debug("CertificateDbMixin:get_certificate_binding(): %s" % binding)
         return self._make_listener_binding_dict(binding, fields)
 
-    def create_a10_certificate_binding(self, context, a10_certificate_binding):
+    def create_a10_certificate_listener_binding(self, context, a10_certificate_binding):
         binding = a10_certificate_binding['a10_certificate_binding']
         certificate_id = binding['certificate_id']
         listener_id = binding['listener_id']
@@ -240,16 +243,16 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
 
         return self._make_listener_binding_dict(binding_record)
 
-    def delete_a10_certificate_binding(self, context, id):
+    def delete_a10_certificate_listener_binding(self, context, id):
         with context.session.begin(subtransactions=True):
             binding = self._get_listener_binding(context, id)
             if binding is None:
                 raise CertificateListenerBindingNotFoundByIdError(id=id)
             context.session.delete(binding)
 
-    def get_a10_certificate_bindings(self, context, filters=None, fields=None,
-                                     sorts=None, limit=None, marker=None,
-                                     page_reverse=False):
+    def get_a10_certificate_listener_bindings(self, context, filters=None, fields=None,
+                                              sorts=None, limit=None, marker=None,
+                                              page_reverse=False):
         bindings = self._get_collection(context, CertificateListenerBinding,
                                         self._make_listener_binding_dict, filters=filters,
                                         fields=fields, sorts=sorts, limit=limit,

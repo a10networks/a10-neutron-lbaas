@@ -29,6 +29,7 @@ LOG = logging.getLogger(__name__)
 
 
 class ListenerHandler(handler_base_v2.HandlerBaseV2):
+
     def __init__(self, a10_driver, openstack_manager, neutron=None, barbican_client=None,
                  cert_db=None):
         super(ListenerHandler, self).__init__(a10_driver, openstack_manager, neutron)
@@ -74,7 +75,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 LOG.exception(ex)
 
             if bindings and len(bindings) > 0:
-                import pdb; pdb.set_trace()
                 if self._set_a10_https_values(listener, c, cert_data, bindings):
                     templates["client_ssl"] = {}
                     template_name = str(cert_data.get('template_name', ''))
@@ -156,7 +156,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 LOG.exception(ex)
 
             if container:
-                base_name = getattr(getattr(container, '_cert_container', None), 'name', '') or c_id
+                base_name = getattr(
+                    getattr(container, '_cert_container', None), 'name', '') or c_id
 
                 cert_data["cert_content"] = container.get_certificate()
                 cert_data["key_content"] = container.get_private_key()

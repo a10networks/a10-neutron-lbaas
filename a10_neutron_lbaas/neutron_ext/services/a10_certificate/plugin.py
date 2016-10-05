@@ -28,7 +28,7 @@ class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
 
     def __init__(self):
         super(A10CertificatePlugin, self).__init__()
-        self.lbplugin = plugin.LoadBalancerPlugin()
+        self.lbplugin = plugin.LoadBalancerPluginv2()
 
     def get_a10_certificates(self, context, filters=None, fields=None):
         return super(A10CertificatePlugin, self).get_a10_certificates(context, filters, fields)

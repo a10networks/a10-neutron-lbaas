@@ -71,6 +71,7 @@ class UnitTestBase(test_case.TestCase):
         return _build_openstack_context()
 
     def setUp(self, openstack_lb_args={}):
+        super(UnitTestBase, self).setUp()
         unit_dir = os.path.dirname(__file__)
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
