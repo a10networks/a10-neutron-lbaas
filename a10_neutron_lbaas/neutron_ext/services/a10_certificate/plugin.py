@@ -39,28 +39,28 @@ class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
     def get_a10_certificate(self, context, id, fields=None):
         return super(A10CertificatePlugin, self).get_a10_certificate(context, id, fields)
 
-    def update_a10_certificate(self, context, a10_certificate):
-        return super(A10CertificatePlugin, self).update_a10_certificate(context, a10_certificate)
+    def update_a10_certificate(self, context, id, certificate):
+        return super(A10CertificatePlugin, self).update_a10_certificate(context, id, certificate)
 
     def delete_a10_certificate(self, context, id):
         return super(A10CertificatePlugin, self).delete_a10_certificate(context, id)
 
-    def get_a10_certificate_listener_bindings(self, context, filters=None, fields=None):
+    def get_a10_certificate_bindings(self, context, filters=None, fields=None):
         return super(A10CertificatePlugin, self).get_a10_certificate_bindings(context, filters,
                                                                               fields)
 
-    def create_a10_certificate_listener_binding(self, context, a10_certificate_binding):
+    def create_a10_certificate_binding(self, context, a10_certificate_binding):
         binding = a10_certificate_binding[constants.A10_CERTIFICATE_BINDING]
         result = super(A10CertificatePlugin,
-                       self).create_a10_certificate_listener_binding(context,
-                                                                     binding)
+                       self).create_a10_certificate_binding(context,
+                                                            binding)
         listener_id = binding["listener_id"]
         listener = {"listener": self.lbplugin.get_listener(context, listener_id)}
         self.lbplugin.update_listener(context, listener_id, listener)
         return result
 
-    def get_a10_certificate_listener_binding(self, context, id):
-        return super(A10CertificatePlugin, self).get_a10_certificate_binding(context, id)
+    def get_a10_certificate_binding(self, context, id, fields=None):
+        return super(A10CertificatePlugin, self).get_a10_certificate_binding(context, id, fields)
 
-    def delete_a10_certificate_listener_binding(self, context, id):
+    def delete_a10_certificate_binding(self, context, id):
         return super(A10CertificatePlugin, self).delete_a10_certificate_binding(context, id)

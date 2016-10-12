@@ -96,8 +96,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         if 'server_ssl' in templates:
             server_args = {'server_ssl_template': templates['server_ssl']}
-            template_args["template-server-ssl"] = template_name
-
+            template_args["template_server_ssl"] = template_name
             try:
                 c.client.slb.template.server_ssl.create(
                     template_name,

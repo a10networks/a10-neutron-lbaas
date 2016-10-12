@@ -16,6 +16,7 @@ import abc
 import logging
 import six
 
+import a10_openstack_lib.resources.a10_certificate as a10_certificate
 from neutron.api import extensions
 from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
@@ -23,7 +24,6 @@ from neutron.services import service_base
 
 from a10_neutron_lbaas.neutron_ext.common import constants
 import a10_neutron_lbaas.neutron_ext.common.resources as resources
-from a10_openstack_lib.resources import a10_certificate
 
 
 RESOURCE_ATTRIBUTE_MAP = resources.apply_template(
@@ -110,7 +110,7 @@ class A10CertificatePluginBase(service_base.ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def update_a10_certificate(self, context, certificate):
+    def update_a10_certificate(self, context, id, certificate):
         pass
 
     @abc.abstractmethod
@@ -118,17 +118,17 @@ class A10CertificatePluginBase(service_base.ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def get_a10_certificate_listener_bindings(self, context, filters=None, fields=None):
+    def get_a10_certificate_bindings(self, context, filters=None, fields=None):
         pass
 
     @abc.abstractmethod
-    def create_a10_certificate_listener_binding(self, context, a10_certificate_binding):
+    def create_a10_certificate_binding(self, context, a10_certificate_binding):
         pass
 
     @abc.abstractmethod
-    def get_a10_certificate_listener_binding(self, context, id):
+    def get_a10_certificate_binding(self, context, id, fields=None):
         pass
 
     @abc.abstractmethod
-    def delete_a10_certificate_listener_binding(self, context, id):
+    def delete_a10_certificate_binding(self, context, id):
         pass
