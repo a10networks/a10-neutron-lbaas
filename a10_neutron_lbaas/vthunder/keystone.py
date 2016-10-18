@@ -93,6 +93,6 @@ class KeystoneFromContext(KeystoneBase):
         elif int(ks_version) == 3:
             auth = v3.Token(auth_url=auth_url, token=auth_token, project_id=tenant_id)
         else:
-            raise a10_ex.InvalidConfig('keystone version must be protovol version 2 or 3')
+            raise a10_ex.InvalidConfig('keystone version must be protocol version 2 or 3')
 
         return self._get_keystone_stuff(ks_version, auth)
