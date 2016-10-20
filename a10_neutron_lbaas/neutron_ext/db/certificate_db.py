@@ -74,7 +74,8 @@ class CertificateVipBindingsNotFoundByCertificateVipComboError(nexception.NotFou
 
 
 class CertificateListenerBindingInUseError(nexception.InUse):
-    message = _("Certificate %(certificate_id)s is still bound to %(certificatelistenerbinding.id)")
+    message = _(
+        "Certificate %(certificate_id)s is still bound to %(certificatelistenerbinding.id)")
 
 
 class CertificateListenerBindingExistsError(nexception.Conflict):
@@ -118,6 +119,7 @@ class CertificateListenerBinding(model_base.A10BaseMixin, model_base.A10Base):
 
 
 class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10CertificatePluginBase):
+
     """Class to support SSL certificates and their association with VIPs."""
 
     def __init__(self):
@@ -266,3 +268,12 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                         .filter_by(listener_id=listener_id))
 
         return list(existing)
+
+    def get_bindings_for_certificate(self, context, certificate_id):
+        bindings = []
+
+        with context.session.begin(subtransactions=True):
+            bindings = (context.session.query(CertificateListenerBinding)
+                        .filter_by(certificate_id=certificate_id))
+
+        return list(bindings)

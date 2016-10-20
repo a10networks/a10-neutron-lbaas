@@ -23,6 +23,7 @@ LOG = logging.getLogger(__name__)
 
 
 class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
+
     """Implementation of the Neutron SSL Certificate Plugin."""
     supported_extension_aliases = [constants.A10_CERTIFICATE_EXT]
 
