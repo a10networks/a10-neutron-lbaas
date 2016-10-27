@@ -118,4 +118,3 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                       (id))
             instance = self._get_by_id(context, models.A10DeviceInstance, id)
             context.session.delete(instance)
-
