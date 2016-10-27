@@ -12,6 +12,7 @@
 #    under the License.
 
 import sqlalchemy as sa
+import sqlalchemy.orm as orm
 
 from a10_neutron_lbaas.db import model_base
 

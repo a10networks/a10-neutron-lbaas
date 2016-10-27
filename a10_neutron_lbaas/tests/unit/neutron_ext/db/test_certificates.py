@@ -1,4 +1,18 @@
-# Copyright (C) 2014-2015, A10 Networks Inc. All rights reserved.
+# Copyright 2015-2016,  A10 Networks
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+
 import a10_openstack
 from a10_openstack.neutron_ext.common import constants
 from a10_openstack.neutron_ext.db import certificate_db as certs_db
@@ -28,7 +42,9 @@ _get_path = test_api_v2_extension._get_path
 
 
 class CertificateExtensionTestCase(base.ExtensionTestCase):
+
     """Tests a10_openstack.neutron_ext.extensions.Certificates"""
+
     def setUp(self):
         super(CertificateExtensionTestCase, self).setUp()
         self.plugin = mock.MagicMock()
@@ -194,6 +210,7 @@ class CertificateExtensionTestCase(base.ExtensionTestCase):
 
 class CertificateDbMixInTestCase(tbase.CertificateTestBase,
                                  test_db_base_plugin_v2.NeutronDbPluginV2TestCase):
+
     """Tests a10_openstack.neutron_ext.db.certificate_db.CertificateManager"""
     _test_name = 'THE CERTIFICATE'
     _test_description = 'THE CERTIFICATE DESCRIBED'
@@ -383,13 +400,16 @@ class CertificateDbMixInTestCase(tbase.CertificateTestBase,
 
 # TODO(mdurrant) - Move this in to tests or tests/unit
 class DummyCorePlugin(object):
+
     """Dummy Neutron Core plugin for unit testing"""
     pass
 
 
 # TODO(mdurrant) - Move this in to tests or tests/unit
 class DummyServicePlugin(object):
+
     """Dummy Neutron Service plugin for unit testing"""
+
     def driver_loaded(self, driver):
         pass
 
@@ -402,6 +422,7 @@ class DummyServicePlugin(object):
 
 # TODO(mdurrant) - Move this in to tests or tests/unit
 class DummyServiceDriver(object):
+
     """Dummy Neutron Service driver for unit testing"""
     @staticmethod
     def get_service_type():

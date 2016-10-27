@@ -1,19 +1,29 @@
 # Copyright (C) 2014-2015, A10 Networks Inc. All rights reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
 import a10_neutron_lbaas
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import certificate_db as certs_db
-from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate
+from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate as certificate
 from a10_neutron_lbaas.tests.db import test_base as tbase
 
 import mock
 from neutron import context
 from neutron.db import models_v2
-# from neutron_lbaas.tests import base
-from neutron.tests.unit.extensions import base
+
 from neutron.tests.unit.api.v2 import test_base as test_api_v2_extension
-from neutron.tests.unit.db import test_db_base_plugin_v2
-from neutron.tests import base as ntest_base
-from neutron.tests import tools as ntest_tools
+from neutron.tests.unit.extensions import base
 from neutron.tests.unit import testlib_api
 from neutron_lbaas.db.loadbalancer import loadbalancer_dbv2 as lbdb
 from oslo_config import cfg
@@ -33,6 +43,7 @@ _get_path = test_api_v2_extension._get_path
 
 
 class CertificateExtensionTestCase(base.ExtensionTestCase):
+
     """Tests a10_openstack.neutron_ext.extensions.Certificates"""
 
     def setUp(self):
@@ -200,6 +211,7 @@ class CertificateExtensionTestCase(base.ExtensionTestCase):
 
 class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
                                  tbase.UnitTestBase):
+
     """Tests a10_openstack.neutron_ext.db.certificate_db.CertificateManager"""
     _test_name = 'THE CERTIFICATE'
     _test_description = 'THE CERTIFICATE DESCRIBED'
@@ -226,7 +238,8 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
         self.engine = sqlalchemy.create_engine("sqlite://")
         super(CertificateDbMixInTestCase, self).setUp()
 
-        args = ['--config-file', self._test_conf_path]
+        # Following line no qa'd
+        args = ['--config-file', self._test_conf_path]  # noqa
 
         # self.config_parse(args=args)
         # cfg.CONF.set_override('policy_file', self._neutron_policy)
@@ -392,12 +405,14 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
 
 # TODO(mdurrant) - Move this in to tests or tests/unit
 class DummyCorePlugin(object):
+
     """Dummy Neutron Core plugin for unit testing"""
     pass
 
 
 # TODO(mdurrant) - Move this in to tests or tests/unit
 class DummyServicePlugin(object):
+
     """Dummy Neutron Service plugin for unit testing"""
 
     def driver_loaded(self, driver):
@@ -412,6 +427,7 @@ class DummyServicePlugin(object):
 
 # TODO(mdurrant) - Move this in to tests or tests/unit
 class DummyServiceDriver(object):
+
     """Dummy Neutron Service driver for unit testing"""
     @staticmethod
     def get_service_type():
