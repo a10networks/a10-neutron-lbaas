@@ -17,8 +17,6 @@ import pprint
 import time
 import uuid
 
-import glanceclient.client as glance_client
-
 import neutronclient.neutron.client as neutron_client
 
 import novaclient.client as nova_client
@@ -37,7 +35,7 @@ LOG = logging.getLogger(__name__)
 CREATE_TIMEOUT = 900
 
 # TODO(mdurrant) - These may need to go into a configuration file.
-GLANCE_VERSION = 2.1
+
 KEYSTONE_VERSION = "3.0"
 NOVA_VERSION = "2.1"
 NEUTRON_VERSION = "2.0"
@@ -68,9 +66,10 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 
 class InstanceManager(object):
+
     def __init__(self, ks_session, network_ks_session=None,
                  nova_api=None, nova_version=NOVA_VERSION,
-                 glance_api=None, neutron_api=None):
+                 neutron_api=None):
 
         # This is the keystone session that we use for spawning instances,
         # aka our "service tenant" user.
@@ -88,8 +87,6 @@ class InstanceManager(object):
             nova_version, session=self._ks_session)
         self._neutron_api = neutron_api or neutron_client.Client(
             NEUTRON_VERSION, session=self._ks_session)
-        self._glance_api = glance_api or glance_client.Client(
-            GLANCE_VERSION, session=self._ks_session)
 
     @classmethod
     def _factory_with_service_tenant(cls, config, user_keystone_session):
@@ -249,7 +246,7 @@ class InstanceManager(object):
                       ((hasattr(x, "name") and x.name is not None and identifier in x.name)
                        or (hasattr(x, "id") and x.id == identifier)))
         try:
-            images = self._glance_api.images.list()
+            images = self._nova_api.images.list()
         except Exception as ex:
             raise a10_ex.ImageNotFoundError(
                 "Unable to retrieve images from nova.  Error %s" % (ex))
@@ -287,7 +284,7 @@ class InstanceManager(object):
 
         # TODO(mdurrant-jk-cshock) - Look up networks by name too
         id_func = (lambda x: x.get("net-id",
-                   x.get("uuid", x.get("id"))) if x is not None else None)
+                                   x.get("uuid", x.get("id"))) if x is not None else None)
 
         networks_by_id = dict((id_func(x), x) for x in net_list)
         networks_by_name = dict((x.get("name"), x) for x in net_list)
