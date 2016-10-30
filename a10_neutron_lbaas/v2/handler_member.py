@@ -20,6 +20,7 @@ import re
 import acos_client.errors as acos_errors
 import handler_base_v2
 import v2_context as a10
+import a10_exceptions as a10_ex
 # tenant names allow some funky characters; we do not, as of 4.1.0
 non_alpha = re.compile('[^0-9a-zA-Z_-]')
 
@@ -47,7 +48,9 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         server_ip = self.neutron.member_get_ip(context, member,
                                                c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
-
+        conn_limit = c.device_cfg['conn-limit']
+        if conn_limit > 8000000 or conn_limit < 1:
+            raise a10_ex.ConnLimitOutOfBounds("Conn-limit must be >1 and <8000000")
         status = c.client.slb.UP
         if not member.admin_state_up:
             status = c.client.slb.DOWN
@@ -55,6 +58,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         try:
             server_args = {'server': self.meta(member, 'server', {})}
             c.client.slb.server.create(server_name, server_ip,
+                                       conn_limit,
                                        status=status,
                                        axapi_args=server_args)
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):

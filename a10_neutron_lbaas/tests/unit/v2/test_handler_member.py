@@ -81,14 +81,20 @@ class TestMembers(test_base.UnitTestBase):
         if uuid_name:
             self.a.config._config.member_name_use_uuid = old
 
-    def test_create(self, admin_state_up=True):
-        self._test_create()
+    def test_create_connlimit(self):
+        for k, v in self.a.config.get_devices().items():
+            v['conn-limit'] = 1337
+        self._test_create(conn_limit=1337)
 
-    def test_create_member_uuid(self):
-        self._test_create(uuid_name=True)
+    def test_create_connlimit_oob(self):
+        for k, v in self.a.config.get_devices().items():
+            v['conn-limit'] = 8000001
+        self._test_create(conn_limit=8000001)
 
-    def test_create_down(self):
-        self._test_create(admin_state_up=False)
+    def test_create_connlimit_uob(self):
+        for k, v in self.a.config.get_devices().items():
+            v['conn-limit'] = 0
+        self._test_create(conn_limit=0)
 
     def test_update_down(self):
         m = fake_objs.FakeMember(False, pool=mock.MagicMock())
