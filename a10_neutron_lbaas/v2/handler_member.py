@@ -17,10 +17,10 @@ import binascii
 import logging
 import re
 
+import a10_neutron_lbaas.a10_exceptions as a10_ex
 import acos_client.errors as acos_errors
 import handler_base_v2
 import v2_context as a10
-import a10_neutron_lbaas.a10_exceptions as a10_ex
 # tenant names allow some funky characters; we do not, as of 4.1.0
 non_alpha = re.compile('[^0-9a-zA-Z_-]')
 

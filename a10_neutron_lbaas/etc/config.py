@@ -115,9 +115,9 @@ devices = {
     #     "protocol": "https",
     #     "port": 443,
     #
-    # Specify the maximum number of concurrent connections allowed on a 
-    # real server. You also can set the connection limit on individual protocol ports.
-    #    "conn-limit": 8000000
+    # Specify the maximum number of concurrent connections allowed on a
+    # real server.
+    #    "conn-limit": 8000000,
     #
     # Admin username for ACOS device
     #     "username": <required>,
