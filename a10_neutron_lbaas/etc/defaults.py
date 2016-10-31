@@ -37,6 +37,7 @@ DEVICE_REQUIRED_FIELDS = [
 DEVICE_OPTIONAL_DEFAULTS = {
     "protocol": "https",
     "port": 443,
+    "conn-limit": 8000000,
     "api_version": "2.1",
     "status": True,
     "autosnat": False,
