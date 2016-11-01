@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import logging
 import pprint
 import time
@@ -138,6 +139,8 @@ class InstanceManager(object):
 
     def _create_instance(self, context):
         server = self._build_server(context)
+        server = self._populate_config_defaults(server)
+
         image_id = context.get("image", None)
         flavor_id = context.get("flavor", None)
         net_ids = context.get("networks")
@@ -377,6 +380,29 @@ class InstanceManager(object):
         subnet = self._neutron_api.show_subnet(subnet_id)
         network_id = subnet["subnet"]["network_id"]
         return self.plumb_instance(instance_id, network_id, allowed_ips, wrong_ips=wrong_ips)
+
+    def _build_server_with_defaults(self, server, vthunder_config):
+        import pdb
+        pdb.set_trace()
+        rv = self._build_server(server)
+        copy_keys = [("image", "glance_image"),
+                     ("flavor", "nova_flavor"),
+                     ]
+
+        # ("mgmt_network": "vthunder_management_network"),
+        # ("data_networks": "vthunder_data_networks")
+
+        for server_key, config_key in copy_keys:
+            # if the server doesn't have this attribute configured, set it from default
+            if not server_key in k:
+                server_key[k] = vthunder_config.get(config_key)
+
+        mgmt_network = context.get("mgmt_network",
+                                   vthunder_config.get("vthunder_management_network"))
+        data_networks = context.get("data_networks",
+                                    vthunder_config.get("vthunder_data_networks"))
+
+        return rv
 
 
 def distinct_dicts(dicts):
