@@ -19,6 +19,7 @@ import time
 import uuid
 
 import neutronclient.neutron.client as neutron_client
+import neutron_lib.constants as neutron_const
 
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
@@ -139,7 +140,6 @@ class InstanceManager(object):
 
     def _create_instance(self, context):
         server = self._build_server(context)
-        server = self._populate_config_defaults(server)
 
         image_id = context.get("image", None)
         flavor_id = context.get("flavor", None)
@@ -381,26 +381,25 @@ class InstanceManager(object):
         network_id = subnet["subnet"]["network_id"]
         return self.plumb_instance(instance_id, network_id, allowed_ips, wrong_ips=wrong_ips)
 
-    def _build_server_with_defaults(self, server, vthunder_config):
-        import pdb
-        pdb.set_trace()
-        rv = self._build_server(server)
+    def build_server_with_defaults(self, server, vthunder_config):
         copy_keys = [("image", "glance_image"),
                      ("flavor", "nova_flavor"),
                      ]
 
-        # ("mgmt_network": "vthunder_management_network"),
-        # ("data_networks": "vthunder_data_networks")
-
         for server_key, config_key in copy_keys:
             # if the server doesn't have this attribute configured, set it from default
-            if not server_key in k:
-                server_key[k] = vthunder_config.get(config_key)
+            if not server_key in server or type(server[server_key]) == neutron_const.Sentinel:
+                server[server_key] = vthunder_config.get(config_key)
 
-        mgmt_network = context.get("mgmt_network",
-                                   vthunder_config.get("vthunder_management_network"))
-        data_networks = context.get("data_networks",
-                                    vthunder_config.get("vthunder_data_networks"))
+        # Returning this as an array makes further concatenation easier.
+        mgmt_network = [server.get("mgmt_network",
+                                   vthunder_config.get("vthunder_management_network"))]
+        data_networks = server.get("data_networks",
+                                   vthunder_config.get("vthunder_data_networks"))
+        networks = mgmt_network + data_networks
+        rv = self._build_server(server)
+
+        rv["networks"] = networks
 
         return rv
 
