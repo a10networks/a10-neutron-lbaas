@@ -37,14 +37,15 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
                                                c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
         conn_limit = c.device_cfg['conn-limit']
-        if conn_limit > 8000000 or conn_limit < 1:
-            raise a10_ex.ConnLimitOutOfBounds("Conn-limit must be >1 and <8000000")
         status = c.client.slb.UP
         if not member['admin_state_up']:
             status = c.client.slb.DOWN
 
         try:
-            server_args = {'server': self.meta(member, 'server', {})}
+            server_args = self.meta(member, 'server', {})
+            if conn_limit:
+                server_args['conn-limit'] = conn_limit
+            server_args = {'server': server_args}
             c.client.slb.server.create(server_name, server_ip,
                                        conn_limit,
                                        status=status,
