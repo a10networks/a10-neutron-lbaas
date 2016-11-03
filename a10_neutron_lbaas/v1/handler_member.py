@@ -12,10 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
+import logging
+
 import acos_client.errors as acos_errors
 import handler_base_v1
 import v1_context as a10
+
+LOG = logging.getLogger(__name__)
 
 
 class MemberHandler(handler_base_v1.HandlerBaseV1):
@@ -44,10 +47,15 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
         try:
             server_args = self.meta(member, 'server', {})
             if conn_limit:
-                server_args['conn-limit'] = conn_limit
+                if conn_limit < 1 or conn_limit > 8000000:
+                    LOG.warning("The specified member server connection limit " +
+                                "(configuration setting: conn-limit) is out of " +
+                                "bounds with value {0}. Please set to between " +
+                                "1-8000000. Defaulting to 8000000".format(conn_limit))
+                else:
+                    server_args['conn-limit'] = conn_limit
             server_args = {'server': server_args}
             c.client.slb.server.create(server_name, server_ip,
-                                       conn_limit,
                                        status=status,
                                        axapi_args=server_args)
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):

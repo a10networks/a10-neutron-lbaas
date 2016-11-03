@@ -72,11 +72,16 @@ class TestMembers(test_base.UnitTestBase):
             status = self.a.last_client.slb.UP
         else:
             status = self.a.last_client.slb.DOWN
-        self.a.last_client.slb.server.create.assert_called_with(
-            name, ip,
-            conn_limit,
-            status=status,
-            axapi_args={'server': {}})
+        if conn_limit < 1 or conn_limit > 8000000:
+            self.a.last_client.slb.server.create.assert_called_with(
+                name, ip,
+                status=status,
+                axapi_args={'server': {}})
+        else:
+            self.a.last_client.slb.server.create.assert_called_with(
+                name, ip,
+                status=status,
+                axapi_args={'server': {'conn-limit': conn_limit}})
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             m.pool.id, name, m.protocol_port, status=status,
             axapi_args={'member': {}})
