@@ -388,8 +388,10 @@ class InstanceManager(object):
 
         for server_key, config_key in copy_keys:
             # if the server doesn't have this attribute configured, set it from default
+            # Sentinel is the value set by the API when it's unspecified.
             if not server_key in server or type(server[server_key]) == neutron_const.Sentinel:
                 server[server_key] = vthunder_config.get(config_key)
+        rv = self._build_server(server)
 
         # Returning this as an array makes further concatenation easier.
         mgmt_network = [server.get("mgmt_network",
@@ -397,8 +399,6 @@ class InstanceManager(object):
         data_networks = server.get("data_networks",
                                    vthunder_config.get("vthunder_data_networks"))
         networks = mgmt_network + data_networks
-        rv = self._build_server(server)
-
         rv["networks"] = networks
 
         return rv

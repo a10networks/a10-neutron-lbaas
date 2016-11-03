@@ -40,10 +40,8 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         LOG.debug("A10DeviceInstancePlugin.create(): a10_device_instance=%s", a10_device_instance)
         # Attempt to create instance using neutron context
         config = a10_config.A10Config()
-        ks = keystone.KeystoneFromContext(config, context)
-        # TODO(mdurrant) - Move this logic into instance manager. Pass in context, get thing.
-        imgr = instance_manager.InstanceManager._factory_with_service_tenant(config, ks)
         vth_config = config.get_vthunder_config()
+        imgr = instance_manager.InstanceManager.from_config(config, context)
         # #TODO(mdurrant) This is in a constant, use it
         # Pass the member dict to avoid unnecessary transforms.
         instance = imgr.build_server_with_defaults(
@@ -75,4 +73,13 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
 
     def delete_a10_device_instance(self, context, id):
         LOG.debug("A10DeviceInstancePlugin.delete(): id=%s", id)
+        # Deleting the actual instance requires knowing the nova instance ID
+        instance = super(A10DeviceInstancePlugin, self).get_a10_device_instance(context,
+                                                                                id)
+        nova_instance_id = instance.get("nova_instance_id")
+        config = a10_config.A10Config()
+        vth_config = config.get_vthunder_config()
+        imgr = instance_manager.InstanceManager.from_config(config, context)
+        imgr.delete_instance(nova_instance_id)
+
         return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
