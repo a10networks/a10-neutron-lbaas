@@ -67,23 +67,27 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
     def stats(self, context, lb):
         with a10.A10Context(self, context, lb) as c:
+            total_fwd_bytes, total_rev_bytes, curr_conns, tot_conns = 0, 0, 0, 0
             try:
                 name = self.meta(lb, 'id', lb.id)
                 r = c.client.slb.virtual_server.stats(name)
-
+                for port in r["virtual-server"]["port-list"]:
+                    total_fwd_bytes += port['stats']['total_fwd_bytes']
+                    total_rev_bytes += port['stats']['total_rev_bytes']
+                    curr_conns += port["stats"]["curr_conn"]
+                    tot_conns += port["stats"]["total_conn"]
                 return {
-                    "bytes_in": r["virtual_server_stat"]["req_bytes"],
-                    "bytes_out": r["virtual_server_stat"]["resp_bytes"],
-                    "active_connections":
-                        r["virtual_server_stat"]["cur_conns"],
-                    "total_connections": r["virtual_server_stat"]["tot_conns"]
+                    "bytes_in": total_fwd_bytes,
+                    "bytes_out": total_rev_bytes,
+                    "active_connections": curr_conns,
+                    "total_connections": tot_conns
                 }
             except Exception:
                 return {
-                    "bytes_in": 0,
-                    "bytes_out": 0,
-                    "active_connections": 0,
-                    "total_connections": 0
+                    "bytes_in": total_fwd_bytes,
+                    "bytes_out": total_rev_bytes,
+                    "active_connections": curr_conns,
+                    "total_connections": tot_conns
                 }
 
     def refresh(self, context, lb):
