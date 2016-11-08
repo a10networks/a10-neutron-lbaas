@@ -18,7 +18,6 @@ import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
 import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
 import a10_neutron_lbaas.vthunder.instance_manager as instance_manager
-import a10_neutron_lbaas.vthunder.keystone as keystone
 
 
 LOG = logging.getLogger(__name__)
@@ -44,11 +43,15 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         imgr = instance_manager.InstanceManager.from_config(config, context)
         # #TODO(mdurrant) This is in a constant, use it
         # Pass the member dict to avoid unnecessary transforms.
-        instance = imgr.build_server_with_defaults(
-            a10_device_instance.get("a10_device_instance"), vth_config)
+        dev_instance = a10_device_instance.get("a10_device_instance")
+
+        instance = imgr.build_server_with_defaults(dev_instance, vth_config)
         instance = imgr.create_instance(instance)
+        host_ip = instance.get("ip_address")
         nova_instance_id = instance.get("nova_instance_id")
-        a10_device_instance.get("a10_device_instance")["nova_instance_id"] = nova_instance_id
+        # things we don't know until the instance is created.
+        dev_instance["host"] = host_ip
+        dev_instance["nova_instance_id"] = nova_instance_id
 
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
@@ -78,7 +81,6 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
                                                                                 id)
         nova_instance_id = instance.get("nova_instance_id")
         config = a10_config.A10Config()
-        vth_config = config.get_vthunder_config()
         imgr = instance_manager.InstanceManager.from_config(config, context)
         imgr.delete_instance(nova_instance_id)
 
