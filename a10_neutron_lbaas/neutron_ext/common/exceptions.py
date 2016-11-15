@@ -35,3 +35,5 @@ NotFound = _find(lambda: old_exceptions.NotFound,
                  lambda: lib_exceptions.NotFound)
 InUse = _find(lambda: old_exceptions.InUse,
               lambda: lib_exceptions.InUse)
+Conflict = _find(lambda: old_exceptions.Conflict,
+                 lambda: lib_exceptions.Conflict)

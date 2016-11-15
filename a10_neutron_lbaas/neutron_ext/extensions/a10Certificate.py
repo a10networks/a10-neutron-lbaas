@@ -17,20 +17,20 @@ import logging
 import six
 
 import a10_openstack_lib.resources.a10_certificate as a10_certificate
+
 from neutron.api import extensions
-from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
 from neutron.services import service_base
 
+from a10_neutron_lbaas.neutron_ext.common import attributes
 from a10_neutron_lbaas.neutron_ext.common import constants
-import a10_neutron_lbaas.neutron_ext.common.resources as resources
+from a10_neutron_lbaas.neutron_ext.common import exceptions
+from a10_neutron_lbaas.neutron_ext.common import resources
 
 
 RESOURCE_ATTRIBUTE_MAP = resources.apply_template(
     a10_certificate.RESOURCE_ATTRIBUTE_MAP, attributes)
 
-attributes.validators.update(resources.apply_template(a10_certificate.VALIDATORS,
-                                                      attributes.validators))
 
 LOG = logging.getLogger(__name__)
 

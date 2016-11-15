@@ -15,7 +15,6 @@
 import gettext
 _ = gettext.NullTranslations().ugettext
 
-from neutron.common import exceptions as nexception
 from neutron.db import common_db_mixin as common_db_mixin
 
 import logging
@@ -23,6 +22,7 @@ from oslo_utils import uuidutils
 import sqlalchemy as sa
 from sqlalchemy import orm
 
+from a10_neutron_lbaas.neutron_ext.common import exceptions as nexception
 from a10_neutron_lbaas.db import model_base
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate
