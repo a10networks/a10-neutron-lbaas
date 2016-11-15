@@ -18,12 +18,11 @@ import six
 from a10_openstack_lib.resources import a10_device_instance
 
 from neutron.api import extensions
-from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
 from neutron.services import service_base
 
-import a10_neutron_lbaas.neutron_ext.common.constants as constants
 from a10_neutron_lbaas.neutron_ext.common import attributes
+from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.common import exceptions
 from a10_neutron_lbaas.neutron_ext.common import resources
 
