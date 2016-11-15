@@ -15,14 +15,15 @@
 import abc
 import six
 
-import a10_openstack_lib.resources.a10_device_instance as a10_device_instance
+from a10_openstack_lib.resources import a10_device_instance
+
 from neutron.api import extensions
-from neutron.api.v2 import attributes
 from neutron.api.v2 import resource_helper
-from neutron.common import exceptions
 from neutron.services import service_base
 
-import a10_neutron_lbaas.neutron_ext.common.constants as constants
+from a10_neutron_lbaas.neutron_ext.common import attributes
+from a10_neutron_lbaas.neutron_ext.common import constants
+from a10_neutron_lbaas.neutron_ext.common import exceptions
 from a10_neutron_lbaas.neutron_ext.common import resources
 
 RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_instance.RESOURCE_ATTRIBUTE_MAP,
@@ -78,12 +79,14 @@ class A10DeviceInstance(extensions.ExtensionDescriptor):
 
 
 class A10DeviceInstanceNotFoundError(exceptions.NotFound):
+
     def __init__(self, a10_device_instance_id):
         self.msg = _("A10 Device Instance {} could not be found.")
         super(A10DeviceInstanceNotFoundError, self).__init__()
 
 
 class A10DeviceInstanceInUseError(exceptions.InUse):
+
     def __init__(self, a10_device_instance_id):
         self.message = _("A10 Device Instance is in use and cannot be deleted.")
         self.msg = self.message
