@@ -37,11 +37,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         self.cert_db = cert_db
 
     def _set(self, set_method, c, context, listener):
-        if self.barbican_client is None:
-            self.barbican_client = certwrapper.CertManagerWrapper(handler=self)
-
         if self.cert_db is None:
             self.cert_db = A10CertificatePlugin()
+        if self.barbican_client is None:
+            self.barbican_client = certwrapper.CertManagerWrapper(handler=self)
 
         status = c.client.slb.UP
         if not listener.admin_state_up:
@@ -81,7 +80,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                     key_passphrase = str(cert_data.get('key_pass', ''))
                     cert_filename = str(cert_data.get('cert_filename', ''))
                     key_filename = str(cert_data.get('key_filename', ''))
-                    template_args["template-client-ssl"] = template_name
+                    template_args["template_client_ssl"] = template_name
 
         if 'client_ssl' in templates:
             template_args["template_client_ssl"] = template_name
@@ -132,8 +131,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 status=status,
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
-                template_client_ssl=template_args.get("template-client-ssl"),
-                template_server_ssl=template_args.get("template-server-ssl"),
                 axapi_body=vport_meta,
                 **template_args)
         except acos_errors.Exists:

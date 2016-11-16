@@ -11,5 +11,6 @@ nose-exclude
 oslotest
 pymysql
 testresources
+testscenarios
 # TODO(dougwig) -- can we remove this?
 -e git+https://github.com/openstack/neutron#egg=neutron

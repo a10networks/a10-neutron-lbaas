@@ -19,6 +19,7 @@ import six
 import a10_openstack_lib.resources.a10_certificate as a10_certificate
 
 from neutron.api import extensions
+from neutron.api.v2 import attributes as nattributes
 from neutron.api.v2 import resource_helper
 from neutron.services import service_base
 
@@ -62,7 +63,7 @@ class A10Certificate(extensions.ExtensionDescriptor):
         """Returns external resources."""
         my_plurals = resource_helper.build_plural_mappings(
             {}, RESOURCE_ATTRIBUTE_MAP)
-        attributes.PLURALS.update(my_plurals)
+        nattributes.PLURALS.update(my_plurals)
         attr_map = RESOURCE_ATTRIBUTE_MAP
         ext_resources = resource_helper.build_resource_info(my_plurals,
                                                             attr_map,

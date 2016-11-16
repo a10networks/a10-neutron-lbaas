@@ -52,9 +52,9 @@ class CertificateExtensionTestCase(base.ExtensionTestCase):
         self.plugin.return_value = mock.MagicMock()
         # self.fmt = "/{0}/{1}"
         self._setUpExtension(
-            'a10_openstack.neutron_ext.db.certificate_db.CertificateDbMixin',
-            constants.CERTIFICATES, certificate.RESOURCE_ATTRIBUTE_MAP,
-            certificate.Certificate, '', supported_extension_aliases='certificate'
+            'a10_neutron_lbaas.neutron_ext.db.certificate_db.A10CertificateDbMixin',
+            constants.A10_CERTIFICATE, certificate.RESOURCE_ATTRIBUTE_MAP,
+            certificate.A10Certificate, '', supported_extension_aliases='certificate'
         )
 
     def _build_test_binding_collection(self):
@@ -294,7 +294,7 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
 
     def _build_vip_dependencies(self, ctx, tenant_id):
         """Builds Network => Port => Vip to satisfy foreign key constraints"""
-        vip = lbdb.Vip()
+        lb = lbdb.LoadBalancer()
         if ctx is None:
             ctx = context.get_admin_context()
         with ctx.session.begin():
@@ -315,16 +315,16 @@ class CertificateDbMixInTestCase(testlib_api.OpportunisticDBTestMixin,
             ctx.session.add(port)
             port = ctx.session.query(models_v2.Port).filter_by(name='Test Port').first()
             # TODO(mdurrant) What does protocol_port do?
-            vip = lbdb.Vip(id=uuidutils.generate_uuid(),
-                           name='Test Vip', description='Test Vip Description',
-                           port_id=port['id'], protocol_port=0, protocol='HTTPS',
-                           pool_id=uuidutils.generate_uuid(), tenant_id=tenant_id,
-                           status='INACTIVE', status_description='INACTIVE',
-                           admin_state_up=False, connection_limit=42)
+            lb = lbdb.LoadBalancer(id=uuidutils.generate_uuid(),
+                                   name='Test Vip', description='Test Vip Description',
+                                   port_id=port['id'], protocol_port=0, protocol='HTTPS',
+                                   pool_id=uuidutils.generate_uuid(), tenant_id=tenant_id,
+                                   status='INACTIVE', status_description='INACTIVE',
+                                   admin_state_up=False, connection_limit=42)
 
-            ctx.session.add(vip)
-            vip = ctx.session.query(lbdb.Vip).filter_by(name='Test Vip').first()
-        return vip
+            ctx.session.add(listener)
+            listener = ctx.session.query(lbdb.LoadBalancer).filter_by(name='Test Listener').first()
+        return lb
 
     def test_create_certificate(self, tenant_id="tenant1"):
         ctx = context.get_admin_context()

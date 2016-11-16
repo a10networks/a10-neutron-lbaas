@@ -12,12 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import a10_openstack
-from a10_openstack.neutron_ext.common import constants
-from a10_openstack.neutron_ext.db import certificate_db as certs_db
-from a10_openstack.neutron_ext.extensions import certificate
-from tests import base as tbase
+import a10_neutron_lbaas
+from a10_neutron_lbaas.neutron_ext.common import constants
+from a10_neutron_lbaas.neutron_ext.db import certificate_db as certs_db
+from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate
+from a10_neutron_lbaas.tests import test_base as tbase
 
 import mock
 from neutron import context
@@ -26,7 +25,7 @@ from neutron_lbaas.tests import base
 
 from neutron.tests.unit.api.v2 import test_base as test_api_v2_extension
 from neutron.tests.unit.db import test_db_base_plugin_v2
-from neutron_lbaas.db.loadbalancer import loadbalancer_db as lbdb
+from neutron_lbaas.db.loadbalancer import loadbalancer_dbv2 as lbdb
 from oslo_config import cfg
 from oslo_log.helpers import logging as logging
 from oslo_utils import uuidutils
@@ -51,9 +50,9 @@ class CertificateExtensionTestCase(base.ExtensionTestCase):
         self.plugin.return_value = mock.MagicMock()
         # self.fmt = "/{0}/{1}"
         self._setUpExtension(
-            'a10_openstack.neutron_ext.db.certificate_db.CertificateDbMixin',
-            constants.CERTIFICATES, certificate.RESOURCE_ATTRIBUTE_MAP,
-            certificate.Certificate, '', supported_extension_aliases='certificate'
+            'a10_neutron_lbaas.neutron_ext.db.certificate_db.A10CertificateDbMixin',
+            constants.A10_CERTIFICATE, certificate.RESOURCE_ATTRIBUTE_MAP,
+            a10Certificate.A10Certificate, '', supported_extension_aliases='a10_certificates'
         )
 
     def _build_test_binding_collection(self):
@@ -224,7 +223,7 @@ class CertificateDbMixInTestCase(tbase.CertificateTestBase,
     _test_password = 'password'
 
     # figure out where we're being loaded from
-    _base_path = os.path.abspath(a10_openstack.__file__)
+    _base_path = os.path.abspath(a10_neutron_lbaas.__file__)
     _test_path = _base_path[:_base_path.rfind('/')]
 
     _test_etc_path = os.path.abspath("{0}/../tests/etc".format(_test_path))
