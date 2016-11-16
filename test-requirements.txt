@@ -5,6 +5,7 @@ mox
 mox3
 nose
 nose-exclude
+oslotest
 pymysql
 # TODO(dougwig) -- can we remove this?
 -e git+https://github.com/openstack/neutron#egg=neutron
