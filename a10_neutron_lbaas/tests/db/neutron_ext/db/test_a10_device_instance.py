@@ -64,83 +64,83 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
     def envelope(self, body):
         return {a10_device_instance_resources.RESOURCE: body}
 
-    # def test_a10_device_instance(self):
-    #     instance = self.fake_deviceinstance()
-    #     context = self.context()
-    #     result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
-    #     context.session.commit()
-    #     self.assertIsNot(result['id'], None)
-    #     expected = self.default_options()
-    #     expected.update(instance)
-    #     expected.update(
-    #         {
-    #             'id': result['id'],
-    #             'tenant_id': context.tenant_id
-    #         })
-    #     self.assertEqual(expected, result)
+    def test_a10_device_instance(self):
+        instance = self.fake_deviceinstance()
+        context = self.context()
+        result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+        expected = self.default_options()
+        expected.update(instance)
+        expected.update(
+            {
+                'id': result['id'],
+                'tenant_id': context.tenant_id
+            })
+        self.assertEqual(expected, result)
 
-    # def test_create_a10_device_instance_options(self):
-    #     instance = self.fake_deviceinstance()
-    #     instance.update(self.fake_deviceinstance_options())
-    #     context = self.context()
-    #     result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
-    #     context.session.commit()
-    #     self.assertIsNot(result['id'], None)
-    #     expected = instance.copy()
-    #     expected.update(
-    #         {
-    #             'id': result['id'],
-    #             'tenant_id': context.tenant_id,
-    #         })
-    #     self.assertEqual(expected, result)
+    def test_create_a10_device_instance_options(self):
+        instance = self.fake_deviceinstance()
+        instance.update(self.fake_deviceinstance_options())
+        context = self.context()
+        result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+        expected = instance.copy()
+        expected.update(
+            {
+                'id': result['id'],
+                'tenant_id': context.tenant_id,
+            })
+        self.assertEqual(expected, result)
 
-    # def test_create_a10_device_instance_default_port(self):
-    #     instance = self.fake_deviceinstance()
-    #     instance['port'] = 80
-    #     instance['protocol'] = 'http'
-    #     context = self.context()
-    #     result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
-    #     context.session.commit()
-    #     self.assertIsNot(result['id'], None)
-    #     self.assertEqual(80, result['port'])
+    def test_create_a10_device_instance_default_port(self):
+        instance = self.fake_deviceinstance()
+        instance['port'] = 80
+        instance['protocol'] = 'http'
+        context = self.context()
+        result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+        self.assertEqual(80, result['port'])
 
-    # def test_get_a10_device_instance(self):
-    #     instance = self.fake_deviceinstance()
-    #     create_context = self.context()
-    #     create_result = self.plugin.create_a10_device_instance(create_context,
-    #                                                            self.envelope(instance))
-    #     create_context.session.commit()
+    def test_get_a10_device_instance(self):
+        instance = self.fake_deviceinstance()
+        create_context = self.context()
+        create_result = self.plugin.create_a10_device_instance(create_context,
+                                                               self.envelope(instance))
+        create_context.session.commit()
 
-    #     context = self.context()
-    #     result = self.plugin.get_a10_device_instance(context, create_result['id'])
+        context = self.context()
+        result = self.plugin.get_a10_device_instance(context, create_result['id'])
 
-    #     self.assertEqual(create_result, result)
+        self.assertEqual(create_result, result)
 
-    # def test_get_a10_device_instance_not_found(self):
-    #     context = self.context()
-    #     self.assertRaises(
-    #         a10DeviceInstance.A10DeviceInstanceNotFoundError,
-    #         self.plugin.get_a10_device_instance,
-    #         context,
-    #         'fake-deviceinstance-id')
+    def test_get_a10_device_instance_not_found(self):
+        context = self.context()
+        self.assertRaises(
+            a10DeviceInstance.A10DeviceInstanceNotFoundError,
+            self.plugin.get_a10_device_instance,
+            context,
+            'fake-deviceinstance-id')
 
-    # def test_get_a10_device_instances(self):
-    #     instance = self.fake_deviceinstance()
-    #     create_context = self.context()
-    #     create_result = self.plugin.create_a10_device_instance(create_context,
-    #                                                            self.envelope(instance))
-    #     create_context.session.commit()
+    def test_get_a10_device_instances(self):
+        instance = self.fake_deviceinstance()
+        create_context = self.context()
+        create_result = self.plugin.create_a10_device_instance(create_context,
+                                                               self.envelope(instance))
+        create_context.session.commit()
 
-    #     context = self.context()
-    #     result = self.plugin.get_a10_device_instances(context)
+        context = self.context()
+        result = self.plugin.get_a10_device_instances(context)
 
-    #     self.assertEqual([create_result], result)
+        self.assertEqual([create_result], result)
 
-    # def test_get_plugin_name(self):
-    #     self.assertIsNot(self.plugin.get_plugin_name(), None)
+    def test_get_plugin_name(self):
+        self.assertIsNot(self.plugin.get_plugin_name(), None)
 
-    # def test_get_plugin_description(self):
-    #     self.assertIsNot(self.plugin.get_plugin_description(), None)
+    def test_get_plugin_description(self):
+        self.assertIsNot(self.plugin.get_plugin_description(), None)
 
-    # def test_get_plugin_type(self):
-    #     self.assertEqual(self.plugin.get_plugin_type(), constants.A10_DEVICE_INSTANCE)
+    def test_get_plugin_type(self):
+        self.assertEqual(self.plugin.get_plugin_type(), constants.A10_DEVICE_INSTANCE)
