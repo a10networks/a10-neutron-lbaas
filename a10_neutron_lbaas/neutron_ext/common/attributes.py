@@ -13,12 +13,7 @@
 #    under the License.
 
 try:
-    import neutron.common.constants as old_constants
-except ImportError:
-    old_constants = None
-
-try:
-    import neutron.api.attributes as old_attributes
+    import neutron.api.v2.attributes as old_attributes
 except ImportError:
     old_attributes = None
 
@@ -42,5 +37,7 @@ def _find(*args):
 
 convert_to_int = _find(lambda: old_attributes.convert_to_int,
                        lambda: lib_converters.convert_to_int)
-ATTR_NOT_SPECIFIED = _find(lambda: old_constants.ATTR_NOT_SPECIFIED,
+convert_kvp_list_to_dict = _find(lambda: old_attributes.convert_kvp_list_to_dict,
+                                 lambda: lib_converters.convert_kvp_list_to_dict)
+ATTR_NOT_SPECIFIED = _find(lambda: old_attributes.ATTR_NOT_SPECIFIED,
                            lambda: lib_constants.ATTR_NOT_SPECIFIED)
