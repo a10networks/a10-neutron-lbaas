@@ -382,9 +382,14 @@ class InstanceManager(object):
     def build_server_with_defaults(self, server, vthunder_config):
         copy_keys = [("image", "glance_image"),
                      ("flavor", "nova_flavor"),
+                     ("username", "username"),
+                     ("password", "password"),
+                     ("api_version", "api_version"),
+                     ("port", "port"),
+                     ("protocol", "protocol")
                      ]
 
-        resources.remove_resources_not_specified(server)
+        resources.remove_attributes_not_specified(server)
 
         for server_key, config_key in copy_keys:
             # if the server doesn't have this attribute configured, set it from default
