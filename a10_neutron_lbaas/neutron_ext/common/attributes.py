@@ -18,7 +18,7 @@ except ImportError:
     old_constants = None
 
 try:
-    import neutron.api.attributes as old_attributes
+    import neutron.api.v2.attributes as old_attributes
 except ImportError:
     old_attributes = None
 
