@@ -13,11 +13,6 @@
 #    under the License.
 
 try:
-    import neutron.common.constants as old_constants
-except ImportError:
-    old_constants = None
-
-try:
     import neutron.api.v2.attributes as old_attributes
 except ImportError:
     old_attributes = None
