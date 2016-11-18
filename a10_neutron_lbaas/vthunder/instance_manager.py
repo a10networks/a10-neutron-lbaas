@@ -17,14 +17,13 @@ import pprint
 import time
 import uuid
 
-import neutron_lib.constants as neutron_const
 import neutronclient.neutron.client as neutron_client
 
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-
+from a10_neutron_lbaas.neutron_ext.common import resources
 import a10_neutron_lbaas.vthunder.keystone as a10_keystone
 
 
@@ -385,10 +384,11 @@ class InstanceManager(object):
                      ("flavor", "nova_flavor"),
                      ]
 
+        resources.remove_resources_not_specified(server)
+
         for server_key, config_key in copy_keys:
             # if the server doesn't have this attribute configured, set it from default
-            # Sentinel is the value set by the API when it's unspecified.
-            if server_key not in server or type(server[server_key]) == neutron_const.Sentinel:
+            if server_key not in server:
                 server[server_key] = vthunder_config.get(config_key)
         rv = self._build_server(server)
 

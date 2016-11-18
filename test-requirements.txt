@@ -5,6 +5,7 @@ mox
 mox3
 nose
 nose-exclude
+# API and DB test bases use oslotest
 oslotest
 pymysql
 # TODO(dougwig) -- can we remove this?

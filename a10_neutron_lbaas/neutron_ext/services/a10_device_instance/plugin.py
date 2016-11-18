@@ -15,9 +15,10 @@
 from oslo_log import log as logging
 
 import a10_neutron_lbaas.a10_config as a10_config
-import a10_neutron_lbaas.neutron_ext.common.constants as constants
+from a10_neutron_lbaas.neutron_ext.common import constants
 import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
 import a10_neutron_lbaas.vthunder.instance_manager as instance_manager
+from a10_openstack_lib.resources import a10_device_instance as resources
 
 
 LOG = logging.getLogger(__name__)
@@ -43,7 +44,8 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         imgr = instance_manager.InstanceManager.from_config(config, context)
         # #TODO(mdurrant) This is in a constant, use it
         # Pass the member dict to avoid unnecessary transforms.
-        dev_instance = a10_device_instance.get("a10_device_instance")
+
+        dev_instance = a10_device_instance.get(resources.RESOURCE)
 
         instance = imgr.build_server_with_defaults(dev_instance, vth_config)
         instance = imgr.create_instance(instance)
