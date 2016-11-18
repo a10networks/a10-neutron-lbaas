@@ -118,3 +118,9 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                       (id))
             instance = self._get_by_id(context, models.A10DeviceInstance, id)
             context.session.delete(instance)
+
+    def update_a10_device_instance(self, context, a10_device_instance):
+        with context.session.begin(subtransactions=True):
+            instance = self._get_by_id(context, models.A10DeviceInstance,
+                                       a10_device_instance.get("id"))
+            context.session.update(instance)

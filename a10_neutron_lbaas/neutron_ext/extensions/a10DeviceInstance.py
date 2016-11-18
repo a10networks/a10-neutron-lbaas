@@ -125,3 +125,7 @@ class A10DeviceInstancePluginBase(service_base.ServicePluginBase):
     @abc.abstractmethod
     def delete_a10_device_instance(self, context, id):
         pass
+
+    @abc.abstractmethod
+    def update_a10_device_instance(self, context, instance):
+        pass
