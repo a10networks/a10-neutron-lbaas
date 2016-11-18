@@ -44,5 +44,5 @@ convert_to_int = _find(lambda: old_attributes.convert_to_int,
                        lambda: lib_converters.convert_to_int)
 convert_kvp_list_to_dict = _find(lambda: old_attributes.convert_kvp_list_to_dict,
                                  lambda: lib_converters.convert_kvp_list_to_dict)
-ATTR_NOT_SPECIFIED = _find(lambda: old_constants.ATTR_NOT_SPECIFIED,
+ATTR_NOT_SPECIFIED = _find(lambda: old_attributes.ATTR_NOT_SPECIFIED,
                            lambda: lib_constants.ATTR_NOT_SPECIFIED)
