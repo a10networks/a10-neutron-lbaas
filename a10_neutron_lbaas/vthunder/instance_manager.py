@@ -23,7 +23,6 @@ import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-from a10_neutron_lbaas.neutron_ext.common import resources
 import a10_neutron_lbaas.vthunder.keystone as a10_keystone
 
 
