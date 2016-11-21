@@ -94,7 +94,7 @@ EOF
 if [ "$1" = "install" ]; then
     echo "Running database migrations to head"
     cd "${d}/db/migration"
-    alembic upgrade head
+    alembic upgrade heads
     echo ""
 
     config_dir_setup
@@ -106,7 +106,7 @@ elif [ "$1" = "upgrade" ]; then
     if [ -n "$2" ]; then
         alembic $*
     else
-        alembic upgrade head
+        alembic upgrade heads
     fi
 
 elif [ "$1" = "downgrade" ]; then
