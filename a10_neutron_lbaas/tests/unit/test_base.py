@@ -20,6 +20,9 @@ import mock
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
 import a10_neutron_lbaas.plumbing_hooks as hooks
 
+import a10_neutron_lbaas.v1.neutron_ops as v1_ops
+import a10_neutron_lbaas.v2.neutron_ops as v2_ops
+
 
 def _build_openstack_context():
     admin_context = {
@@ -79,8 +82,14 @@ class UnitTestBase(test_case.TestCase):
             openstack_lb_args['provider'] = 'units'
 
         if not hasattr(self, 'version') or self.version == 'v2':
+            self.v_ops = v2_ops.NeutronOpsV2
+            self.v_ops.get_models = mock.MagicMock()
+            self.v_ops.get_neutron_admin_context = mock.MagicMock()
             self.a = FakeA10OpenstackLBV2(mock.MagicMock(), **openstack_lb_args)
         else:
+            self.v_ops = v1_ops.NeutronOpsV1
+            self.v_ops.get_models = mock.MagicMock()
+            self.v_ops.get_neutron_admin_context = mock.MagicMock()
             self.a = FakeA10OpenstackLBV1(mock.MagicMock(), **openstack_lb_args)
 
     def print_mocks(self):

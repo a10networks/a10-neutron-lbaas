@@ -15,10 +15,13 @@
 import logging
 import mock
 
+import a10_neutron_lbaas.worker.status_check as status_check
 import fake_objs
 import test_base
 
 LOG = logging.getLogger(__name__)
+
+import a10_neutron_lbaas.tests.unit.v2.fake_objs as v2_objs
 
 
 def return_one(*args):
@@ -119,3 +122,24 @@ class TestMembers(test_base.UnitTestBase):
 
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
             m.pool_id, name, m.protocol_port)
+
+    def test_get_oper(self):
+        fake_lb = v2_objs.FakeLoadBalancer()
+        fake_lb.pools = [v2_objs.FakePool('HTTP', 'ROUND_ROBIN',
+                         False, members=[v2_objs.FakeMember()])]
+        self.a.openstack_driver.plugin.db.get_loadbalancers = lambda lb: [fake_lb]
+        self.a.neutron.member_get_ip = mock.MagicMock(return_value="1.1.1.1")
+        status_check.status_update_v2(self.a)
+        self.a.last_client.slb.service_group.member.get_oper.assert_called_with(
+            'fake-pool-id-001', '_get-o_1_1_1_1_neutron', 80)
+
+    def test_updating_oper_stats(self):
+        fake_lb = v2_objs.FakeLoadBalancer()
+        fake_lb.pools = [v2_objs.FakePool('HTTP', 'ROUND_ROBIN',
+                         False, members=[v2_objs.FakeMember()])]
+        self.a.openstack_driver.plugin.db.get_loadbalancers = lambda lb: [fake_lb]
+        status_check.status_update_v2(self.a)
+        self.a.openstack_driver.plugin.db.update_status.assert_called_with(mock.ANY, mock.ANY,
+                                                                           'fake-member-id-001',
+                                                                           operating_status=mock.ANY
+                                                                           )

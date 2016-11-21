@@ -11,8 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
+import a10_neutron_lbaas.worker.status_check as status_check
 import fake_objs
 import test_base
+
+import a10_neutron_lbaas.tests.unit.v1.fake_objs as v1_objs
 
 
 def return_one(*args):
@@ -113,3 +118,22 @@ class TestMembers(test_base.UnitTestBase):
         pool_name = self.a.member._pool_name(None, m['pool_id'])
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
             pool_name, name, m['protocol_port'])
+
+    def test_get_oper(self):
+        pool = v1_objs.FakePool()
+        pool.members = [v1_objs.FakeMember()]
+        self.a.openstack_driver.plugin.get_pools = lambda mem: [pool]
+        self.a.openstack_driver._member_get_ip = mock.MagicMock(return_value="1.1.1.1")
+        status_check.status_update_v1(self.a)
+        self.a.last_client.slb.service_group.member.get_oper.assert_called_with(
+            pool.id, "_ten1_1_1_1_1_neutron", "80")
+
+    def test_updating_oper_stats(self):
+        pool = v1_objs.FakePool()
+        pool.members = [v1_objs.FakeMember()]
+        self.a.openstack_driver.plugin.get_pools = lambda mem: [pool]
+        status_check.status_update_v1(self.a)
+        self.a.openstack_driver.plugin.update_status.assert_called_with(mock.ANY, mock.ANY,
+                                                                        'id1',
+                                                                        operating_status=mock.ANY
+                                                                        )

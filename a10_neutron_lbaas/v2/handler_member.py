@@ -145,3 +145,18 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
             pass
 
         return retval
+
+    def _update_operating_status(self, context, member, lb_db, model_type, pool):
+        try:
+            with a10.A10Context(self, context, member) as c:
+                server_ip = self.neutron.member_get_ip(context, member,
+                                                       c.device_cfg['use_float'])
+                server_name = self._meta_name(member, server_ip)
+                oper_stats = c.client.slb.service_group.member.get_oper(pool.id,
+                                                                        server_name,
+                                                                        member.protocol_port)
+                oper_stats = oper_stats["member"]["oper"]["state"]
+                lb_db.update_status(context, model_type, member.id,
+                                    operating_status=oper_stats)
+        except Exception as ex:
+            LOG.exception(ex)
