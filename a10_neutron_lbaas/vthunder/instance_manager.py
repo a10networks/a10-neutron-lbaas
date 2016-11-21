@@ -379,34 +379,6 @@ class InstanceManager(object):
         network_id = subnet["subnet"]["network_id"]
         return self.plumb_instance(instance_id, network_id, allowed_ips, wrong_ips=wrong_ips)
 
-    def build_server_with_defaults(self, server, vthunder_config):
-        copy_keys = [("image", "glance_image"),
-                     ("flavor", "nova_flavor"),
-                     ("username", "username"),
-                     ("password", "password"),
-                     ("api_version", "api_version"),
-                     ("port", "port"),
-                     ("protocol", "protocol")
-                     ]
-
-        resources.remove_attributes_not_specified(server)
-
-        for server_key, config_key in copy_keys:
-            # if the server doesn't have this attribute configured, set it from default
-            if server_key not in server:
-                server[server_key] = vthunder_config.get(config_key)
-        rv = self._build_server(server)
-
-        # Returning this as an array makes further concatenation easier.
-        mgmt_network = [server.get("mgmt_network",
-                                   vthunder_config.get("vthunder_management_network"))]
-        data_networks = server.get("data_networks",
-                                   vthunder_config.get("vthunder_data_networks"))
-        networks = mgmt_network + data_networks
-        rv["networks"] = networks
-
-        return rv
-
 
 def distinct_dicts(dicts):
     hashable = map(lambda x: tuple(sorted(x.items())), dicts)

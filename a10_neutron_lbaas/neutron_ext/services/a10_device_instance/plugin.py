@@ -16,10 +16,11 @@ from oslo_log import log as logging
 
 import a10_neutron_lbaas.a10_config as a10_config
 from a10_neutron_lbaas.neutron_ext.common import constants
+from a10_neutron_lbaas.neutron_ext.common import resources as common_resources
+
 import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
 import a10_neutron_lbaas.vthunder.instance_manager as instance_manager
 from a10_openstack_lib.resources import a10_device_instance as resources
-
 
 LOG = logging.getLogger(__name__)
 
@@ -37,18 +38,21 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
             context, filters=filters, fields=fields)
 
     def create_a10_device_instance(self, context, a10_device_instance):
+        """Attempt to create instance using neutron context"""
         LOG.debug("A10DeviceInstancePlugin.create(): a10_device_instance=%s", a10_device_instance)
-        # Attempt to create instance using neutron context
+
         config = a10_config.A10Config()
         vth_config = config.get_vthunder_config()
+
         imgr = instance_manager.InstanceManager.from_config(config, context)
+
         # #TODO(mdurrant) This is in a constant, use it
         # Pass the member dict to avoid unnecessary transforms.
-
         dev_instance = a10_device_instance.get(resources.RESOURCE)
 
-        instance = imgr.build_server_with_defaults(dev_instance, vth_config)
-        instance = imgr.create_instance(instance)
+        # Create the instance with specified defaults.
+        instance = self._build_server_with_defaults(dev_instance, vth_config, imgr)
+
         host_ip = instance.get("ip_address")
         nova_instance_id = instance.get("nova_instance_id")
         # things we don't know until the instance is created.
@@ -89,3 +93,32 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         imgr.delete_instance(nova_instance_id)
 
         return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
+
+    def _build_server_with_defaults(self, server, vthunder_config, imgr):
+        """
+        This function takes our API object and transforms it into two things:
+        Our DB record
+        A Nova instance record.
+        """
+        copy_keys = [("image", "glance_image"),
+                     ("flavor", "nova_flavor"),
+                     ("username", "username"),
+                     ("password", "password"),
+                     ("api_version", "api_version"),
+                     ("port", "port"),
+                     ("protocol", "protocol"),
+                     ("mgmt_network", "vthunder_management_network"),
+                     ("data_networks", "vthunder_data_networks"),
+                     ]
+
+        server = common_resources.remove_attributes_not_specified(server)
+        # Returning this as an array makes further concatenation easier.
+
+        for server_key, config_key in copy_keys:
+            # if the server doesn't have this attribute configured, set it from default
+            if server_key in server and config_key in vthunder_config:
+                vthunder_config[config_key] = server[server_key]
+
+        rv = imgr.create_device_instance(vthunder_config, server.get("name"))
+
+        return rv

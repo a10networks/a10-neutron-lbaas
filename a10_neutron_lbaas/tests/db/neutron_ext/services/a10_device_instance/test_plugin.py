@@ -50,7 +50,7 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
 
     def test_create_calls_instance_manager(self):
         self.target.create_a10_device_instance(self.context, self._build_instance())
-        self.assertTrue(self.instance_manager.create_instance.called)
+        self.assertTrue(self.instance_manager.create_device_instance.called)
 
     def test_delete_calls_instance_manager(self):
         self.target.delete_a10_device_instance(self.context, 1)
