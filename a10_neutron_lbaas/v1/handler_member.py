@@ -39,7 +39,7 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
         server_ip = self.neutron.member_get_ip(context, member,
                                                c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
-        conn_limit = c.device_cfg['conn-limit']
+        conn_limit = c.device_cfg.get('conn-limit')
         status = c.client.slb.UP
         if not member['admin_state_up']:
             status = c.client.slb.DOWN
