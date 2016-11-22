@@ -77,7 +77,7 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
             id,
             a10_device_instance)
 
-        return super(A10DeviceInstancePlugin, self).a10_device_instance(
+        return super(A10DeviceInstancePlugin, self).update_a10_device_instance(
             context,
             id,
             a10_device_instance)
