@@ -89,7 +89,6 @@ devices = {
     # A sample ACOS 2.7.2 box
     # "ax2": {
     #     "host": "10.10.100.20",
-    #     "conn-limit": 8000000,
     #     "port": 8443,
     #     "username": "admin",
     #     "password": "a10",
@@ -98,7 +97,6 @@ devices = {
     # A sample ACOS 4.0.1 box
     # "ax4": {
     #     "host": "10.10.100.20",
-    #     "conn-limit": 8000000,
     #     "port": 443,
     #     "username": "admin",
     #     "password": "a10",
@@ -114,10 +112,6 @@ devices = {
     # Protocol and port number for AxAPI on ACOS device
     #     "protocol": "https",
     #     "port": 443,
-    #
-    # Specify the maximum number of concurrent connections allowed on a
-    # real server.
-    #    "conn-limit": 8000000,
     #
     # Admin username for ACOS device
     #     "username": <required>,

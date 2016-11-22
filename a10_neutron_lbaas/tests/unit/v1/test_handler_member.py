@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import a10_neutron_lbaas.a10_exceptions as a10_ex
 import fake_objs
 import test_base
 
@@ -46,7 +45,7 @@ class TestMembers(test_base.UnitTestBase):
     def test_count(self):
         self.a.member.neutron.member_count(None, fake_objs.FakeMember())
 
-    def _test_create(self, admin_state_up=True, uuid_name=False, conn_limit=800000):
+    def _test_create(self, admin_state_up=True, uuid_name=False):
         if uuid_name:
             old = self.a.config.get('member_name_use_uuid')
             self.a.config._config.member_name_use_uuid = True
@@ -62,16 +61,10 @@ class TestMembers(test_base.UnitTestBase):
             status = self.a.last_client.slb.UP
         else:
             status = self.a.last_client.slb.DOWN
-        if conn_limit < 1 or conn_limit > 8000000:
-            self.a.last_client.slb.server.create.assert_called_with(
-                name, ip,
-                status=status,
-                axapi_args={'server': {}})
-        else:
-            self.a.last_client.slb.server.create.assert_called_with(
-                name, ip,
-                status=status,
-                axapi_args={'server': {'conn-limit': conn_limit}})
+        self.a.last_client.slb.server.create.assert_called_with(
+            name, ip,
+            status=status,
+            axapi_args={'server': {}})
         pool_name = self.a.member._pool_name(None, m['pool_id'])
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             pool_name, name, m['protocol_port'], status=status,
@@ -79,26 +72,14 @@ class TestMembers(test_base.UnitTestBase):
         if uuid_name:
             self.a.config._config.member_name_use_uuid = old
 
-    def test_create_connlimit(self):
-        for k, v in self.a.config.get_devices().items():
-            v['conn-limit'] = 1337
-        self._test_create(conn_limit=1337)
+    def test_create(self, admin_state_up=True):
+        self._test_create()
 
-    def test_create_connlimit_lowerbound(self):
-        for k, v in self.a.config.get_devices().items():
-            v['conn-limit'] = 8000001
-        try:
-            self._test_create(conn_limit=8000001)
-        except a10_ex.ConnLimitOutOfBounds:
-            pass
+    def test_create_member_uuid(self):
+        self._test_create(uuid_name=True)
 
-    def test_create_connlimit_upperbound(self):
-        for k, v in self.a.config.get_devices().items():
-            v['conn-limit'] = 0
-        try:
-            self._test_create(conn_limit=0)
-        except a10_ex.ConnLimitOutOfBounds:
-            pass
+    def test_create_down(self):
+        self._test_create(admin_state_up=False)
 
     def test_update_down(self):
         m = fake_objs.FakeMember(admin_state_up=False)
