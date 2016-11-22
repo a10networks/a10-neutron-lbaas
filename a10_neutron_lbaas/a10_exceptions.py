@@ -75,3 +75,7 @@ class NoDevicesAvailableError(Exception):
 
 class NotImplemented(Exception):
     pass
+
+
+class ConnLimitOutOfBounds(Exception):
+    pass
