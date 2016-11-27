@@ -23,7 +23,6 @@ import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-
 import a10_neutron_lbaas.vthunder.keystone as a10_keystone
 
 
@@ -35,8 +34,8 @@ LOG = logging.getLogger(__name__)
 CREATE_TIMEOUT = 900
 
 # TODO(mdurrant) - These may need to go into a configuration file.
-GLANCE_VERSION = 2
-KEYSTONE_VERSION = "2.0"
+
+KEYSTONE_VERSION = "3.0"
 NOVA_VERSION = "2.1"
 NEUTRON_VERSION = "2.0"
 OS_INTERFACE_URLS = ["public", "publicURL"]
@@ -66,9 +65,10 @@ MISSING_ERR_FORMAT = "{0} with name or id {1} could not be found"
 
 
 class InstanceManager(object):
+
     def __init__(self, ks_session, network_ks_session=None,
                  nova_api=None, nova_version=NOVA_VERSION,
-                 glance_api=None, neutron_api=None):
+                 neutron_api=None):
 
         # This is the keystone session that we use for spawning instances,
         # aka our "service tenant" user.
@@ -137,6 +137,7 @@ class InstanceManager(object):
 
     def _create_instance(self, context):
         server = self._build_server(context)
+
         image_id = context.get("image", None)
         flavor_id = context.get("flavor", None)
         net_ids = context.get("networks")
@@ -283,7 +284,7 @@ class InstanceManager(object):
 
         # TODO(mdurrant-jk-cshock) - Look up networks by name too
         id_func = (lambda x: x.get("net-id",
-                   x.get("uuid", x.get("id"))) if x is not None else None)
+                                   x.get("uuid", x.get("id"))) if x is not None else None)
 
         networks_by_id = dict((id_func(x), x) for x in net_list)
         networks_by_name = dict((x.get("name"), x) for x in net_list)

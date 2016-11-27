@@ -5,7 +5,6 @@ debtcollector
 # Many of our requirements have to be the same as the underlying neutron,
 # so while we will list the ones used explicity here, we will not necessarily
 # specifiy versions
-
 python-glanceclient>=0.9.0  # icehouse min
 python-keystoneclient>=0.7.0  # icehouse min
 python-novaclient  # implicit from neutron

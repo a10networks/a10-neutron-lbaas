@@ -17,7 +17,9 @@ import six
 
 from a10_openstack_lib.resources import a10_device_instance
 
+
 from neutron.api import extensions
+from neutron.api.v2 import attributes as nattributes
 from neutron.api.v2 import resource_helper
 from neutron.services import service_base
 
@@ -58,7 +60,7 @@ class A10DeviceInstance(extensions.ExtensionDescriptor):
         """Returns external resources."""
         my_plurals = resource_helper.build_plural_mappings(
             {}, RESOURCE_ATTRIBUTE_MAP)
-        attributes.PLURALS.update(my_plurals)
+        nattributes.PLURALS.update(my_plurals)
         attr_map = RESOURCE_ATTRIBUTE_MAP
         resources = resource_helper.build_resource_info(my_plurals,
                                                         attr_map,
@@ -118,4 +120,12 @@ class A10DeviceInstancePluginBase(service_base.ServicePluginBase):
 
     @abc.abstractmethod
     def get_a10_device_instance(self, context, id, fields=None):
+        pass
+
+    @abc.abstractmethod
+    def delete_a10_device_instance(self, context, id):
+        pass
+
+    @abc.abstractmethod
+    def update_a10_device_instance(self, context, id, a10_device_instance):
         pass

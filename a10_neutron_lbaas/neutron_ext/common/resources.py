@@ -14,7 +14,7 @@
 
 import collections
 
-from neutron.api.v2 import attributes
+import attributes
 
 import six
 
