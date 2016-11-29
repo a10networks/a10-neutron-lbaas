@@ -19,14 +19,11 @@ from neutron.db import common_db_mixin as common_db_mixin
 
 import logging
 from oslo_utils import uuidutils
-import sqlalchemy as sa
-from sqlalchemy import orm
 
 from a10_neutron_lbaas import a10_config
-from a10_neutron_lbaas.neutron_ext.common import exceptions as nexception
-from a10_neutron_lbaas.db import model_base
 from a10_neutron_lbaas.db.models import a10_certificates as models
 from a10_neutron_lbaas.neutron_ext.common import constants
+from a10_neutron_lbaas.neutron_ext.common import exceptions as nexception
 from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate
 
 
@@ -205,7 +202,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                              sorts=None, limit=None, marker=None,
                              page_reverse=False):
         LOG.debug("NDB: CertificateDbMixin:get_certificates() tenant_id=%s" % context.tenant_id)
-        return self._get_collection(context, Certificate,
+        return self._get_collection(context, models.Certificate,
                                     self._make_certificate_dict, filters=filters,
                                     fields=fields, sorts=sorts, limit=limit,
                                     marker_obj=marker, page_reverse=page_reverse)

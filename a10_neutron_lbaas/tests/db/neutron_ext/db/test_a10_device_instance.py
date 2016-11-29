@@ -18,10 +18,10 @@ from a10_openstack_lib.resources import a10_device_instance as a10_device_instan
 
 import a10_neutron_lbaas.tests.db.test_base as test_base
 
-import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
 from a10_neutron_lbaas.neutron_ext.common import constants
+from a10_neutron_lbaas.neutron_ext.db import a10_device_instance as a10_device_instance
 from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
-import neutron.plugins.common.constants as nconstants
+from neutron.plugins.common import constants as nconstants
 
 
 class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):

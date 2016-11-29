@@ -17,27 +17,16 @@ from a10_neutron_lbaas.db.models import a10_certificates as models
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import certificate_db as certs_db
 
-from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate as certificate
 from a10_neutron_lbaas.tests.db import test_base as tbase
 
 import mock
-from neutron import context
-import neutron.plugins.common.constants as nconstants
-
-from neutron.db import models_v2
-
-
+from neutron.plugins.common import constants as nconstants
 from neutron.tests.unit.api.v2 import test_base as test_api_v2_extension
-from neutron_lbaas.tests import base
-from neutron.tests.unit import testlib_api
-from neutron_lbaas.db.loadbalancer import loadbalancer_dbv2 as lbdb
 from neutron_lbaas.db.loadbalancer import models as lb_models
 
-from oslo_config import cfg
 from oslo_log.helpers import logging as logging
 from oslo_utils import uuidutils
 
-import sqlalchemy
 
 import os
 import os.path
@@ -288,11 +277,11 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
         certificate = self._build_certificate()
         return self.plugin.create_a10_certificate(ctx, certificate), certificate
 
-    def _create_binding(self, ctx=None, certificate_id=None, listener_id=None, tenant_id=_tenant_id):
+    def _create_binding(self, ctx=None, cert_id=None, listener_id=None, tenant_id=_tenant_id):
         if ctx is None:
             ctx = self.context()
         ctx.tenant_id = tenant_id
-        binding = self._build_binding(ctx, certificate_id, listener_id, tenant_id)
+        binding = self._build_binding(ctx, cert_id, listener_id, tenant_id)
 
         return self.plugin.create_a10_certificate_listener_binding(ctx, binding), binding
 
