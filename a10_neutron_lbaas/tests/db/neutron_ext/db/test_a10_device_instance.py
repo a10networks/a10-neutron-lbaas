@@ -19,6 +19,8 @@ from a10_openstack_lib.resources import a10_device_instance as a10_device_instan
 import a10_neutron_lbaas.tests.db.test_base as test_base
 
 import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
+from a10_neutron_lbaas.neutron_ext.common import constants
+from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
 
 
 class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
@@ -35,7 +37,7 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
     def fake_deviceinstance(self):
         return {
             'name': 'fake-name',
-            'ip_address': 'fake-host',
+            'host': 'fake-host',
             'api_version': 'fake-version',
             'username': 'fake-username',
             'password': 'fake-password',
@@ -46,7 +48,8 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
             'v_method': 'LSI',
             'shared_partition': 'shared',
             'write_memory': False,
-            'nova_instance_id': None
+            'nova_instance_id': None,
+            'project_id': 'fake-tenant-id'
         }
 
     def fake_deviceinstance_options(self):
@@ -75,7 +78,9 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         expected.update(
             {
                 'id': result['id'],
-                'tenant_id': context.tenant_id
+                'tenant_id': context.tenant_id,
+                'project_id': context.tenant_id
+
             })
         self.assertEqual(expected, result)
 
@@ -91,6 +96,7 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
             {
                 'id': result['id'],
                 'tenant_id': context.tenant_id,
+                'project_id': context.tenant_id
             })
         self.assertEqual(expected, result)
 
