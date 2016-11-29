@@ -25,7 +25,6 @@ from neutron.services import service_base
 
 from a10_neutron_lbaas.neutron_ext.common import attributes
 from a10_neutron_lbaas.neutron_ext.common import constants
-from a10_neutron_lbaas.neutron_ext.common import exceptions
 from a10_neutron_lbaas.neutron_ext.common import resources
 
 

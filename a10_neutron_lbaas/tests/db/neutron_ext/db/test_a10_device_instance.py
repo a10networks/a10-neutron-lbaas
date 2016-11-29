@@ -21,17 +21,27 @@ import a10_neutron_lbaas.tests.db.test_base as test_base
 import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
+import neutron.plugins.common.constants as nconstants
 
 
 class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
 
     def setUp(self):
         super(TestA10DeviceInstanceDbMixin, self).setUp()
+        self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
+        nm = self._nm_patcher.start()
+        nm.get_service_plugins.return_value = {
+            nconstants.LOADBALANCERV2: mock.MagicMock()
+        }
+
         self.plugin = a10_device_instance.A10DeviceInstanceDbMixin()
+
+    def tearDown(self):
+        super(TestA10DeviceInstanceDbMixin, self).tearDown()
 
     def context(self):
         session = self.open_session()
-        context = mock.MagicMock(session=session, tenant_id='fake-tenant-id')
+        context = mock.Mock(session=session, tenant_id='fake-tenant-id')
         return context
 
     def fake_deviceinstance(self):
@@ -67,12 +77,22 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
     def envelope(self, body):
         return {a10_device_instance_resources.RESOURCE: body}
 
+
+class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
+
+    def setUp(self):
+        super(TestA10DeviceInstanceDb, self).setUp()
+
+    def tearDown(self):
+        super(TestA10DeviceInstanceDb, self).tearDown()
+
     def test_a10_device_instance(self):
         instance = self.fake_deviceinstance()
         context = self.context()
         result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
         context.session.commit()
         self.assertIsNot(result['id'], None)
+
         expected = self.default_options()
         expected.update(instance)
         expected.update(
@@ -98,6 +118,7 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
                 'tenant_id': context.tenant_id,
                 'project_id': context.tenant_id
             })
+
         self.assertEqual(expected, result)
 
     def test_create_a10_device_instance_default_port(self):
@@ -116,7 +137,6 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         create_result = self.plugin.create_a10_device_instance(create_context,
                                                                self.envelope(instance))
         create_context.session.commit()
-
         context = self.context()
         result = self.plugin.get_a10_device_instance(context, create_result['id'])
 

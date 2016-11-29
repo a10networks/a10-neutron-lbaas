@@ -34,8 +34,8 @@ def _uuid_str():
 class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                                a10DeviceInstance.A10DeviceInstancePluginBase):
 
-    def __init__(self):
-        super(A10DeviceInstanceDbMixin, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(A10DeviceInstanceDbMixin, self).__init__(*args, **kwargs)
         self.config = a10_config.A10Config()
 
     def _get_a10_device_instance(self, context, a10_device_instance_id):

@@ -22,8 +22,10 @@ from oslo_utils import uuidutils
 import sqlalchemy as sa
 from sqlalchemy import orm
 
+from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.neutron_ext.common import exceptions as nexception
 from a10_neutron_lbaas.db import model_base
+from a10_neutron_lbaas.db.models import a10_certificates as models
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate
 
@@ -100,31 +102,17 @@ class CertificateListenerBindingsNotFoundByCertificateListenerComboError(nexcept
                 "Listener ID %(listener_id)s could not be found")
 
 
-class Certificate(model_base.A10BaseMixin, model_base.A10Base):
-    __tablename__ = "a10_certificates"
-    name = sa.Column(sa.String(255), nullable=False)
-    description = sa.Column(sa.Text(1024), nullable=True)
-    cert_data = sa.Column(sa.Text(8000), nullable=False)
-    key_data = sa.Column(sa.Text(8000), nullable=False)
-    intermediate_data = sa.Column(sa.Text(8000), nullable=True)
-    password = sa.Column(sa.String(1024), nullable=True)
-
-
-class CertificateListenerBinding(model_base.A10BaseMixin, model_base.A10Base):
-    __tablename__ = "a10_certificatelistenerbindings"
-    certificate_id = sa.Column(sa.String(36), sa.ForeignKey("a10_certificates.id"),
-                               nullable=False)
-    certificate = orm.relationship(Certificate, uselist=False)
-    listener_id = sa.Column(sa.String(36))
-
-
 class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10CertificatePluginBase):
+
+    def __init__(self, *args, **kwargs):
+        super(A10CertificateDbMixin, self).__init__(*args, **kwargs)
+        self.config = a10_config.A10Config()
 
     """Class to support SSL certificates and their association with VIPs."""
 
-    def __init__(self):
-        # manager = None is used in unit tests where CertificateManager is loaded as a plugin.
-        pass
+    # def __init__(self):
+    #     # manager = None is used in unit tests where CertificateManager is loaded as a plugin.
+    #     pass
 
     def get_plugin_name(self):
         return constants.A10_CERTIFICATE
@@ -137,7 +125,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
 
     def _get_certificate(self, context, certificate_id):
         try:
-            return self._get_by_id(context, Certificate, certificate_id)
+            return self._get_by_id(context, models.Certificate, certificate_id)
         except Exception:
             raise CertificateNotFoundError(certificate_id=certificate_id)
 
@@ -154,7 +142,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
 
     def _ensure_certificate_not_in_use(self, context, certificate_id):
         with context.session.begin(subtransactions=True):
-            bindings = (context.session.query(CertificateListenerBinding)
+            bindings = (context.session.query(models.CertificateListenerBinding)
                         .filter_by(certificate_id=certificate_id)
                         .all())
             LOG.debug("CertificateDbMixin:_ensure_certificate_not_in_use(): id={0}, len={1}".format(
@@ -173,15 +161,16 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
 
     def create_a10_certificate(self, context, a10_certificate):
         cert = a10_certificate['a10_certificate']
+
         with context.session.begin(subtransactions=True):
-            cert_record = Certificate(id=uuidutils.generate_uuid(),
-                                      name=cert['name'],
-                                      description=cert['description'],
-                                      cert_data=cert['cert_data'],
-                                      key_data=cert['key_data'],
-                                      intermediate_data=cert['intermediate_data'],
-                                      password=cert['password'],
-                                      tenant_id=context.tenant_id)
+            cert_record = models.Certificate(id=uuidutils.generate_uuid(),
+                                             name=cert['name'],
+                                             description=cert['description'],
+                                             cert_data=cert['cert_data'],
+                                             key_data=cert['key_data'],
+                                             intermediate_data=cert['intermediate_data'],
+                                             password=cert['password'],
+                                             tenant_id=context.tenant_id)
             context.session.add(cert_record)
 
         return self._make_certificate_dict(cert_record)
@@ -190,7 +179,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         data = certificate['a10_certificate']
         with context.session.begin(subtransactions=True):
             certificate_db = self._get_certificate(context, certificate_id)
-            certificate_db.update(data)
+            certificate_db.update(**data)
 
         return self._make_certificate_dict(certificate_db)
 
@@ -204,7 +193,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
 
     def _get_listener_binding(self, context, binding_id):
         try:
-            return self._get_by_id(context, CertificateListenerBinding, binding_id)
+            return self._get_by_id(context, models.CertificateListenerBinding, binding_id)
         except Exception:
             raise CertificateListenerBindingNotFoundByIdError(id=binding_id)
 
@@ -230,16 +219,16 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         certificate_id = a10_certificate_binding['certificate_id']
         listener_id = a10_certificate_binding['listener_id']
         with context.session.begin(subtransactions=True):
-            existing = (context.session.query(CertificateListenerBinding)
+            existing = (context.session.query(models.CertificateListenerBinding)
                         .filter_by(certificate_id=certificate_id, listener_id=listener_id)
                         .first())
             if existing is not None:
                 raise CertificateListenerBindingExistsError(certificate_id=certificate_id,
                                                             listener_id=listener_id)
-            binding_record = CertificateListenerBinding(id=uuidutils.generate_uuid(),
-                                                        certificate_id=certificate_id,
-                                                        listener_id=listener_id,
-                                                        tenant_id=context.tenant_id)
+            binding_record = models.CertificateListenerBinding(id=uuidutils.generate_uuid(),
+                                                               certificate_id=certificate_id,
+                                                               listener_id=listener_id,
+                                                               tenant_id=context.tenant_id)
             context.session.add(binding_record)
 
         return self._make_listener_binding_dict(binding_record)
@@ -254,7 +243,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
     def get_a10_certificate_bindings(self, context, filters=None, fields=None,
                                      sorts=None, limit=None, marker=None,
                                      page_reverse=False):
-        bindings = self._get_collection(context, CertificateListenerBinding,
+        bindings = self._get_collection(context, models.CertificateListenerBinding,
                                         self._make_listener_binding_dict, filters=filters,
                                         fields=fields, sorts=sorts, limit=limit,
                                         marker_obj=marker, page_reverse=page_reverse)
@@ -264,7 +253,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         existing = []
 
         with context.session.begin(subtransactions=True):
-            existing = (context.session.query(CertificateListenerBinding)
+            existing = (context.session.query(models.CertificateListenerBinding)
                         .filter_by(listener_id=listener_id))
 
         return list(existing)
@@ -273,7 +262,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         bindings = []
 
         with context.session.begin(subtransactions=True):
-            bindings = (context.session.query(CertificateListenerBinding)
+            bindings = (context.session.query(models.CertificateListenerBinding)
                         .filter_by(certificate_id=certificate_id))
 
         return list(bindings)
