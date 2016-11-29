@@ -1,4 +1,6 @@
--e ../a10-openstack-lib
+# TODO(dougwig) - Replace me with real deal when you package
+-e git+https://github.com/a10networks/a10-openstack-lib.git#egg=a10_openstack_lib
+
 acos-client>=1.3.6
 debtcollector
 

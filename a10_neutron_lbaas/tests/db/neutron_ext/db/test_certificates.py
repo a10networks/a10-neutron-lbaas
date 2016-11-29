@@ -16,12 +16,11 @@ import a10_neutron_lbaas
 from a10_neutron_lbaas.db.models import a10_certificates as models
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import certificate_db as certs_db
-
 from a10_neutron_lbaas.tests.db import test_base as tbase
 
 import mock
 from neutron.plugins.common import constants as nconstants
-from neutron.tests.unit.api.v2 import test_base as test_api_v2_extension
+from neutron.tests.unit.api.v2 import test_base as ntbase
 from neutron_lbaas.db.loadbalancer import models as lb_models
 
 from oslo_log.helpers import logging as logging
@@ -35,182 +34,181 @@ import os.path
 LOG = logging.getLogger(__name__)
 
 _tenant_id = uuidutils.generate_uuid()
-_get_path = test_api_v2_extension._get_path
+_get_path = ntbase._get_path
 
 CERTIFICATE = "a10_certificate"
 CERTIFICATES = CERTIFICATE + "s"
 CERTIFICATE_BINDING = "a10_certificate_binding"
 CERTIFICATE_BINDINGS = CERTIFICATE_BINDING + "s"
 
-CERTIFICATE_EXT = "a10-certificates"
+CERTIFICATE_EXT = "a10-certificate"
 
 
-class CertificateExtensionTestCase(base.ExtensionTestCase):
+# class CertificateExtensionTestCase(ExtensionTestCase):
 
-    """Tests a10_openstack.neutron_ext.extensions.Certificates"""
+#     """Tests a10_openstack.neutron_ext.extensions.Certificates"""
 
-    def setUp(self):
-        super(CertificateExtensionTestCase, self).setUp()
-        self.plugin = mock.MagicMock()
+#     def setUp(self):
+#         super(CertificateExtensionTestCase, self).setUp()
+#         self.plugin = mock.MagicMock()
 
-        # self.fmt = "/{0}/{1}"
-        self._setUpExtension(
-            'a10_neutron_lbaas.neutron_ext.db.certificate_db.A10CertificateDbMixin',
-            constants.A10_CERTIFICATE, certificate.RESOURCE_ATTRIBUTE_MAP,
-            certificate.A10Certificate, '', supported_extension_aliases='a10-certificate'
-        )
+#         self._setUpExtension(
+#             'a10_neutron_lbaas.tests.db.neutron_ext.db.test_certificates.DummyCorePlugin',
+#             "", a10Certificate.RESOURCE_ATTRIBUTE_MAP,
+#             a10Certificate.A10Certificate, '', supported_extension_aliases='a10-certificate'
+#         )
 
-    def _build_test_binding_collection(self):
-        result = {CERTIFICATE_BINDINGS: []}
-        result[CERTIFICATE_BINDINGS].append(self._build_test_binding(
-            uuidutils.generate_uuid(),
-            uuidutils.generate_uuid(),
-            _tenant_id))
-        result[CERTIFICATE_BINDINGS].append(self._build_test_binding(
-            uuidutils.generate_uuid(),
-            uuidutils.generate_uuid(),
-            _tenant_id))
-        result[CERTIFICATE_BINDINGS].append(self._build_test_binding(
-            uuidutils.generate_uuid(),
-            uuidutils.generate_uuid(),
-            _tenant_id))
-        return result
+#     def _build_test_binding_collection(self):
+#         result = {CERTIFICATE_BINDINGS: []}
+#         result[CERTIFICATE_BINDINGS].append(self._build_test_binding(
+#             uuidutils.generate_uuid(),
+#             uuidutils.generate_uuid(),
+#             _tenant_id))
+#         result[CERTIFICATE_BINDINGS].append(self._build_test_binding(
+#             uuidutils.generate_uuid(),
+#             uuidutils.generate_uuid(),
+#             _tenant_id))
+#         result[CERTIFICATE_BINDINGS].append(self._build_test_binding(
+#             uuidutils.generate_uuid(),
+#             uuidutils.generate_uuid(),
+#             _tenant_id))
+#         return result
 
-    def _build_test_certificate_collection(self):
-        result = {CERTIFICATES: []}
+#     def _build_test_certificate_collection(self):
+#         result = {CERTIFICATES: []}
 
-        result[CERTIFICATES].append(self._build_test_certificate())
-        result[CERTIFICATES].append(self._build_test_certificate(
-            name="Magic Certificate 2"))
-        return result
+#         result[CERTIFICATES].append(self._build_test_certificate())
+#         result[CERTIFICATES].append(self._build_test_certificate(
+#             name="Magic Certificate 2"))
+#         return result
 
-    def _build_test_binding(self, certificate_id, vip_id, tenant_id=_tenant_id):
-        result = {'certificate_id': certificate_id,
-                  'vip_id': vip_id}
-        if tenant_id is not None:
-            result['tenant_id'] = tenant_id
-        return result
+#     def _build_test_binding(self, certificate_id, vip_id, tenant_id=_tenant_id):
+#         result = {'certificate_id': certificate_id,
+#                   'vip_id': vip_id}
+#         if tenant_id is not None:
+#             result['tenant_id'] = tenant_id
+#         return result
 
-    def _build_test_certificate(self, name="Magic Certificate",
-                                description="Certificate Description",
-                                cert_data="Super secret certificate data",
-                                key_data='Key data',
-                                intermediate_data='Intermediate data',
-                                tenant_id=_tenant_id,
-                                password="SecretPassword"):
-        result = {'name': name,
-                  'description': description,
-                  'cert_data': cert_data,
-                  'key_data': key_data,
-                  'intermediate_data': intermediate_data,
-                  'password': password}
-        if tenant_id is not None:
-            result['tenant_id'] = tenant_id
-        return result
+#     def _build_test_certificate(self, name="Magic Certificate",
+#                                 description="Certificate Description",
+#                                 cert_data="Super secret certificate data",
+#                                 key_data='Key data',
+#                                 intermediate_data='Intermediate data',
+#                                 tenant_id=_tenant_id,
+#                                 password="SecretPassword"):
+#         result = {'name': name,
+#                   'description': description,
+#                   'cert_data': cert_data,
+#                   'key_data': key_data,
+#                   'intermediate_data': intermediate_data,
+#                   'password': password}
+#         if tenant_id is not None:
+#             result['tenant_id'] = tenant_id
+#         return result
 
-    def test_create_certificate(self):
-        expected = {CERTIFICATE: self._build_test_certificate(_tenant_id)}
-        import pdb
-        pdb.set_trace()
-        # self.plugin.create_a10_certificate = mock.Mock(return_value=expected[CERTIFICATE])
+#     def test_create_certificate(self):
+#         expected = {CERTIFICATE: self._build_test_certificate(_tenant_id)}
+#         import pdb
+#         pdb.set_trace()
+#         # self.plugin.create_a10_certificate = mock.Mock(return_value=expected[CERTIFICATE])
 
-        self.api.post(_get_path(CERTIFICATES, fmt=self.fmt), self.serialize(expected),
-                      content_type='application/%s' % self.fmt)
-        self.plugin.create_a10_certificate.assert_called_with(mock.ANY, certificate=expected)
+#         self.api.post(_get_path(CERTIFICATES, fmt=self.fmt), self.serialize(expected),
+#                       content_type='application/%s' % self.fmt)
+#         self.plugin.create_a10_certificate.assert_called_with(mock.ANY, certificate=expected)
 
-    def test_delete_certificate(self):
-        certificate_id = uuidutils.generate_uuid()
-        self.api.delete(_get_path(CERTIFICATES, id=certificate_id, fmt=self.fmt),
-                        content_type="application/%s" % self.fmt)
+#     def test_delete_certificate(self):
+#         certificate_id = uuidutils.generate_uuid()
+#         self.api.delete(_get_path(CERTIFICATES, id=certificate_id, fmt=self.fmt),
+#                         content_type="application/%s" % self.fmt)
 
-        self.plugin.delete_a10_certificate.assert_called_with(mock.ANY, certificate_id)
+#         self.plugin.delete_a10_certificate.assert_called_with(mock.ANY, certificate_id)
 
-    def test_update_certificate(self):
-        certificate_id = uuidutils.generate_uuid()
-        expected = {CERTIFICATE: self._build_test_certificate(tenant_id=None)}
+#     def test_update_certificate(self):
+#         certificate_id = uuidutils.generate_uuid()
+#         expected = {CERTIFICATE: self._build_test_certificate(tenant_id=None)}
 
-        self.plugin.update_a10_certificate = mock.Mock(return_value=expected)
-        self.api.put(_get_path(CERTIFICATES, id=certificate_id, fmt=self.fmt),
-                     self.serialize(expected),
-                     content_type="application/%s" % self.fmt)
+#         self.plugin.update_a10_certificate = mock.Mock(return_value=expected)
+#         self.api.put(_get_path(CERTIFICATES, id=certificate_id, fmt=self.fmt),
+#                      self.serialize(expected),
+#                      content_type="application/%s" % self.fmt)
 
-        self.plugin.update_a10_certificate.assert_called_with(mock.ANY,
-                                                              certificate_id,
-                                                              certificate=expected[CERTIFICATE])
+#         self.plugin.update_a10_certificate.assert_called_with(mock.ANY,
+#                                                               certificate_id,
+#                                                               certificate=expected[CERTIFICATE])
 
-    def test_get_certificate(self):
-        certificate_id = uuidutils.generate_uuid()
-        expected = {CERTIFICATE: self._build_test_certificate()}
+#     def test_get_certificate(self):
+#         certificate_id = uuidutils.generate_uuid()
+#         expected = {CERTIFICATE: self._build_test_certificate()}
 
-        self.plugin.get_a10_certificate = mock.Mock(return_value=expected[CERTIFICATE])
-        response = self.api.get(_get_path(CERTIFICATES, id=certificate_id, fmt=self.fmt))
-        self.plugin.get_a10_certificate.assert_called_with(
-            mock.ANY, certificate_id, fields=mock.ANY)
-        actual = self.deserialize(response)
-        self.assertEqual(1, len(actual))
-        self.assertEqual(expected, actual)
-        self.assertEqual(expected[CERTIFICATE]['name'], actual[CERTIFICATE]['name'])
+#         self.plugin.get_a10_certificate = mock.Mock(return_value=expected[CERTIFICATE])
+#         response = self.api.get(_get_path(CERTIFICATES, id=certificate_id, fmt=self.fmt))
+#         self.plugin.get_a10_certificate.assert_called_with(
+#             mock.ANY, certificate_id, fields=mock.ANY)
+#         actual = self.deserialize(response)
+#         self.assertEqual(1, len(actual))
+#         self.assertEqual(expected, actual)
+#         self.assertEqual(expected[CERTIFICATE]['name'], actual[CERTIFICATE]['name'])
 
-    def test_get_certificates(self):
-        expected = self._build_test_certificate_collection()
+#     def test_get_certificates(self):
+#         expected = self._build_test_certificate_collection()
 
-        self.plugin.get_a10_certificates = mock.Mock(return_value=expected[CERTIFICATES])
-        url = _get_path(CERTIFICATES, fmt=self.fmt)
-        response = self.api.get(url)
+#         self.plugin.get_a10_certificates = mock.Mock(return_value=expected[CERTIFICATES])
+#         url = _get_path(CERTIFICATES, fmt=self.fmt)
+#         response = self.api.get(url)
 
-        self.plugin.get_a10_certificates.assert_called_with(mock.ANY,
-                                                            fields=mock.ANY,
-                                                            filters=mock.ANY)
-        actual = self.deserialize(response)
-        self.assertEqual(expected[CERTIFICATES], actual[CERTIFICATES])
+#         self.plugin.get_a10_certificates.assert_called_with(mock.ANY,
+#                                                             fields=mock.ANY,
+#                                                             filters=mock.ANY)
+#         actual = self.deserialize(response)
+#         self.assertEqual(expected[CERTIFICATES], actual[CERTIFICATES])
 
-    def test_get_certificate_binding(self):
-        binding_id = uuidutils.generate_uuid()
-        certificate_id = uuidutils.generate_uuid()
-        vip_id = uuidutils.generate_uuid()
-        expected = {CERTIFICATE_BINDING: self._build_test_binding(certificate_id, vip_id)}
+#     def test_get_certificate_binding(self):
+#         binding_id = uuidutils.generate_uuid()
+#         certificate_id = uuidutils.generate_uuid()
+#         vip_id = uuidutils.generate_uuid()
+#         expected = {CERTIFICATE_BINDING: self._build_test_binding(certificate_id, vip_id)}
 
-        self.plugin.get_a10_certificate_binding = mock.Mock(
-            return_value=expected[CERTIFICATE_BINDING])
-        url = _get_path(CERTIFICATE_BINDINGS, id=binding_id, fmt=self.fmt)
-        response = self.api.get(url)
-        self.plugin.get_a10_certificate_binding.assert_called_with(
-            mock.ANY, binding_id, fields=mock.ANY)
-        actual = self.deserialize(response)
-        self.assertEqual(expected, actual)
-        self.assertEqual("200 OK", response._status)
+#         self.plugin.get_a10_certificate_binding = mock.Mock(
+#             return_value=expected[CERTIFICATE_BINDING])
+#         url = _get_path(CERTIFICATE_BINDINGS, id=binding_id, fmt=self.fmt)
+#         response = self.api.get(url)
+#         self.plugin.get_a10_certificate_binding.assert_called_with(
+#             mock.ANY, binding_id, fields=mock.ANY)
+#         actual = self.deserialize(response)
+#         self.assertEqual(expected, actual)
+#         self.assertEqual("200 OK", response._status)
 
-    def test_get_certificate_bindings(self):
-        expected = self._build_test_binding_collection()
+#     def test_get_certificate_bindings(self):
+#         expected = self._build_test_binding_collection()
 
-        self.plugin.get_a10_certificate_bindings = mock.Mock(
-            return_value=expected[CERTIFICATE_BINDING])
-        url = _get_path(CERTIFICATE_BINDINGS, fmt=self.fmt)
-        result = self.api.get(url)
-        actual = self.deserialize(result)
+#         self.plugin.get_a10_certificate_bindings = mock.Mock(
+#             return_value=expected[CERTIFICATE_BINDING])
+#         url = _get_path(CERTIFICATE_BINDINGS, fmt=self.fmt)
+#         result = self.api.get(url)
+#         actual = self.deserialize(result)
 
-        self.plugin.get_a10_certificate_bindings.assert_called_with(mock.ANY,
-                                                                    fields=mock.ANY,
-                                                                    filters=mock.ANY)
-        self.assertEqual(expected, actual)
+#         self.plugin.get_a10_certificate_bindings.assert_called_with(mock.ANY,
+#                                                                     fields=mock.ANY,
+#                                                                     filters=mock.ANY)
+#         self.assertEqual(expected, actual)
 
-    def test_create_certificate_binding(self):
-        certificate_id = uuidutils.generate_uuid()
-        vip_id = uuidutils.generate_uuid()
-        expected = {CERTIFICATE_BINDING: self._build_test_binding(certificate_id, vip_id)}
+#     def test_create_certificate_binding(self):
+#         certificate_id = uuidutils.generate_uuid()
+#         vip_id = uuidutils.generate_uuid()
+#         expected = {CERTIFICATE_BINDING: self._build_test_binding(certificate_id, vip_id)}
 
-        self.plugin.create_a10_certificate_binding = mock.Mock(return_value=expected)
-        url = _get_path(CERTIFICATE_BINDINGS, fmt=self.fmt)
-        self.api.post(url, self.serialize(expected),
-                      content_type='application/%s' % self.fmt)
-        self.plugin.create_a10_certificate_binding.assert_called_with(mock.ANY,
-                                                                      certificate_binding=expected)
+#         self.plugin.create_a10_certificate_binding = mock.Mock(return_value=expected)
+#         url = _get_path(CERTIFICATE_BINDINGS, fmt=self.fmt)
+#         self.api.post(url, self.serialize(expected),
+#                       content_type='application/%s' % self.fmt)
+#         self.plugin.create_a10_certificate_binding.assert_called_with(mock.ANY,
+#                                                                       certificate_binding=expected)
 
-    def test_delete_certificate_binding(self):
-        binding_id = uuidutils.generate_uuid()
-        url = _get_path(CERTIFICATE_BINDINGS, id=binding_id, fmt=self.fmt)
-        self.api.delete(url, content_type="application/%s" % self.fmt)
-        self.plugin.delete_a10_certificate_binding.assert_called_with(mock.ANY, binding_id)
+#     def test_delete_certificate_binding(self):
+#         binding_id = uuidutils.generate_uuid()
+#         url = _get_path(CERTIFICATE_BINDINGS, id=binding_id, fmt=self.fmt)
+#         self.api.delete(url, content_type="application/%s" % self.fmt)
+#         self.plugin.delete_a10_certificate_binding.assert_called_with(mock.ANY, binding_id)
 
 
 class CertificateDbMixInTestCase(tbase.UnitTestBase):
