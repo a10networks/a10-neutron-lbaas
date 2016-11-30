@@ -10,4 +10,4 @@ oslotest
 pymysql
 # TODO(dougwig) -- can we remove this?
 -e git+https://github.com/openstack/neutron#egg=neutron
-
+-e git+https://github.com/openstack/neutron-lbaas#egg=neutron-lbaas

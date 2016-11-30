@@ -122,3 +122,15 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
                 result["members"] = stats.get("members", {})
 
         return result
+
+    def _update_operating_status(self, context, pool, lb_db, model_type):
+        try:
+            with a10.A10Context(self, context, pool) as c:
+                name = pool.id
+                if name is not None:
+                    oper_stats = c.client.slb.service_group.oper(name)
+                    oper_stats = oper_stats["service-group"]["oper"]["state"]
+                    lb_db.update_status(context, model_type, pool.id,
+                                        operating_status=str(oper_stats))
+        except Exception as ex:
+            LOG.exception(ex)
