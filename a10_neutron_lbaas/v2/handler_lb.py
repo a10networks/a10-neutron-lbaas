@@ -46,7 +46,34 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def _create(self, c, context, lb):
         self._set(c.client.slb.virtual_server.create, c, context, lb)
 
-    def _stats(self, **kwargs):
+    def _stats_v21(self, resp):
+        vs = c.client.slb.virtual_service.get(resp["name"])
+        
+        for stat in resp["virtual_server_stat"]["vport_stat_list"]:
+            pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
+            pool["pool_stat_list"] = pool.pop("service_group_stat")
+            stat.update(pool)
+        
+        f["virtual_server_stat"]["listener_stat"] = f["virtual_server_stat"].pop("vport_stat_list")
+        f["loadbalancer_stat"] = f.pop("virtual_server_stat")
+        
+        return {
+
+        }
+
+    def _stats_v30(self, resp):
+        self.stats = {}
+        self.lock = threading.Lock()
+
+        for ports in resp['port-list']:
+            t = Thread(target=_stats, kwargs=ports['stats'])
+            t.start()
+
+        #vs = c.client.slb.virtual_I
+
+        # (TODO: hthompson6) Add stats gathering for child objects
+
+    def _stats_thread(self, resp):
         for k,v in kwargs.items():
             self.lock.acquire()
 
@@ -82,7 +109,10 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10Context(self, context, lb) as c:
             name = self.meta(lb, 'id', lb.id)
             resp = c.client.slb.virtual_server.stats(name)
-            
+
+            # Check for version
+            # (TODO: hthompson6) find a way to check acos version            
+
             if not resp:
                 return {
                     "bytes_in": 0,
@@ -92,21 +122,10 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                     "extended_stats": {}
                 }
 
-            self.stats = {}
-            self.lock = threading.Lock()
-
-            for ports in resp['stats']:
-                t = Thread(target=_stats, kwargs=ports)
-                t.start()
-
-            # (TODO: Hunter) Add stats gathering for child objects
-
-            return {
-                "bytes_in": self.stats['total_fwd_bytes'],
-                "bytes_out": self.stats['total_rev_bytes'],
-                "active_connections": self.stats['cur_conn'],
-                "total_connections": self.stats['total_conn'],
-                }
+            if c.device_cfg.get('api_version') == "3.0":
+                return _stats_v30(resp)
+            else:
+                return _stats_v21(resp)
 
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")
