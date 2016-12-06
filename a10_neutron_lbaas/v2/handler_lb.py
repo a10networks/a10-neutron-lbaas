@@ -46,19 +46,27 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def _create(self, c, context, lb):
         self._set(c.client.slb.virtual_server.create, c, context, lb)
 
-    def _stats_v21(self, resp):
-        vs = c.client.slb.virtual_service.get(resp["name"])
-        
+    def _stats_v21(self, c, resp):
         for stat in resp["virtual_server_stat"]["vport_stat_list"]:
-            pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
-            pool["pool_stat_list"] = pool.pop("service_group_stat")
-            stat.update(pool)
+            vs = c.client.slb.virtual_service.get(stat["name"])
+            if vs["virtual_service"]["service_group"] != "":
+                pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
+                pool["pool_stat_list"] = pool.pop("service_group_stat")
+                stat.update(pool)
         
-        f["virtual_server_stat"]["listener_stat"] = f["virtual_server_stat"].pop("vport_stat_list")
-        f["loadbalancer_stat"] = f.pop("virtual_server_stat")
+        if resp["virtual_server_stat"]["vport_stat_list"]:
+            resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"]["vport_stat_list"]
+            del resp["virtual_server_stat"]["vport_stat_list"]
         
-        return {
+        resp["loadbalancer_stat"] = resp["virtual_server_stat"]
+        del resp["virtual_server_stat"]
 
+        return {
+            "bytes_in": resp["loadbalancer_stat"]["req_bytes"],
+            "bytes_out": resp["loadbalancer_stat"]["resp_bytes"],
+            "active_connections": resp["loadbalancer_stat"]["cur_conns"],
+            "total_connections": resp["loadbalancer_stat"]["tot_conns"],
+            "extended_stats": resp
         }
 
     def _stats_v30(self, resp):
@@ -109,7 +117,6 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10Context(self, context, lb) as c:
             name = self.meta(lb, 'id', lb.id)
             resp = c.client.slb.virtual_server.stats(name)
-
             # Check for version
             # (TODO: hthompson6) find a way to check acos version            
 
@@ -123,9 +130,9 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 }
 
             if c.device_cfg.get('api_version') == "3.0":
-                return _stats_v30(resp)
+                return self._stats_v30(resp)
             else:
-                return _stats_v21(resp)
+                return self._stats_v21(c, resp)
 
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")
