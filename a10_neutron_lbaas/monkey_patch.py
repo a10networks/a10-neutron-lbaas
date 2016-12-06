@@ -24,7 +24,7 @@ class MonkeyPatch(object):
         stats_data = driver.load_balancer.stats(context, lb)
         if stats_data:
             self.plugin.db.update_loadbalancer_stats(context, loadbalancer_id,
-                                                  stats_data)
+                                                     stats_data)
         db_stats = self.plugin.db.stats(context, loadbalancer_id)
         setattr(db_stats, "extended_stats", stats_data['extended_stats'])
         return {'stats': db_stats.to_api_dict()}
