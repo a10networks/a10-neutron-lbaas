@@ -27,6 +27,11 @@ try:
 except ImportError:
     lib_converters = None
 
+try:
+    import neutron_lib.api.validators as lib_validators
+except ImportError:
+    lib_validators = None
+
 
 def _find(*args):
     for f in args:
@@ -48,3 +53,23 @@ convert_kvp_to_list = _find(lambda: old_attributes.convert_kvp_to_list,
 ATTR_NOT_SPECIFIED = _find(lambda: old_attributes.ATTR_NOT_SPECIFIED,
                            lambda: lib_constants.ATTR_NOT_SPECIFIED)
 PLURALS = _find(lambda: old_attributes.PLURALS)
+
+
+def _add_validator_to(validators):
+    def add_validator(type_name, validator):
+        if type_name not in validators:
+            validators[type_name] = validator
+    return add_validator
+
+
+def add_validators(validators):
+    """Uniform way to add validators. Call this one!"""
+    for type_name, validator in validators.items():
+        add_validator(type_name, validator)
+
+validators = _find(lambda: old_attributes.validators,
+                   lambda: lib_validators.validators)
+
+# Choose which way to add a validator based on whether validators has moved
+add_validator = _find(lambda: _add_validator_to(old_attributes.validators),
+                      lambda: lib_validators.add_validator)

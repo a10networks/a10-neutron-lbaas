@@ -16,7 +16,7 @@ import abc
 import six
 
 from a10_openstack_lib.resources import a10_device_instance
-
+import a10_openstack_lib.resources.validators as a10_validators
 
 from neutron.api import extensions
 from neutron.api.v2 import attributes as nattributes
@@ -30,6 +30,9 @@ from a10_neutron_lbaas.neutron_ext.common import resources
 
 RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_instance.RESOURCE_ATTRIBUTE_MAP,
                                                   attributes)
+
+attributes.add_validators(resources.apply_template(
+    a10_validators.VALIDATORS, attributes.validators))
 
 
 # TODO(rename this to *Extension to avoid config file confusion)
