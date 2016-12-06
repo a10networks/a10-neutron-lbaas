@@ -49,10 +49,9 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def _stats_v21(self, c, resp):
         for stat in resp["virtual_server_stat"]["vport_stat_list"]:
             vs = c.client.slb.virtual_service.get(stat["name"])
-            if vs["virtual_service"]["service_group"] != "":
+            if vs["virtual_service"]["service_group"]:
                 pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
-                pool["pool_stat_list"] = pool.pop("service_group_stat")
-                stat.update(pool)
+                stat["pool_stat_list"] = pool["service_group_stat"]
         
         if resp["virtual_server_stat"]["vport_stat_list"]:
             resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"]["vport_stat_list"]
@@ -69,35 +68,41 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             "extended_stats": resp
         }
 
-    def _stats_v30(self, c, resp):
+    def _stats_v30(self, c, resp, name):
         self.stats = {}
         self.lock = threading.Lock()
-
+        
         for ports in resp['port-list']:
             t = Thread(target=self._stats_thread, kwargs=ports['stats'])
             t.start()
-            vs = c.client.slb.virtual_service.get(stat["name"])
-            if vs["virtual_service"]["service_group"] != "":
-                pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
-                pool["pool_stat_list"] = pool.pop("service_group_stat")
-                stat.update(pool)
-
-        if resp["virtual_server_stat"]["vport_stat_list"]:
-            resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"]["vport_stat_list"]
-            del resp["virtual_server_stat"]["vport_stat_list"]
-
-        resp["loadbalancer_stat"] = resp["virtual_server_stat"]
-        del resp["virtual_server_stat"]
+        resp["loadbalancer_stat"] = self.stats
+        if resp["port-list"]:
+            resp["loadbalancer_stat"]["listener_stat"] = resp["port-list"]
+            del resp["port-list"]
+        self.stats = {}
+        
+        virt_serv = c.client.slb.virtual_server.get(name)
+        for port in virt_serv['virtual-server']['port-list']:
+            if port["service-group"]:
+                pool = c.client.slb.service_group.stats(port["service-group"])
+                resp["loadbalancer_stat"]["pool_stat_list"] = pool["service-group"]["stats"]
+                members = c.client.slb.service_group.get(port["service-group"]+"/member/stats")
+                if members:
+                    for mems in members['member-list']:
+                        t = Thread(target=self._stats_thread, kwargs=mems['stats'])
+                        t.start()
+                    resp["loadbalancer_stat"]["pool_stat_list"].update(self.stats)
+                    resp["loadbalancer_stat"]["pool_stat_list"]["member-list"] = members['member-list']
 
         return {
-            "bytes_in": self.stats["loadbalancer_stat"]["req_bytes"],
-            "bytes_out": self.stats["loadbalancer_stat"]["resp_bytes"],
-            "active_connections": self.stats["loadbalancer_stat"]["cur_conns"],
-            "total_connections": self.stats["loadbalancer_stat"]["tot_conns"],
+            "bytes_in": resp["loadbalancer_stat"]["total_fwd_bytes"],
+            "bytes_out": resp["loadbalancer_stat"]["total_rev_bytes"],
+            "active_connections": resp["loadbalancer_stat"]["curr_conn"],
+            "total_connections": resp["loadbalancer_stat"]["total_conn"],
             "extended_stats": resp
         }
 
-    def _stats_thread(self, resp):
+    def _stats_thread(self, **kwargs):
         for k,v in kwargs.items():
             self.lock.acquire()
 
@@ -143,7 +148,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 }
 
             if c.device_cfg.get('api_version') == "3.0":
-                return self._stats_v30(c, resp)
+                return self._stats_v30(c, resp, name)
             else:
                 return self._stats_v21(c, resp)
 
