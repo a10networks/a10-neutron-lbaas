@@ -13,14 +13,18 @@
 #    under the License.
 
 
-def stats(self, context, loadbalancer_id):
-        lb = self.db.get_loadbalancer(context, loadbalancer_id)
-        driver = self._get_driver_for_loadbalancer(context, loadbalancer_id)
+class MonkeyPatch(object):
+
+    def __init__(self, plugin):
+        self.plugin = plugin
+
+    def stats(self, context, loadbalancer_id):
+        lb = self.plugin.db.get_loadbalancer(context, loadbalancer_id)
+        driver = self.plugin._get_driver_for_loadbalancer(context, loadbalancer_id)
         stats_data = driver.load_balancer.stats(context, lb)
-        
         if stats_data:
-            self.db.update_loadbalancer_stats(context, loadbalancer_id,
-                                              stats_data)
-        db_stats = self.db.stats(context, loadbalancer_id)
+            self.plugin.db.update_loadbalancer_stats(context, loadbalancer_id,
+                                                  stats_data)
+        db_stats = self.plugin.db.stats(context, loadbalancer_id)
         setattr(db_stats, "extended_stats", stats_data['extended_stats'])
         return {'stats': db_stats.to_api_dict()}
