@@ -74,7 +74,7 @@ class A10OpenstackLBBase(object):
             self.hooks = self.plumbing_hooks_class(self)
         else:
             self.hooks = self.config.get('plumbing_hooks_class')(self)
-        
+
         if self.config.get('verify_appliances'):
             self._verify_appliances()
 

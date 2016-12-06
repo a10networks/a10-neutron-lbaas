@@ -52,11 +52,12 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             if vs["virtual_service"]["service_group"]:
                 pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
                 stat["pool_stat_list"] = pool["service_group_stat"]
-        
+
         if resp["virtual_server_stat"]["vport_stat_list"]:
-            resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"]["vport_stat_list"]
+            resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"].get(
+                "vport_stat_list")
             del resp["virtual_server_stat"]["vport_stat_list"]
-        
+
         resp["loadbalancer_stat"] = resp["virtual_server_stat"]
         del resp["virtual_server_stat"]
 
@@ -71,7 +72,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def _stats_v30(self, c, resp, name):
         self.stats = {}
         self.lock = threading.Lock()
-        
+
         for ports in resp['port-list']:
             t = Thread(target=self._stats_thread, kwargs=ports['stats'])
             t.start()
@@ -80,19 +81,20 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             resp["loadbalancer_stat"]["listener_stat"] = resp["port-list"]
             del resp["port-list"]
         self.stats = {}
-        
+
         virt_serv = c.client.slb.virtual_server.get(name)
         for port in virt_serv['virtual-server']['port-list']:
             if port["service-group"]:
                 pool = c.client.slb.service_group.stats(port["service-group"])
                 resp["loadbalancer_stat"]["pool_stat_list"] = pool["service-group"]["stats"]
-                members = c.client.slb.service_group.get(port["service-group"]+"/member/stats")
+                members = c.client.slb.service_group.get(port["service-group"] + "/member/stats")
                 if members:
                     for mems in members['member-list']:
                         t = Thread(target=self._stats_thread, kwargs=mems['stats'])
                         t.start()
                     resp["loadbalancer_stat"]["pool_stat_list"].update(self.stats)
-                    resp["loadbalancer_stat"]["pool_stat_list"]["member-list"] = members['member-list']
+                    resp["loadbalancer_stat"]["pool_stat_list"]["member-list"] = members.get(
+                        'member-list')
 
         return {
             "bytes_in": resp["loadbalancer_stat"]["total_fwd_bytes"],
@@ -103,7 +105,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         }
 
     def _stats_thread(self, **kwargs):
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             self.lock.acquire()
 
             if self.stats.get(k):
