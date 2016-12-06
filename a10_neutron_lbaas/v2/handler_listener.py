@@ -58,10 +58,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
             if self._set_terminated_https_values(listener, c, cert_data):
                 templates["client_ssl"] = {}
-                template_name = str(cert_data.get('template_name', ''))
-                key_passphrase = str(cert_data.get('key_pass', ''))
-                cert_filename = str(cert_data.get('cert_filename', ''))
-                key_filename = str(cert_data.get('key_filename', ''))
+                template_name = str(cert_data.get('template_name') or '')
+                key_passphrase = str(cert_data.get('key_pass') or '')
+                cert_filename = str(cert_data.get('cert_filename') or '')
+                key_filename = str(cert_data.get('key_filename') or '')
             else:
                 LOG.error("Could not created terminated HTTPS endpoint.")
         # Else, set it up as an HTTP endpoint and attach the A10 cert data.
@@ -76,10 +76,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             if bindings and len(bindings) > 0:
                 if self._set_a10_https_values(listener, c, cert_data, bindings):
                     templates["client_ssl"] = {}
-                    template_name = str(cert_data.get('template_name', ''))
-                    key_passphrase = str(cert_data.get('key_pass', ''))
-                    cert_filename = str(cert_data.get('cert_filename', ''))
-                    key_filename = str(cert_data.get('key_filename', ''))
+                    template_name = str(cert_data.get('template_name') or '')
+                    key_passphrase = str(cert_data.get('key_pass') or '')
+                    cert_filename = str(cert_data.get('cert_filename') or '')
+                    key_filename = str(cert_data.get('key_filename') or '')
                     template_args["template_client_ssl"] = template_name
 
         if 'client_ssl' in templates:
@@ -209,7 +209,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                         size=len(cert_data["cert_content"]),
                                         action="import", certificate_type="pem")
 
-            if len(cert_data.get("key_content", None)) > 0:
+            if len(cert_data.get("key_content") or "") > 0:
                 cert_data["key_filename"] = "{0}key.pem".format(base_name)
                 self._acos_create_or_update(c.client.file.ssl_key,
                                             file=cert_data["key_filename"],
