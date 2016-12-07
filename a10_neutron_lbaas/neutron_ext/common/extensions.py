@@ -17,6 +17,6 @@
 try:
     # Get the ExtensionDescriptor class from neutron
     from neutron.api.extensions import ExtensionDescriptor as ExtensionDescriptor  # noqa
-except AttributeError:
+except (AttributeError, ImportError):
     # If it's not there, try neutron_lib. Else, we're hosed.
     from neutron_lib.api.extensions import ExtensionDescriptor as ExtensionDescriptor  # noqa
