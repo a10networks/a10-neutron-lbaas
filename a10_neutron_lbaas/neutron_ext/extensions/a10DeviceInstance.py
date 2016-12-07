@@ -18,7 +18,18 @@ import six
 from a10_openstack_lib.resources import a10_device_instance
 import a10_openstack_lib.resources.validators as a10_validators
 
-from neutron.api import extensions
+# Get the ExtensionDescriptor class from <= Mitaka (? I think)
+try:
+    from neutron.api.extensions import ExtensionDescriptor
+except AttributeError:
+    pass
+
+# Get the Extension
+try:
+    from neutron_lib.api.extensions import ExtensionDescriptor  # noqa
+except AttributeError:
+    pass
+
 from neutron.api.v2 import attributes as nattributes
 from neutron.api.v2 import resource_helper
 from neutron.services import service_base
@@ -36,7 +47,7 @@ attributes.add_validators(resources.apply_template(
 
 
 # TODO(rename this to *Extension to avoid config file confusion)
-class A10DeviceInstance(extensions.ExtensionDescriptor):
+class A10DeviceInstance(ExtensionDescriptor):
 
     @classmethod
     def get_name(cls):
