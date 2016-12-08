@@ -18,7 +18,7 @@ except ImportError:
     lib_exceptions = None
 
 try:
-    from neutron.common import old_exceptions
+    import neutron.common.exceptions as old_exceptions
 except ImportError:
     old_exceptions = None
 
