@@ -56,11 +56,9 @@ class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
                        self).create_a10_certificate_binding(context,
                                                             binding)
         listener_id = binding["listener_id"]
-        # This will raise an exception if it doesn't exist.
-        self.lbplugin.get_listener(context, listener_id)
-        # If the above succeeded, the listener exists and we can trigger an update
-        # Don't use the existing listener fields or bad things happen.
+        # Create an empty listener structure - we just want to trigger the update logic
         fake_listener = {"listener": {}}
+        # Below will raise exception if listener doesn't exist
         self.lbplugin.update_listener(context, listener_id, fake_listener)
         return result
 
