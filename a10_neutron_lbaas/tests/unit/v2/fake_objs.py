@@ -24,6 +24,7 @@ class FakeModel(object):
 
 
 class FakePort(FakeModel):
+
     def __init__(self, **kwargs):
         self.id = kwargs.get('id', 'fake-port-01')
         self.tenant_id = kwargs.get('tenant_id', "tenantsruinedmypicnic")
@@ -128,3 +129,12 @@ class FakeHM(FakeModel):
         self.expected_codes = '200'
         self.pool = pool
         self.root_loadbalancer = FakeLoadBalancer()
+
+
+class FakeCertificateBinding(FakeModel):
+
+    def __init__(self, id=None, certificate_id=None, listener_id=None):
+        super(FakeCertificateBinding, self).__init__()
+        self.id = id or "binding01"
+        self.certificate_id = certificate_id or "certid01"
+        self.listener_id = listener_id or 'fake-listen-id-001'

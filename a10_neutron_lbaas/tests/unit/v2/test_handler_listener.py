@@ -216,3 +216,17 @@ class TestListeners(test_base.UnitTestBase):
         self.assertTrue('fake-listen-id-001' in s)
         self.assertTrue('port=2222' in s)
         self.assertTrue('HTTP' in s)
+
+    def test_delete_removes_bindings(self):
+        pool = fake_objs.FakePool('TCP', 'ROUND_ROBIN', None)
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener('TCP', 2222, pool=pool, loadbalancer=lb)
+        binding = fake_objs.FakeCertificateBinding(listener_id=m.id)
+        pool.listener = m
+        bindings = [binding]
+        get_bindings_mock = mock.Mock(return_value=bindings)
+
+        self.a.listener.cert_db.get_bindings_for_listener = get_bindings_mock
+        self.a.listener.delete(None, m)
+        expected = self.a.listener.cert_db.delete_a10_certificate_binding.call_count
+        self.assertEqual(expected, len(bindings))

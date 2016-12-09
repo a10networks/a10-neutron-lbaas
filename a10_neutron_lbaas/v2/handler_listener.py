@@ -243,6 +243,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             self._update(c, context, listener)
 
     def _delete(self, c, context, listener):
+        # First, remove any existing cert bindings
+        self._remove_existing_bindings(c, context, listener)
+
         try:
             c.client.slb.virtual_server.vport.delete(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
@@ -262,3 +265,18 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
             self._delete(c, context, listener)
+
+    def _remove_existing_bindings(self, c, context, listener):
+        bindings = []
+
+        try:
+            bindings = self.cert_db.get_bindings_for_listener(context, listener.id)
+        except Exception as ex:
+            LOG.exception(ex)
+        # if we have bindings, remove them
+        if bindings and len(bindings) > 0:
+            for b in bindings:
+                try:
+                    self.cert_db.delete_a10_certificate_binding(context, b.id)
+                except Exception as ex:
+                    LOG.exception(ex)
