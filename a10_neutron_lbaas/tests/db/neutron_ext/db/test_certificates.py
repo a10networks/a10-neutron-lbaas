@@ -344,7 +344,7 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
                                            'key_data': 'Key data',
                                            'intermediate_data': 'intermediate data',
                                            'password': 'password'}}
-        self.plugin.update_a10_certificate(ctx, cert['id'], certificate)
+        self.plugin.update_a10_certificate(ctx, cert['id'], **certificate)
         actual = (ctx.session.query(models.Certificate).filter_by(id=cert['id']).one())
         self.assertEqual('THE SECOND CERTIFICATE', actual.name)
         self.assertEqual('THE SECOND CERT DESCRIBED', actual.description)

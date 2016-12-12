@@ -172,11 +172,10 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
 
         return self._make_certificate_dict(cert_record)
 
-    def update_a10_certificate(self, context, certificate_id, certificate):
-        data = certificate['a10_certificate']
+    def update_a10_certificate(self, context, certificate_id, a10_certificate):
         with context.session.begin(subtransactions=True):
             certificate_db = self._get_certificate(context, certificate_id)
-            certificate_db.update(**data)
+            certificate_db.update(**a10_certificate)
 
         return self._make_certificate_dict(certificate_db)
 
