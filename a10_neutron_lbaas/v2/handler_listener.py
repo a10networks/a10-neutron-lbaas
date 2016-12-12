@@ -66,7 +66,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 LOG.error("Could not created terminated HTTPS endpoint.")
         # Else, set it up as an HTTP endpoint and attach the A10 cert data.
         elif (self.a10_driver.config.get('use_database') and listener.protocol and
-              listener.protocol in [constants.PROTOCOL_HTTP,
+              listener.protocol in [constants.PROTOCOL_HTTPS,
+                                    constants.PROTOCOL_HTTP,
                                     constants.PROTOCOL_TCP]):
             try:
                 bindings = self.cert_db.get_bindings_for_listener(context, listener.id)
