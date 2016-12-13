@@ -2,7 +2,7 @@ SSL Certificates API
 ====================
 
 Certificates
-------
+------------
 
 Create
 ^^^^^^
@@ -225,7 +225,7 @@ Delete
 
 
 Certificate Bindings
--------
+--------------------
 
 Create
 ^^^^^^

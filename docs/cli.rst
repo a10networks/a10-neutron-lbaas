@@ -458,3 +458,189 @@ Delete
    Example::
 
        neutron a10-scaling-group-worker-delete manually-created-worker
+
+
+SSL Certificates
+----------------
+
+
+Certificates
+^^^^^^^^^^^^
+
+Create
+""""""
+
+.. program:: a10-certificate
+
+.. option:: a10-certificate-create <name>
+
+   Create a new :ref:`certificate <certificates>`.
+
+   Examples::
+
+       neutron a10-certificate-create mycert \
+           --description "SSL Cert for myawesomewebsite.com.tld"
+           --cert-file /mnt/usb/MyCertFile.pem
+           --key-file /mnt/usb/MyKeyFile.pem
+           --intermediate-file /mnt/usb/MyChain.pem
+           --password "My secret password"
+
+.. option:: --cert-file <cert-file>
+
+   The :ref:`file <certificates-datafields>` that contains the encoded data for the certificate
+
+.. option:: --key-file <key-file>
+
+   The :ref:`file <certificates-datafields>` that contains the encoded data for the private key
+
+.. option:: --intermediate-file <intermediate-file>
+
+   The :ref:`file <certificates-datafields>` that contains the encoded data for any intermediary certificates
+
+.. option:: --password <password>
+
+   The :ref:`password <certificates-datafields>` required for the key.
+
+Update
+""""""
+
+.. option:: a10-certificate <name_or_id>
+
+   Update an certificate by name or id.
+   Update can be passed :option:`--name <neutron --name>` :option:`--description <neutron --description>`..
+
+   Examples::
+
+       neutron a10-certificate-update mycert --name myname
+
+       neutron a10-certificate-update mycert \
+           --name myname \
+           --desciption "My new description"
+
+       neutron a10-certificate-update mycert \
+           --desciption "My new description"
+Show
+""""
+
+.. option:: a10-certificate-show <name_or_id>
+
+   Show a certificate by name or ID
+
+   Example::
+
+       neutron a10-certificate-show mycert
+       neutron a10-certificate-show c131cb42-072a-4c3f-9d2d-89ee76d407a5
+
+List
+""""
+
+.. option:: a10-certificate-list
+
+   List all certificates.
+
+   Example::
+
+       neutron a10-certificate-list
+
+Delete
+""""""
+
+.. option:: a10-certificate-delete <name_or_id>
+
+   Delete a certificate by name or id.
+
+   Example::
+
+       neutron a10-certificate-delete mycert
+       neutron a10-certificate-delete c131cb42-072a-4c3f-9d2d-89ee76d407a5
+
+
+Certificate Bindings
+^^^^^^^^^^^^^^^^^^^^
+
+Create
+""""""
+
+.. program:: a10-certificate
+
+.. option:: a10-certificate-create <name>
+
+   Create a new :ref:`certificate <certificates>`.
+
+   Examples::
+
+       neutron a10-certificate-create mycert \
+           --description "SSL Cert for myawesomewebsite.com.tld"
+           --cert-file /mnt/usb/MyCertFile.pem
+           --key-file /mnt/usb/MyKeyFile.pem
+           --intermediate-file /mnt/usb/MyChain.pem
+           --password "My secret password"
+
+.. option:: --cert-file <cert-file>
+
+   The :ref:`file <certificates-datafields>` that contains the encoded data for the certificate
+
+.. option:: --key-file <key-file>
+
+   The :ref:`file <certificates-datafields>` that contains the encoded data for the private key
+
+.. option:: --intermediate-file <intermediate-file>
+
+   The :ref:`file <certificates-datafields>` that contains the encoded data for any intermediary certificates
+
+.. option:: --password <password>
+
+   The :ref:`password <certificates-datafields>` required for the key.
+
+Update
+""""""
+
+.. option:: a10-certificate <name_or_id>
+
+   Update an certificate by name or id.
+   Update can be passed :option:`--name <neutron --name>` :option:`--description <neutron --description>`..
+
+   Examples::
+
+       neutron a10-certificate-update mycert --name myname
+
+       neutron a10-certificate-update mycert \
+           --name myname \
+           --desciption "My new description"
+
+       neutron a10-certificate-update mycert \
+           --desciption "My new description"
+Show
+""""
+
+.. option:: a10-certificate-show <name_or_id>
+
+   Show a certificate by name or ID
+
+   Example::
+
+       neutron a10-certificate-show mycert
+       neutron a10-certificate-show c131cb42-072a-4c3f-9d2d-89ee76d407a5
+
+List
+""""
+
+.. option:: a10-certificate-list
+
+   List all certificates.
+
+   Example::
+
+       neutron a10-certificate-list
+
+Delete
+""""""
+
+.. option:: a10-certificate-delete <name_or_id>
+
+   Delete a certificate by name or id.
+
+   Example::
+
+       neutron a10-certificate-delete mycert
+       neutron a10-certificate-delete c131cb42-072a-4c3f-9d2d-89ee76d407a5
