@@ -40,8 +40,9 @@ class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
     def get_a10_certificate(self, context, id, fields=None):
         return super(A10CertificatePlugin, self).get_a10_certificate(context, id, fields)
 
-    def update_a10_certificate(self, context, id, certificate):
-        return super(A10CertificatePlugin, self).update_a10_certificate(context, id, certificate)
+    def update_a10_certificate(self, context, id, a10_certificate):
+        return super(A10CertificatePlugin, self).update_a10_certificate(context, id,
+                                                                        a10_certificate)
 
     def delete_a10_certificate(self, context, id):
         return super(A10CertificatePlugin, self).delete_a10_certificate(context, id)

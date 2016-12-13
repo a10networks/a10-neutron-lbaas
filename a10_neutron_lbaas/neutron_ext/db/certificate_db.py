@@ -26,6 +26,7 @@ from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.common import exceptions as nexception
 from a10_neutron_lbaas.neutron_ext.extensions import a10Certificate
 
+from a10_openstack_lib.resources import a10_certificate as resources
 
 LOG = logging.getLogger(__name__)
 
@@ -157,7 +158,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         return self._fields(res, fields)
 
     def create_a10_certificate(self, context, a10_certificate):
-        cert = a10_certificate['a10_certificate']
+        cert = a10_certificate[resources.CERTIFICATE]
 
         with context.session.begin(subtransactions=True):
             cert_record = models.Certificate(id=uuidutils.generate_uuid(),
@@ -172,11 +173,12 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
 
         return self._make_certificate_dict(cert_record)
 
-    def update_a10_certificate(self, context, certificate_id, certificate):
-        data = certificate['a10_certificate']
+    def update_a10_certificate(self, context, certificate_id, a10_certificate):
+        a10_certificate = a10_certificate[resources.CERTIFICATE]
+
         with context.session.begin(subtransactions=True):
             certificate_db = self._get_certificate(context, certificate_id)
-            certificate_db.update(**data)
+            certificate_db.update(**a10_certificate)
 
         return self._make_certificate_dict(certificate_db)
 
