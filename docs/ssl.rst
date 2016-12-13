@@ -33,7 +33,7 @@ Certificate Bindings
 
 An SSL Certificate binding represents the relationship between a certificate and listener(s) the certificate is bound to.
 
-.. _certificate-binding-datafields:
+.. _certificatebindings-datafields:
 
 Certificate Binding Data Fields
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

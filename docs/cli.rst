@@ -561,86 +561,56 @@ Certificate Bindings
 Create
 """"""
 
-.. program:: a10-certificate
+.. program:: a10-certificate-bindings
 
-.. option:: a10-certificate-create <name>
+.. option:: a10-certificatebindings-create <name>
 
-   Create a new :ref:`certificate <certificates>`.
-
-   Examples::
-
-       neutron a10-certificate-create mycert \
-           --description "SSL Cert for myawesomewebsite.com.tld"
-           --cert-file /mnt/usb/MyCertFile.pem
-           --key-file /mnt/usb/MyKeyFile.pem
-           --intermediate-file /mnt/usb/MyChain.pem
-           --password "My secret password"
-
-.. option:: --cert-file <cert-file>
-
-   The :ref:`file <certificates-datafields>` that contains the encoded data for the certificate
-
-.. option:: --key-file <key-file>
-
-   The :ref:`file <certificates-datafields>` that contains the encoded data for the private key
-
-.. option:: --intermediate-file <intermediate-file>
-
-   The :ref:`file <certificates-datafields>` that contains the encoded data for any intermediary certificates
-
-.. option:: --password <password>
-
-   The :ref:`password <certificates-datafields>` required for the key.
-
-Update
-""""""
-
-.. option:: a10-certificate <name_or_id>
-
-   Update an certificate by name or id.
-   Update can be passed :option:`--name <neutron --name>` :option:`--description <neutron --description>`..
+   Create a new :ref:`certificate/listener binding <certificate-bindings>`.
 
    Examples::
 
-       neutron a10-certificate-update mycert --name myname
+       neutron a10-certificatebinding-create mycert listener1
+       neutron a10-certificatebinding-create c131cb42-072a-4c3f-9d2d-89ee76d407a5 listener1
+       neutron a10-certificatebinding-create mycert 2309dbf6-4097-4abe-9528-1ab5c53409a5
+       neutron a10-certificate-binding-create c131cb42-072a-4c3f-9d2d-89ee76d407a5 2309dbf6-4097-4abe-9528-1ab5c53409a5
 
-       neutron a10-certificate-update mycert \
-           --name myname \
-           --desciption "My new description"
+.. option:: --certificate_id <certificate_id>
 
-       neutron a10-certificate-update mycert \
-           --desciption "My new description"
+   The :ref:`certificate <certificatebindings-datafields>` being bound to the listener.
+
+.. option:: --listener_id <listener_id>
+
+   The :ref:`listener <certificatebindings-datafields>` that will present the SSL certificate.
+
 Show
 """"
 
-.. option:: a10-certificate-show <name_or_id>
+.. option:: a10-certificatebindings-show <name_or_id>
 
-   Show a certificate by name or ID
+   Show a certificate binding by  ID
 
    Example::
 
-       neutron a10-certificate-show mycert
-       neutron a10-certificate-show c131cb42-072a-4c3f-9d2d-89ee76d407a5
+       neutron a10-certificate-show e526205e-2c9d-4ca9-a9b7-fb22742f1634
 
 List
 """"
 
-.. option:: a10-certificate-list
+.. option:: a10-certificatebindings-list
 
-   List all certificates.
+   List all certificate bindings.
 
    Example::
 
-       neutron a10-certificate-list
+       neutron a10-certificatebindings-list
 
 Delete
 """"""
 
 .. option:: a10-certificate-delete <name_or_id>
 
-   Delete a certificate by name or id.
+   Delete a certificate binding by id.
 
    Example::
 
-       neutron a10-certificate-delete mycert
-       neutron a10-certificate-delete c131cb42-072a-4c3f-9d2d-89ee76d407a5
+       neutron a10-certificate-delete e526205e-2c9d-4ca9-a9b7-fb22742f1634
