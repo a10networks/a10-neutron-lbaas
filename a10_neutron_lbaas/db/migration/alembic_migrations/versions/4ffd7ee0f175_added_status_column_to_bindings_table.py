@@ -11,17 +11,18 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-"""Branch head merge
 
-Revision ID: e3d5134c59a7
-Revises: 08dacae1fb67, bc5626a5af2a
-Create Date: 2016-12-13 18:33:01.305065
+"""Added status column to bindings table
+
+Revision ID: 4ffd7ee0f175
+Revises: e3d5134c59a7
+Create Date: 2016-12-14 01:01:28.281713
 
 """
 
 # revision identifiers, used by Alembic.
-revision = 'e3d5134c59a7'
-down_revision = ('08dacae1fb67', 'bc5626a5af2a')
+revision = '4ffd7ee0f175'
+down_revision = 'e3d5134c59a7'
 branch_labels = None
 depends_on = None
 
@@ -30,8 +31,10 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    pass
+    op.add_column('a10_certificatelistenerbindings', 
+            sa.Column('status', sa.Boolean, default=False, server_default='0')
+    )
 
 
 def downgrade():
-    pass
+    op.drop_column('a10_certificatelistenerbindings', 'status')

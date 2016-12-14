@@ -94,3 +94,15 @@ def vip_protocols(c, os_protocol):
         'FTP_PROXY': z.FTP_PROXY
     }
     return protocols[os_protocol]
+
+
+def vport_swap_protocols(c, os_protocol):
+    z = c.client.slb.virtual_server.vport
+    # what it is: what it needs to be
+    mapping = {
+        z.TCP: z.HTTPS,
+        z.HTTPS: z.TCP,
+        z.HTTP: z.TCP
+    }
+
+    return mapping[os_protocol]

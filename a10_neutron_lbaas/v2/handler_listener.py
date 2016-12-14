@@ -74,14 +74,20 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             except Exception as ex:
                 LOG.exception(ex)
 
-            if bindings and len(bindings) > 0:
+            unbound = any([not bool(x.status) for x in bindings])
+
+            if bindings and len(bindings) > 0 and unbound:
                 if self._set_a10_https_values(listener, c, cert_data, bindings):
+                    listener = self._swap_https_listener(c, listener)
+                    set_method = c.slb.virtual_server.vport.create
                     templates["client_ssl"] = {}
                     template_name = str(cert_data.get('template_name') or '')
                     key_passphrase = str(cert_data.get('key_pass') or '')
                     cert_filename = str(cert_data.get('cert_filename') or '')
                     key_filename = str(cert_data.get('key_filename') or '')
                     template_args["template_client_ssl"] = template_name
+        else:
+            listener.protocol = openstack_mappings.vip_protocols(c, listener.protocol)
 
         if 'client_ssl' in templates:
             template_args["template_client_ssl"] = template_name
@@ -124,7 +130,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=openstack_mappings.vip_protocols(c, listener.protocol),
+                protocol=listener.protocol,
                 port=listener.protocol_port,
                 service_group_name=pool_name,
                 s_pers_name=persistence.s_persistence(),
@@ -187,7 +193,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         # If we got bindings back and there is only one - a listener can only have
         # a single cert bound.
-        if bindings and len(bindings) == 1:
+        if bindings and len(bindings) == 1 and all([bool(x.status) for x in bindings]):
             binding = bindings[0]
 
             cert_data["cert_content"] = binding.certificate.cert_data or None
@@ -281,3 +287,28 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                     self.cert_db.delete_a10_certificate_binding(context, b.id)
                 except Exception as ex:
                     LOG.exception(ex)
+
+    # Swap in the https protocol type for tcp virtual ports
+    def _swap_https_listener(self, c, listener):
+        # Get the existing vport
+        old_listener = c.client.slb.virtual_server.vport.get(
+            self.a10_driver.loadbalancer._name(listener.loadbalancer),
+            self._meta_name(listener),
+            protocol=openstack_mappings.vip_protocols(c, listener.protocol),
+            port=listener.protocol_port
+        )
+
+        c.client.slb.virtual_server.vport.delete(
+            self.a10_driver.loadbalancer._name(old_listener.loadbalancer),
+            self._meta_name(old_listener),
+            protocol=old_listener.protocol,
+            port=listener.protocol_port)
+
+        listener.protocol = openstack_mappings.vport_swap_protocols(listener.protocol)
+
+        return listener
+
+        # Copy the relevant data (port, service group if set)
+        # Delete the existing port
+        # Create a new port with the same name, but HTTPS. And SSL template.
+        # Do this in reverse for a delete
