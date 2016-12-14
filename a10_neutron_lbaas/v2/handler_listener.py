@@ -37,10 +37,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         self.cert_db = cert_db
 
     def _set(self, set_method, c, context, listener):
-        if self.cert_db is None:
-            self.cert_db = A10CertificatePlugin()
-        if self.barbican_client is None:
-            self.barbican_client = certwrapper.CertManagerWrapper(handler=self)
+        unbound = False
+
+        self._ensure_ssl_dependencies()
 
         status = c.client.slb.UP
         if not listener.admin_state_up:
@@ -74,19 +73,22 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             except Exception as ex:
                 LOG.exception(ex)
 
-            unbound = any([not bool(x.status) for x in bindings])
+            unbound = not bindings or any([not bool(x.status) for x in bindings])
 
             if bindings and len(bindings) > 0 and unbound:
                 if self._set_a10_https_values(listener, c, cert_data, bindings):
-                    listener = self._swap_https_listener(c, listener)
-                    set_method = c.slb.virtual_server.vport.create
+                    listener, set_method = self._swap_https_listener(c, listener)
                     templates["client_ssl"] = {}
                     template_name = str(cert_data.get('template_name') or '')
                     key_passphrase = str(cert_data.get('key_pass') or '')
                     cert_filename = str(cert_data.get('cert_filename') or '')
                     key_filename = str(cert_data.get('key_filename') or '')
                     template_args["template_client_ssl"] = template_name
-        else:
+                    self._set_binding_status(context, bindings)
+                    unbound = False
+
+        # No binding, proceed.
+        if unbound:
             listener.protocol = openstack_mappings.vip_protocols(c, listener.protocol)
 
         if 'client_ssl' in templates:
@@ -191,9 +193,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         LOG.info("default_tls_container_id unspecified for listener. Checking A10 DB.")
         is_success = False
 
-        # If we got bindings back and there is only one - a listener can only have
-        # a single cert bound.
-        if bindings and len(bindings) == 1 and all([bool(x.status) for x in bindings]):
+        # We should have a single binding and it's status should be 0.
+        if bindings and len(bindings) == 1 and all([not bool(x.status) for x in bindings]):
             binding = bindings[0]
 
             cert_data["cert_content"] = binding.certificate.cert_data or None
@@ -257,7 +258,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             c.client.slb.virtual_server.vport.delete(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=openstack_mappings.vip_protocols(c, listener.protocol),
+                protocol=openstack_mappings.vip_protocols(c, str.upper(str(listener.protocol))),
                 port=listener.protocol_port)
         except acos_errors.NotFound:
             pass
@@ -270,11 +271,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 pass
 
     def delete(self, context, listener):
+        self._ensure_ssl_dependencies()
         with a10.A10DeleteContext(self, context, listener) as c:
             self._delete(c, context, listener)
 
     def _remove_existing_bindings(self, c, context, listener):
         bindings = []
+        removed = False
 
         try:
             bindings = self.cert_db.get_bindings_for_listener(context, listener.id)
@@ -285,30 +288,45 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             for b in bindings:
                 try:
                     self.cert_db.delete_a10_certificate_binding(context, b.id)
+                    removed = True
                 except Exception as ex:
                     LOG.exception(ex)
+                listener.protocol = openstack_mappings.vport_swap_protocols(c, listener.protocol)
+        return removed
 
     # Swap in the https protocol type for tcp virtual ports
     def _swap_https_listener(self, c, listener):
         # Get the existing vport
+
+        lb_name = str(self.a10_driver.loadbalancer._name(listener.loadbalancer))
+        listener_name = str(self._meta_name(listener))
+        listener_protocol = str(openstack_mappings.vip_protocols(c, str(listener.protocol)))
+        listener_port = listener.protocol_port
+
         old_listener = c.client.slb.virtual_server.vport.get(
-            self.a10_driver.loadbalancer._name(listener.loadbalancer),
-            self._meta_name(listener),
-            protocol=openstack_mappings.vip_protocols(c, listener.protocol),
-            port=listener.protocol_port
+            lb_name,
+            listener_name,
+            protocol=listener_protocol,
+            port=listener_port
         )
 
         c.client.slb.virtual_server.vport.delete(
-            self.a10_driver.loadbalancer._name(old_listener.loadbalancer),
-            self._meta_name(old_listener),
-            protocol=old_listener.protocol,
-            port=listener.protocol_port)
+            lb_name,
+            listener_name,
+            protocol=listener_protocol,
+            port=listener_port)
 
-        listener.protocol = openstack_mappings.vport_swap_protocols(listener.protocol)
+        listener.protocol = openstack_mappings.vport_swap_protocols(c, listener_protocol)
 
-        return listener
+        return (listener, c.client.slb.virtual_server.vport.create)
 
-        # Copy the relevant data (port, service group if set)
-        # Delete the existing port
-        # Create a new port with the same name, but HTTPS. And SSL template.
-        # Do this in reverse for a delete
+    def _set_binding_status(self, context, bindings):
+        for binding in bindings:
+            bind_dict = {"a10_certificate_binding": {"id": binding.id, "status": 1}}
+            self.cert_db.update_a10_certificate_binding(context, bind_dict)
+
+    def _ensure_ssl_dependencies(self):
+        if self.cert_db is None:
+            self.cert_db = A10CertificatePlugin()
+        if self.barbican_client is None:
+            self.barbican_client = certwrapper.CertManagerWrapper(handler=self)

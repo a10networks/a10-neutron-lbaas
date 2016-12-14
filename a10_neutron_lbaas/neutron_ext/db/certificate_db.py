@@ -149,12 +149,13 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         if bindings is not None and len(bindings) > 0:
             raise CertificateInUseError(certificate_id)
 
-    def _make_listener_binding_dict(self, binding, fields=None):
+    def _make_certificate_binding_dict(self, binding, fields=None):
         res = {'id': binding.id,
                'tenant_id': binding.tenant_id,
                'certificate_id': binding.certificate_id,
                'listener_id': binding.listener_id,
-               'certificate_name': binding.certificate.name}
+               'certificate_name': binding.certificate.name,
+               'status': binding.status}
         return self._fields(res, fields)
 
     def create_a10_certificate(self, context, a10_certificate):
@@ -190,7 +191,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
             cert = self._get_certificate(context, certificate_id)
             context.session.delete(cert)
 
-    def _get_listener_binding(self, context, binding_id):
+    def _get_certificate_binding(self, context, binding_id):
         try:
             return self._get_by_id(context, models.CertificateListenerBinding, binding_id)
         except Exception:
@@ -210,9 +211,9 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                                     marker_obj=marker, page_reverse=page_reverse)
 
     def get_a10_certificate_binding(self, context, id, fields=None):
-        binding = self._get_listener_binding(context, id)
+        binding = self._get_certificate_binding(context, id)
         LOG.debug("CertificateDbMixin:get_certificate_binding(): %s" % binding)
-        return self._make_listener_binding_dict(binding, fields)
+        return self._make_certificate_binding_dict(binding, fields)
 
     def create_a10_certificate_binding(self, context, a10_certificate_binding):
         certificate_id = a10_certificate_binding['certificate_id']
@@ -230,11 +231,11 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                                                                tenant_id=context.tenant_id)
             context.session.add(binding_record)
 
-        return self._make_listener_binding_dict(binding_record)
+        return self._make_certificate_binding_dict(binding_record)
 
     def delete_a10_certificate_binding(self, context, id):
         with context.session.begin(subtransactions=True):
-            binding = self._get_listener_binding(context, id)
+            binding = self._get_certificate_binding(context, id)
             if binding is None:
                 raise CertificateListenerBindingNotFoundByIdError(id=id)
             context.session.delete(binding)
@@ -243,7 +244,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                                      sorts=None, limit=None, marker=None,
                                      page_reverse=False):
         bindings = self._get_collection(context, models.CertificateListenerBinding,
-                                        self._make_listener_binding_dict, filters=filters,
+                                        self._make_certificate_binding_dict, filters=filters,
                                         fields=fields, sorts=sorts, limit=limit,
                                         marker_obj=marker, page_reverse=page_reverse)
         return bindings
@@ -265,3 +266,12 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                         .filter_by(certificate_id=certificate_id))
 
         return list(bindings)
+
+    def update_a10_certificate_binding(self, context, a10_certificate_binding):
+        a10_certificate_binding = a10_certificate_binding[resources.CERTIFICATE_BINDING]
+        id = a10_certificate_binding["id"]
+        with context.session.begin(subtransactions=True):
+            certificate_db = self._get_certificate_binding(context, id)
+            certificate_db.update(**a10_certificate_binding)
+
+        return self._make_certificate_binding_dict(certificate_db)
