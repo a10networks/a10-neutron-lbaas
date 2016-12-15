@@ -33,4 +33,5 @@ class CertificateListenerBinding(model_base.A10BaseMixin, model_base.A10Base):
                                nullable=False)
     certificate = orm.relationship(Certificate, uselist=False)
     listener_id = sa.Column(sa.String(36))
-    status = sa.Column(sa.Boolean())
+    # This is a TINYINT/BYTE field depending on SQL implementation
+    status = sa.Column(sa.Integer())
