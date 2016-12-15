@@ -373,7 +373,7 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
         vip = self._build_vip_dependencies(ctx, _tenant_id)
         vip_uuid = vip['id']
         cert, data = self._create_certificate()
-        binding = self._build_binding(cert['id'], vip_uuid).get("a10_certificate_binding")
+        binding = self._build_binding(cert['id'], vip_uuid)
         self.plugin.create_a10_certificate_binding(ctx, binding)
 
         actual = ctx.session.query(models.CertificateListenerBinding).filter_by(
@@ -388,7 +388,7 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
         vip_uuid = vip['id']
 
         cert, data = self._create_certificate()
-        binding = self._build_binding(cert['id'], vip_uuid).get("a10_certificate_binding")
+        binding = self._build_binding(cert['id'], vip_uuid)
         self.plugin.create_a10_certificate_binding(ctx, binding)
         ctx.session.commit()
         record = ctx.session.query(models.CertificateListenerBinding) \

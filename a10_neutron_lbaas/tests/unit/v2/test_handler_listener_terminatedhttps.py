@@ -104,7 +104,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
     def test_barbican_client_not_null(self, certmgr):
         """This tests that the barbican_client dependency is always there."""
         handler = self.a.listener
-        handler.barbican_client = None
+
         pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
         lb = fake_objs.FakeLoadBalancer()
@@ -121,7 +121,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         certmgr.private_key_passphrase = "SECRETPASSWORD"
 
         handler = self.a.listener
-        handler.barbican_client = certmgr
+
         pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
         lb = fake_objs.FakeLoadBalancer()
