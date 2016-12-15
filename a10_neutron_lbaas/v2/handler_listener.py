@@ -84,8 +84,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 LOG.exception(ex)
 
             if binding:
-                # If the binding is being deleted and the listener wasn't created as https
-                # remove the https port and re-create it as the original port type
+                # if the binding is being deleted and the listener wasn't created as https,
+                # remove the https port to make room for the original port
                 if binding.status == constants.STATUS_DELETING:
 
                     if (protocol != c.client.slb.virtual_server.vport.HTTPS):
@@ -271,10 +271,11 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             pass
 
     def _delete(self, c, context, listener):
-        # First, remove any existing cert bindings
-
-        protocol = listener.protocol if self._remove_existing_bindings(
-            c, context, listener) else openstack_mappings.vip_protocols(c, listener.protocol)
+        # First, remove any existing cert bindings and set the correct protocol for delete
+        # existence of bindings means the vport protocol has been "switched"
+        protocol = openstack_mappings.vip_protocols(c, listener.protocol)
+        if self._remove_existing_bindings(c, context, listener):
+            protocol = c.client.slb.virtual_server.vport.HTTPS
 
         # Regular delete, use regular protocol mapping.
         self._delete_listener(
