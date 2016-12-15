@@ -84,16 +84,17 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 LOG.exception(ex)
 
             if binding:
-                # If the binding is being deleted and the port isn't https
-                # remove the port and re-create it.
+                # If the binding is being deleted and the listener wasn't created as https
+                # remove the https port and re-create it as the original port type
                 if binding.status == constants.STATUS_DELETING:
 
                     if (protocol != c.client.slb.virtual_server.vport.HTTPS):
-                        self._delete_listener(c, context, listener, listener.protocol)
+                        self._delete_listener(c, context, listener,
+                                              c.client.slb.virtual_server.vport.HTTPS)
                         set_method = c.client.slb.virtual_server.vport.create
                 elif self._set_a10_https_values(listener, c, cert_data, binding):
                     # If the binding hasn't been created and the port isn't https
-                    # remove the port and re-create it.
+                    # remove the port and re-create it as https.
                     if (binding.status == constants.STATUS_CREATING and
                             protocol != c.client.slb.virtual_server.vport.HTTPS):
 
