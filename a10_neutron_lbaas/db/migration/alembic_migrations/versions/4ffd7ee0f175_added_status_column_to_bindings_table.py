@@ -31,9 +31,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('a10_certificatelistenerbindings', 
-            sa.Column('status', sa.Boolean, default=False, server_default='0')
-    )
+    op.add_column('a10_certificatelistenerbindings',
+                  sa.Column('status', sa.Integer, nullable=False, default=0, server_default='0')
+                  )
 
 
 def downgrade():

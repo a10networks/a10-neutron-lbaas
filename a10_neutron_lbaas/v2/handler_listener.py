@@ -18,7 +18,8 @@ import acos_client.errors as acos_errors
 
 from a10_neutron_lbaas.acos import openstack_mappings
 from a10_neutron_lbaas import constants
-from a10_neutron_lbaas.neutron_ext.db.certificate_db import A10CertificateDbMixin as A10CertificateDb
+from a10_neutron_lbaas.neutron_ext.db.certificate_db \
+    import A10CertificateDbMixin as A10CertificateDb
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
 import handler_base_v2
 import handler_persist
@@ -48,7 +49,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             self._barbican_client = certwrapper.CertManagerWrapper(handler=self)
         return self._barbican_client
 
-
     def _set(self, set_method, c, context, listener):
 
         status = c.client.slb.UP
@@ -57,7 +57,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         templates = self.meta(listener, "template", {})
 
-        bindings = []
         server_args = {}
         cert_data = dict()
         template_args = {}
@@ -88,17 +87,19 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 # If the binding is being deleted and the port isn't https
                 # remove the port and re-create it.
                 if binding.status == constants.STATUS_DELETING:
+                    import pdb
+                    pdb.set_trace()
+
                     if (protocol != c.client.slb.virtual_server.vport.HTTPS):
-                        self._delete_listener(c, context, listener)
+                        self._delete_listener(c, context, listener, listener.protocol)
                         set_method = c.client.slb.virtual_server.vport.create
                 elif self._set_a10_https_values(listener, c, cert_data, binding):
-
                     # If the binding hasn't been created and the port isn't https
                     # remove the port and re-create it.
                     if (binding.status == constants.STATUS_CREATING and
-                        protocol != c.client.slb.virtual_server.vport.HTTPS):
+                            protocol != c.client.slb.virtual_server.vport.HTTPS):
 
-                        self._delete_listener(c, context, listener)
+                        self._delete_listener(c, context, listener, protocol)
                         set_method = c.client.slb.virtual_server.vport.create
 
                     protocol = c.client.slb.virtual_server.vport.HTTPS
@@ -260,12 +261,12 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10WriteStatusContext(self, context, listener) as c:
             self._update(c, context, listener)
 
-    def _delete_listener(self, c, context, listener):
+    def _delete_listener(self, c, context, listener, protocol):
         try:
             c.client.slb.virtual_server.vport.delete(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=openstack_mappings.vip_protocols(c, listener.protocol),
+                protocol=protocol,
                 port=listener.protocol_port)
         except acos_errors.NotFound:
             pass
@@ -273,8 +274,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def _delete(self, c, context, listener):
         # First, remove any existing cert bindings
         self._remove_existing_bindings(c, context, listener)
-
-        self._delete_listener(c, context, listener)
+        # Regular delete, use regular protocol mapping.
+        self._delete_listener(
+            c, context, listener, openstack_mappings.vip_protocols(c, listener.protocol))
 
         # clean up ssl template
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:

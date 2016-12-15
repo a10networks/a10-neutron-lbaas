@@ -54,8 +54,8 @@ class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
 
     def _set_a10_certificate_binding_status(self, context, id, status):
         update_binding = {
-                "id": binding["id"],
-                "status": status}
+            "id": id,
+            "status": status
         }
         update_a10_certificate_binding = {constants.A10_CERTIFICATE_BINDING: update_binding}
 
@@ -90,7 +90,8 @@ class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
     def delete_a10_certificate_binding(self, context, id):
         binding = self._set_a10_certificate_binding_status(context, id,
                                                            certificate_constants.STATUS_DELETING)
-
+        import pdb
+        pdb.set_trace()
         # All of the real work happens in the listener handler.
         self._update_listener(context, binding["listener_id"])
 
