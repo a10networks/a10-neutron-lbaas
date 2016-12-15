@@ -216,6 +216,7 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
         return self._make_certificate_binding_dict(binding, fields)
 
     def create_a10_certificate_binding(self, context, a10_certificate_binding):
+        a10_certificate_binding = a10_certificate_binding[resources.CERTIFICATE_BINDING]
         certificate_id = a10_certificate_binding['certificate_id']
         listener_id = a10_certificate_binding['listener_id']
         with context.session.begin(subtransactions=True):
@@ -249,23 +250,19 @@ class A10CertificateDbMixin(common_db_mixin.CommonDbMixin, a10Certificate.A10Cer
                                         marker_obj=marker, page_reverse=page_reverse)
         return bindings
 
-    def get_bindings_for_listener(self, context, listener_id):
-        existing = []
-
+    def get_binding_for_listener(self, context, listener_id):
         with context.session.begin(subtransactions=True):
             existing = (context.session.query(models.CertificateListenerBinding)
-                        .filter_by(listener_id=listener_id))
+                        .filter_by(listener_id=listener_id).first())
 
-        return list(existing)
+        return existing
 
     def get_bindings_for_certificate(self, context, certificate_id):
-        bindings = []
-
         with context.session.begin(subtransactions=True):
             bindings = (context.session.query(models.CertificateListenerBinding)
-                        .filter_by(certificate_id=certificate_id))
+                        .filter_by(certificate_id=certificate_id).all())
 
-        return list(bindings)
+        return bindings
 
     def update_a10_certificate_binding(self, context, a10_certificate_binding):
         a10_certificate_binding = a10_certificate_binding[resources.CERTIFICATE_BINDING]

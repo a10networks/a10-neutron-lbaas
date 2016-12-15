@@ -18,7 +18,7 @@ import acos_client.errors as acos_errors
 
 from a10_neutron_lbaas.acos import openstack_mappings
 from a10_neutron_lbaas import constants
-from a10_neutron_lbaas.neutron_ext.services.a10_certificate.plugin import A10CertificatePlugin
+from a10_neutron_lbaas.neutron_ext.db.certificate_db import A10CertificateDbMixin as A10CertificateDb
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
 import handler_base_v2
 import handler_persist
@@ -33,13 +33,23 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def __init__(self, a10_driver, openstack_manager, neutron=None, barbican_client=None,
                  cert_db=None):
         super(ListenerHandler, self).__init__(a10_driver, openstack_manager, neutron)
-        self.barbican_client = barbican_client
-        self.cert_db = cert_db
+        self._barbican_client = barbican_client
+        self._cert_db = cert_db
+
+    @property
+    def cert_db(self):
+        if self._cert_db is None:
+            self._cert_db = A10CertificateDb()
+        return self._cert_db
+
+    @property
+    def barbican_client(self):
+        if self._barbican_client is None:
+            self._barbican_client = certwrapper.CertManagerWrapper(handler=self)
+        return self._barbican_client
+
 
     def _set(self, set_method, c, context, listener):
-        unbound = False
-
-        self._ensure_ssl_dependencies()
 
         status = c.client.slb.UP
         if not listener.admin_state_up:
@@ -51,6 +61,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         server_args = {}
         cert_data = dict()
         template_args = {}
+        protocol = openstack_mappings.vip_protocols(c, listener.protocol)
 
         # Try Barbican first.  TERMINATED HTTPS requires a default TLS container ID that is
         # checked by the API so we can't fake it out.
@@ -69,27 +80,34 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                     constants.PROTOCOL_HTTP,
                                     constants.PROTOCOL_TCP]):
             try:
-                bindings = self.cert_db.get_bindings_for_listener(context, listener.id)
+                binding = self.cert_db.get_binding_for_listener(context, listener.id)
             except Exception as ex:
                 LOG.exception(ex)
 
-            unbound = not bindings or any([not bool(x.status) for x in bindings])
+            if binding:
+                # If the binding is being deleted and the port isn't https
+                # remove the port and re-create it.
+                if binding.status == constants.STATUS_DELETING:
+                    if (protocol != c.client.slb.virtual_server.vport.HTTPS):
+                        self._delete_listener(c, context, listener)
+                        set_method = c.client.slb.virtual_server.vport.create
+                elif self._set_a10_https_values(listener, c, cert_data, binding):
 
-            if bindings and len(bindings) > 0 and unbound:
-                if self._set_a10_https_values(listener, c, cert_data, bindings):
-                    listener, set_method = self._swap_https_listener(c, listener)
+                    # If the binding hasn't been created and the port isn't https
+                    # remove the port and re-create it.
+                    if (binding.status == constants.STATUS_CREATING and
+                        protocol != c.client.slb.virtual_server.vport.HTTPS):
+
+                        self._delete_listener(c, context, listener)
+                        set_method = c.client.slb.virtual_server.vport.create
+
+                    protocol = c.client.slb.virtual_server.vport.HTTPS
                     templates["client_ssl"] = {}
                     template_name = str(cert_data.get('template_name') or '')
                     key_passphrase = str(cert_data.get('key_pass') or '')
                     cert_filename = str(cert_data.get('cert_filename') or '')
                     key_filename = str(cert_data.get('key_filename') or '')
                     template_args["template_client_ssl"] = template_name
-                    self._set_binding_status(context, bindings)
-                    unbound = False
-
-        # No binding, proceed.
-        if unbound:
-            listener.protocol = openstack_mappings.vip_protocols(c, listener.protocol)
 
         if 'client_ssl' in templates:
             template_args["template_client_ssl"] = template_name
@@ -132,7 +150,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=listener.protocol,
+                protocol=protocol,
                 port=listener.protocol_port,
                 service_group_name=pool_name,
                 s_pers_name=persistence.s_persistence(),
@@ -189,21 +207,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             LOG.error("default_tls_container_id unspecified for listener.")
         return is_success
 
-    def _set_a10_https_values(self, listener, c, cert_data, bindings):
+    def _set_a10_https_values(self, listener, c, cert_data, binding):
         LOG.info("default_tls_container_id unspecified for listener. Checking A10 DB.")
         is_success = False
 
-        # We should have a single binding and it's status should be 0.
-        if bindings and len(bindings) == 1 and all([not bool(x.status) for x in bindings]):
-            binding = bindings[0]
-
-            cert_data["cert_content"] = binding.certificate.cert_data or None
-            cert_data["key_content"] = binding.certificate.key_data or None
-            cert_data["key_pass"] = binding.certificate.password or None
-
-        else:
-            LOG.error("No Certificate <-> Listener bindings found.")
-            return is_success
+        cert_data["cert_content"] = binding.certificate.cert_data or None
+        cert_data["key_content"] = binding.certificate.key_data or None
+        cert_data["key_pass"] = binding.certificate.password or None
 
         if len(cert_data["cert_content"]) > 1:
             base_name = listener.id
@@ -250,18 +260,21 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10WriteStatusContext(self, context, listener) as c:
             self._update(c, context, listener)
 
-    def _delete(self, c, context, listener):
-        # First, remove any existing cert bindings
-        self._remove_existing_bindings(c, context, listener)
-
+    def _delete_listener(self, c, context, listener):
         try:
             c.client.slb.virtual_server.vport.delete(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=openstack_mappings.vip_protocols(c, str.upper(str(listener.protocol))),
+                protocol=openstack_mappings.vip_protocols(c, listener.protocol),
                 port=listener.protocol_port)
         except acos_errors.NotFound:
             pass
+
+    def _delete(self, c, context, listener):
+        # First, remove any existing cert bindings
+        self._remove_existing_bindings(c, context, listener)
+
+        self._delete_listener(c, context, listener)
 
         # clean up ssl template
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
@@ -271,62 +284,19 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 pass
 
     def delete(self, context, listener):
-        self._ensure_ssl_dependencies()
         with a10.A10DeleteContext(self, context, listener) as c:
             self._delete(c, context, listener)
 
     def _remove_existing_bindings(self, c, context, listener):
-        bindings = []
-        removed = False
+        binding = None
 
         try:
-            bindings = self.cert_db.get_bindings_for_listener(context, listener.id)
+            binding = self.cert_db.get_binding_for_listener(context, listener.id)
         except Exception as ex:
             LOG.exception(ex)
         # if we have bindings, remove them
-        if bindings and len(bindings) > 0:
-            for b in bindings:
-                try:
-                    self.cert_db.delete_a10_certificate_binding(context, b.id)
-                    removed = True
-                except Exception as ex:
-                    LOG.exception(ex)
-                listener.protocol = openstack_mappings.vport_swap_protocols(c, listener.protocol)
-        return removed
-
-    # Swap in the https protocol type for tcp virtual ports
-    def _swap_https_listener(self, c, listener):
-        # Get the existing vport
-
-        lb_name = str(self.a10_driver.loadbalancer._name(listener.loadbalancer))
-        listener_name = str(self._meta_name(listener))
-        listener_protocol = str(openstack_mappings.vip_protocols(c, str(listener.protocol)))
-        listener_port = listener.protocol_port
-
-        old_listener = c.client.slb.virtual_server.vport.get(
-            lb_name,
-            listener_name,
-            protocol=listener_protocol,
-            port=listener_port
-        )
-
-        c.client.slb.virtual_server.vport.delete(
-            lb_name,
-            listener_name,
-            protocol=listener_protocol,
-            port=listener_port)
-
-        listener.protocol = openstack_mappings.vport_swap_protocols(c, listener_protocol)
-
-        return (listener, c.client.slb.virtual_server.vport.create)
-
-    def _set_binding_status(self, context, bindings):
-        for binding in bindings:
-            bind_dict = {"a10_certificate_binding": {"id": binding.id, "status": 1}}
-            self.cert_db.update_a10_certificate_binding(context, bind_dict)
-
-    def _ensure_ssl_dependencies(self):
-        if self.cert_db is None:
-            self.cert_db = A10CertificatePlugin()
-        if self.barbican_client is None:
-            self.barbican_client = certwrapper.CertManagerWrapper(handler=self)
+        if binding is not None:
+            try:
+                self.cert_db.delete_a10_certificate_binding(context, binding.id)
+            except Exception as ex:
+                LOG.exception(ex)
