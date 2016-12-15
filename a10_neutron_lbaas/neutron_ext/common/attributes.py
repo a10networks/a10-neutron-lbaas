@@ -52,7 +52,8 @@ convert_kvp_to_list = _find(lambda: old_attributes.convert_kvp_to_list,
 
 ATTR_NOT_SPECIFIED = _find(lambda: old_attributes.ATTR_NOT_SPECIFIED,
                            lambda: lib_constants.ATTR_NOT_SPECIFIED)
-PLURALS = _find(lambda: old_attributes.PLURALS)
+PLURALS = _find(lambda: old_attributes.PLURALS,
+                lambda: {})
 
 
 def _add_validator_to(validators):
