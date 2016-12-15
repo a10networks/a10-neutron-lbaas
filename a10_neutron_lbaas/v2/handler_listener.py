@@ -87,8 +87,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 # If the binding is being deleted and the port isn't https
                 # remove the port and re-create it.
                 if binding.status == constants.STATUS_DELETING:
-                    import pdb
-                    pdb.set_trace()
 
                     if (protocol != c.client.slb.virtual_server.vport.HTTPS):
                         self._delete_listener(c, context, listener, listener.protocol)
