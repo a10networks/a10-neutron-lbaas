@@ -272,10 +272,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _delete(self, c, context, listener):
         # First, remove any existing cert bindings
-        self._remove_existing_bindings(c, context, listener)
+
+        protocol = listener.protocol if self._remove_existing_bindings(
+            c, context, listener) else openstack_mappings.vip_protocols(c, listener.protocol)
+
         # Regular delete, use regular protocol mapping.
         self._delete_listener(
-            c, context, listener, openstack_mappings.vip_protocols(c, listener.protocol))
+            c, context, listener, protocol)
 
         # clean up ssl template
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
@@ -301,3 +304,4 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 self.cert_db.delete_a10_certificate_binding(context, binding.id)
             except Exception as ex:
                 LOG.exception(ex)
+        return binding
