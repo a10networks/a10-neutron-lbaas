@@ -91,6 +91,11 @@ class A10CertificatePlugin(certificate_db.A10CertificateDbMixin):
         binding = self._set_a10_certificate_binding_status(context, id,
                                                            certificate_constants.STATUS_DELETING)
         # All of the real work happens in the listener handler.
-        self._update_listener(context, binding["listener_id"])
+        # Try to update the listener - it could be gone by now.
+        try:
+            self._update_listener(context, binding["listener_id"])
+        except Exception as ex:
+            LOG.exception(ex)
+            pass
 
         return super(A10CertificatePlugin, self).delete_a10_certificate_binding(context, id)
