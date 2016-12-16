@@ -42,11 +42,13 @@ class A10OpenstackLBBase(object):
                  barbican_client=None,
                  config=None,
                  config_dir=None,
-                 provider=None):
+                 provider=None,
+                 cert_db=None):
         self.openstack_driver = openstack_driver
         self.plumbing_hooks_class = plumbing_hooks_class
         self.neutron = neutron_hooks_module
         self.barbican_client = barbican_client
+        self.cert_db = cert_db
         self.config = config
         self.config_dir = config_dir
         self.provider = provider
@@ -124,7 +126,8 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
             self,
             self.openstack_driver.listener,
             neutron=self.neutron,
-            barbican_client=self.barbican_client)
+            barbican_client=self.barbican_client,
+            cert_db=self.cert_db)
 
     @property
     def pool(self):

@@ -3,11 +3,14 @@ hacking>=0.10,<0.11
 mock>=1.0.1,<1.1.0
 mox
 mox3
+-e git+https://github.com/openstack/neutron-lbaas#egg=neutron-lbaas
+#neutron
+#neutron-lbaas
 nose
 nose-exclude
-# API and DB test bases use oslotest
 oslotest
 pymysql
+testresources
+testscenarios
 # TODO(dougwig) -- can we remove this?
 -e git+https://github.com/openstack/neutron#egg=neutron
-

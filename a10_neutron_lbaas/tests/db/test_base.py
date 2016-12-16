@@ -26,4 +26,5 @@ class UnitTestBase(test_base.UnitTestBase):
         self.close_session = close_session
 
     def tearDown(self):
+        super(UnitTestBase, self).tearDown()
         self.close_session()

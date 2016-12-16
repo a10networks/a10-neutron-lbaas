@@ -28,7 +28,7 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
         super(TestPlugin, self).setUp()
         self.plugin = plugin.A10DeviceInstancePlugin()
         self.target = self.plugin
-        self.context = mock.MagicMock(tenant_id="MY_FAKE_TENANT")
+
         self.instance_manager = mock.MagicMock()
         instance_manager.InstanceManager.from_config = mock.MagicMock(
             return_value=self.instance_manager)
@@ -49,10 +49,14 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
         self.assertEqual([constants.A10_DEVICE_INSTANCE_EXT], sea)
 
     def test_create_calls_instance_manager(self):
-        self.target.create_a10_device_instance(self.context, self._build_instance())
+        context = self.context()
+        context.session = mock.MagicMock()
+        self.target.create_a10_device_instance(context, self._build_instance())
         self.assertTrue(self.instance_manager.create_device_instance.called)
 
     def test_delete_calls_instance_manager(self):
-        self.target.delete_a10_device_instance(self.context, 1)
+        context = self.context()
+        context.session = mock.MagicMock()
+        self.target.delete_a10_device_instance(context, 1)
         delete_call = self.instance_manager.delete_instance
         self.assertTrue(delete_call.called)

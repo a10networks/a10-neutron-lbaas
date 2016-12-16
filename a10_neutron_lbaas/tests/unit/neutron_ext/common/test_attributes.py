@@ -1,3 +1,5 @@
+# Copyright 2016,  A10 Networks
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -10,14 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from a10_neutron_lbaas.tests import test_case
 
-LB_METHOD_ROUND_ROBIN = 'ROUND_ROBIN'
-PROTOCOL_TERMINATED_HTTPS = 'TERMINATED_HTTPS'
-PROTOCOL_HTTP = 'HTTP'
-PROTOCOL_TCP = 'TCP'
-PROTOCOL_HTTPS = 'HTTPS'
+from a10_neutron_lbaas.neutron_ext.common import attributes
 
-# Statuses for a10 objects (certificate bindings)
-STATUS_CREATING = 0
-STATUS_CREATED = 1
-STATUS_DELETING = 2
+
+class TestAttributes(test_case.TestCase):
+
+    def test_plurals(self):
+        self.assertIsNotNone(attributes.PLURALS)

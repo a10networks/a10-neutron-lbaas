@@ -1,3 +1,5 @@
+# Copyright 2016, A10 Networks
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -9,15 +11,27 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+"""Branch head merge
+
+Revision ID: e3d5134c59a7
+Revises: 08dacae1fb67, bc5626a5af2a
+Create Date: 2016-12-13 18:33:01.305065
+
+"""
+
+# revision identifiers, used by Alembic.
+revision = 'e3d5134c59a7'
+down_revision = ('08dacae1fb67', 'bc5626a5af2a')
+branch_labels = None
+depends_on = None
+
+from alembic import op  # noqa
+import sqlalchemy as sa  # noqa
 
 
-LB_METHOD_ROUND_ROBIN = 'ROUND_ROBIN'
-PROTOCOL_TERMINATED_HTTPS = 'TERMINATED_HTTPS'
-PROTOCOL_HTTP = 'HTTP'
-PROTOCOL_TCP = 'TCP'
-PROTOCOL_HTTPS = 'HTTPS'
+def upgrade():
+    pass
 
-# Statuses for a10 objects (certificate bindings)
-STATUS_CREATING = 0
-STATUS_CREATED = 1
-STATUS_DELETING = 2
+
+def downgrade():
+    pass

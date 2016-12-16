@@ -35,6 +35,7 @@ class FakeA10OpenstackLB(object):
         super(FakeA10OpenstackLB, self).__init__(
             mock.MagicMock(),
             **kw)
+
         self.openstack_driver = mock.MagicMock()
         self.plumbing_hooks = hooks.PlumbingHooks(self)
         self.openstack_context = _build_openstack_context()
@@ -61,6 +62,7 @@ class FakeA10OpenstackLBV2(FakeA10OpenstackLB, a10_os.A10OpenstackLBV2):
         super(FakeA10OpenstackLBV2, self).__init__(
             openstack_driver,
             neutron_hooks_module=mock.MagicMock(),
+            cert_db=mock.MagicMock(),
             **kw)
         self.certmgr = mock.Mock()
 
@@ -71,6 +73,7 @@ class UnitTestBase(test_case.TestCase):
         return _build_openstack_context()
 
     def setUp(self, openstack_lb_args={}):
+        super(UnitTestBase, self).setUp()
         unit_dir = os.path.dirname(__file__)
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config

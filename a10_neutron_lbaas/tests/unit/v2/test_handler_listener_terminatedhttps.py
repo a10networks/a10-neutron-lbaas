@@ -104,7 +104,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
     def test_barbican_client_not_null(self, certmgr):
         """This tests that the barbican_client dependency is always there."""
         handler = self.a.listener
-        handler.barbican_client = None
+
         pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
         lb = fake_objs.FakeLoadBalancer()
@@ -121,7 +121,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         certmgr.private_key_passphrase = "SECRETPASSWORD"
 
         handler = self.a.listener
-        handler.barbican_client = certmgr
+
         pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
                                   constants.LB_METHOD_ROUND_ROBIN, None)
         lb = fake_objs.FakeLoadBalancer()
@@ -135,6 +135,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         listener.default_tls_container_id = "CONTAINERID"
 
         pool.listener = listener
+
         handler.create(None, listener)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue(certmgr.certificate in s)
@@ -155,6 +156,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
 
 class FakeCertManager(object):
+
     def __init__(self):
         self.get_private_key_value = ""
         self.get_certificate_value = ""

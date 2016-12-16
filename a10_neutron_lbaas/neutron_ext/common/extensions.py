@@ -1,3 +1,5 @@
+# Copyright (C) 2016, A10 Networks Inc. All rights reserved.
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -10,14 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""Provides backwards compatibility for neutron -> neutron_lib moves"""
 
-LB_METHOD_ROUND_ROBIN = 'ROUND_ROBIN'
-PROTOCOL_TERMINATED_HTTPS = 'TERMINATED_HTTPS'
-PROTOCOL_HTTP = 'HTTP'
-PROTOCOL_TCP = 'TCP'
-PROTOCOL_HTTPS = 'HTTPS'
-
-# Statuses for a10 objects (certificate bindings)
-STATUS_CREATING = 0
-STATUS_CREATED = 1
-STATUS_DELETING = 2
+try:
+    # Get the ExtensionDescriptor class from neutron
+    from neutron.api.extensions import ExtensionDescriptor as ExtensionDescriptor  # noqa
+except (AttributeError, ImportError):
+    # If it's not there, try neutron_lib. Else, we're hosed.
+    from neutron_lib.api.extensions import ExtensionDescriptor as ExtensionDescriptor  # noqa

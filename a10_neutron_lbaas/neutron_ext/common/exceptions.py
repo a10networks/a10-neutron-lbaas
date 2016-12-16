@@ -18,7 +18,7 @@ except ImportError:
     lib_exceptions = None
 
 try:
-    from neutron.common import old_exceptions
+    import neutron.common.exceptions as old_exceptions
 except ImportError:
     old_exceptions = None
 
@@ -35,3 +35,5 @@ NotFound = _find(lambda: old_exceptions.NotFound,
                  lambda: lib_exceptions.NotFound)
 InUse = _find(lambda: old_exceptions.InUse,
               lambda: lib_exceptions.InUse)
+Conflict = _find(lambda: old_exceptions.Conflict,
+                 lambda: lib_exceptions.Conflict)

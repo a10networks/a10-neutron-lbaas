@@ -34,8 +34,8 @@ def _uuid_str():
 class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                                a10DeviceInstance.A10DeviceInstancePluginBase):
 
-    def __init__(self):
-        super(A10DeviceInstanceDbMixin, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(A10DeviceInstanceDbMixin, self).__init__(*args, **kwargs)
         self.config = a10_config.A10Config()
 
     def _get_a10_device_instance(self, context, a10_device_instance_id):
@@ -73,7 +73,6 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
         body = self._get_body(a10_device_instance)
         data = self.config.get_vthunder_config()
         data.update(**body)
-
         with context.session.begin(subtransactions=True):
             instance_record = models.A10DeviceInstance(
                 id=_uuid_str(),
@@ -93,7 +92,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
                 # Not all device records are nova instances
                 nova_instance_id=data.get('nova_instance_id'),
                 write_memory=data.get('write_memory', False),
-                host=data['host'])
+                host=body['host'])
             context.session.add(instance_record)
 
         return self._make_a10_device_instance_dict(instance_record)

@@ -18,6 +18,8 @@ import acos_client.errors as acos_errors
 
 from a10_neutron_lbaas.acos import openstack_mappings
 from a10_neutron_lbaas import constants
+from a10_neutron_lbaas.neutron_ext.db.certificate_db \
+    import A10CertificateDbMixin as A10CertificateDb
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
 import handler_base_v2
 import handler_persist
@@ -28,13 +30,26 @@ LOG = logging.getLogger(__name__)
 
 
 class ListenerHandler(handler_base_v2.HandlerBaseV2):
-    def __init__(self, a10_driver, openstack_manager, neutron=None, barbican_client=None):
+
+    def __init__(self, a10_driver, openstack_manager, neutron=None, barbican_client=None,
+                 cert_db=None):
         super(ListenerHandler, self).__init__(a10_driver, openstack_manager, neutron)
-        self.barbican_client = barbican_client
+        self._barbican_client = barbican_client
+        self._cert_db = cert_db
+
+    @property
+    def cert_db(self):
+        if self._cert_db is None:
+            self._cert_db = A10CertificateDb()
+        return self._cert_db
+
+    @property
+    def barbican_client(self):
+        if self._barbican_client is None:
+            self._barbican_client = certwrapper.CertManagerWrapper(handler=self)
+        return self._barbican_client
 
     def _set(self, set_method, c, context, listener):
-        if self.barbican_client is None:
-            self.barbican_client = certwrapper.CertManagerWrapper(handler=self)
 
         status = c.client.slb.UP
         if not listener.admin_state_up:
@@ -45,16 +60,55 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         server_args = {}
         cert_data = dict()
         template_args = {}
+        protocol = openstack_mappings.vip_protocols(c, listener.protocol)
+        binding = None
 
+        # Try Barbican first.  TERMINATED HTTPS requires a default TLS container ID that is
+        # checked by the API so we can't fake it out.
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
             if self._set_terminated_https_values(listener, c, cert_data):
                 templates["client_ssl"] = {}
-                template_name = str(cert_data.get('template_name', ''))
-                key_passphrase = str(cert_data.get('key_pass', ''))
-                cert_filename = str(cert_data.get('cert_filename', ''))
-                key_filename = str(cert_data.get('key_filename', ''))
+                template_name = str(cert_data.get('template_name') or '')
+                key_passphrase = str(cert_data.get('key_pass') or '')
+                cert_filename = str(cert_data.get('cert_filename') or '')
+                key_filename = str(cert_data.get('key_filename') or '')
             else:
                 LOG.error("Could not created terminated HTTPS endpoint.")
+        # Else, set it up as an HTTP endpoint and attach the A10 cert data.
+        elif (self.a10_driver.config.get('use_database') and listener.protocol and
+              listener.protocol in [constants.PROTOCOL_HTTPS,
+                                    constants.PROTOCOL_HTTP,
+                                    constants.PROTOCOL_TCP]):
+            try:
+                binding = self.cert_db.get_binding_for_listener(context, listener.id)
+            except Exception as ex:
+                LOG.exception(ex)
+
+            if binding:
+                # if the binding is being deleted and the listener wasn't created as https,
+                # remove the https port to make room for the original port
+                if binding.status == constants.STATUS_DELETING:
+
+                    if (protocol != c.client.slb.virtual_server.vport.HTTPS):
+                        self._delete_listener(c, context, listener,
+                                              c.client.slb.virtual_server.vport.HTTPS)
+                        set_method = c.client.slb.virtual_server.vport.create
+                elif self._set_a10_https_values(listener, c, cert_data, binding):
+                    # If the binding hasn't been created and the port isn't https
+                    # remove the port and re-create it as https.
+                    if (binding.status == constants.STATUS_CREATING and
+                            protocol != c.client.slb.virtual_server.vport.HTTPS):
+
+                        self._delete_listener(c, context, listener, protocol)
+                        set_method = c.client.slb.virtual_server.vport.create
+
+                    protocol = c.client.slb.virtual_server.vport.HTTPS
+                    templates["client_ssl"] = {}
+                    template_name = str(cert_data.get('template_name') or '')
+                    key_passphrase = str(cert_data.get('key_pass') or '')
+                    cert_filename = str(cert_data.get('cert_filename') or '')
+                    key_filename = str(cert_data.get('key_filename') or '')
+                    template_args["template_client_ssl"] = template_name
 
         if 'client_ssl' in templates:
             template_args["template_client_ssl"] = template_name
@@ -90,13 +144,14 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         persistence = handler_persist.PersistHandler(
             c, context, listener.default_pool)
 
+        # This doesn't do anything anymore.
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
 
         try:
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=openstack_mappings.vip_protocols(c, listener.protocol),
+                protocol=protocol,
                 port=listener.protocol_port,
                 service_group_name=pool_name,
                 s_pers_name=persistence.s_persistence(),
@@ -111,8 +166,11 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _set_terminated_https_values(self, listener, c, cert_data):
         is_success = False
+        container = None
+
         c_id = listener.default_tls_container_id if listener.default_tls_container_id else None
 
+        # if there's a barbican container ID, check there.
         if c_id:
             try:
                 container = self.barbican_client.get_certificate(c_id, check_only=True)
@@ -122,7 +180,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 LOG.exception(ex)
 
             if container:
-                base_name = getattr(getattr(container, '_cert_container', None), 'name', '') or c_id
+                base_name = getattr(
+                    getattr(container, '_cert_container', None), 'name', '') or c_id
 
                 cert_data["cert_content"] = container.get_certificate()
                 cert_data["key_content"] = container.get_private_key()
@@ -146,7 +205,39 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                                             action="import")
                 is_success = True
         else:
-            LOG.error("default_tls_container_id unspecified for listener. Cannot create listener.")
+            LOG.error("default_tls_container_id unspecified for listener.")
+        return is_success
+
+    def _set_a10_https_values(self, listener, c, cert_data, binding):
+        LOG.info("default_tls_container_id unspecified for listener. Checking A10 DB.")
+        is_success = False
+
+        cert_data["cert_content"] = binding.certificate.cert_data or None
+        cert_data["key_content"] = binding.certificate.key_data or None
+        cert_data["key_pass"] = binding.certificate.password or None
+
+        if len(cert_data["cert_content"]) > 1:
+            base_name = listener.id
+            cert_data["template_name"] = base_name
+
+            cert_data["cert_filename"] = "{0}cert.pem".format(base_name)
+
+            self._acos_create_or_update(c.client.file.ssl_cert,
+                                        file=cert_data["cert_filename"],
+                                        cert=cert_data["cert_content"],
+                                        size=len(cert_data["cert_content"]),
+                                        action="import", certificate_type="pem")
+
+            if len(cert_data.get("key_content") or "") > 0:
+                cert_data["key_filename"] = "{0}key.pem".format(base_name)
+                self._acos_create_or_update(c.client.file.ssl_key,
+                                            file=cert_data["key_filename"],
+                                            cert=cert_data["key_content"],
+                                            size=len(cert_data["key_content"]),
+                                            action="import")
+
+            is_success = True
+
         return is_success
 
     def _acos_create_or_update(self, acos_obj, **kwargs):
@@ -170,15 +261,26 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10WriteStatusContext(self, context, listener) as c:
             self._update(c, context, listener)
 
-    def _delete(self, c, context, listener):
+    def _delete_listener(self, c, context, listener, protocol):
         try:
             c.client.slb.virtual_server.vport.delete(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
-                protocol=openstack_mappings.vip_protocols(c, listener.protocol),
+                protocol=protocol,
                 port=listener.protocol_port)
         except acos_errors.NotFound:
             pass
+
+    def _delete(self, c, context, listener):
+        # First, remove any existing cert bindings and set the correct protocol for delete.
+        # Existence of bindings means the vport has been re-created as https.
+        protocol = openstack_mappings.vip_protocols(c, listener.protocol)
+        if self._remove_existing_bindings(c, context, listener):
+            protocol = c.client.slb.virtual_server.vport.HTTPS
+
+        # Regular delete, use regular protocol mapping.
+        self._delete_listener(
+            c, context, listener, protocol)
 
         # clean up ssl template
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
@@ -190,3 +292,18 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
     def delete(self, context, listener):
         with a10.A10DeleteContext(self, context, listener) as c:
             self._delete(c, context, listener)
+
+    def _remove_existing_bindings(self, c, context, listener):
+        binding = None
+
+        try:
+            binding = self.cert_db.get_binding_for_listener(context, listener.id)
+        except Exception as ex:
+            LOG.exception(ex)
+        # if we have bindings, remove them
+        if binding is not None:
+            try:
+                self.cert_db.delete_a10_certificate_binding(context, binding.id)
+            except Exception as ex:
+                LOG.exception(ex)
+        return binding
