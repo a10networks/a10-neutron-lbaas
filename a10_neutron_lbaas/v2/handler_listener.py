@@ -61,6 +61,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         cert_data = dict()
         template_args = {}
         protocol = openstack_mappings.vip_protocols(c, listener.protocol)
+        binding = None
 
         # Try Barbican first.  TERMINATED HTTPS requires a default TLS container ID that is
         # checked by the API so we can't fake it out.
