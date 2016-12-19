@@ -13,12 +13,11 @@
 #    under the License.
 
 import logging
-import threading
-from threading import Thread
 
 import acos_client.errors as acos_errors
 
 import handler_base_v2
+from threads import StatThread
 import v2_context as a10
 
 LOG = logging.getLogger(__name__)
@@ -47,7 +46,15 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         self._set(c.client.slb.virtual_server.create, c, context, lb)
 
     def _stats_v21(self, c, resp):
-        for stat in resp["virtual_server_stat"]["vport_stat_list"]:
+       if not c.openstack_driver.config.get("extended_stats"):
+           return {
+               "bytes_in": resp["virtual_server_stat"]["req_bytes"],
+               "bytes_out": resp["virtual_server_stat"]["resp_bytes"],
+               "active_connections": resp["virtual_server_stat"]["cur_conns"],
+               "total_connections": resp["virtual_server_stat"]["tot_conns"]
+           }
+ 
+       for stat in resp["virtual_server_stat"]["vport_stat_list"]:
             vs = c.client.slb.virtual_service.get(stat["name"])
             if vs["virtual_service"]["service_group"]:
                 pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
@@ -70,18 +77,25 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         }
 
     def _stats_v30(self, c, resp, name):
-        self.stats = {}
-        self.lock = threading.Lock()
-
+        
+        stat_thread = StatThread()
         for ports in resp['port-list']:
-            t = Thread(target=self._stats_thread, kwargs=ports['stats'])
-            t.start()
-        resp["loadbalancer_stat"] = self.stats
+            stat_thread.start(ports['stats'])
+        
+        resp["loadbalancer_stat"] = stat_thread.stats
+
+        if not c.openstack_driver.config.get("extended_stats"):
+            return {
+            "bytes_in": resp["loadbalancer_stat"]["total_fwd_bytes"],
+            "bytes_out": resp["loadbalancer_stat"]["total_rev_bytes"],
+            "active_connections": resp["loadbalancer_stat"]["curr_conn"],
+            "total_connections": resp["loadbalancer_stat"]["total_conn"]
+           }
+
         if resp["port-list"]:
             resp["loadbalancer_stat"]["listener_stat"] = resp["port-list"]
             del resp["port-list"]
-        self.stats = {}
-
+        
         virt_serv = c.client.slb.virtual_server.get(name)
         for port in virt_serv['virtual-server']['port-list']:
             if port["service-group"]:
@@ -89,10 +103,11 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 resp["loadbalancer_stat"]["pool_stat_list"] = pool["service-group"]["stats"]
                 members = c.client.slb.service_group.get(port["service-group"] + "/member/stats")
                 if members:
+                    stat_thread = StatThread()
                     for mems in members['member-list']:
-                        t = Thread(target=self._stats_thread, kwargs=mems['stats'])
-                        t.start()
-                    resp["loadbalancer_stat"]["pool_stat_list"].update(self.stats)
+                        stat_thread.start(mems['stats'])
+
+                    resp["loadbalancer_stat"]["pool_stat_list"].update(stat_thread.stats)
                     resp["loadbalancer_stat"]["pool_stat_list"]["member-list"] = members.get(
                         'member-list')
 
@@ -103,17 +118,6 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             "total_connections": resp["loadbalancer_stat"]["total_conn"],
             "extended_stats": resp
         }
-
-    def _stats_thread(self, **kwargs):
-        for k, v in kwargs.items():
-            self.lock.acquire()
-
-            if self.stats.get(k):
-                self.stats[k] += v
-            else:
-                self.stats[k] = v
-
-            self.lock.release()
 
     def create(self, context, lb):
         with a10.A10WriteStatusContext(self, context, lb, action='create') as c:
@@ -140,19 +144,28 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10Context(self, context, lb) as c:
             name = self.meta(lb, 'id', lb.id)
             resp = c.client.slb.virtual_server.stats(name)
+
             if not resp:
-                return {
-                    "bytes_in": 0,
-                    "bytes_out": 0,
-                    "active_connections": 0,
-                    "total_connections": 0,
-                    "extended_stats": {}
-                }
+                if c.openstack_driver.config.get('extended_stat'):
+                    return {
+                        "bytes_in": 0,
+                        "bytes_out": 0,
+                        "active_connections": 0,
+                        "total_connections": 0,
+                        "extended_stats": {}
+                    }
+                else:
+                    return {
+                        "bytes_in": 0,
+                        "bytes_out": 0,
+                        "active_connections": 0,
+                        "total_connections": 0
+                    }
 
             if c.device_cfg.get('api_version') == "3.0":
                 return self._stats_v30(c, resp, name)
             else:
-                return self._stats_v21(c, resp)
+                return self._stats_v21(c, resp, name)
 
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")
