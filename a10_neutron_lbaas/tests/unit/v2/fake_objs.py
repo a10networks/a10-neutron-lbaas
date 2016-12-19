@@ -47,6 +47,25 @@ class FakeLoadBalancer(FakeModel):
         self.vip_subnet_id = "fake-subnet-id-001"
         self.pools = []
 
+    def stats_v21(self):
+        self.stats = {"virtual_server_stat": 
+                      {
+                       "req_bytes": 1337,
+                       "resp_bytes": 1337,
+                       "cur_conns": 1337,
+                       "tot_conns": 1337
+                      }
+                     }
+
+    def stats_v30(self);
+        self.stats = {"loadbalancer_stat": 
+                      {
+                       "req_bytes": 1337,
+                       "resp_bytes": 1337,
+                       "cur_conns": 1337,
+                       "tot_conns": 1337
+                      }
+                     }
 
 class FakeListener(FakeModel):
 

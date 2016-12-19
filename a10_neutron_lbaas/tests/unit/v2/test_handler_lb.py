@@ -15,7 +15,7 @@
 import mock
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-
+from a10_neutron_lbaas.v2.threads import StatThread
 import fake_objs
 import test_base
 
@@ -120,7 +120,7 @@ class TestLB(test_base.UnitTestBase):
         except a10_ex.UnsupportedFeature:
             pass
 
-    def test_stats(self):
+    def test_stats_v21(self):
         test_lb = fake_objs.FakeLoadBalancer()
         self.a.lb.stats(None, test_lb)
 
@@ -128,6 +128,25 @@ class TestLB(test_base.UnitTestBase):
 
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.stats' in s)
+
+    def test_stats_v30(self):
+        test_lb = fake_objs.FakeLoadBalancer()
+    
+        self.stat = StatThread
+        self.stat.start = mock.MagicMock()
+        self.stat._stats_thread = mock.Mock()
+
+    def test_stats_v21_ext(self):
+        pass
+
+    def test_stats_v30_ext(self):
+        pass
+
+    def test_stats_none(self):
+        pass
+
+    def test_stats_none_ext(self):
+        pass
 
     def do_raise_exception(self, e, msg="mock raised exception"):
         def raise_exception(e, msg="acos broke!"):
