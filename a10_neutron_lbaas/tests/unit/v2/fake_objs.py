@@ -48,14 +48,45 @@ class FakeLoadBalancer(FakeModel):
         self.pools = []
 
     def stats_v21(self):
-        self.stats = {"virtual_server_stat": 
-                      {
-                       "req_bytes": 1337,
-                       "resp_bytes": 1337,
-                       "cur_conns": 1337,
-                       "tot_conns": 1337
-                      }
-                     }
+        self.ret_stats = {
+            "bytes_in": 1337,
+            "bytes_out": 347,
+            "active_connections": 101,
+            "total_connections": 1337,
+        }
+
+        self.ret_stats_ext = {
+            "bytes_in": 1337,
+            "bytes_out": 347,
+            "active_connections": 101,
+            "total_connections": 1337,
+            "extended_stats": {}
+        }
+
+        self.virt_server_stats = {
+            "virtual_server_stat": {
+                "req_bytes": 1337,
+                "resp_bytes": 347,
+                "cur_conns":101,
+                "tot_conns": 1337,
+                "vport_stat_list": {
+                    "name": "31d3rb3rri35"
+                }
+            }
+        }
+
+        self.virt_service_stats = {
+            "virtual_service": {
+                "service_group": "ni",
+            },
+
+        }
+
+        self.service_group = {
+            "service_group_stat": {
+              "stats": 80
+            }
+        }
 
     def stats_v30(self);
         self.stats = {"loadbalancer_stat": 
@@ -66,6 +97,16 @@ class FakeLoadBalancer(FakeModel):
                        "tot_conns": 1337
                       }
                      }
+
+       self.stat_port = {
+                        
+                        }
+
+       self.stat_ext = {
+
+                       }
+        
+
 
 class FakeListener(FakeModel):
 

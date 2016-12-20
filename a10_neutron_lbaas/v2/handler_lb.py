@@ -86,11 +86,11 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
         if not c.openstack_driver.config.get("extended_stats"):
             return {
-            "bytes_in": resp["loadbalancer_stat"]["total_fwd_bytes"],
-            "bytes_out": resp["loadbalancer_stat"]["total_rev_bytes"],
-            "active_connections": resp["loadbalancer_stat"]["curr_conn"],
-            "total_connections": resp["loadbalancer_stat"]["total_conn"]
-           }
+                "bytes_in": resp["loadbalancer_stat"]["total_fwd_bytes"],
+                "bytes_out": resp["loadbalancer_stat"]["total_rev_bytes"],
+                "active_connections": resp["loadbalancer_stat"]["curr_conn"],
+                "total_connections": resp["loadbalancer_stat"]["total_conn"]
+            }
 
         if resp["port-list"]:
             resp["loadbalancer_stat"]["listener_stat"] = resp["port-list"]

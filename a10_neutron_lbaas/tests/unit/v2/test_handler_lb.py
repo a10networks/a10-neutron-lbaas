@@ -122,8 +122,11 @@ class TestLB(test_base.UnitTestBase):
 
     def test_stats_v21(self):
         test_lb = fake_objs.FakeLoadBalancer()
-        self.a.lb.stats(None, test_lb)
-
+        self.a.last_client.slb.virtual_server.stats = test_lb.ret_stats
+        
+        ret_val = self.a.lb.stats(None, test_lb)
+        self.assertEquals(ret_val, test_lb.ret_stats)
+        
         self.print_mocks()
 
         s = str(self.a.last_client.mock_calls)
@@ -131,10 +134,15 @@ class TestLB(test_base.UnitTestBase):
 
     def test_stats_v30(self):
         test_lb = fake_objs.FakeLoadBalancer()
-    
+        test_lb.stats_v30()
+
         self.stat = StatThread
-        self.stat.start = mock.MagicMock()
+        self.stat.start = mock.MagicMock(return_value = test_lb.stats)
         self.stat._stats_thread = mock.Mock()
+        
+        self.a.last_client.slb.virtual_server.stats = test_lb.stats
+        self.a.lb.stats(None, test_lb)
+        
 
     def test_stats_v21_ext(self):
         pass
