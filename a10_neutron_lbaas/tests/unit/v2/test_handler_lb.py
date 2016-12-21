@@ -123,16 +123,20 @@ class TestLB(test_base.UnitTestBase):
     def test_stats_v21(self):
         test_lb = fake_objs.FakeLoadBalancer()
         self.a.last_client.slb.virtual_server.stats = test_lb.ret_stats
-        
+        self.a.last_client.slb.virtual_service.stats = test_lb.virt_service_stats
+        self.a.last_client.slb.service_group.stats = test_lb.service_group
+
         ret_val = self.a.lb.stats(None, test_lb)
-        self.assertEquals(ret_val, test_lb.ret_stats)
-        
         self.print_mocks()
 
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.stats' in s)
+        self.assertTrue('call.slb.virtual_service.stats' in s)
+        self.asserTrue('call.slb.service_group.stats' in s)
+        self.assertEqual(ret_val, test_lb.ret_stats)
 
     def test_stats_v30(self):
+        pass
         test_lb = fake_objs.FakeLoadBalancer()
         test_lb.stats_v30()
 
