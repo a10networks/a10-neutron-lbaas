@@ -14,6 +14,8 @@
 
 import uuid
 
+import threading
+from threading import Thread
 
 class FakeModel(object):
 
@@ -47,66 +49,100 @@ class FakeLoadBalancer(FakeModel):
         self.vip_subnet_id = "fake-subnet-id-001"
         self.pools = []
 
-    def stats_v21(self):
+    def stats(self):
         self.ret_stats = {
             "bytes_in": 1337,
             "bytes_out": 347,
             "active_connections": 101,
             "total_connections": 1337,
+            "extended_stats": {
+                "loadbalancer_stat": {
+                    "req_bytes": 1337,
+                    "resp_bytes": 347,
+                    "cur_conns":101,
+                    "tot_conns": 1337
+                }
+            }
         }
 
-        self.ret_stats_ext = {
+        self.ret_stats_v30 = {
             "bytes_in": 1337,
             "bytes_out": 347,
             "active_connections": 101,
             "total_connections": 1337,
-            "extended_stats": {}
+            "extended_stats": {
+                "loadbalancer_stat": {
+                    "total_fwd_bytes": 1337,
+                    "total_rev_bytes": 347,
+                    "curr_conn":101,
+                    "total_conn": 1337,
+                    "listener_stat" : {
+                        "stats": {
+                            "total_fwd_bytes": 1337,
+                            "total_rev_bytes": 347,
+                            "curr_conn": 101,
+                            "total_conn": 1337
+                        }
+                     }  
+                }
+            }
         }
 
-        self.virt_server_stats = {
+
+        self.stats_v21 = {
             "virtual_server_stat": {
                 "req_bytes": 1337,
                 "resp_bytes": 347,
                 "cur_conns":101,
                 "tot_conns": 1337,
-                "vport_stat_list": {
-                    "name": "31d3rb3rri35"
+            }
+        }
+
+        self.stats_v30 = {
+            "port-list": {
+                "80": {
+                    "stats": {
+                        "total_fwd_bytes": 1337,
+                        "total_rev_bytes": 347,
+                        "curr_conn": 101,
+                        "total_conn": 1337
+                    }
                 }
             }
         }
 
-        self.virt_service_stats = {
-            "virtual_service": {
-                "service_group": "ni",
-            },
+class FakeThread(object):
 
+    def __init__(self):
+        self.stats = {}
+        self.lock = threading.Lock()
+
+    def start(self, **kwargs):
+        t = Thread(target=self._stats_thread, kwargs=kwargs)
+        t.start()
+
+    def _stats_thread(self, **kwargs):
+        for k, v in kwargs.items():
+            with self.lock:
+                if self.stats.get(k):
+                    self.stats[k] += v
+                else:
+                    self.stats[k] = v
+
+class FakeThreads(object):
+    def __init__(self):
+        self.stats = {
+            "total_fwd_bytes": 1337,
+            "total_rev_bytes": 347,
+            "curr_conn": 101,
+            "total_conn": 1337
         }
 
-        self.service_group = {
-            "service_group_stat": {
-              "stats": 80
-            }
-        }
+    def start(self, **kwargs):
+        return
 
-    def stats_v30(self);
-        self.stats = {"loadbalancer_stat": 
-                      {
-                       "req_bytes": 1337,
-                       "resp_bytes": 1337,
-                       "cur_conns": 1337,
-                       "tot_conns": 1337
-                      }
-                     }
-
-       self.stat_port = {
-                        
-                        }
-
-       self.stat_ext = {
-
-                       }
-        
-
+    def _stats_thread(self, **kwargs):
+        return
 
 class FakeListener(FakeModel):
 

@@ -15,7 +15,7 @@
 import mock
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-from a10_neutron_lbaas.v2.threads import StatThread
+import a10_neutron_lbaas.v2.threads as threads
 import fake_objs
 import test_base
 
@@ -120,45 +120,29 @@ class TestLB(test_base.UnitTestBase):
         except a10_ex.UnsupportedFeature:
             pass
 
+    def test_stats_v30(self):
+        test_lb = fake_objs.FakeLoadBalancer()
+        test_lb.stats()
+        ret_val = self.a.lb._stats_v30(mock.MagicMock(), test_lb.stats_v30, None)
+        self.print_mocks()
+        self.assertEqual(ret_val, test_lb.ret_stats_v30)
+
     def test_stats_v21(self):
         test_lb = fake_objs.FakeLoadBalancer()
-        self.a.last_client.slb.virtual_server.stats = test_lb.ret_stats
-        self.a.last_client.slb.virtual_service.stats = test_lb.virt_service_stats
-        self.a.last_client.slb.service_group.stats = test_lb.service_group
-
-        ret_val = self.a.lb.stats(None, test_lb)
+        test_lb.stats()
+        ret_val = self.a.lb._stats_v21(None, test_lb.stats_v21)
         self.print_mocks()
 
         s = str(self.a.last_client.mock_calls)
-        self.assertTrue('call.slb.virtual_server.stats' in s)
-        self.assertTrue('call.slb.virtual_service.stats' in s)
-        self.asserTrue('call.slb.service_group.stats' in s)
         self.assertEqual(ret_val, test_lb.ret_stats)
-
-    def test_stats_v30(self):
-        pass
+  
+    def test_stats(self):
         test_lb = fake_objs.FakeLoadBalancer()
-        test_lb.stats_v30()
-
-        self.stat = StatThread
-        self.stat.start = mock.MagicMock(return_value = test_lb.stats)
-        self.stat._stats_thread = mock.Mock()
-        
-        self.a.last_client.slb.virtual_server.stats = test_lb.stats
         self.a.lb.stats(None, test_lb)
-        
 
-    def test_stats_v21_ext(self):
-        pass
-
-    def test_stats_v30_ext(self):
-        pass
-
-    def test_stats_none(self):
-        pass
-
-    def test_stats_none_ext(self):
-        pass
+        self.print_mocks()
+        s = str(self.a.last_client.mock_calls)
+        self.assertTrue('call.slb.virtual_server.stats' in s)
 
     def do_raise_exception(self, e, msg="mock raised exception"):
         def raise_exception(e, msg="acos broke!"):
