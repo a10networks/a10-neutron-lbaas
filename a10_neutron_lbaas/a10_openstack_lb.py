@@ -58,9 +58,8 @@ class A10OpenstackLBBase(object):
         LOG.info("A10-neutron-lbaas: pre-initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
 
-        if self.config.get('extended_stats'):
-            monkey = monkey_patch.MonkeyPatch(self.openstack_driver.plugin)
-            self.openstack_driver.plugin.stats = monkey.stats
+        monkey = monkey_patch.MonkeyPatch(self.openstack_driver.plugin)
+        self.openstack_driver.plugin.stats = monkey.stats
 
         if provider is not None:
             self._late_init(provider)

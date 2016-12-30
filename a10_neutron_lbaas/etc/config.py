@@ -20,11 +20,6 @@
 
 # verify_appliances = False
 
-# Should the driver return all statistics for child objects
-# of the indicated loadbalancer?
-
-# extended_stats = False
-
 # Should the driver store some meta-info in a database?
 # Needed for tenant<->appliance persistence if the number of appliances
 # is changed for any reason. Setting this to true means that you will

@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import logging
 
 import acos_client.errors as acos_errors
@@ -46,59 +47,42 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         self._set(c.client.slb.virtual_server.create, c, context, lb)
 
     def _stats_v21(self, c, resp):
-       if not c.openstack_driver.config.get("extended_stats"):
-           return {
-               "bytes_in": resp["virtual_server_stat"]["req_bytes"],
-               "bytes_out": resp["virtual_server_stat"]["resp_bytes"],
-               "active_connections": resp["virtual_server_stat"]["cur_conns"],
-               "total_connections": resp["virtual_server_stat"]["tot_conns"]
-           }
- 
-       for stat in resp["virtual_server_stat"]["vport_stat_list"]:
-            vs = c.client.slb.virtual_service.get(stat["name"])
-            if vs["virtual_service"]["service_group"]:
-                pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
-                stat["pool_stat_list"] = pool["service_group_stat"]
+       if resp["virtual_server_stat"].get("vport_stat_list"):
+           for stat in resp["virtual_server_stat"]["vport_stat_list"]:
+               vs = c.client.slb.virtual_service.get(stat["name"])
+               if vs["virtual_service"]["service_group"]:
+                   pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
+                   stat["pool_stat_list"] = pool["service_group_stat"]
 
-        if resp["virtual_server_stat"]["vport_stat_list"]:
-            resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"].get(
+           resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"].get(
                 "vport_stat_list")
-            del resp["virtual_server_stat"]["vport_stat_list"]
+           del resp["virtual_server_stat"]["vport_stat_list"]
 
-        resp["loadbalancer_stat"] = resp["virtual_server_stat"]
-        del resp["virtual_server_stat"]
+       resp["loadbalancer_stat"] = resp["virtual_server_stat"]
+       del resp["virtual_server_stat"]
 
-        return {
-            "bytes_in": resp["loadbalancer_stat"]["req_bytes"],
-            "bytes_out": resp["loadbalancer_stat"]["resp_bytes"],
-            "active_connections": resp["loadbalancer_stat"]["cur_conns"],
-            "total_connections": resp["loadbalancer_stat"]["tot_conns"],
-            "extended_stats": resp
+       return {
+           "bytes_in": resp["loadbalancer_stat"]["req_bytes"],
+           "bytes_out": resp["loadbalancer_stat"]["resp_bytes"],
+           "active_connections": resp["loadbalancer_stat"]["cur_conns"],
+           "total_connections": resp["loadbalancer_stat"]["tot_conns"],
+           "extended_stats": resp
         }
 
     def _stats_v30(self, c, resp, name):
-        
         stat_thread = StatThread()
         for ports in resp['port-list']:
-            stat_thread.start(ports['stats'])
+            stat_thread.start(stats=resp['port-list'][ports]['stats'])
         
-        resp["loadbalancer_stat"] = stat_thread.stats
-
-        if not c.openstack_driver.config.get("extended_stats"):
-            return {
-                "bytes_in": resp["loadbalancer_stat"]["total_fwd_bytes"],
-                "bytes_out": resp["loadbalancer_stat"]["total_rev_bytes"],
-                "active_connections": resp["loadbalancer_stat"]["curr_conn"],
-                "total_connections": resp["loadbalancer_stat"]["total_conn"]
-            }
-
-        if resp["port-list"]:
+        resp["loadbalancer_stat"] = stat_thread.stats['stats']
+        
+        if resp.get("port-list"):
             resp["loadbalancer_stat"]["listener_stat"] = resp["port-list"]
             del resp["port-list"]
-        
+
         virt_serv = c.client.slb.virtual_server.get(name)
         for port in virt_serv['virtual-server']['port-list']:
-            if port["service-group"]:
+            if port.get("service-group"):
                 pool = c.client.slb.service_group.stats(port["service-group"])
                 resp["loadbalancer_stat"]["pool_stat_list"] = pool["service-group"]["stats"]
                 members = c.client.slb.service_group.get(port["service-group"] + "/member/stats")
@@ -109,7 +93,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
                     resp["loadbalancer_stat"]["pool_stat_list"].update(stat_thread.stats)
                     resp["loadbalancer_stat"]["pool_stat_list"]["member-list"] = members.get(
-                        'member-list')
+                         'member-list')
 
         return {
             "bytes_in": resp["loadbalancer_stat"]["total_fwd_bytes"],
@@ -146,26 +130,18 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             resp = c.client.slb.virtual_server.stats(name)
 
             if not resp:
-                if c.openstack_driver.config.get('extended_stat'):
-                    return {
-                        "bytes_in": 0,
-                        "bytes_out": 0,
-                        "active_connections": 0,
-                        "total_connections": 0,
-                        "extended_stats": {}
-                    }
-                else:
-                    return {
-                        "bytes_in": 0,
-                        "bytes_out": 0,
-                        "active_connections": 0,
-                        "total_connections": 0
-                    }
+                return {
+                    "bytes_in": 0,
+                    "bytes_out": 0,
+                    "active_connections": 0,
+                    "total_connections": 0,
+                    "extended_stats": {}
+                }
 
             if c.device_cfg.get('api_version') == "3.0":
                 return self._stats_v30(c, resp, name)
             else:
-                return self._stats_v21(c, resp, name)
+                return self._stats_v21(c, resp)
 
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")
