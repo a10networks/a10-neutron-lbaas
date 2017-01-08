@@ -19,7 +19,6 @@ import mock
 
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
 import a10_neutron_lbaas.plumbing_hooks as hooks
-import a10_neutron_lbaas.v2.threads as threads
 
 import v2.fake_objs as fake_objs
 
@@ -82,10 +81,6 @@ class UnitTestBase(test_case.TestCase):
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
         
-        fake_objs.FakeThread.start = mock.MagicMock()
-        fake_objs.FakeThread._stats_thread = mock.Mock()
-        threads.StatThread = fake_objs.FakeThread
-
         if 'provider' not in openstack_lb_args:
             openstack_lb_args['provider'] = 'units'
 

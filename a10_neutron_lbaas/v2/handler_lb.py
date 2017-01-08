@@ -18,7 +18,6 @@ import logging
 import acos_client.errors as acos_errors
 
 import handler_base_v2
-from threads import StatThread
 import v2_context as a10
 
 LOG = logging.getLogger(__name__)
@@ -70,15 +69,23 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         }
 
     def _stats_v30(self, c, resp, name):
-        stat_thread = StatThread()
+        stats = {}
+
         for ports in resp['port-list']:
-            stat_thread.start(stats=resp['port-list'][ports]['stats'])
-        
-        resp["loadbalancer_stat"] = stat_thread.stats['stats']
-        
+            for k, v in resp['port-list'][ports]['stats'].items():
+                if stats.get(k):
+                    stats[k] += v
+                else:
+                    stats[k] = v
+
+        resp["loadbalancer_stat"] = stats
+
         if resp.get("port-list"):
-            resp["loadbalancer_stat"]["listener_stat"] = resp["port-list"]
-            del resp["port-list"]
+            temp_resp = {}
+            temp_resp["loadbalancer_stat"] = resp["loadbalancer_stat"].copy()
+            temp_resp["loadbalancer_stat"]["listener_stat"] = {}
+            temp_resp["loadbalancer_stat"]["listener_stat"].update(resp["port-list"])
+            resp = temp_resp
 
         virt_serv = c.client.slb.virtual_server.get(name)
         for port in virt_serv['virtual-server']['port-list']:
@@ -87,11 +94,14 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 resp["loadbalancer_stat"]["pool_stat_list"] = pool["service-group"]["stats"]
                 members = c.client.slb.service_group.get(port["service-group"] + "/member/stats")
                 if members:
-                    stat_thread = StatThread()
+                    stats = {}
                     for mems in members['member-list']:
-                        stat_thread.start(mems['stats'])
-
-                    resp["loadbalancer_stat"]["pool_stat_list"].update(stat_thread.stats)
+                        for k, v in mems['stats'].items():
+                            if stats.get(k):
+                                stats[k] += v
+                            else:
+                                stats[k] = v
+                    resp["loadbalancer_stat"]["pool_stat_list"].update(stats)
                     resp["loadbalancer_stat"]["pool_stat_list"]["member-list"] = members.get(
                          'member-list')
 

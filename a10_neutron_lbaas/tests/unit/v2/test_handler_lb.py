@@ -122,14 +122,18 @@ class TestLB(test_base.UnitTestBase):
 
     def test_stats_v30(self):
         test_lb = fake_objs.FakeLoadBalancer()
-        test_lb.stats()
-        ret_val = self.a.lb._stats_v30(mock.MagicMock(), test_lb.stats_v30, None)
+        test_lb.stats_v30()
+        c = mock.MagicMock()
+        c.client.slb.service_group.stats = test_lb.stats_service_group
+        c.client.slb.service_group.get = test_lb.stats_members
+        ret_val = self.a.lb._stats_v30(c, test_lb.stats_v30, None)
         self.print_mocks()
+
         self.assertEqual(ret_val, test_lb.ret_stats_v30)
 
     def test_stats_v21(self):
         test_lb = fake_objs.FakeLoadBalancer()
-        test_lb.stats()
+        test_lb.stats_v21()
         ret_val = self.a.lb._stats_v21(None, test_lb.stats_v21)
         self.print_mocks()
 

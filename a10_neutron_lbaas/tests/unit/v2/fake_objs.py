@@ -49,7 +49,7 @@ class FakeLoadBalancer(FakeModel):
         self.vip_subnet_id = "fake-subnet-id-001"
         self.pools = []
 
-    def stats(self):
+    def stats_v21(self):
         self.ret_stats = {
             "bytes_in": 1337,
             "bytes_out": 347,
@@ -65,6 +65,17 @@ class FakeLoadBalancer(FakeModel):
             }
         }
 
+        self.stats_v21 = {
+            "virtual_server_stat": {
+                "req_bytes": 1337,
+                "resp_bytes": 347,
+                "cur_conns":101,
+                "tot_conns": 1337,
+            }
+        }
+
+
+    def stats_v30(self):
         self.ret_stats_v30 = {
             "bytes_in": 1337,
             "bytes_out": 347,
@@ -77,26 +88,19 @@ class FakeLoadBalancer(FakeModel):
                     "curr_conn":101,
                     "total_conn": 1337,
                     "listener_stat" : {
-                        "stats": {
-                            "total_fwd_bytes": 1337,
-                            "total_rev_bytes": 347,
-                            "curr_conn": 101,
-                            "total_conn": 1337
-                        }
+                        "80": {
+                            "stats": {
+                                "total_fwd_bytes": 1337,
+                                "total_rev_bytes": 347,
+                                "curr_conn": 101,
+                                "total_conn": 1337
+                            }
+                         }
                      }  
                 }
             }
         }
 
-
-        self.stats_v21 = {
-            "virtual_server_stat": {
-                "req_bytes": 1337,
-                "resp_bytes": 347,
-                "cur_conns":101,
-                "tot_conns": 1337,
-            }
-        }
 
         self.stats_v30 = {
             "port-list": {
@@ -111,38 +115,6 @@ class FakeLoadBalancer(FakeModel):
             }
         }
 
-class FakeThread(object):
-
-    def __init__(self):
-        self.stats = {}
-        self.lock = threading.Lock()
-
-    def start(self, **kwargs):
-        t = Thread(target=self._stats_thread, kwargs=kwargs)
-        t.start()
-
-    def _stats_thread(self, **kwargs):
-        for k, v in kwargs.items():
-            with self.lock:
-                if self.stats.get(k):
-                    self.stats[k] += v
-                else:
-                    self.stats[k] = v
-
-class FakeThreads(object):
-    def __init__(self):
-        self.stats = {
-            "total_fwd_bytes": 1337,
-            "total_rev_bytes": 347,
-            "curr_conn": 101,
-            "total_conn": 1337
-        }
-
-    def start(self, **kwargs):
-        return
-
-    def _stats_thread(self, **kwargs):
-        return
 
 class FakeListener(FakeModel):
 
