@@ -20,9 +20,6 @@ import mock
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
 import a10_neutron_lbaas.plumbing_hooks as hooks
 
-import v2.fake_objs as fake_objs
-
-
 
 def _build_openstack_context():
     admin_context = {
@@ -80,7 +77,7 @@ class UnitTestBase(test_case.TestCase):
         unit_dir = os.path.dirname(__file__)
         unit_config = os.path.join(unit_dir, "unit_config")
         os.environ['A10_CONFIG_DIR'] = unit_config
-        
+
         if 'provider' not in openstack_lb_args:
             openstack_lb_args['provider'] = 'units'
 

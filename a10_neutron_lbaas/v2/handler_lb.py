@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import logging
 
 import acos_client.errors as acos_errors
@@ -46,46 +45,39 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         self._set(c.client.slb.virtual_server.create, c, context, lb)
 
     def _stats_v21(self, c, resp):
-       if resp["virtual_server_stat"].get("vport_stat_list"):
-           for stat in resp["virtual_server_stat"]["vport_stat_list"]:
-               vs = c.client.slb.virtual_service.get(stat["name"])
-               if vs["virtual_service"]["service_group"]:
-                   pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
-                   stat["pool_stat_list"] = pool["service_group_stat"]
+        if resp["virtual_server_stat"].get("vport_stat_list"):
+            for stat in resp["virtual_server_stat"]["vport_stat_list"]:
+                vs = c.client.slb.virtual_service.get(stat["name"])
+                if vs["virtual_service"]["service_group"]:
+                    pool = c.client.slb.service_group.stats(vs["virtual_service"]["service_group"])
+                    stat["pool_stat_list"] = pool["service_group_stat"]
 
-           resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"].get(
+            resp["virtual_server_stat"]["listener_stat"] = resp["virtual_server_stat"].get(
                 "vport_stat_list")
-           del resp["virtual_server_stat"]["vport_stat_list"]
+            del resp["virtual_server_stat"]["vport_stat_list"]
 
-       resp["loadbalancer_stat"] = resp["virtual_server_stat"]
-       del resp["virtual_server_stat"]
+        resp["loadbalancer_stat"] = resp["virtual_server_stat"]
+        del resp["virtual_server_stat"]
 
-       return {
-           "bytes_in": resp["loadbalancer_stat"]["req_bytes"],
-           "bytes_out": resp["loadbalancer_stat"]["resp_bytes"],
-           "active_connections": resp["loadbalancer_stat"]["cur_conns"],
-           "total_connections": resp["loadbalancer_stat"]["tot_conns"],
-           "extended_stats": resp
-        }
+        return {
+            "bytes_in": resp["loadbalancer_stat"]["req_bytes"],
+            "bytes_out": resp["loadbalancer_stat"]["resp_bytes"],
+            "active_connections": resp["loadbalancer_stat"]["cur_conns"],
+            "total_connections": resp["loadbalancer_stat"]["tot_conns"],
+            "extended_stats": resp}
 
     def _stats_v30(self, c, resp, name):
         stats = {}
-
         for ports in resp['port-list']:
-            for k, v in resp['port-list'][ports]['stats'].items():
+            for k, v in ports['stats'].items():
                 if stats.get(k):
                     stats[k] += v
                 else:
                     stats[k] = v
 
         resp["loadbalancer_stat"] = stats
-
-        if resp.get("port-list"):
-            temp_resp = {}
-            temp_resp["loadbalancer_stat"] = resp["loadbalancer_stat"].copy()
-            temp_resp["loadbalancer_stat"]["listener_stat"] = {}
-            temp_resp["loadbalancer_stat"]["listener_stat"].update(resp["port-list"])
-            resp = temp_resp
+        resp["loadbalancer_stat"]["listener_stat"] = resp["port-list"]
+        del resp["port-list"]
 
         virt_serv = c.client.slb.virtual_server.get(name)
         for port in virt_serv['virtual-server']['port-list']:
@@ -102,8 +94,8 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                             else:
                                 stats[k] = v
                     resp["loadbalancer_stat"]["pool_stat_list"].update(stats)
-                    resp["loadbalancer_stat"]["pool_stat_list"]["member-list"] = members.get(
-                         'member-list')
+                    resp["loadbalancer_stat"]["pool_stat_list"]["member_list"] = members.get(
+                        'member-list')
 
         return {
             "bytes_in": resp["loadbalancer_stat"]["total_fwd_bytes"],
