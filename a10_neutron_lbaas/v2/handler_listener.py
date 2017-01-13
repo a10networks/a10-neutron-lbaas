@@ -159,6 +159,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 status=status,
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
+                syn_cookie=c.device_cfg.get('syn_cookie'),
                 axapi_body=vport_meta,
                 **template_args)
         except acos_errors.Exists:

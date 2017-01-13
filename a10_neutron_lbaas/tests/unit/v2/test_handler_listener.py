@@ -171,6 +171,42 @@ class TestListeners(test_base.UnitTestBase):
     def test_create_ip_in_ip_negative_v30(self):
         self._test_create_ipinip()
 
+    def _test_create_syn_cookie(self, api_ver="3.0", syn_cookie=False):
+        for k, v in self.a.config.devices.items():
+            v['syn_cookie'] = syn_cookie
+            v['api_version'] = api_ver
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+
+        self.a.listener.create(None, m)
+        self.print_mocks()
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn("syn_cookie=%s" % syn_cookie, s)
+
+    def test_create_syn_cookie_positive_v21(self):
+        self._test_create_syn_cookie(api_ver="2.1", syn_cookie=True)
+
+    def test_create_syn_cookie_negative_v21(self):
+        self._test_create_syn_cookie(api_ver="2.1")
+
+    def test_create_syn_cookie_unspecified(self):
+        self._test_create_syn_cookie("2.1")
+
+    def test_create_syn_cookie_positive_v30(self):
+        self._test_create_syn_cookie(syn_cookie=True)
+
+    def test_create_syn_cookie_negative_v30(self):
+        self._test_create_syn_cookie()
+
+    def test_create_syn_cookie_unspecified(self):
+        self._test_create_syn_cookie("3.0")
+
     def test_update_no_lb(self):
         m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)
