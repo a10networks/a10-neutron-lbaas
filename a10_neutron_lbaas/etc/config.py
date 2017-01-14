@@ -156,7 +156,7 @@ devices = {
     #     "ipinip": False,
     #
     # Enable syn cookie on vports.
-    #     "syn_cookie": True,
+    #     "syn_cookie": False,
     #
     # Contains a list of hostnames or IP addresses that the driver will run
     # the 'ha sync' command against whenever a write operation occurs.
