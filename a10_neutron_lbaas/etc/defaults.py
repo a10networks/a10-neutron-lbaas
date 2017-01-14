@@ -48,6 +48,7 @@ DEVICE_OPTIONAL_DEFAULTS = {
     "syn_cookie": False,
     "ha_sync_list": [],
     "write_memory": True,
+
     # "max_instance": 5000,
     # "method": "hash",
 
