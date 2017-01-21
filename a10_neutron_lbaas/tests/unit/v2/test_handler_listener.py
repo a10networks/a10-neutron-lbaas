@@ -195,7 +195,7 @@ class TestListeners(test_base.UnitTestBase):
     def test_create_syn_cookie_negative_v21(self):
         self._test_create_syn_cookie(api_ver="2.1")
 
-    def test_create_syn_cookie_unspecified(self):
+    def test_create_syn_cookie_unspecified_v21(self):
         self._test_create_syn_cookie("2.1")
 
     def test_create_syn_cookie_positive_v30(self):
