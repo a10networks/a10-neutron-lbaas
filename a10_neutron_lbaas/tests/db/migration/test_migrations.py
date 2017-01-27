@@ -95,13 +95,17 @@ class TestMigrations(test_base.UnitTestBase):
             # We don't care about display width
             if getattr(copied_type, 'display_width', None) is not None:
                 copied_type.display_width = None
+            if type(schema_type) is sqlalchemy.sql.sqltypes.Text:
+                copied_type.length = None
+
             normalized_type = copied_type.compile(dialect=self.connection.dialect)
 
             # mysql has some weird synonyms
             if self.connection.dialect.name == 'mysql':
                 weird_synonyms = {
                     'BOOL': 'TINYINT',
-                    'BOOLEAN': 'TINYINT'
+                    'BOOLEAN': 'TINYINT',
+                    'TEXT()': 'TEXT'
                 }
                 normalized_type = weird_synonyms.get(normalized_type, normalized_type)
 
@@ -109,8 +113,6 @@ class TestMigrations(test_base.UnitTestBase):
 
         for model in a10_models:
             columns = inspection.get_columns(model.__tablename__)
-
-            # import pdb; pdb.set_trace()
 
             actual_columns = sorted([
                 {
