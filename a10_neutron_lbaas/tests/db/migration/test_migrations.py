@@ -90,6 +90,9 @@ class TestMigrations(test_base.UnitTestBase):
                          "The following tables weren't created by installing {0}".
                          format(missing_tables))
 
+        dialect = self.connection.dialect
+        ddl_compiler = dialect.ddl_compiler(dialect, None)
+
         def normalize(schema_type):
             copied_type = copy.copy(schema_type)
             # We don't care about display width
@@ -98,10 +101,10 @@ class TestMigrations(test_base.UnitTestBase):
             if type(schema_type) is sqlalchemy.sql.sqltypes.Text:
                 copied_type.length = None
 
-            normalized_type = copied_type.compile(dialect=self.connection.dialect)
+            normalized_type = copied_type.compile(dialect=dialect)
 
             # mysql has some weird synonyms
-            if self.connection.dialect.name == 'mysql':
+            if dialect.name == 'mysql':
                 weird_synonyms = {
                     'BOOL': 'TINYINT',
                     'BOOLEAN': 'TINYINT',
@@ -129,7 +132,7 @@ class TestMigrations(test_base.UnitTestBase):
             expected_columns = sorted([
                 {
                     'nullable': c.nullable,
-                    'default': c.server_default,
+                    'default': ddl_compiler.get_column_default_string(c),
                     'type': normalize(c.type),
                     'name': unicode(c.name)
                 }
