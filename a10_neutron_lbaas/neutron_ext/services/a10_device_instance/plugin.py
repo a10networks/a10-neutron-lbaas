@@ -40,10 +40,8 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
     def create_a10_device_instance(self, context, a10_device_instance):
         """Attempt to create instance using neutron context"""
         LOG.debug("A10DeviceInstancePlugin.create(): a10_device_instance=%s", a10_device_instance)
-
         config = a10_config.A10Config()
         vth_config = config.get_vthunder_config()
-
         imgr = instance_manager.InstanceManager.from_config(config, context)
 
         # #TODO(mdurrant) This is in a constant, use it
@@ -59,10 +57,11 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         dev_instance["host"] = host_ip
         dev_instance["nova_instance_id"] = nova_instance_id
 
+        import pdb; pdb.set_trace()
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
         return super(A10DeviceInstancePlugin, self).create_a10_device_instance(context,
-                                                                               a10_device_instance)
+                                                                               instance)
 
     def get_a10_device_instance(self, context, id, fields=None):
         LOG.debug("A10DeviceInstancePlugin.get_a10_instance(): id=%s, fields=%s",

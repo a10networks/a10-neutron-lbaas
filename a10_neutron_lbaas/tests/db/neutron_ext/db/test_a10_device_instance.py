@@ -17,7 +17,7 @@ import mock
 from a10_openstack_lib.resources import a10_device_instance as a10_device_instance_resources
 
 import a10_neutron_lbaas.tests.db.test_base as test_base
-
+import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import a10_device_instance as a10_device_instance
 from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
@@ -29,14 +29,26 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
     def setUp(self):
         super(TestA10DeviceInstanceDbMixin, self).setUp()
         self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
+        self._config_patcher = mock.patch('a10_neutron_lbaas.a10_config.A10Config')
+        
         nm = self._nm_patcher.start()
         nm.get_service_plugins.return_value = {
             nconstants.LOADBALANCERV2: mock.MagicMock()
         }
-
+        config = self._config_patcher.start()
+        vth_config = self.vthunder_options()
+        vth_config.update(self.fake_deviceinstance())
+        vth_config.update(self.default_options())
+        vth_config["nova_instance_id"] = "fake_instance_id"
+        config_mock = mock.MagicMock(get_vthunder_config=mock.Mock(return_value=vth_config), get_devices=mock.Mock(return_value={}))
+        config.return_value = config_mock 
+  
         self.plugin = a10_device_instance.A10DeviceInstanceDbMixin()
+        self.plugin.config.get_vthunder_config = lambda: vth_config
+
 
     def tearDown(self):
+        self._config_patcher.stop()
         super(TestA10DeviceInstanceDbMixin, self).tearDown()
 
     def context(self):
@@ -58,7 +70,7 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
             'v_method': 'LSI',
             'shared_partition': 'shared',
             'write_memory': False,
-            'nova_instance_id': None,
+            'nova_instance_id': "fake_instance_id",
             'project_id': 'fake-tenant-id'
         }
 
@@ -72,6 +84,42 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         return {
             'protocol': 'https',
             'port': 443
+        }
+
+    def fake_deviceinstance_with_options(self):
+        rv = self.fake_deviceinstance()
+        rv.update(self.fake_deviceinstance_options())
+        return rv
+
+    def vthunder_options(self):
+        return {
+                'username': 'admin',
+                'password': 'a10',
+                'nova_flavor': 'm1.tiny',  # 1 core, 4096MB ram, 12GB disk
+                'glance_image': '7d0b41ac-e988-431f-ae15-ca80e6d3e114',
+                'vthunder_management_network': 'public',
+                'vthunder_data_networks': [ 'private', 'public' ],
+                'license_manager': {
+                         "hosts": [
+                                {"ip": "pdx.a10cloud.com", "port": 443},
+                                {"ip": "sfo.a10cloud.com", "port": 443},
+                                {"ip": "iad.a10cloud.com", "port": 443}
+                        ],
+                        "serial": "SNxxxxxxxxxxxxxxxx",
+                        "instance-name": "openstack_instance",
+                        "bandwidth-base": 100,
+                        "interval": 3,
+                        "use-mgmt-port": True
+                },
+                'dns_resolver': {
+                    'primary': '192.0.2.4',
+                    'secondary': '192.0.2.5',
+                },
+                'sflow_collector': {
+                     'host': '10.10.10.10',
+                     'port': 6343
+                },
+            
         }
 
     def envelope(self, body):
@@ -88,6 +136,7 @@ class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
 
     def test_a10_device_instance(self):
         instance = self.fake_deviceinstance()
+        instance.update(self.fake_deviceinstance_options())
         context = self.context()
         result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
         context.session.commit()
@@ -105,8 +154,7 @@ class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
         self.assertEqual(expected, result)
 
     def test_create_a10_device_instance_options(self):
-        instance = self.fake_deviceinstance()
-        instance.update(self.fake_deviceinstance_options())
+        instance = self.fake_deviceinstance_with_options()
         context = self.context()
         result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
         context.session.commit()
@@ -122,7 +170,7 @@ class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
         self.assertEqual(expected, result)
 
     def test_create_a10_device_instance_default_port(self):
-        instance = self.fake_deviceinstance()
+        instance = self.fake_deviceinstance_with_options()
         instance['port'] = 80
         instance['protocol'] = 'http'
         context = self.context()
@@ -132,7 +180,7 @@ class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
         self.assertEqual(80, result['port'])
 
     def test_get_a10_device_instance(self):
-        instance = self.fake_deviceinstance()
+        instance = self.fake_deviceinstance_with_options()
         create_context = self.context()
         create_result = self.plugin.create_a10_device_instance(create_context,
                                                                self.envelope(instance))
@@ -151,7 +199,7 @@ class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
             'fake-deviceinstance-id')
 
     def test_get_a10_device_instances(self):
-        instance = self.fake_deviceinstance()
+        instance = self.fake_deviceinstance_with_options()
         create_context = self.context()
         create_result = self.plugin.create_a10_device_instance(create_context,
                                                                self.envelope(instance))
