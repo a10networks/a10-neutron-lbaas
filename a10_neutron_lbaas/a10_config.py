@@ -130,7 +130,7 @@ class A10Config(object):
 
                 LOG.debug("A10Config, device %s=%s", k, self._devices[k])
 
-        self._vthunder = {}
+        self._vthunder = None
         if hasattr(self._config, 'vthunder'):
             self._vthunder = self._config.vthunder
 
