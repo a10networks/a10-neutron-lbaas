@@ -32,7 +32,7 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
         self.instance_manager = mock.MagicMock()
         instance_manager.InstanceManager.from_config = mock.MagicMock(
             return_value=self.instance_manager)
-        self.instance_manager.create_device_instance.side_effect = lambda x, y: y 
+        self.instance_manager.create_device_instance.side_effect = lambda x, y: {"a10_device_instance": x} 
 
     def _build_instance(self):
         rv = {
