@@ -16,11 +16,10 @@ import mock
 
 from a10_openstack_lib.resources import a10_device_instance as a10_device_instance_resources
 
-import a10_neutron_lbaas.tests.db.test_base as test_base
-import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import a10_device_instance as a10_device_instance
 from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
+import a10_neutron_lbaas.tests.db.test_base as test_base
 from neutron.plugins.common import constants as nconstants
 
 
@@ -30,7 +29,7 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         super(TestA10DeviceInstanceDbMixin, self).setUp()
         self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
         self._config_patcher = mock.patch('a10_neutron_lbaas.a10_config.A10Config')
-        
+
         nm = self._nm_patcher.start()
         nm.get_service_plugins.return_value = {
             nconstants.LOADBALANCERV2: mock.MagicMock()
@@ -40,12 +39,12 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         vth_config.update(self.fake_deviceinstance())
         vth_config.update(self.default_options())
         vth_config["nova_instance_id"] = "fake_instance_id"
-        config_mock = mock.MagicMock(get_vthunder_config=mock.Mock(return_value=vth_config), get_devices=mock.Mock(return_value={}))
-        config.return_value = config_mock 
-  
+        config_mock = mock.MagicMock(get_vthunder_config=mock.Mock(
+            return_value=vth_config), get_devices=mock.Mock(return_value={}))
+        config.return_value = config_mock
+
         self.plugin = a10_device_instance.A10DeviceInstanceDbMixin()
         self.plugin.config.get_vthunder_config = lambda: vth_config
-
 
     def tearDown(self):
         self._config_patcher.stop()
@@ -93,33 +92,12 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
 
     def vthunder_options(self):
         return {
-                'username': 'admin',
-                'password': 'a10',
-                'nova_flavor': 'm1.tiny',  # 1 core, 4096MB ram, 12GB disk
-                'glance_image': '7d0b41ac-e988-431f-ae15-ca80e6d3e114',
-                'vthunder_management_network': 'public',
-                'vthunder_data_networks': [ 'private', 'public' ],
-                'license_manager': {
-                         "hosts": [
-                                {"ip": "pdx.a10cloud.com", "port": 443},
-                                {"ip": "sfo.a10cloud.com", "port": 443},
-                                {"ip": "iad.a10cloud.com", "port": 443}
-                        ],
-                        "serial": "SNxxxxxxxxxxxxxxxx",
-                        "instance-name": "openstack_instance",
-                        "bandwidth-base": 100,
-                        "interval": 3,
-                        "use-mgmt-port": True
-                },
-                'dns_resolver': {
-                    'primary': '192.0.2.4',
-                    'secondary': '192.0.2.5',
-                },
-                'sflow_collector': {
-                     'host': '10.10.10.10',
-                     'port': 6343
-                },
-            
+            'username': 'admin',
+            'password': 'a10',
+            'nova_flavor': 'm1.tiny',
+            'glance_image': '7d0b41ac-e988-431f-ae15-ca80e6d3e114',
+            'vthunder_management_network': 'public',
+            'vthunder_data_networks': ['private', 'public'],
         }
 
     def envelope(self, body):

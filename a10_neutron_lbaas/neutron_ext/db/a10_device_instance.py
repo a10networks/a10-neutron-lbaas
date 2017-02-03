@@ -70,12 +70,9 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
         return resources.remove_attributes_not_specified(body)
 
     def create_a10_device_instance(self, context, a10_device_instance):
-        import pdb; pdb.set_trace()
         body = self._get_body(a10_device_instance)
-        
+
         with context.session.begin(subtransactions=True):
-            if 'username' not in body:
-                import pdb; pdb.set_trace()
             instance_record = models.A10DeviceInstance(
                 id=_uuid_str(),
                 tenant_id=context.tenant_id,

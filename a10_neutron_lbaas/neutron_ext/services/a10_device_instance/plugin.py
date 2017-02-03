@@ -57,7 +57,6 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         dev_instance["host"] = host_ip
         dev_instance["nova_instance_id"] = nova_instance_id
 
-        import pdb; pdb.set_trace()
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
         return super(A10DeviceInstancePlugin, self).create_a10_device_instance(context,
