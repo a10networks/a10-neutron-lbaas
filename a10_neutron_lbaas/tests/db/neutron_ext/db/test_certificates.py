@@ -21,7 +21,6 @@ from a10_neutron_lbaas.tests.db import test_base as tbase
 import mock
 from neutron.plugins.common import constants as nconstants
 from neutron.tests.unit.api.v2 import test_base as ntbase
-from neutron_lbaas.db.loadbalancer import models as lb_models
 
 from oslo_log.helpers import logging as logging
 from oslo_utils import uuidutils
@@ -283,44 +282,6 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
 
         return self.plugin.create_a10_certificate_listener_binding(ctx, binding), binding
 
-    def _build_vip_dependencies(self, ctx, tenant_id):
-        """Builds Network => Port => Vip to satisfy foreign key constraints"""
-        lb = lb_models.LoadBalancer()
-        # if ctx is None:
-        #     ctx = self.context()
-
-        # with ctx.session.begin(subtransactions=True):
-        #     network = models_v2.Network(id=uuidutils.generate_uuid(),
-        #                                 name='Test Network',
-        #                                 status='Unavailable',
-        #                                 admin_state_up=False)
-
-        #     ctx.session.add(network)
-        #     ctx.session.commit()
-
-        #     network = ctx.session.query(models_v2.Network).filter_by(name='Test Network').first()
-        #     port = models_v2.Port(id=uuidutils.generate_uuid(),
-        #                           name='Test Port', tenant_id=tenant_id,
-        #                           network_id=network['id'],
-        #                           mac_address='13:37:c0:ff:fe:13', admin_state_up=False,
-        #                           device_owner='Test Owner', device_id='Test Device ID',
-        #                           status='INACTIVE')
-
-        #     ctx.session.add(port)
-        #     port = ctx.session.query(models_v2.Port).filter_by(name='Test Port').first()
-        #     # TODO(mdurrant) What does protocol_port do?
-        #     lb = lb_models.LoadBalancer(id=uuidutils.generate_uuid(),
-        #                                 name='Test Vip', description='Test Vip Description',
-        #                                 port_id=port['id'], protocol_port=0, protocol='HTTPS',
-        #                                 pool_id=uuidutils.generate_uuid(), tenant_id=tenant_id,
-        #                                 status='INACTIVE', status_description='INACTIVE',
-        #                                 admin_state_up=False, connection_limit=42)
-
-        #     ctx.session.add(listener)
-        #     listener = ctx.session.query(lb_models.Listener).filter_by(
-        #         name='Test Listener').first()
-        return lb
-
     def test_create_certificate(self, tenant_id="tenant1"):
         ctx = self.context()
         record, request = self._create_certificate(tenant_id)
@@ -370,8 +331,7 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
 
     def test_create_certificate_binding(self):
         ctx = self.context()
-        vip = self._build_vip_dependencies(ctx, _tenant_id)
-        vip_uuid = vip['id']
+        vip_uuid = 'fake-listener-id'
         cert, data = self._create_certificate()
         binding = self._build_binding(cert['id'], vip_uuid)
         self.plugin.create_a10_certificate_binding(ctx, binding)
@@ -384,9 +344,7 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
 
     def test_delete_certificate_binding(self):
         ctx = self.context()
-        vip = self._build_vip_dependencies(ctx, _tenant_id)
-        vip_uuid = vip['id']
-
+        vip_uuid = 'fake-listener-id'
         cert, data = self._create_certificate()
         binding = self._build_binding(cert['id'], vip_uuid)
         self.plugin.create_a10_certificate_binding(ctx, binding)

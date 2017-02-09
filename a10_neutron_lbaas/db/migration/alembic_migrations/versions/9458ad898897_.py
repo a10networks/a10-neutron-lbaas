@@ -10,27 +10,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""${message}
+"""empty message
 
-Revision ID: ${up_revision}
-Revises: ${down_revision | comma,n}
-Create Date: ${create_date}
+Revision ID: 9458ad898897
+Revises: 4ffd7ee0f175, 3e6dafba6b22
+Create Date: 2017-02-01 22:52:28.324438
 
 """
 
 # revision identifiers, used by Alembic.
-revision = ${repr(up_revision)}
-down_revision = ${repr(down_revision)}
-branch_labels = ${repr(branch_labels)}
-depends_on = ${repr(depends_on)}
+revision = '9458ad898897'
+down_revision = ('4ffd7ee0f175', '3e6dafba6b22')
+branch_labels = None
+depends_on = None
 
-from alembic import op  # noqa
-import sqlalchemy as sa  # noqa
-${imports if imports else ""}
 
 def upgrade():
-    ${upgrades if upgrades else "pass"}
+    pass
 
 
 def downgrade():
-    ${downgrades if downgrades else "pass"}
+    pass

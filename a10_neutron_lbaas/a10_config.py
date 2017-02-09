@@ -28,6 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 class ConfigModule(object):
+
     def __init__(self, d, provider=None):
         self.__dict__.update(d)
 

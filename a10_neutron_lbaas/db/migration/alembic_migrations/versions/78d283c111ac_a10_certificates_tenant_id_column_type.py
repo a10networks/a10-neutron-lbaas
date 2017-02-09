@@ -10,27 +10,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""${message}
+"""a10_certificates tenant_id column type
 
-Revision ID: ${up_revision}
-Revises: ${down_revision | comma,n}
-Create Date: ${create_date}
+Revision ID: 78d283c111ac
+Revises: 9458ad898897
+Create Date: 2017-02-01 22:53:47.229207
 
 """
 
 # revision identifiers, used by Alembic.
-revision = ${repr(up_revision)}
-down_revision = ${repr(down_revision)}
-branch_labels = ${repr(branch_labels)}
-depends_on = ${repr(depends_on)}
+revision = '78d283c111ac'
+down_revision = '9458ad898897'
+branch_labels = None
+depends_on = None
 
-from alembic import op  # noqa
-import sqlalchemy as sa  # noqa
-${imports if imports else ""}
+from alembic import op
+import sqlalchemy as sa
+
 
 def upgrade():
-    ${upgrades if upgrades else "pass"}
+    op.alter_column('a10_certificates', 'tenant_id', type_=sa.String(36), nullable=False)
 
 
 def downgrade():
-    ${downgrades if downgrades else "pass"}
+    op.alter_column('a10_certificates', 'tenant_id', type_=sa.String(255), nullable=True)

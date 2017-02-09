@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.etc import config as blank_config
 
@@ -21,3 +23,22 @@ def empty_config():
 def config(config_dict):
     config_constructor = type('config', (object,), config_dict)
     return a10_config.A10Config(config=config_constructor())
+
+
+def use_config_dir(config_dir=None):
+    if config_dir is None:
+        config_dir = os.path.dirname(__file__)
+
+    if 'A10_CONFIG_DIR' in os.environ:
+        current = os.environ['A10_CONFIG_DIR']
+
+        def cleanup():
+            os.environ['A10_CONFIG_DIR'] = current
+    else:
+
+        def cleanup():
+            del os.environ['A10_CONFIG_DIR']
+
+    os.environ['A10_CONFIG_DIR'] = config_dir
+
+    return cleanup

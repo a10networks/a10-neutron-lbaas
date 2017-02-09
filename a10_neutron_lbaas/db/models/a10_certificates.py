@@ -32,6 +32,6 @@ class CertificateListenerBinding(model_base.A10BaseMixin, model_base.A10Base):
     certificate_id = sa.Column(sa.String(36), sa.ForeignKey("a10_certificates.id"),
                                nullable=False)
     certificate = orm.relationship(Certificate, uselist=False)
-    listener_id = sa.Column(sa.String(36))
+    listener_id = sa.Column(sa.String(36), nullable=False)
     # This is a TINYINT/BYTE field depending on SQL implementation
-    status = sa.Column(sa.Integer(), default=0)
+    status = sa.Column(sa.Integer(), default=0, nullable=False, server_default="0")
