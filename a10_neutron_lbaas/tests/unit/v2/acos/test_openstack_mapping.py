@@ -22,6 +22,7 @@ class TestA10Openstack(test_base.UnitTestBase):
 
     def test_source_ip_v2(self):
         mock_client = mock.Mock()
-        expected = 'src-ip-hash'
-        actual = target.service_group_lb_method_v2(mock_client, 'SOURCE_IP')
+        mock_client.client.slb.service_group.SOURCE_IP_HASH = 'SOURCE_IP'
+        expected = mock_client.client.slb.service_group.SOURCE_IP_HASH
+        actual = target.service_group_lb_method(mock_client, 'SOURCE_IP')
         self.assertEqual(expected, actual)

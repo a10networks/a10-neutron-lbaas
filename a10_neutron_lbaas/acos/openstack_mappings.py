@@ -29,34 +29,7 @@ def service_group_lb_method(c, os_method):
     lb_methods = {
         'ROUND_ROBIN': z.ROUND_ROBIN,
         'LEAST_CONNECTIONS': z.LEAST_CONNECTION,
-        'SOURCE_IP': z.WEIGHTED_LEAST_CONNECTION,
-        'WEIGHTED_ROUND_ROBIN': z.WEIGHTED_ROUND_ROBIN,
-        'WEIGHTED_LEAST_CONNECTION': z.WEIGHTED_LEAST_CONNECTION,
-        'LEAST_CONNECTION_ON_SERVICE_PORT':
-            z.LEAST_CONNECTION_ON_SERVICE_PORT,
-        'WEIGHTED_LEAST_CONNECTION_ON_SERVICE_PORT':
-            z.WEIGHTED_LEAST_CONNECTION_ON_SERVICE_PORT,
-        'FAST_RESPONSE_TIME': z.FAST_RESPONSE_TIME,
-        'LEAST_REQUEST': z.LEAST_REQUEST,
-        'STRICT_ROUND_ROBIN': z.STRICT_ROUND_ROBIN,
-        'STATELESS_SOURCE_IP_HASH': z.STATELESS_SOURCE_IP_HASH,
-        'STATELESS_DESTINATION_IP_HASH': z.STATELESS_DESTINATION_IP_HASH,
-        'STATELESS_SOURCE_DESTINATION_IP_HASH':
-            z.STATELESS_SOURCE_DESTINATION_IP_HASH,
-        'STATELESS_PER_PACKET_ROUND_ROBIN':
-            z.STATELESS_PER_PACKET_ROUND_ROBIN,
-    }
-    return lb_methods[os_method]
-
-
-# This is duplicated because v1/v2 have different mappings.
-# TODO(mdurrant) Refactor this into a dictionary that encapsulates v1/v2 differences.
-def service_group_lb_method_v2(c, os_method):
-    z = c.client.slb.service_group
-    lb_methods = {
-        'ROUND_ROBIN': z.ROUND_ROBIN,
-        'LEAST_CONNECTIONS': z.LEAST_CONNECTION,
-        'SOURCE_IP': 'src-ip-hash',
+        'SOURCE_IP': z.SOURCE_IP_HASH,
         'WEIGHTED_ROUND_ROBIN': z.WEIGHTED_ROUND_ROBIN,
         'WEIGHTED_LEAST_CONNECTION': z.WEIGHTED_LEAST_CONNECTION,
         'LEAST_CONNECTION_ON_SERVICE_PORT':
