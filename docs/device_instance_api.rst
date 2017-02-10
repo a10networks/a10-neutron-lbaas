@@ -7,7 +7,7 @@ Device Instances
 Create
 ^^^^^^
 
-.. http:post:: /v2.0/a10_device_instance
+.. http:post:: /v2.0/a10_device_instances
 
    Create a new :ref:`device instance <deviceinstance>`.
 
@@ -78,7 +78,7 @@ Create
 Update
 ^^^^^^
 
-.. http:put:: /v2.0/a10_device_instance/(id)
+.. http:put:: /v2.0/a10_device_instances/(id)
 
    Update a device instance by ID
    Once a device has been created, the only properties that can be updated are those not required for device instantiation.
