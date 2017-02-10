@@ -11,7 +11,7 @@ Create
 
    Create a new :ref:`device instance <deviceinstance>`.
 
-    When specifying networks, the management interface for the device is specified as the first member of the 'networks' collection.
+    When specifying networks, it is assumed the management interface is specified as the first member of the 'networks' collection.
 
    **Example request**:
 
