@@ -66,7 +66,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # Try Barbican first.  TERMINATED HTTPS requires a default TLS container ID that is
         # checked by the API so we can't fake it out.
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
-            if self._set_terminated_https_values(listener, c, cert_data):
+            if self._set_terminated_https_values(listener, c,
+                                                 context, cert_data):
                 templates["client_ssl"] = {}
                 template_name = str(cert_data.get('template_name') or '')
                 key_passphrase = str(cert_data.get('key_pass') or '')
@@ -164,7 +165,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         except acos_errors.Exists:
             pass
 
-    def _set_terminated_https_values(self, listener, c, cert_data):
+    def _set_terminated_https_values(self, listener, c, context, cert_data):
         is_success = False
         container = None
 
@@ -173,7 +174,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # if there's a barbican container ID, check there.
         if c_id:
             try:
-                container = self.barbican_client.get_certificate(c_id, check_only=True)
+                container = self.barbican_client.get_certificate(
+                    context.project_id, c_id, None, check_only=True
+                )
             except Exception as ex:
                 container = None
                 LOG.error("Exception encountered retrieving TLS Container %s" % c_id)
