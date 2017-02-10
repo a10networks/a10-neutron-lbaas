@@ -17,6 +17,7 @@ import mock
 from a10_openstack_lib.resources import a10_device_instance as a10_device_instance_resources
 
 import a10_neutron_lbaas.tests.db.test_base as test_base
+import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import a10_device_instance as a10_device_instance
@@ -34,9 +35,13 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
             nconstants.LOADBALANCERV2: mock.MagicMock()
         }
 
+        self._config_cleanup = unit_config.use_config_dir()
+
         self.plugin = a10_device_instance.A10DeviceInstanceDbMixin()
 
     def tearDown(self):
+        self._config_cleanup()
+
         super(TestA10DeviceInstanceDbMixin, self).tearDown()
 
     def context(self):
@@ -58,7 +63,7 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
             'v_method': 'LSI',
             'shared_partition': 'shared',
             'write_memory': False,
-            'nova_instance_id': None,
+            'nova_instance_id': 'fake-instance-id',
             'project_id': 'fake-tenant-id'
         }
 

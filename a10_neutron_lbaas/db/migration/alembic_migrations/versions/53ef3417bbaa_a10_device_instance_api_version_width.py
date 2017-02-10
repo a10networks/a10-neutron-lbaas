@@ -10,27 +10,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""${message}
+"""a10_device_instance api_version width
 
-Revision ID: ${up_revision}
-Revises: ${down_revision | comma,n}
-Create Date: ${create_date}
+Revision ID: 53ef3417bbaa
+Revises: 357cd913dae6
+Create Date: 2016-08-05 20:08:16.496817
 
 """
 
 # revision identifiers, used by Alembic.
-revision = ${repr(up_revision)}
-down_revision = ${repr(down_revision)}
-branch_labels = ${repr(branch_labels)}
-depends_on = ${repr(depends_on)}
+revision = '53ef3417bbaa'
+down_revision = '357cd913dae6'
+branch_labels = None
+depends_on = None
 
-from alembic import op  # noqa
-import sqlalchemy as sa  # noqa
-${imports if imports else ""}
+from alembic import op
+import sqlalchemy as sa
+
 
 def upgrade():
-    ${upgrades if upgrades else "pass"}
+    op.alter_column('a10_device_instances', 'api_version',
+                    type_=sa.String(12), nullable=False,
+                    existing_type=sa.String(255), existing_nullable=False)
 
 
 def downgrade():
-    ${downgrades if downgrades else "pass"}
+    pass

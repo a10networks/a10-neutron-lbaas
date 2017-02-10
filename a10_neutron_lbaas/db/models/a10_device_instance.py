@@ -38,7 +38,7 @@ class A10DeviceInstance(model_base.A10BaseMixin, model_base.A10Base):
     ipinip = sa.Column(sa.Boolean(), nullable=False)
     write_memory = sa.Column(sa.Boolean(), nullable=False)
 
-    nova_instance_id = sa.Column(sa.String(36), nullable=True)
+    nova_instance_id = sa.Column(sa.String(36), nullable=False)
     host = sa.Column(sa.String(255), nullable=False)
 
     # TODO(dougwig) -- later - reference to scheduler, or capacity, or?

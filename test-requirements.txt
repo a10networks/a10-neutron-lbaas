@@ -9,6 +9,7 @@ mox3
 nose
 nose-exclude
 oslotest
+pifpaf
 pymysql
 testresources
 testscenarios

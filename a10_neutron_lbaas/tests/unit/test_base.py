@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
+import mock
 
 import a10_neutron_lbaas.tests.test_case as test_case
-import mock
+import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 
 import a10_neutron_lbaas.a10_openstack_lb as a10_os
 import a10_neutron_lbaas.plumbing_hooks as hooks
@@ -74,9 +74,8 @@ class UnitTestBase(test_case.TestCase):
 
     def setUp(self, openstack_lb_args={}):
         super(UnitTestBase, self).setUp()
-        unit_dir = os.path.dirname(__file__)
-        unit_config = os.path.join(unit_dir, "unit_config")
-        os.environ['A10_CONFIG_DIR'] = unit_config
+
+        self._config_cleanup = unit_config.use_config_dir()
 
         if 'provider' not in openstack_lb_args:
             openstack_lb_args['provider'] = 'units'
@@ -85,6 +84,9 @@ class UnitTestBase(test_case.TestCase):
             self.a = FakeA10OpenstackLBV2(mock.MagicMock(), **openstack_lb_args)
         else:
             self.a = FakeA10OpenstackLBV1(mock.MagicMock(), **openstack_lb_args)
+
+    def tearDown(self):
+        self._config_cleanup()
 
     def print_mocks(self):
         print("OPENSTACK ", self.a.openstack_driver.mock_calls)

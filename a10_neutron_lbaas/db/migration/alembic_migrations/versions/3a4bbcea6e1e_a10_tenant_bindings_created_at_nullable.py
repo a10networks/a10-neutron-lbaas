@@ -10,27 +10,32 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""${message}
+"""a10_tenant_bindings created_at nullable
 
-Revision ID: ${up_revision}
-Revises: ${down_revision | comma,n}
-Create Date: ${create_date}
+Revision ID: 3a4bbcea6e1e
+Revises: 53ef3417bbaa
+Create Date: 2016-08-05 20:17:00.492616
 
 """
 
 # revision identifiers, used by Alembic.
-revision = ${repr(up_revision)}
-down_revision = ${repr(down_revision)}
-branch_labels = ${repr(branch_labels)}
-depends_on = ${repr(depends_on)}
+revision = '3a4bbcea6e1e'
+down_revision = '53ef3417bbaa'
+branch_labels = None
+depends_on = None
 
-from alembic import op  # noqa
-import sqlalchemy as sa  # noqa
-${imports if imports else ""}
+from alembic import op
+import sqlalchemy as sa
+
 
 def upgrade():
-    ${upgrades if upgrades else "pass"}
+    op.alter_column('a10_tenant_bindings', 'created_at',
+                    type_=sa.DateTime, nullable=False,
+                    existing_type=sa.DateTime, existing_nullable=True)
+    op.alter_column('a10_tenant_bindings', 'updated_at',
+                    type_=sa.DateTime, nullable=False,
+                    existing_type=sa.DateTime, existing_nullable=True)
 
 
 def downgrade():
-    ${downgrades if downgrades else "pass"}
+    pass
