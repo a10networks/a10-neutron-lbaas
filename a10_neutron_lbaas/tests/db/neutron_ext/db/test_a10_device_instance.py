@@ -49,6 +49,18 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         context = mock.Mock(session=session, tenant_id='fake-tenant-id')
         return context
 
+    def envelope(self, body):
+        return {a10_device_instance_resources.RESOURCE: body}
+
+
+class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
+
+    def setUp(self):
+        super(TestA10DeviceInstanceDb, self).setUp()
+
+    def tearDown(self):
+        super(TestA10DeviceInstanceDb, self).tearDown()
+
     def fake_deviceinstance(self):
         return {
             'name': 'fake-name',
@@ -64,7 +76,9 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
             'shared_partition': 'shared',
             'write_memory': False,
             'nova_instance_id': 'fake-instance-id',
-            'project_id': 'fake-tenant-id'
+            'project_id': 'fake-tenant-id',
+            'protocol': 'https',
+            'port': 442
         }
 
     def fake_deviceinstance_options(self):
@@ -73,24 +87,6 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
             'port': 12345
         }
 
-    def default_options(self):
-        return {
-            'protocol': 'https',
-            'port': 443
-        }
-
-    def envelope(self, body):
-        return {a10_device_instance_resources.RESOURCE: body}
-
-
-class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
-
-    def setUp(self):
-        super(TestA10DeviceInstanceDb, self).setUp()
-
-    def tearDown(self):
-        super(TestA10DeviceInstanceDb, self).tearDown()
-
     def test_a10_device_instance(self):
         instance = self.fake_deviceinstance()
         context = self.context()
@@ -98,7 +94,7 @@ class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
         context.session.commit()
         self.assertIsNot(result['id'], None)
 
-        expected = self.default_options()
+        expected = {}
         expected.update(instance)
         expected.update(
             {
