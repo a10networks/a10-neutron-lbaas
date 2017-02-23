@@ -68,7 +68,9 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
         attr_map = resources.RESOURCE_ATTRIBUTE_MAP[resource]
         return dict((k, attr_map[k]['default'])
                     for k in attr_map
-                    if 'default' in attr_map[k] and not callable(attr_map[k]['default']))
+                    if 'default' in attr_map[k]
+                    and not callable(attr_map[k]['default'])
+                    and attr_map[k]['is_visible'])
 
     def default_options(self):
         return self.blank(resources.RESOURCES)
@@ -95,6 +97,7 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
                 'port': self.vthunder_defaults['port'],
                 'description': ''
             })
+
         self.assertEqual(expected, result)
 
     def test_create_a10_device_instance_options(self):
@@ -103,7 +106,8 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
         result = self.plugin.create_a10_device_instance(context, self.envelope(instance))
         self.assertIsNotNone(result['id'])
 
-        expected = instance.copy()
+        expected = self.default_options()
+        expected.update(instance)
         expected.update(
             {
                 'id': result['id'],
@@ -116,7 +120,7 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
         self.assertEqual(expected, result)
 
     def test_update_a10_device_instance_options(self):
-        instance = {}
+        instance = self.default_options()
         create_context = self.context()
         create_result = self.plugin.create_a10_device_instance(create_context,
                                                                self.envelope(instance))
@@ -171,7 +175,8 @@ class TestPlugin(test_a10_device_instance.TestA10DeviceInstanceDbMixin):
                 "host": "10.10.42.42",
                 "image": "MY_FAKE_IMAGE",
                 "flavor": "MY_FAKE_FLAVOR",
-                "networks": ["this_network", "that_network"],
+                "management_network": "this_network",
+                "data_networks": ["that_network"],
             }
         }
 

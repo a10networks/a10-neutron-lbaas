@@ -49,8 +49,11 @@ _mappings = [("id", None, None, "id"),
              (None, "use_float", None, "use_float"),
              (None, "default_virtual_server_vrid", None, "default_virtual_server_vrid"),
              (None, "ipinip", None, "ipinip"),
-             (None, "write_memory", None, "write_memory")
-             ]
+             (None, "write_memory", None, "write_memory"),
+             ("management_network", "vthunder_management_network", None, None),
+             ("data_networks", "vthunder_data_networks", None, None),
+             ("image", "glance_image", None, None),
+             ("flavor", "nova_flavor", None, None)]
 
 
 def _convert(source, from_type, to_type):

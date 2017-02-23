@@ -64,6 +64,7 @@ class TestA10DeviceInstanceDb(TestA10DeviceInstanceDbMixin):
     def fake_deviceinstance(self):
         return {
             'name': 'fake-name',
+            'description': 'fake-description',
             'host': 'fake-host',
             'api_version': 'fake-version',
             'username': 'fake-username',
