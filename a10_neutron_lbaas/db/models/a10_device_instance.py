@@ -23,6 +23,7 @@ class A10DeviceInstance(model_base.A10BaseMixin, model_base.A10Base):
     # This field is directly analagous to the device name in config.py;
     # and will be used as such throughout.
     name = sa.Column(sa.String(1024), nullable=False)
+    description = sa.Column(sa.String(255), nullable=True)
 
     username = sa.Column(sa.String(255), nullable=False)
     password = sa.Column(sa.String(255), nullable=False)

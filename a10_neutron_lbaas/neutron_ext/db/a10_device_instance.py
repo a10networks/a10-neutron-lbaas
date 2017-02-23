@@ -47,6 +47,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
     def _make_a10_device_instance_dict(self, a10_device_instance_db, fields=None):
         res = {'id': a10_device_instance_db.id,
                'name': a10_device_instance_db.name,
+               'description': a10_device_instance_db.description,
                'tenant_id': a10_device_instance_db.tenant_id,
                'username': a10_device_instance_db.username,
                'password': a10_device_instance_db.password,
@@ -71,27 +72,26 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
 
     def create_a10_device_instance(self, context, a10_device_instance):
         body = self._get_body(a10_device_instance)
-        data = self.config.get_vthunder_config()
-        data.update(**body)
         with context.session.begin(subtransactions=True):
             instance_record = models.A10DeviceInstance(
                 id=_uuid_str(),
                 tenant_id=context.tenant_id,
-                name=body['name'],
-                username=data['username'],
-                password=data['password'],
-                api_version=data['api_version'],
-                protocol=data['protocol'],
-                port=data['port'],
-                autosnat=data['autosnat'],
-                v_method=data['v_method'],
-                shared_partition=data['shared_partition'],
-                use_float=data['use_float'],
-                default_virtual_server_vrid=data['default_virtual_server_vrid'],
-                ipinip=data['ipinip'],
+                name=body.get('name', ''),
+                description=body.get('description', ''),
+                username=body['username'],
+                password=body['password'],
+                api_version=body['api_version'],
+                protocol=body['protocol'],
+                port=body['port'],
+                autosnat=body['autosnat'],
+                v_method=body['v_method'],
+                shared_partition=body['shared_partition'],
+                use_float=body['use_float'],
+                default_virtual_server_vrid=body['default_virtual_server_vrid'],
+                ipinip=body['ipinip'],
                 # Not all device records are nova instances
-                nova_instance_id=data.get('nova_instance_id'),
-                write_memory=data.get('write_memory', False),
+                nova_instance_id=body.get('nova_instance_id'),
+                write_memory=body.get('write_memory', False),
                 host=body['host'])
             context.session.add(instance_record)
 
