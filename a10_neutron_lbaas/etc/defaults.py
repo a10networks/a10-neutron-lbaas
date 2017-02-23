@@ -45,6 +45,7 @@ DEVICE_OPTIONAL_DEFAULTS = {
     "use_float": False,
     "default_virtual_server_vrid": None,
     "ipinip": False,
+    "syn_cookie": False,
     "ha_sync_list": [],
     "write_memory": True,
 
