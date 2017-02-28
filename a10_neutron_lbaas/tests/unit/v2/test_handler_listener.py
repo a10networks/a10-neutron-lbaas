@@ -230,3 +230,29 @@ class TestListeners(test_base.UnitTestBase):
         self.a.listener.delete(None, m)
         expected = self.a.listener.cert_db.delete_a10_certificate_binding.call_count
         self.assertEqual(expected, len(bindings))
+
+    def _test_create_source_nat_pool(self, api_ver="3.0", source_nat_pool=None):
+        snatpool_vars = {
+            "2.1": "source_nat",
+            "3.0": "pool"
+        }
+
+        expected_var = snatpool_vars.get(api_ver, None)
+
+        for k, v in self.a.config.devices.items():
+            v['source_nat_auto'] = source_nat_pool
+            v['api_ver'] = api_ver
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+
+        self.a.listener.create(None, m)
+        self.print_mocks()
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        if source_nat_pool is not None:
+            self.assertIn("{0}={1}".format(expected_var, source_nat_pool), s)
