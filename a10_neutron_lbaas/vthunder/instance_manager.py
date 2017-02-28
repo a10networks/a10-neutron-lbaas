@@ -268,7 +268,7 @@ class InstanceManager(object):
         network_list = {"networks": []}
         net_list = []
 
-        if networks is None or len(networks) < 1:
+        if networks is None:
             raise a10_ex.IdentifierUnspecifiedError(
                 "Parameter networks must be specified.")
 
