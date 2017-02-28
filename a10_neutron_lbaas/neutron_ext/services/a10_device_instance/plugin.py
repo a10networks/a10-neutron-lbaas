@@ -24,6 +24,58 @@ from a10_openstack_lib.resources import a10_device_instance as resources
 
 LOG = logging.getLogger(__name__)
 
+# api, vthunder, instance, and db keys
+_API = 0
+_VTHUNDER_CONFIG = 1
+_INSTANCE = 2
+_DB = 3
+_mappings = [("id", None, None, "id"),
+             ("tenant_id", None, None, "tenant_id"),
+             ("tenant_id", None, None, "project_id"),
+             ("project_id", None, None, "tenant_id"),
+             ("project_id", None, None, "project_id"),
+             ("name", None, None, "name"),
+             ("description", None, None, "description"),
+             ("host", None, "ip_address", "host"),
+             ("username", "username", None, "username"),
+             ("password", "password", None, "password"),
+             ("api_version", "api_version", None, "api_version"),
+             ("protocol", "protocol", None, "protocol"),
+             ("port", "port", None, "port"),
+             ("nova_instance_id", None, "nova_instance_id", "nova_instance_id"),
+             (None, "autosnat", None, "autosnat"),
+             (None, "v_method", None, "v_method"),
+             (None, "shared_partition", None, "shared_partition"),
+             (None, "use_float", None, "use_float"),
+             (None, "default_virtual_server_vrid", None, "default_virtual_server_vrid"),
+             (None, "ipinip", None, "ipinip"),
+             (None, "write_memory", None, "write_memory"),
+             ("management_network", "vthunder_management_network", None, None),
+             ("data_networks", "vthunder_data_networks", None, None),
+             ("image", "glance_image", None, None),
+             ("flavor", "nova_flavor", None, None)]
+
+
+def _convert(source, from_type, to_type):
+    result = {}
+
+    for mapping in _mappings:
+        source_key = mapping[from_type]
+        if source_key is None or source_key not in source:
+            continue
+
+        dest_key = mapping[to_type]
+        if dest_key is None:
+            continue
+
+        result[dest_key] = source[source_key]
+
+    return result
+
+
+def _make_api_dict(db_record):
+    return _convert(db_record, _DB, _API)
+
 
 class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
 
@@ -34,42 +86,49 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
             "A10DeviceInstancePlugin.get_a10_instances(): filters=%s, fields=%s",
             filters,
             fields)
-        return super(A10DeviceInstancePlugin, self).get_a10_device_instances(
+
+        db_instances = super(A10DeviceInstancePlugin, self).get_a10_device_instances(
             context, filters=filters, fields=fields)
+
+        return map(_make_api_dict, db_instances)
 
     def create_a10_device_instance(self, context, a10_device_instance):
         """Attempt to create instance using neutron context"""
         LOG.debug("A10DeviceInstancePlugin.create(): a10_device_instance=%s", a10_device_instance)
 
         config = a10_config.A10Config()
-        vth_config = config.get_vthunder_config()
+        vthunder_defaults = config.get_vthunder_config()
 
         imgr = instance_manager.InstanceManager.from_config(config, context)
 
-        # #TODO(mdurrant) This is in a constant, use it
-        # Pass the member dict to avoid unnecessary transforms.
-        dev_instance = a10_device_instance.get(resources.RESOURCE)
+        dev_instance = common_resources.remove_attributes_not_specified(
+            a10_device_instance.get(resources.RESOURCE))
 
         # Create the instance with specified defaults.
-        instance = self._build_server_with_defaults(dev_instance, vth_config, imgr)
+        vthunder_config = vthunder_defaults.copy()
+        vthunder_config.update(_convert(dev_instance, _API, _VTHUNDER_CONFIG))
+        instance = imgr.create_device_instance(vthunder_config, dev_instance.get("name"))
 
-        host_ip = instance.get("ip_address")
-        nova_instance_id = instance.get("nova_instance_id")
-        # things we don't know until the instance is created.
-        dev_instance["host"] = host_ip
-        dev_instance["nova_instance_id"] = nova_instance_id
+        db_record = {}
+        db_record.update(_convert(vthunder_config, _VTHUNDER_CONFIG, _DB))
+        db_record.update(_convert(dev_instance, _API, _DB))
+        db_record.update(_convert(instance, _INSTANCE, _DB))
 
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
-        return super(A10DeviceInstancePlugin, self).create_a10_device_instance(context,
-                                                                               a10_device_instance)
+        db_instance = super(A10DeviceInstancePlugin, self).create_a10_device_instance(
+            context, {resources.RESOURCE: db_record})
+
+        return _make_api_dict(db_instance)
 
     def get_a10_device_instance(self, context, id, fields=None):
         LOG.debug("A10DeviceInstancePlugin.get_a10_instance(): id=%s, fields=%s",
                   id, fields)
-        return super(A10DeviceInstancePlugin, self).get_a10_device_instance(context,
-                                                                            id,
-                                                                            fields=fields)
+
+        db_instance = super(A10DeviceInstancePlugin, self).get_a10_device_instance(
+            context, id, fields=fields)
+
+        return _make_api_dict(db_instance)
 
     def update_a10_device_instance(self, context, id, a10_device_instance):
         LOG.debug(
@@ -77,10 +136,12 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
             id,
             a10_device_instance)
 
-        return super(A10DeviceInstancePlugin, self).update_a10_device_instance(
+        db_instance = super(A10DeviceInstancePlugin, self).update_a10_device_instance(
             context,
             id,
             a10_device_instance)
+
+        return _make_api_dict(db_instance)
 
     def delete_a10_device_instance(self, context, id):
         LOG.debug("A10DeviceInstancePlugin.delete(): id=%s", id)
@@ -93,32 +154,3 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         imgr.delete_instance(nova_instance_id)
 
         return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
-
-    def _build_server_with_defaults(self, server, vthunder_config, imgr):
-        """
-        This function takes our API object and transforms it into two things:
-        Our DB record
-        A Nova instance record.
-        """
-        copy_keys = [("image", "glance_image"),
-                     ("flavor", "nova_flavor"),
-                     ("username", "username"),
-                     ("password", "password"),
-                     ("api_version", "api_version"),
-                     ("port", "port"),
-                     ("protocol", "protocol"),
-                     ("mgmt_network", "vthunder_management_network"),
-                     ("data_networks", "vthunder_data_networks"),
-                     ]
-
-        server = common_resources.remove_attributes_not_specified(server)
-        # Returning this as an array makes further concatenation easier.
-
-        for server_key, config_key in copy_keys:
-            # if the server doesn't have this attribute configured, set it from default
-            if server_key in server and config_key in vthunder_config:
-                vthunder_config[config_key] = server[server_key]
-
-        rv = imgr.create_device_instance(vthunder_config, server.get("name"))
-
-        return rv

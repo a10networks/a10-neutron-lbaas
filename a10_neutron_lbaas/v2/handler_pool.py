@@ -32,7 +32,7 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
         set_method(
             self._meta_name(pool),
             protocol=openstack_mappings.service_group_protocol(c, pool.protocol),
-            lb_method=openstack_mappings.service_group_lb_method_v2(c, pool.lb_algorithm),
+            lb_method=openstack_mappings.service_group_lb_method(c, pool.lb_algorithm),
             axapi_args=args)
 
         # session persistence might need a vport update
