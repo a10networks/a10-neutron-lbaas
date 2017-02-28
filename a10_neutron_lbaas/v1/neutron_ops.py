@@ -13,9 +13,10 @@
 
 class NeutronOpsV1(object):
 
-    def __init__(self, handler):
+    def __init__(self, handler, ndbplugin=None):
         self.openstack_driver = handler.openstack_driver
         self.plugin = self.openstack_driver.plugin
+        self.ndbplugin = ndbplugin
 
     def hm_binding_count(self, context, hm_id):
         return self.openstack_driver._hm_binding_count(context, hm_id)

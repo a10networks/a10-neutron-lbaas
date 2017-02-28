@@ -22,6 +22,10 @@ import test_base
 
 class TestLB(test_base.UnitTestBase):
 
+    def setUp(self):
+        super(TestLB, self).setUp()
+        self.handler = self.a.lb
+
     def test_create(self):
         m = fake_objs.FakeLoadBalancer()
         self.a.lb.create(None, m)
@@ -44,7 +48,6 @@ class TestLB(test_base.UnitTestBase):
         self._test_create_default_vrid("3.0", 7)
 
     def _test_create_default_vrid(self, api_ver=None, default_vrid=None):
-
         """
         Due to how the config is pulled in, we override the config
         for all of the devices.
@@ -82,7 +85,7 @@ class TestLB(test_base.UnitTestBase):
     #         z = test_base.FakeListener('TCP', 2222+x, pool=pool,
     #                                    loadbalancer=m)
     #         m.listeners.append(z)
-    #     self.a.lb.create(None, m)
+    #     self.handler.create(None, m)
     #     s = str(self.a.last_client.mock_calls)
     #     print ("LAST CALLS {0}".format(s))
     #     self.assertTrue('call.slb.virtual_server.create' in s)
@@ -96,7 +99,7 @@ class TestLB(test_base.UnitTestBase):
     def test_update_down(self):
         m = fake_objs.FakeLoadBalancer()
         m.admin_state_up = False
-        self.a.lb.update(None, m, m)
+        self.handler.update(None, m, m)
         s = str(self.a.last_client.mock_calls)
         self.assertTrue('call.slb.virtual_server.update' in s)
         self.assertTrue('fake-lb-id-001' in s)
@@ -116,6 +119,7 @@ class TestLB(test_base.UnitTestBase):
 
     def test_refresh(self):
         try:
+
             self.a.lb.refresh(None, fake_objs.FakeLoadBalancer())
         except a10_ex.UnsupportedFeature:
             pass
@@ -134,3 +138,44 @@ class TestLB(test_base.UnitTestBase):
             raise e(msg)
 
         return lambda *args, **kwargs: raise_exception(e, msg)
+
+    def test_create_calls_portbindingport_create_positive(self):
+        m = test_base.FakeLoadBalancer()
+        self.a.openstack_driver.device_info = {"enable_host_binding": True}
+        self.handler.create(self.context, m)
+        hostname = self.a.device_info["name"]
+
+        call_args = self.handler.neutron.portbindingport_create_or_update_from_vip_id.call_args[0]
+
+        self.assertTrue(self.handler.neutron.portbindingport_create_or_update_from_vip_id.called)
+        self.assertTrue(self.context in call_args)
+        self.assertTrue(m.vip_port["id"] in call_args)
+        self.assertTrue(hostname in call_args)
+
+    def test_create_calls_portbindingport_create_negative(self):
+        m = test_base.FakeLoadBalancer()
+        self.handler.neutron.portbindingport_create_or_update_from_vip_id.reset_mock()
+        self.a.openstack_driver.device_info = {"enable_host_binding": False}
+        self.handler.create(self.context, m)
+
+        self.assertFalse(self.handler.neutron.portbindingport_create_or_update_from_vip_id.called)
+
+    def test_delete_calls_portbinding_delete_positive(self):
+        m = test_base.FakeLoadBalancer()
+        self.a.openstack_driver.device_info = {"enable_host_binding": True}
+        self.handler.delete(self.context, m)
+
+        call_args = self.handler.neutron.portbindingport_delete.call_args[0]
+
+        self.assertTrue(self.handler.neutron.portbindingport_delete.called)
+        self.assertTrue(self.context in call_args)
+        self.assertTrue(m.vip_port["id"] in call_args)
+
+    def test_delete_calls_portbinding_delete_negative(self):
+        m = test_base.FakeLoadBalancer()
+        self.a.openstack_driver.device_info = {"enable_host_binding": False}
+        self.handler.neutron.portbindingport_create_or_update_from_vip_id.reset_mock()
+
+        self.handler.delete(self.context, m)
+
+        self.assertFalse(self.handler.neutron.portbindingport_delete.called)
