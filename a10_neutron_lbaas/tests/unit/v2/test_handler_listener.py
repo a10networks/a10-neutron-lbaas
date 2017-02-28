@@ -231,10 +231,9 @@ class TestListeners(test_base.UnitTestBase):
         expected = self.a.listener.cert_db.delete_a10_certificate_binding.call_count
         self.assertEqual(expected, len(bindings))
 
-    def _test_create_source_nat_pool(self, source_nat_pool=None, snat_var=None, api_ver="3.0"):
+    def _test_create_source_nat_pool(self, source_nat_pool):
         for k, v in self.a.config.devices.items():
             v['source_nat_pool'] = source_nat_pool
-            v['api_ver'] = api_ver
 
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
@@ -248,20 +247,20 @@ class TestListeners(test_base.UnitTestBase):
         s = str(self.a.last_client.mock_calls)
 
         self.assertIn("vport.create", s)
-        expected = "{0}={1}".format(snat_var, source_nat_pool)
+        expected = "source_nat_pool='{0}'".format(source_nat_pool)
         if source_nat_pool:
             self.assertIn(expected, s)
         else:
             self.assertNotIn(expected, s)
 
     def test_create_source_nat_pool_v30_positive(self):
-        self._test_create_source_nat_pool("mypool", "pool")
+        self._test_create_source_nat_pool("mypool")
 
     def test_create_source_nat_pool_v30_negative(self):
-        self._test_create_source_nat_pool(None, "pool")
+        self._test_create_source_nat_pool(None)
 
     def test_create_source_nat_pool_v21_positive(self):
-        self._test_create_source_nat_pool("mypool", "source_nat", "2.1")
+        self._test_create_source_nat_pool("mypool")
 
     def test_create_source_nat_pool_v21_negative(self):
-        self._test_create_source_nat_pool(None, "source_nat", "2.1")
+        self._test_create_source_nat_pool(None)
