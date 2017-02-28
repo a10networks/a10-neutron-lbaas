@@ -193,3 +193,29 @@ class TestVIP(test_base.UnitTestBase):
         self.a.last_client.slb.virtual_server.delete.assert_called_with(vip_id)
         z = self.a.last_client.slb.template.src_ip_persistence.delete
         z.assert_called_with(vip_id)
+
+    def _test_create_source_nat_pool(self, source_nat_pool):
+        vip = fake_objs.FakeVIP()
+
+        if source_nat_pool:
+            for k, v in self.a.config.devices.items():
+                v['source_nat_pool'] = source_nat_pool
+
+        self.a.vip.create(None, vip)
+        s = str(self.a.last_client.mock_calls)
+
+        self.assertIn("vport.create", s)
+
+        if source_nat_pool:
+            expected = "source_nat_pool='{0}'".format(source_nat_pool)
+            self.assertIn(expected, s)
+        else:
+            self.assertIn("source_nat_pool=None", s)
+
+        s = str(self.a.last_client.mock_calls)
+
+    def test_create_source_nat_pool_positive(self):
+        self._test_create_source_nat_pool("mypool")
+
+    def test_create_source_nat_pool_negative(self):
+        self._test_create_source_nat_pool(None)
