@@ -134,6 +134,10 @@ devices = {
     # Set to true if you want automatic source nat on vports
     #     "autosnat": False,
     #
+    # Set to the name of a nat pool to use that pool for source nat on vports
+    # The nat pool must already exist on the ACOS device.
+    #     "source_nat_pool": None,
+    #
     # Partition method; "LSI" to put all slb's in a single shared partition,
     # or "ADP" to use a partition per tenant. Partitions are RBA style in
     # ACOS 2.x, and L3V in ACOS 4.x.
