@@ -174,7 +174,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # if there's a barbican container ID, check there.
         if c_id:
             try:
-                container = self.barbican_client.get_certificate(c_id, check_only=True)
+                container = self.barbican_client.get_certificate(c_id, check_only=True,
+                                                                 project_id=c.tenant_id)
             except Exception as ex:
                 container = None
                 LOG.error("Exception encountered retrieving TLS Container %s" % c_id)
