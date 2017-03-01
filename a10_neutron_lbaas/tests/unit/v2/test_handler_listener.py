@@ -272,3 +272,29 @@ class TestListeners(test_base.UnitTestBase):
 
     def test_create_source_nat_pool_negative(self):
         self._test_create_source_nat_pool(None)
+
+    def _set_device_config(self, key, value):
+        for k, v in self.a.config.devices.items():
+            v[key] = value
+
+    def _get_vport_config(self):
+        return {
+            "gslb-enable": 1
+        }
+
+    def test_create_vport_defaults(self):
+        self._set_device_config("vport_defaults", self._get_vport_config)
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                           loadbalancer=lb)
+
+        self.a.listener.create(None, m)
+        self.print_mocks()
+
+        s = str(self.a.last_client.mock_calls)
+
+        self.assertIn("vport.create", s)
+        self.assertIn("gslb_enable=1", s)

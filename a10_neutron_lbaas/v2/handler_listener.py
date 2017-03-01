@@ -163,6 +163,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
                 source_nat_pool=c.device_cfg.get('source_nat_pool'),
+                vport_defaults=c.device_cfg.get('vport_defaults'),
                 axapi_body=vport_meta,
                 **template_args)
         except acos_errors.Exists:
