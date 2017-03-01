@@ -116,7 +116,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 c.client.slb.template.client_ssl.create(
                     template_name,
                     cert=cert_filename,
-                    key=key_filename)
+                    key=key_filename,
+                    passphrase=key_passphrase)
             except acos_errors.Exists:
                 c.client.slb.template.client_ssl.update(template_name, cert=cert_filename,
                                                         key=key_filename, passphrase=key_passphrase)
@@ -129,11 +130,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                     template_name,
                     cert_filename,
                     key_filename,
+                    passphrase=key_passphrase,
                     axapi_args=server_args)
             except acos_errors.Exists:
                 c.client.slb.template.server_ssl.update(template_name,
                                                         cert_filename,
                                                         key_filename,
+                                                        passphrase=key_passphrase,
                                                         axapi_args=server_args)
 
         try:
