@@ -37,7 +37,10 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
 
         # session persistence might need a vport update
         if pool.listener:
+            # neutron-lbaas object graphs aren't fully populated ...
             pool.listener.default_pool_id = pool.listener.default_pool_id or pool.id
+            # ... and don't update object references from ids
+            pool.listener.default_pool = pool.listener.default_pool or pool
             self.a10_driver.listener._update(c, context, pool.listener)
 
     def _create(self, c, context, pool):
