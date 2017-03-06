@@ -283,13 +283,14 @@ class TestListeners(test_base.UnitTestBase):
         }
 
     def test_create_vport_defaults(self):
-        self._set_device_config("vport_defaults", self._get_vport_config)
+        expected = self._get_vport_config()
+        self._set_device_config("vport_defaults", expected)
 
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
         m = fake_objs.FakeListener(p, 2222, pool=pool,
-                                           loadbalancer=lb)
+                                   loadbalancer=lb)
 
         self.a.listener.create(None, m)
         self.print_mocks()
@@ -297,4 +298,4 @@ class TestListeners(test_base.UnitTestBase):
         s = str(self.a.last_client.mock_calls)
 
         self.assertIn("vport.create", s)
-        self.assertIn("gslb_enable=1", s)
+        self.assertIn(str(expected), s)
