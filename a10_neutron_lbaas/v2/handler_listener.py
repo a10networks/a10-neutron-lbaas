@@ -163,7 +163,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
                 source_nat_pool=c.device_cfg.get('source_nat_pool'),
-                vport_defaults=c.device_cfg.get('vport_defaults'),
+                # Device-level defaults
+                vport_defaults=self._get_vport_defaults(c),
                 axapi_body=vport_meta,
                 **template_args)
         except acos_errors.Exists:
@@ -315,3 +316,20 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             except Exception as ex:
                 LOG.exception(ex)
         return binding
+
+    def _get_global_vport_defaults(self, c):
+        rv = {}
+        rv = c.a10_driver.config.get("vport_defaults")
+        return rv
+
+    def _get_device_vport_defaults(self, c):
+        rv = {}
+        rv = c.device_cfg.get("vport_defaults")
+        return rv
+
+    def _get_vport_defaults(self, c):
+        rv = {}
+        # Device-specific defaults have precedence over global
+        rv.update(self._get_global_vport_defaults(c))
+        rv.update(self._get_device_vport_defaults(c))
+        return rv
