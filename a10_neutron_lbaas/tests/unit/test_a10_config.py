@@ -79,6 +79,8 @@ class TestA10Config(test_base.UnitTestBase):
         self.assertEqual(self.a.config.get('use_database'), self.a.config.config.use_database)
         self.assertEqual(self.a.config.get(
             'verify_appliances'), self.a.config.config.verify_appliances)
+        self.assertEqual(self.a.config.get(
+            'vport_defaults'), self.a.config.get_vport_defaults())
 
 
 class TestA10ConfigProvider(test_base.UnitTestBase):

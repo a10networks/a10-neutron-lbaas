@@ -319,7 +319,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _get_global_vport_defaults(self, c):
         rv = {}
-        rv = c.a10_driver.config.get("vport_defaults")
+        rv = c.a10_driver.config.get_vport_defaults()
         return rv
 
     def _get_device_vport_defaults(self, c):

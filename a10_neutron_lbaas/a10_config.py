@@ -130,6 +130,7 @@ class A10Config(object):
                 LOG.debug("A10Config, device %s=%s", k, self._devices[k])
 
         self._vthunder = None
+
         if hasattr(self._config, 'vthunder'):
             self._vthunder = self._config.vthunder
 
@@ -154,6 +155,10 @@ class A10Config(object):
         if self._config.keystone_auth_url is None:
             self._config.keystone_auth_url = self._get_neutron_conf(
                 'keystone_authtoken', 'auth_uri')
+
+        self._vport_defaults = {}
+        if hasattr(self._config, "vport_defaults"):
+            self._vport_defaults = self._config.vport_defaults
 
         # Setup some backwards compat stuff
         self.config = OldConfig(self)
@@ -212,6 +217,9 @@ class A10Config(object):
 
     def get_vthunder_config(self):
         return self._vthunder
+
+    def get_vport_defaults(self):
+        return self._vport_defaults
 
     # backwards compat
     @removals.remove

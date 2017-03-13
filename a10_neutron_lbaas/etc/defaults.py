@@ -26,7 +26,6 @@ GLOBAL_DEFAULTS = {
     "keystone_version": 2,
     "plumbing_hooks_class": a10_neutron_lbaas.plumbing_hooks.PlumbingHooks,
     "nova_api_version": "2.1",
-    # AXAPI options to be applied during vport creation
     "vport_defaults": {},
 }
 
