@@ -20,7 +20,17 @@ import a10_openstack_lib.resources.validators as a10_validators
 
 
 from neutron.api.v2 import resource_helper
-from neutron.services import service_base
+# neutron.services got moved to neutron_lib
+try:
+    from neutron.services.service_base import ServicePluginBase
+except (ImportError, AttributeError):
+    pass
+
+try:
+    from neutron_lib.services.base import ServicePluginBase
+except AttributeError:
+    pass
+
 
 from a10_neutron_lbaas.neutron_ext.common import attributes
 from a10_neutron_lbaas.neutron_ext.common import constants
@@ -99,7 +109,7 @@ class A10DeviceInstanceInUseError(exceptions.InUse):
 
 
 @six.add_metaclass(abc.ABCMeta)
-class A10DeviceInstancePluginBase(service_base.ServicePluginBase):
+class A10DeviceInstancePluginBase(ServicePluginBase):
 
     def get_plugin_name(self):
         return constants.A10_DEVICE_INSTANCE
