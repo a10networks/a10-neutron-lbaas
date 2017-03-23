@@ -23,17 +23,16 @@ from neutron.api.v2 import resource_helper
 
 # neutron.services got moved to neutron_lib
 try:
-    from neutron.services.service_base import ServicePluginBase
+    # F811 (redefinition of ServicePluginBase) suppressed
+    from neutron.services.service_base import ServicePluginBase  # noqa
 except (ImportError, AttributeError):
     pass
 
 try:
-    from neutron_lib.services.base import ServicePluginBase
+    # F811 (redefinition of ServicePluginBase) suppressed
+    from neutron_lib.services.base import ServicePluginBase  # noqa
 except AttributeError:
     pass
-
-
-
 
 from a10_neutron_lbaas.neutron_ext.common import attributes
 from a10_neutron_lbaas.neutron_ext.common import constants
