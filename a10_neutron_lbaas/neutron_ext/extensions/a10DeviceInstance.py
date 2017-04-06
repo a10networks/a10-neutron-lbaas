@@ -30,7 +30,7 @@ except (ImportError, AttributeError):
 try:
     # F811 (redefinition of ServicePluginBase) suppressed
     from neutron_lib.services.base import ServicePluginBase  # noqa
-except AttributeError:
+except (ImportError, AttributeError):
     pass
 
 from a10_neutron_lbaas.neutron_ext.common import attributes
