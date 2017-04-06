@@ -164,6 +164,7 @@ class FakeListener(FakeModel):
                  loadbalancer=None, container_id=None, containers=None):
         super(FakeListener, self).__init__()
         self.id = 'fake-listen-id-001'
+        self.name = 'openstackname'
         self.protocol = protocol
         self.protocol_port = port
         self.admin_state_up = admin_state_up

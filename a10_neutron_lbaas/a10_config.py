@@ -160,6 +160,10 @@ class A10Config(object):
         if hasattr(self._config, "vport_defaults"):
             self._vport_defaults = self._config.vport_defaults
 
+        self._vport_expressions = {}
+        if hasattr(self._config, "vport_expressions"):
+            self._vport_expressions = self._config.vport_expressions
+
         # Setup some backwards compat stuff
         self.config = OldConfig(self)
 
@@ -220,6 +224,9 @@ class A10Config(object):
 
     def get_vport_defaults(self):
         return self._vport_defaults
+
+    def get_vport_expressions(self):
+        return self._vport_expressions
 
     # backwards compat
     @removals.remove

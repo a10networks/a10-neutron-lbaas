@@ -334,18 +334,18 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
     def _get_vport_expressions(self, c):
         rv = {}
-        rv = c.device_cfg.get("vport_expressions")
+        rv = c.a10_driver.config.get_vport_expressions()
         return rv
 
     def _get_name_matches(self, vport, vport_name, redict):
         # for each key in the vport_defaults dictionary
-        for k,v in redict:
+        for k,v in redict.iteritems():
             # check to see if the regex value matches.
+            v = redict[k]
             regex = re.compile(k)
-            match = regex.match(vport_name)
+            matched = regex.search(vport_name)
 
-            if match:
+            if matched:
                 # If so, take those dictionary values and apply them to the object
                 vport.update(v)
                 break
-
