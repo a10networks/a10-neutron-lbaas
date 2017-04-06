@@ -13,6 +13,7 @@
 #    under the License.
 
 import logging
+import re
 
 import acos_client.errors as acos_errors
 
@@ -62,7 +63,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         template_args = {}
         protocol = openstack_mappings.vip_protocols(c, listener.protocol)
         binding = None
-
+        os_name = listener.name or None
         # Try Barbican first.  TERMINATED HTTPS requires a default TLS container ID that is
         # checked by the API so we can't fake it out.
         if listener.protocol and listener.protocol == constants.PROTOCOL_TERMINATED_HTTPS:
@@ -164,7 +165,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 ipinip=c.device_cfg.get('ipinip'),
                 source_nat_pool=c.device_cfg.get('source_nat_pool'),
                 # Device-level defaults
-                vport_defaults=self._get_vport_defaults(c),
+                vport_defaults=self._get_vport_defaults(c, os_name),
                 axapi_body=vport_meta,
                 **template_args)
         except acos_errors.Exists:
@@ -318,18 +319,33 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         return binding
 
     def _get_global_vport_defaults(self, c):
-        rv = {}
-        rv = c.a10_driver.config.get_vport_defaults()
-        return rv
+        return c.a10_driver.config.get_vport_defaults()
 
     def _get_device_vport_defaults(self, c):
-        rv = {}
-        rv = c.device_cfg.get("vport_defaults")
-        return rv
+        return c.device_cfg.get("vport_defaults")
 
-    def _get_vport_defaults(self, c):
+    def _get_vport_defaults(self, c, vport_name):
         rv = {}
         # Device-specific defaults have precedence over global
         rv.update(self._get_global_vport_defaults(c))
         rv.update(self._get_device_vport_defaults(c))
+        self._get_name_matches(rv, vport_name, self._get_vport_expressions(c))
         return rv
+
+    def _get_vport_expressions(self, c):
+        rv = {}
+        rv = c.device_cfg.get("vport_expressions")
+        return rv
+
+    def _get_name_matches(self, vport, vport_name, redict):
+        # for each key in the vport_defaults dictionary
+        for k,v in redict:
+            # check to see if the regex value matches.
+            regex = re.compile(k)
+            match = regex.match(vport_name)
+
+            if match:
+                # If so, take those dictionary values and apply them to the object
+                vport.update(v)
+                break
+
