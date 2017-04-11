@@ -150,6 +150,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         # This doesn't do anything anymore.
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
+        template_args.update(**self._get_vport_defaults(c, os_name))
 
         try:
             set_method(

@@ -15,6 +15,7 @@
 import a10_neutron_lbaas.handler_base as base
 import neutron_ops
 
+import re
 
 class HandlerBaseV2(base.HandlerBase):
 
@@ -25,3 +26,18 @@ class HandlerBaseV2(base.HandlerBase):
             self.neutron = neutron
         else:
             self.neutron = neutron_ops.NeutronOpsV2(self)
+
+        
+    def _get_name_matches(self, vport, vport_name, redict):
+        # for each key in the vport_defaults dictionary
+        for k,v in redict.iteritems():
+            # check to see if the regex value matches.
+            v = redict[k]
+            regex = re.compile(k)
+            matched = regex.search(vport_name)
+
+            if matched:
+                # If so, take those dictionary values and apply them to the object
+                vport.update(v)
+                break
+
