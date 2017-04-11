@@ -27,17 +27,21 @@ class HandlerBaseV2(base.HandlerBase):
         else:
             self.neutron = neutron_ops.NeutronOpsV2(self)
 
-        
-    # def _get_name_matches(self, vport, vport_name, redict):
-    #     # for each key in the vport_defaults dictionary
-    #     for k,v in redict.iteritems():
-    #         # check to see if the regex value matches.
-    #         v = redict[k]
-    #         regex = re.compile(k)
-    #         matched = regex.search(vport_name)
+    """
+    Pass in an element, it's openstack name, and a dictionary of matches.
+    """
+    def _get_name_matches(self, elem, os_name, redict):
+        # for each key in the vport_defaults dictionary
+        for k, v in redict.iteritems():
+            # check to see if the regex value matches.
+            v = redict[k]
 
-    #         if matched:
-    #             # If so, take those dictionary values and apply them to the object
-    #             vport.update(v)
-    #             break
+            regex_str = redict["regex"]
+            json_merge = redict["json"]
+            regex = re.compile(regex_str)
+            matched = regex.search(os_name)
 
+            if matched:
+                # If so, take those dictionary values and apply them to the object
+                elem.update(json_merge)
+                break
