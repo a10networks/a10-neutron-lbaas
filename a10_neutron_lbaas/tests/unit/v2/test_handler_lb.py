@@ -19,7 +19,7 @@ import fake_objs
 import test_base
 
 
-class TestLB(test_base.UnitTestBase):
+class TestLB(test_base.HandlerTestBase):
 
     def test_create(self):
         m = fake_objs.FakeLoadBalancer()
@@ -155,3 +155,43 @@ class TestLB(test_base.UnitTestBase):
             raise e(msg)
 
         return lambda *args, **kwargs: raise_exception(e, msg)
+
+    def _test_create_expressions(self, os_name, pattern, expressions=None):
+        self.a.config.get_virtual_server_expressions = self._get_expressions_mock
+        expressions = expressions or self.a.config.get_virtual_server_expressions()
+        expected = expressions.get(pattern, {}).get("json", None) or ""
+        p = 'TCP'
+        m = fake_objs.FakeLoadBalancer()
+        m.name = os_name
+        handler = self.a.lb
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("virtual_server.create", s)
+        self.assertIn(str(expected), s)
+
+    def test_create_expressions_none(self):
+        self._test_create_expressions("mylb", None, {})
+
+    def test_create_expressions_match_beginning(self):
+        self._test_create_expressions("securelb", self.EXPR_BEGIN)
+
+    def test_create_expressions_match_end(self):
+        self._test_create_expressions("lbweb", self.EXPR_END)
+
+    def test_create_expressions_match_charclass(self):
+        self._test_create_expressions("lbwwlb", self.EXPR_CLASS)
+
+    def test_create_expressions_nomatch(self):
+        self.a.config.get_virtual_server_expressions = self._get_expressions_mock
+        expressions = self.a.config.get_virtual_server_expressions()
+        expected = expressions.get(self.EXPR_BEGIN, {}).get("json", None) or ""
+        p = 'TCP'
+        m = fake_objs.FakeLoadBalancer()
+        m.name = "mylb"
+        handler = self.a.lb
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("virtual_server.create", s)
+        self.assertNotIn(str(expected), s)

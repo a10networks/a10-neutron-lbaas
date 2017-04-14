@@ -132,9 +132,3 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
         rv = {}
         rv = c.a10_driver.config.get_service_group_expressions()
         return rv
-
-    def _get_config_defaults(self, c, os_name):
-        rv = {}
-        # Device-specific defaults have precedence over global
-        self._get_name_matches(rv, os_name, self._get_expressions(c))
-        return rv

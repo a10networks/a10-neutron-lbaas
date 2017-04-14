@@ -353,7 +353,7 @@ class TestListeners(test_base.HandlerTestBase):
         self._test_create_expressions("blahweb", self.EXPR_END)
 
     def test_create_vport_expressions_match_charclass(self):
-        self._test_create_expressions("listenerwwlis", self.EXPR_CLASS)
+        self._test_create_expressions("listenerwwwlis", self.EXPR_CLASS)
 
     def test_create_vport_expressions_nomatch(self):
         self.a.config.get_vport_expressions = self._get_expressions_mock

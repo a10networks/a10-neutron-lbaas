@@ -44,3 +44,9 @@ class HandlerBaseV2(base.HandlerBase):
                 # If so, take those dictionary values and apply them to the object
                 elem.update(json_merge)
                 break
+
+    def _get_config_defaults(self, c, os_name):
+        rv = {}
+        # Device-specific defaults have precedence over global
+        self._get_name_matches(rv, os_name, self._get_expressions(c))
+        return rv
