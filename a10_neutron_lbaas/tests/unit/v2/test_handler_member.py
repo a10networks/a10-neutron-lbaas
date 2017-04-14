@@ -149,7 +149,6 @@ class TestMembers(test_base.HandlerTestBase):
         admin_state = self.a.last_client.slb.UP
         m = fake_objs.FakeMember(admin_state_up=admin_state,
                                  pool=mock.MagicMock())
-        ip = self.a.member.neutron.member_get_ip(None, m, True)
 
         m.name = os_name
 
@@ -158,10 +157,11 @@ class TestMembers(test_base.HandlerTestBase):
 
         # s = str(self.a.last_client.mock_calls)
         self.a.last_client.slb.server.create.assert_called_with(
-                mock.ANY, mock.ANY,
-                status=mock.ANY,
-                config_defaults=expected,
-                axapi_args={'server': {}})
+            mock.ANY,
+            mock.ANY,
+            status=mock.ANY,
+            config_defaults=expected,
+            axapi_args={'server': {}})
         # self.assertIn("member.create", s)
         # self.assertIn(str(expected), s)
 
@@ -179,22 +179,18 @@ class TestMembers(test_base.HandlerTestBase):
 
     def test_create_expressions_nomatch(self):
         self.a.config.get_member_expressions = self._get_expressions_mock
-        expressions = self.a.config.get_member_expressions()
-        expected = expressions.get(self.EXPR_BEGIN, {}).get("json", {})
 
         admin_state = self.a.last_client.slb.UP
         m = fake_objs.FakeMember(admin_state_up=admin_state,
                                  pool=mock.MagicMock())
-        ip = self.a.member.neutron.member_get_ip(None, m, True)
 
         m.name = "myserver"
 
         handler = self.a.member
         handler.create(None, m)
-        status=admin_state
 
         self.a.last_client.slb.server.create.assert_called_with(
             mock.ANY, mock.ANY,
             status=mock.ANY,
             config_defaults={},
-            axapi_args={'server': {},})
+            axapi_args={'server': {}})

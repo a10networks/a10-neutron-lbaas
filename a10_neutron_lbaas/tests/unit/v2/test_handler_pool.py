@@ -153,7 +153,6 @@ class TestPools(test_base.HandlerTestBase):
         expressions = expressions or self.a.config.get_service_group_expressions()
         expected = expressions.get(pattern, {}).get("json", None) or ""
         p = 'TCP'
-        lb = fake_objs.FakeLoadBalancer()
         m = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
         m.name = os_name
         handler = self.a.pool
@@ -181,7 +180,6 @@ class TestPools(test_base.HandlerTestBase):
 
         expected = expressions["beginning"]
         p = 'TCP'
-        lb = fake_objs.FakeLoadBalancer()
         m = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
 
         m.name = "thepool"
