@@ -21,6 +21,7 @@ class FakeModel(object):
         self.id = kwargs.get('id', 'fake-id-001')
         self.tenant_id = kwargs.get('tenant_id', 'get-off-my-lawn')
         self.root_loadbalancer = None
+        self.name = kwargs.get("name", "fake-name")
 
 
 class FakePort(FakeModel):

@@ -18,7 +18,6 @@ import neutron_ops
 import re
 
 class HandlerBaseV2(base.HandlerBase):
-
     def __init__(self, a10_driver, openstack_manager, neutron=None):
         super(HandlerBaseV2, self).__init__(a10_driver)
         self.openstack_manager = openstack_manager
@@ -36,8 +35,8 @@ class HandlerBaseV2(base.HandlerBase):
             # check to see if the regex value matches.
             v = redict[k]
 
-            regex_str = redict["regex"]
-            json_merge = redict["json"]
+            regex_str = v["regex"]
+            json_merge = v["json"]
             regex = re.compile(regex_str)
             matched = regex.search(os_name)
 

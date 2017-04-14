@@ -29,20 +29,29 @@ class UnitTestBase(test_base.UnitTestBase):
 class HandlerTestBase(UnitTestBase):
     def __init__(self, *args):
         super(HandlerTestBase, self).__init__(*args)
+        self.EXPR_BEGIN = "beginning"
+        self.EXPR_END = "end"
+        self.EXPR_CLASS = "charclass"
 
     def _get_expressions_mock(self):
         return {
-            # Start match
-            "^secure": {
-                "no-logging": 1,
-                "template-virtual-port": "default"
+            self.EXPR_BEGIN: {
+                "regex": "^secure",
+                "json": {
+                    "template-virtual-port": "default",
+                    "no-logging": 1,
+                },
             },
-            # End match
-            ".*?web$": {
-                "scaleout-bucket-count": 32
+            self.EXPR_END: {
+                "regex": ".*?web$",
+                "json": {
+                    "scaleout-bucket-count": 32
+                },
             },
-            # character class
-            "[w]{1,3}": {
-                "scaleout-bucket-count": 64
+            self.EXPR_CLASS: {
+                "regex": "[w]{2,3}",
+                "json": {
+                    "scaleout-bucket-count": 64
+                }
             }
         }

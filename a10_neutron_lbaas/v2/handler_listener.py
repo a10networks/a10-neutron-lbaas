@@ -330,23 +330,11 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # Device-specific defaults have precedence over global
         rv.update(self._get_global_vport_defaults(c))
         rv.update(self._get_device_vport_defaults(c))
-        self._get_name_matches(rv, vport_name, self._get_vport_expressions(c))
+        self._get_name_matches(rv, vport_name, self._get_expressions(c))
         return rv
 
-    def _get_vport_expressions(self, c):
+    def _get_expressions(self, c):
         rv = {}
         rv = c.a10_driver.config.get_vport_expressions()
         return rv
 
-    def _get_name_matches(self, vport, vport_name, redict):
-        # for each key in the vport_defaults dictionary
-        for k,v in redict.iteritems():
-            # check to see if the regex value matches.
-            v = redict[k]
-            regex = re.compile(k)
-            matched = regex.search(vport_name)
-
-            if matched:
-                # If so, take those dictionary values and apply them to the object
-                vport.update(v)
-                break

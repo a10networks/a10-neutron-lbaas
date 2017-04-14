@@ -317,6 +317,23 @@ class TestListeners(test_base.HandlerTestBase):
         self.assertIn("vport.create", s)
         self.assertIn(str(expected), s)
 
+    def _test_create_expressions(self, os_name, pattern, expressions=None):
+        self.a.config.get_vport_expressions = self._get_expressions_mock
+        expressions = expressions or self.a.config.get_vport_expressions()
+        expected = expressions.get(pattern, {}).get("json", {})
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        m.name = os_name
+        handler = self.a.listener
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn(str(expected), s)
+
     def test_create_vport_expressions_none(self):
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
@@ -330,64 +347,19 @@ class TestListeners(test_base.HandlerTestBase):
         self.assertIn("vport.create", s)
 
     def test_create_vport_expressions_match_beginning(self):
-        self.a.config.get_vport_expressions = self._get_expressions_mock
-        expressions = self.a.config.get_vport_expressions()
-
-        expected = expressions["^secure"]
-        p = 'TCP'
-        lb = fake_objs.FakeLoadBalancer()
-        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
-        m = fake_objs.FakeListener(p, 2222, pool=pool,
-                                   loadbalancer=lb)
-        m.name = "securelistener"
-        handler = self.a.listener
-        handler.create(None, m)
-
-        s = str(self.a.last_client.mock_calls)
-        self.assertIn("vport.create", s)
-        self.assertIn(str(expected), s)
-
+        self._test_create_expressions("securelistener", self.EXPR_BEGIN)
+        
     def test_create_vport_expressions_match_end(self):
-        self.a.config.get_vport_expressions = self._get_expressions_mock
-        expressions = self.a.config.get_vport_expressions()
-
-        expected = expressions[".*?web$"]
-        p = 'TCP'
-        lb = fake_objs.FakeLoadBalancer()
-        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
-        m = fake_objs.FakeListener(p, 2222, pool=pool,
-                                   loadbalancer=lb)
-        m.name = "blahweb"
-        handler = self.a.listener
-        handler.create(None, m)
-
-        s = str(self.a.last_client.mock_calls)
-        self.assertIn("vport.create", s)
-        self.assertIn(str(expected), s)
+        self._test_create_expressions("blahweb", self.EXPR_END)
 
     def test_create_vport_expressions_match_charclass(self):
-        self.a.config.get_vport_expressions = self._get_expressions_mock
-        expressions = self.a.config.get_vport_expressions()
-
-        expected = expressions["[w]{1,3}"]
-        p = 'TCP'
-        lb = fake_objs.FakeLoadBalancer()
-        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
-        m = fake_objs.FakeListener(p, 2222, pool=pool,
-                                   loadbalancer=lb)
-        m.name = "blahww"
-        handler = self.a.listener
-        handler.create(None, m)
-
-        s = str(self.a.last_client.mock_calls)
-        self.assertIn("vport.create", s)
-        self.assertIn(str(expected), s)
+        self._test_create_expressions("listenerwwlis", self.EXPR_CLASS)
 
     def test_create_vport_expressions_nomatch(self):
         self.a.config.get_vport_expressions = self._get_expressions_mock
         expressions = self.a.config.get_vport_expressions()
 
-        expected = expressions["^secure"]
+        expected = expressions[self.EXPR_BEGIN].get("json", {})
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
