@@ -167,15 +167,19 @@ class A10Config(object):
 
         self._virtual_server_expressions = {}
         if hasattr(self._config, "virtual_server_expressions"):
-            self._vport_expressions = self._config.virtual_server_expressions
+            self._virtual_server_expressions = self._config.virtual_server_expressions
 
         self._service_group_expressions = {}
         if hasattr(self._config, "service_group_expressions"):
-            self._vport_expressions = self._config.service_group_expressions
+            self._service_group_expressions = self._config.service_group_expressions
 
         self._member_expressions = {}
         if hasattr(self._config, "member_expressions"):
-            self._vport_expressions = self._config.member_expressions
+            self._member_expressions = self._config.member_expressions
+
+        self._monitor_expressions = {}
+        if hasattr(self._config, "monitor_expressions"):
+            self._monitor_expressions = self._config.monitor_expressions
 
         # Setup some backwards compat stuff
         self.config = OldConfig(self)
@@ -249,6 +253,9 @@ class A10Config(object):
 
     def get_member_expressions(self):
         return self._member_expressions
+
+    def get_monitor_expressions(self):
+        return self._monitor_expressions
 
     # backwards compat
     @removals.remove
