@@ -24,3 +24,25 @@ class UnitTestBase(test_base.UnitTestBase):
     def print_mocks(self):
         super(UnitTestBase, self).print_mocks()
         print("NEUTRON ", self.a.neutron.mock_calls)
+
+
+class HandlerTestBase(UnitTestBase):
+    def __init__(self, *args):
+        super(HandlerTestBase, self).__init__(*args)
+
+    def _get_expressions_mock(self):
+        return {
+            # Start match
+            "^secure": {
+                "no-logging": 1,
+                "template-virtual-port": "default"
+            },
+            # End match
+            ".*?web$": {
+                "scaleout-bucket-count": 32
+            },
+            # character class
+            "[w]{1,3}": {
+                "scaleout-bucket-count": 64
+            }
+        }

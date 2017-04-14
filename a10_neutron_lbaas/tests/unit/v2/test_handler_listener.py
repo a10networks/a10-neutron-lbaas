@@ -24,7 +24,7 @@ from a10_neutron_lbaas import constants
 LOG = logging.getLogger(__name__)
 
 
-class TestListeners(test_base.UnitTestBase):
+class TestListeners(test_base.HandlerTestBase):
 
     def test_create_no_lb(self):
         m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
@@ -329,9 +329,8 @@ class TestListeners(test_base.UnitTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertIn("vport.create", s)
 
-
     def test_create_vport_expressions_match_beginning(self):
-        self.a.config.get_vport_expressions = self._get_vport_expressions_mock
+        self.a.config.get_vport_expressions = self._get_expressions_mock
         expressions = self.a.config.get_vport_expressions()
 
         expected = expressions["^secure"]
@@ -349,7 +348,7 @@ class TestListeners(test_base.UnitTestBase):
         self.assertIn(str(expected), s)
 
     def test_create_vport_expressions_match_end(self):
-        self.a.config.get_vport_expressions = self._get_vport_expressions_mock
+        self.a.config.get_vport_expressions = self._get_expressions_mock
         expressions = self.a.config.get_vport_expressions()
 
         expected = expressions[".*?web$"]
@@ -367,7 +366,7 @@ class TestListeners(test_base.UnitTestBase):
         self.assertIn(str(expected), s)
 
     def test_create_vport_expressions_match_charclass(self):
-        self.a.config.get_vport_expressions = self._get_vport_expressions_mock
+        self.a.config.get_vport_expressions = self._get_expressions_mock
         expressions = self.a.config.get_vport_expressions()
 
         expected = expressions["[w]{1,3}"]
@@ -385,7 +384,7 @@ class TestListeners(test_base.UnitTestBase):
         self.assertIn(str(expected), s)
 
     def test_create_vport_expressions_nomatch(self):
-        self.a.config.get_vport_expressions = self._get_vport_expressions_mock
+        self.a.config.get_vport_expressions = self._get_expressions_mock
         expressions = self.a.config.get_vport_expressions()
 
         expected = expressions["^secure"]
@@ -401,21 +400,3 @@ class TestListeners(test_base.UnitTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertIn("vport.create", s)
         self.assertNotIn(str(expected), s)
-
-    def _get_vport_expressions_mock(self):
-        return {
-            # Start match
-            "^secure": {
-                "no-logging": 1,
-                "template-virtual-port": "default"
-            },
-            # End match
-            ".*?web$": {
-                "scaleout-bucket-count": 32
-            },
-            # character class
-            "[w]{1,3}": {
-                "scaleout-bucket-count": 64
-            }
-
-        }

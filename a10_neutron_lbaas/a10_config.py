@@ -155,7 +155,8 @@ class A10Config(object):
         if self._config.keystone_auth_url is None:
             self._config.keystone_auth_url = self._get_neutron_conf(
                 'keystone_authtoken', 'auth_uri')
-
+        
+        # TODO(mdurrant) - There's a way to do this with getattr/setattr
         self._vport_defaults = {}
         if hasattr(self._config, "vport_defaults"):
             self._vport_defaults = self._config.vport_defaults
@@ -163,6 +164,18 @@ class A10Config(object):
         self._vport_expressions = {}
         if hasattr(self._config, "vport_expressions"):
             self._vport_expressions = self._config.vport_expressions
+
+        self._virtual_server_expressions = {}
+        if hasattr(self._config, "virtual_server_expressions"):
+            self._vport_expressions = self._config.virtual_server_expressions
+
+        self._service_group_expressions = {}
+        if hasattr(self._config, "service_group_expressions"):
+            self._vport_expressions = self._config.service_group_expressions
+
+        self._member_expressions = {}
+        if hasattr(self._config, "member_expressions"):
+            self._vport_expressions = self._config.member_expressions
 
         # Setup some backwards compat stuff
         self.config = OldConfig(self)
@@ -227,6 +240,15 @@ class A10Config(object):
 
     def get_vport_expressions(self):
         return self._vport_expressions
+
+    def get_virtual_server_expressions(self):
+        return self._virtual_server_expressions
+
+    def get_service_group_expressions(self):
+        return self._service_group_expressions
+
+    def get_member_expressions(self):
+        return self._member_expressions
 
     # backwards compat
     @removals.remove
