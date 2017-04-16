@@ -19,7 +19,58 @@ import acos_client.errors as acos_errors
 LOG = logging.getLogger(__name__)
 
 
-class A10Context(object):
+class A10BaseContext(object):
+
+    def __init__(self, plumbing_hooks, tenant_id, device_cfg, client, **kwargs):
+        self.hooks = plumbing_hooks
+        self.client = client
+        self.device_cfg = device_cfg
+        self.tenant_id = tenant_id
+        self.partition_name = "shared"
+
+    def __enter__(self):
+        self.select_appliance_partition()
+        if hasattr(self.hooks, 'after_select_partition'):
+            self.hooks.after_select_partition(self)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            self.client.session.close()
+        except acos_errors.InvalidSessionID:
+            pass
+
+        if hasattr(self.hooks, 'a10_context_exit_final'):
+            self.hooks.a10_context_exit_final(self)
+
+        if exc_type is not None:
+            return False
+
+    def select_appliance_partition(self):
+
+        name = self.device_cfg.get("shared_partition", "shared")
+
+        if self.device_cfg['v_method'].lower() == 'adp':
+            name = self.tenant_id[0:13]
+
+        # If we are not using appliance partitions, we are done.
+        if name == 'shared':
+            return
+
+        self.partition_name = name
+
+        try:
+            self.client.system.partition.active(name)
+            return
+        except acos_errors.NotFound:
+            pass
+
+        # Create it if not found
+        self.hooks.partition_create(self.client, self.openstack_context, name)
+        self.client.system.partition.active(name)
+
+
+class A10Context(A10BaseContext):
 
     def __init__(self, handler, openstack_context, openstack_lbaas_obj,
                  **kwargs):
@@ -44,58 +95,18 @@ class A10Context(object):
                                                    action=self.action)
         return d
 
-    def _get_client(self, device_cfg):
-        return self.a10_driver._get_a10_client(device_cfg, action=self.action)
-
     def __enter__(self):
         self.get_tenant_id()
         self.device_cfg = self._get_device()
-        self.client = self._get_client(self.device_cfg)
-        self.select_appliance_partition()
-        if hasattr(self.hooks, 'after_select_partition'):
-            self.hooks.after_select_partition(self)
+        self.client = self.a10_driver._get_a10_client(self.device_cfg, action=self.action)
+        super(A10Context, self).__enter__()
         return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        try:
-            self.client.session.close()
-        except acos_errors.InvalidSessionID:
-            pass
-
-        if hasattr(self.hooks, 'a10_context_exit_final'):
-            self.hooks.a10_context_exit_final(self)
-
-        if exc_type is not None:
-            return False
 
     def get_tenant_id(self):
         if hasattr(self.openstack_lbaas_obj, 'tenant_id'):
             self.tenant_id = self.openstack_lbaas_obj.root_loadbalancer.tenant_id
         else:
             self.tenant_id = self.openstack_lbaas_obj['tenant_id']
-
-    def select_appliance_partition(self):
-
-        name = self.device_cfg.get("shared_partition", "shared")
-
-        if self.device_cfg['v_method'].lower() == 'adp':
-            name = self.tenant_id[0:13]
-
-        # If we are not using appliance partitions, we are done.
-        if name == 'shared':
-            return
-
-        self.partition_name = name
-
-        try:
-            self.client.system.partition.active(name)
-            return
-        except acos_errors.NotFound:
-            pass
-
-        # Create it if not found
-        self.hooks.partition_create(self.client, self.openstack_context, name)
-        self.client.system.partition.active(name)
 
 
 class A10WriteContext(A10Context):
