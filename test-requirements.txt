@@ -12,6 +12,7 @@ oslotest
 # flake8 doesn't like pbr 2.0.0 yet
 pbr<2.0,>=0.11
 pifpaf
+pycallgraph
 pymysql
 testresources
 testscenarios

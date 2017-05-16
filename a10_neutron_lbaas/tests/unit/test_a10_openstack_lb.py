@@ -19,6 +19,9 @@ import a10_neutron_lbaas.tests.test_case as test_case
 import a10_neutron_lbaas.a10_openstack_lb as a10_openstack_lb
 import a10_neutron_lbaas.plumbing_hooks as plumbing_hooks
 
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
+
 
 class SetupA10OpenstackLBBase(object):
 

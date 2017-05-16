@@ -23,16 +23,20 @@ from a10_neutron_lbaas import constants
 
 LOG = logging.getLogger(__name__)
 
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
+
 
 class TestListeners(test_base.UnitTestBase):
 
     def test_create_no_lb(self):
-        m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
+	with PyCallGraph(output=GraphvizOutput()):
+        	m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)
-        try:
-            self.a.listener.create(None, m)
-        except a10_ex.UnsupportedFeature:
-            pass
+	        try:
+        	    self.a.listener.create(None, m)
+	        except a10_ex.UnsupportedFeature:
+        	    pass
 
     def test_create_no_pool(self):
         m = fake_objs.FakeListener('HTTP', 8080, pool=None,
