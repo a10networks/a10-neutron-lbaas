@@ -225,17 +225,29 @@ class TestListeners(test_base.UnitTestBase):
         pool.listener = m
         bindings = [binding]
         get_bindings_mock = mock.Mock(return_value=bindings)
-
         self.a.listener.cert_db.get_bindings_for_listener = get_bindings_mock
+        self.a.config.use_database = True
         self.a.listener.delete(None, m)
         expected = self.a.listener.cert_db.delete_a10_certificate_binding.call_count
         self.assertEqual(expected, len(bindings))
+
+    def test_delete_no_db_delete_use_database_false(self):
+        pool = fake_objs.FakePool('TCP', 'ROUND_ROBIN', None)
+        lb = fake_objs.FakeLoadBalancer()
+        m = fake_objs.FakeListener('TCP', 2222, pool=pool, loadbalancer=lb)
+        binding = fake_objs.FakeCertificateBinding(listener_id=m.id)
+        pool.listener = m
+        bindings = [binding]
+        get_bindings_mock = mock.Mock(return_value=bindings)
+        self.a.listener.cert_db.get_bindings_for_listener = get_bindings_mock
+        self.a.listener.delete(None, m)
+        expected = self.a.listener.cert_db.delete_a10_certificate_binding.call_count
+        self.assertEqual(expected, 0)
 
     def _test_create_source_nat_pool(self, source_nat_pool):
         if source_nat_pool:
             for k, v in self.a.config.devices.items():
                 v['source_nat_pool'] = source_nat_pool
-
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)

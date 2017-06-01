@@ -276,8 +276,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # First, remove any existing cert bindings and set the correct protocol for delete.
         # Existence of bindings means the vport has been re-created as https.
         protocol = openstack_mappings.vip_protocols(c, listener.protocol)
-        if self._remove_existing_bindings(c, context, listener):
-            protocol = c.client.slb.virtual_server.vport.HTTPS
+
+        if self.a10_driver.config.use_database and self._remove_existing_bindings(
+                c, context, listener):
+                protocol = c.client.slb.virtual_server.vport.HTTPS
 
         # Regular delete, use regular protocol mapping.
         self._delete_listener(
