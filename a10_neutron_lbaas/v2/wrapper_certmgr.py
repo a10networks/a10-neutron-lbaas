@@ -20,8 +20,8 @@ class CertManagerWrapper(object):
         else:
             self.certmgr = handler.neutron.bcm_factory()
 
-    def get_certificate(self, container_id, **kwargs):
-        return self.certmgr.get_cert(container_id, **kwargs)
+    def get_certificate(self, project_id, cert_ref, resource_ref, **kwargs):
+        return self.certmgr.get_cert(project_id, cert_ref, resource_ref, **kwargs)
 
     def store_cert(self, certificate, private_key, intermediates=None,
                    private_key_passphrase=None, expiration=None,
