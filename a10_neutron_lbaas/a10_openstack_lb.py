@@ -12,6 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+# This comes first to initialize constant overloads.
+import neutron_lb_constants  # noqa - F401
+
 import logging
 
 import acos_client
