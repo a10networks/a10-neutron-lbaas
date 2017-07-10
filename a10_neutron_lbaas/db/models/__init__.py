@@ -15,5 +15,7 @@
 # to allow existing code to run, while it's converted.
 
 from a10_device_instance import A10DeviceInstance
+from a10_device_instance import A10DeviceKey
+from a10_device_instance import A10DeviceValue
 from a10_slb import A10SLB
 from a10_tenant_binding import A10TenantBinding

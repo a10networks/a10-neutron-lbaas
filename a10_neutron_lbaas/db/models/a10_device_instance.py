@@ -10,9 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
 import sqlalchemy as sa
+import sqlalchemy.orm as orm
 
 from a10_neutron_lbaas.db import model_base
+
+def _uuid_str():
+    return str(uuid.uuid4())
 
 
 class A10DeviceInstance(model_base.A10BaseMixin, model_base.A10Base):
@@ -39,7 +44,7 @@ class A10DeviceInstance(model_base.A10BaseMixin, model_base.A10Base):
     ipinip = sa.Column(sa.Boolean(), nullable=False)
     write_memory = sa.Column(sa.Boolean(), nullable=False)
 
-    nova_instance_id = sa.Column(sa.String(36), nullable=False)
+    nova_instance_id = sa.Column(sa.String(36), nullable=True)
     host = sa.Column(sa.String(255), nullable=False)
 
     # TODO(dougwig) -- later - reference to scheduler, or capacity, or?
@@ -47,3 +52,26 @@ class A10DeviceInstance(model_base.A10BaseMixin, model_base.A10Base):
 
     # For "device" dicts, use a10_config.get_device()
     # For client objects, use _get_a10_client with the a10_config device dict
+
+
+class A10DeviceKey(model_base.A10Base):
+
+    __tablename__ = 'a10_device_key'
+
+    id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
+    name = sa.Column(sa.String(255), nullable=False)
+    description = sa.Column(sa.String(1024), nullable=False)
+
+
+class A10DeviceValue(model_base.A10Base):
+
+    __tablename__ = 'a10_device_value'
+
+    id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
+    device_id = sa.Column(sa.String(36), sa.ForeignKey('a10_device_instances.id'), nullable=False)
+    key_id = sa.Column(sa.String(32), sa.ForeignKey('a10_device_key.id'), nullable=False)
+
+    value = sa.Column(sa.String(255), nullable=False)
+
+    uuid = orm.relationship(A10DeviceInstance, uselist=False)
+    device_key = orm.relationship(A10DeviceKey, uselist=False)
