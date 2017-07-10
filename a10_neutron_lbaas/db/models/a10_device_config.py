@@ -10,24 +10,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-#import uuid
-
 import sqlalchemy as sa
-import sqlalchemy.orm as orm
 
-from a10_neutron_lbaas.db import model_base
+from a10_neutron_lbaas.db import mdoel_base
 
-#def _uuid_str():
-    #return str(uuid.uuid4())
-
-class A10DeviceConfig(model_base.A10Base):
+class A10DeviceConfig(model_base.A10BaseMixin, model_base.A10Base):
 
     __tablename__ = 'a10_device_config'
 
-    id = sa.Column(Integer, primary_key=True, nullable=False)
-    #uuid = sa.Column(String(32), nullable=False, default=_uuid_str)
     name = sa.Column(sa.String(1024), nullable=False)
-    #description = sa.Column(sa.String(255), nullable=True)
+    description = sa.Column(sa.String(255), nullable=True)
 
     username = sa.Column(sa.String(255), nullable=False)
     password = sa.Column(sa.String(255), nullable=False)
