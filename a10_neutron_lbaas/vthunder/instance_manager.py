@@ -246,7 +246,7 @@ class InstanceManager(object):
                       ((hasattr(x, "name") and x.name is not None and identifier in x.name)
                        or (hasattr(x, "id") and x.id == identifier)))
         try:
-            images = self._nova_api.images.list()
+            images = self._nova_api.glance.list()
         except Exception as ex:
             raise a10_ex.ImageNotFoundError(
                 "Unable to retrieve images from nova.  Error %s" % (ex))
