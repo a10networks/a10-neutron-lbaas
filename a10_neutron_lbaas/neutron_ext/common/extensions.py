@@ -20,3 +20,9 @@ try:
 except (AttributeError, ImportError):
     # If it's not there, try neutron_lib. Else, we're hosed.
     from neutron_lib.api.extensions import ExtensionDescriptor as ExtensionDescriptor  # noqa
+
+try:
+    from neutron.api.extensions import APIExtensionDescriptor as APIExtensionDescriptor
+except (AttributeError, ImportError):
+    # If it's not there, try neutron_lib. Else, we're hosed.
+    from neutron_lib.api.extensions import APIExtensionDescriptor as APIExtensionDescriptor  # noqa
