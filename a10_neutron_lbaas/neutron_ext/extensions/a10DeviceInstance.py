@@ -47,6 +47,7 @@ attributes.add_validators(resources.apply_template(
 
 _ALIAS = constants.A10_DEVICE_INSTANCE_EXT
 
+
 # TODO(rename this to *Extension to avoid config file confusion)
 class A10DeviceInstance(extensions.ExtensionDescriptor):
 
