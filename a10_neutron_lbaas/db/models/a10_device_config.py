@@ -11,8 +11,9 @@
 #    under the License.
 
 import sqlalchemy as sa
+import sqlalchemy.orm as orm
 
-from a10_neutron_lbaas.db import mdoel_base
+from a10_neutron_lbaas.db import model_base
 
 class A10DeviceConfig(model_base.A10BaseMixin, model_base.A10Base):
 
@@ -36,3 +37,24 @@ class A10DeviceConfig(model_base.A10BaseMixin, model_base.A10Base):
     write_memory = sa.Column(sa.Boolean(), nullable=False)
 
     host = sa.Column(sa.String(255), nullable=False)
+
+
+class A10DeviceConfigKey(model_base.A10BaseMixin, model_base.A10Base):
+
+    __tablename__ = 'a10_device_config_key'
+
+    key_name = sa.Column(sa.String(255, nullable=False)
+    description = sa.Column(sa.String(1024), nullable=False)
+
+
+class A10DeviceConfigValue(model_Base.A10BaseMixin, model_base.A10Base):
+
+    __tablename__ = 'a10_device_config_value'
+
+    config_id = sa.Column(sa.String(32), ForeignKey('a10_device_config.id')
+    config_key_id = sa.Column(sa.String(32), ForeignKey('a10_device_config_key.id')
+
+    value = 
+
+    config = orm.relationship(A10DeviceConfig, uselist=False)
+    config_key = orm.relationship(A10DeviceConfigKey, uselist=False)
