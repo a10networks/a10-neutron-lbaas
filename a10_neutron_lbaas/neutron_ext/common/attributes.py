@@ -23,9 +23,9 @@ except ImportError:
     lib_constants = None
 
 try:
-    import neutron_lib.api.converters as lib_converters
+    import neutron_lib.api.converters as nlib_converters
 except ImportError:
-    lib_converters = None
+    nlib_converters = None
 
 try:
     import neutron_lib.api.validators as lib_validators
@@ -41,14 +41,14 @@ def _find(*args):
             pass
 
 convert_to_int = _find(lambda: old_attributes.convert_to_int,
-                       lambda: lib_converters.convert_to_int)
+                       lambda: nlib_converters.convert_to_int)
 
 convert_kvp_list_to_dict = _find(lambda: old_attributes.convert_kvp_list_to_dict,
-                                 lambda: lib_converters.convert_kvp_list_to_dict)
+                                 lambda: nlib_converters.convert_kvp_list_to_dict)
 convert_to_list = _find(lambda: old_attributes.convert_to_list,
-                        lambda: lib_converters.convert_to_list)
+                        lambda: nlib_converters.convert_to_list)
 convert_kvp_to_list = _find(lambda: old_attributes.convert_kvp_to_list,
-                            lambda: lib_converters.convert_kvp_to_list)
+                            lambda: nlib_converters.convert_kvp_to_list)
 
 ATTR_NOT_SPECIFIED = _find(lambda: old_attributes.ATTR_NOT_SPECIFIED,
                            lambda: lib_constants.ATTR_NOT_SPECIFIED)

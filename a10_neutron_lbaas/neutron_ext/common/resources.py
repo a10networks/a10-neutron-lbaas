@@ -25,7 +25,6 @@ def remove_attributes_not_specified(resource):
 
 def apply_template(template, *args, **kw):
     """Applies every callable in any Mapping or Iterable"""
-
     if six.callable(template):
         return template(*args, **kw)
     if isinstance(template, six.string_types):

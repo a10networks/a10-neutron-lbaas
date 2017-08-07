@@ -18,7 +18,7 @@ import six
 from a10_openstack_lib.resources import a10_device_instance
 import a10_openstack_lib.resources.validators as a10_validators
 
-
+from neutron.api import extensions as nextensions
 from neutron.api.v2 import resource_helper
 # neutron.services got moved to neutron_lib
 try:
@@ -45,11 +45,15 @@ RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_instance.RESOURCE_A
 attributes.add_validators(resources.apply_template(
     a10_validators.VALIDATORS, attributes.validators))
 
+_ALIAS = constants.A10_DEVICE_INSTANCE_EXT
+
 
 # TODO(rename this to *Extension to avoid config file confusion)
 class A10DeviceInstance(extensions.ExtensionDescriptor):
 
-    @classmethod
+    nextensions.register_custom_supported_check(
+        _ALIAS, lambda: True, plugin_agnostic=True)
+
     def get_name(cls):
         return "A10 Device Instances"
 
