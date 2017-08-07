@@ -10,17 +10,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+#import uuid
+
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 
 from a10_neutron_lbaas.db import model_base
 
-class A10DeviceConfig(model_base.A10BaseMixin, model_base.A10Base):
+#def _uuid_str():
+    #return str(uuid.uuid4())
+
+class A10DeviceConfig(model_base.A10Base):
 
     __tablename__ = 'a10_device_config'
 
+    id = sa.Column(Integer, primary_key=True, nullable=False)
+    #uuid = sa.Column(String(32), nullable=False, default=_uuid_str)
     name = sa.Column(sa.String(1024), nullable=False)
-    description = sa.Column(sa.String(255), nullable=True)
+    #description = sa.Column(sa.String(255), nullable=True)
 
     username = sa.Column(sa.String(255), nullable=False)
     password = sa.Column(sa.String(255), nullable=False)
@@ -28,33 +35,37 @@ class A10DeviceConfig(model_base.A10BaseMixin, model_base.A10Base):
     api_version = sa.Column(sa.String(12), nullable=False)
     protocol = sa.Column(sa.String(32), nullable=False)
     port = sa.Column(sa.Integer, nullable=False)
-    autosnat = sa.Column(sa.Boolean(), nullable=False)
-    v_method = sa.Column(sa.String(32), nullable=False)
-    shared_partition = sa.Column(sa.String(1024), nullable=False)
-    use_float = sa.Column(sa.Boolean(), nullable=False)
-    default_virtual_server_vrid = sa.Column(sa.Integer, nullable=True)
-    ipinip = sa.Column(sa.Boolean(), nullable=False)
-    write_memory = sa.Column(sa.Boolean(), nullable=False)
+    #autosnat = sa.Column(sa.Boolean(), nullable=False)
+    #v_method = sa.Column(sa.String(32), nullable=False)
+    #shared_partition = sa.Column(sa.String(1024), nullable=False)
+    #use_float = sa.Column(sa.Boolean(), nullable=False)
+    #default_virtual_server_vrid = sa.Column(sa.Integer, nullable=True)
+    #ipinip = sa.Column(sa.Boolean(), nullable=False)
+    #write_memory = sa.Column(sa.Boolean(), nullable=False)
 
     host = sa.Column(sa.String(255), nullable=False)
 
 
-class A10DeviceConfigKey(model_base.A10BaseMixin, model_base.A10Base):
+class A10DeviceConfigKey(model_base.A10Base):
 
     __tablename__ = 'a10_device_config_key'
 
-    key_name = sa.Column(sa.String(255, nullable=False)
+    id = sa.Column(Integer, primary_key=True, nullable=False)
+    config_id = sa.Column(Integer, ForeignKey('a10_device_config.id'), nullable=False)
+
+    name = sa.Column(sa.String(255, nullable=False)
     description = sa.Column(sa.String(1024), nullable=False)
 
 
-class A10DeviceConfigValue(model_Base.A10BaseMixin, model_base.A10Base):
+class A10DeviceConfigValue(model_base.A10Base):
 
     __tablename__ = 'a10_device_config_value'
 
-    config_id = sa.Column(sa.String(32), ForeignKey('a10_device_config.id')
-    config_key_id = sa.Column(sa.String(32), ForeignKey('a10_device_config_key.id')
+    id = sa.Column(Integer, primary_key=True, nullable=False) 
+    config_id = sa.Column(Integer, ForeignKey('a10_device_config.id'), nullable=False)
+    config_key_id = sa.Column(Integer, ForeignKey('a10_device_config_key.id'), nullable=False)
 
-    value = 
+    value = sa.Column(sa.String(255), nullable=False)
 
     config = orm.relationship(A10DeviceConfig, uselist=False)
     config_key = orm.relationship(A10DeviceConfigKey, uselist=False)
