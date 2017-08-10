@@ -110,6 +110,7 @@ devices = {
         "password": "a10",
         "autosnat": True,
         "api_version": "3.0",
+    }
 }
 ```
 
