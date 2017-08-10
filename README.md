@@ -72,7 +72,7 @@ Post-installation configuration requires modification of your neutron.conf or ne
 
 ### LBaaS v1 configuration
 Open `/etc/neutron/neutron.conf` in your preferred text editor.
-Under the `service_plugins` setting, ensure `lbaas` is listed.
+Under the `service_plugins` setting, ensure `lbaas` or `lbaasv2 is listed depending on your configuration.
 
 In the list of `service_provider` settings, add a service provider for A10
 Networks:
