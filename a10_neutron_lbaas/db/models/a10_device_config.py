@@ -17,17 +17,17 @@ import sqlalchemy.orm as orm
 
 from a10_neutron_lbaas.db import model_base
 
-#def _uuid_str():
-    #return str(uuid.uuid4())
+def _uuid_str():
+    return str(uuid.uuid4())
 
 class A10DeviceConfig(model_base.A10Base):
 
     __tablename__ = 'a10_device_config'
 
-    id = sa.Column(Integer, primary_key=True, nullable=False)
-    #uuid = sa.Column(String(32), nullable=False, default=_uuid_str)
+    id = sa.Column(sa.String(32), primary_key=True, nullable=False, default=_uuid_str)
+    uuid = sa.Column(sa.String(32), nullable=False, default=_uuid_str)
     name = sa.Column(sa.String(1024), nullable=False)
-    #description = sa.Column(sa.String(255), nullable=True)
+    description = sa.Column(sa.String(255), nullable=True)
 
     username = sa.Column(sa.String(255), nullable=False)
     password = sa.Column(sa.String(255), nullable=False)
@@ -50,22 +50,25 @@ class A10DeviceConfigKey(model_base.A10Base):
 
     __tablename__ = 'a10_device_config_key'
 
-    id = sa.Column(Integer, primary_key=True, nullable=False)
-    config_id = sa.Column(Integer, ForeignKey('a10_device_config.id'), nullable=False)
-
-    name = sa.Column(sa.String(255, nullable=False)
+    id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
+    device_uuid = sa.Column(sa.String(32), sa.ForeignKey('a10_device_config.uuid'), nullable=False)
+    name = sa.Column(sa.String(255), nullable=False)
     description = sa.Column(sa.String(1024), nullable=False)
+
+    uuid = orm.relationship(A10DeviceConfig, uselist=False)
 
 
 class A10DeviceConfigValue(model_base.A10Base):
 
     __tablename__ = 'a10_device_config_value'
 
-    id = sa.Column(Integer, primary_key=True, nullable=False) 
-    config_id = sa.Column(Integer, ForeignKey('a10_device_config.id'), nullable=False)
-    config_key_id = sa.Column(Integer, ForeignKey('a10_device_config_key.id'), nullable=False)
+    id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
+    device_uuid = sa.Column(sa.String(32), sa.ForeignKey('a10_device_config.uuid'), nullable=False)
+    config_id = sa.Column(sa.String(32), sa.ForeignKey('a10_device_config.id'), nullable=False)
+    config_key_id = sa.Column(sa.String(32), sa.ForeignKey('a10_device_config_key.id'), nullable=False)
 
     value = sa.Column(sa.String(255), nullable=False)
 
-    config = orm.relationship(A10DeviceConfig, uselist=False)
+    uuid = orm.relationship(A10DeviceConfig, foreign_keys=device_uuid, uselist=False)
+    config = orm.relationship(A10DeviceConfig, foreign_keys=config_id, uselist=False)
     config_key = orm.relationship(A10DeviceConfigKey, uselist=False)
