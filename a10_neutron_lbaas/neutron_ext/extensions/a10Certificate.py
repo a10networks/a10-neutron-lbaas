@@ -20,6 +20,7 @@ import a10_openstack_lib.resources.a10_certificate as a10_certificate
 import a10_openstack_lib.resources.validators as a10_validators
 
 from neutron.api.v2 import resource_helper
+from neutron.api import extensions as nextensions
 
 # neutron.services got moved to neutron_lib
 try:
@@ -49,6 +50,8 @@ LOG = logging.getLogger(__name__)
 
 
 class A10Certificate(extensions.ExtensionDescriptor):
+    nextensions.register_custom_supported_check(
+        constants.A10_CERTIFICATE_EXT, lambda: True, plugin_agnostic=True)
 
     @classmethod
     def get_name(cls):
