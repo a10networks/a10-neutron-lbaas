@@ -20,17 +20,36 @@ class CertManagerWrapper(object):
         else:
             self.certmgr = handler.neutron.bcm_factory()
 
-    def get_certificate(self, container_id, **kwargs):
-        return self.certmgr.get_cert(container_id, **kwargs)
+    # neutron-lbaas barbican interface changed in Mitaka
+    # https://github.com/openstack/neutron-lbaas/commit/2228ef86ab7caf986a8608800d41add6cbd7f5f7
+
+    def get_certificate(self, container_id, project_id=None,
+                        resource_ref=None, **kwargs):
+        try:
+            return self.certmgr.get_cert(container_id, **kwargs)
+        except TypeError:
+            return self.certmgr.get_cert(project_id, container_id, resource_ref, **kwargs)
 
     def store_cert(self, certificate, private_key, intermediates=None,
                    private_key_passphrase=None, expiration=None,
-                   name='A10-LBaaS TLS Cert', **kwargs):
-        return self.certmgr.store_cert(certificate, private_key, intermediates=intermediates,
-                                       private_key_passphrase=private_key_passphrase,
-                                       expiration=expiration, name=name, kwargs=kwargs)
+                   name='A10-LBaaS TLS Cert',
+                   project_id=None, **kwargs):
+        try:
+            return self.certmgr.store_cert(certificate, private_key,
+                                           intermediates=intermediates,
+                                           private_key_passphrase=private_key_passphrase,
+                                           expiration=expiration, name=name, **kwargs)
+        except TypeError:
+            return self.certmgr.store_cert(project_id, certificate, private_key,
+                                           intermediates=intermediates,
+                                           private_key_passphrase=private_key_passphrase,
+                                           expiration=expiration, name=name, **kwargs)
 
     def delete_cert(self, cert_ref, service_name='A10-LBaaS', resource_ref=None,
-                    **kwargs):
-        return self.certmgr.delete_cert(cert_ref, service_name=service_name,
-                                        resource_ref=resource_ref, kwargs=kwargs)
+                    project_id=None, **kwargs):
+        try:
+            return self.certmgr.delete_cert(cert_ref, service_name=service_name,
+                                            resource_ref=resource_ref, **kwargs)
+        except TypeError:
+            return self.certmgr.delete_cert(project_id, cert_ref, resource_ref,
+                                            service_name=service_name, **kwargs)

@@ -120,6 +120,7 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
         certmgr.private_key = "PRIVATEKEY"
         certmgr.private_key_passphrase = "SECRETPASSWORD"
 
+        self.a.barbican_client = certmgr
         handler = self.a.listener
 
         pool = fake_objs.FakePool(constants.PROTOCOL_TERMINATED_HTTPS,
@@ -138,9 +139,10 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 
         handler.create(None, listener)
         s = str(self.a.last_client.mock_calls)
-        self.assertTrue(certmgr.certificate in s)
-        self.assertTrue(certmgr.private_key in s)
-        self.assertTrue(certmgr.private_key_passphrase in s)
+
+        self.assertIn(certmgr.certificate, s)
+        self.assertIn(certmgr.private_key, s)
+        self.assertIn(certmgr.private_key_passphrase, s)
 
     def test_create_tls_container_negative(self):
         """Test that cert data is not passed to handler"""
@@ -158,47 +160,24 @@ class TestListenersTerminatedHTTPS(test_base.UnitTestBase):
 class FakeCertManager(object):
 
     def __init__(self):
-        self.get_private_key_value = ""
-        self.get_certificate_value = ""
-        self.get_private_key_passphrase_value = ""
+        self.private_key = ""
+        self.certificate = ""
+        self.private_key_passphrase = ""
         self.container_name = "tls-container"
-        self.set_mocks()
 
-    def set_mocks(self):
-        self.mock_cert = mock.Mock(return_value=self.certificate)
-        self.mock_key = mock.Mock(return_value=self.private_key)
-        self.mock_passphrase = mock.Mock(return_value=self.private_key_passphrase)
         self.mock_cert_container = mock.Mock()
         self.mock_cert_container.configure_mock(name=self.container_name)
 
-        self.mock_certificate_result = mock.Mock(return_value=mock.Mock(
-                                                 get_certificate=self.mock_cert,
-                                                 get_private_key=self.mock_key,
-                                                 get_private_key_passphrase=self.mock_passphrase,
-                                                 _cert_container=self.mock_cert_container))
+        self.mock_certificate = mock.Mock(
+            get_certificate=lambda: self.certificate,
+            get_private_key=lambda: self.private_key,
+            get_private_key_passphrase=lambda: self.private_key_passphrase,
+            _cert_container=self.mock_cert_container)
 
-        self.get_certificate = self.mock_certificate_result
+    def get_certificate(self, container_id, project_id=None, **kwargs):
 
-    @property
-    def private_key(self):
-        return self.get_private_key_value
+        # project_id is needed to call a CertManager in Mitaka and later
+        if project_id is None:
+            raise Exception("project_id is required")
 
-    @private_key.setter
-    def private_key(self, value):
-        self.mock_key.return_value = value
-
-    @property
-    def certificate(self):
-        return self.get_certificate_value
-
-    @certificate.setter
-    def certificate(self, value):
-        self.mock_cert.return_value = value
-
-    @property
-    def private_key_passphrase(self):
-        return self.get_private_key_passphrase_value
-
-    @private_key_passphrase.setter
-    def private_key_passphrase(self, value):
-        self.mock_passphrase.return_value = value
+        return self.mock_certificate

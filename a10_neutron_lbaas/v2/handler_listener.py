@@ -116,7 +116,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 c.client.slb.template.client_ssl.create(
                     template_name,
                     cert=cert_filename,
-                    key=key_filename)
+                    key=key_filename,
+                    passphrase=key_passphrase)
             except acos_errors.Exists:
                 c.client.slb.template.client_ssl.update(template_name, cert=cert_filename,
                                                         key=key_filename, passphrase=key_passphrase)
@@ -129,11 +130,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                     template_name,
                     cert_filename,
                     key_filename,
+                    passphrase=key_passphrase,
                     axapi_args=server_args)
             except acos_errors.Exists:
                 c.client.slb.template.server_ssl.update(template_name,
                                                         cert_filename,
                                                         key_filename,
+                                                        passphrase=key_passphrase,
                                                         axapi_args=server_args)
 
         try:
@@ -174,7 +177,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # if there's a barbican container ID, check there.
         if c_id:
             try:
-                container = self.barbican_client.get_certificate(c_id, check_only=True)
+                container = self.barbican_client.get_certificate(c_id, check_only=True,
+                                                                 project_id=c.tenant_id)
             except Exception as ex:
                 container = None
                 LOG.error("Exception encountered retrieving TLS Container %s" % c_id)
