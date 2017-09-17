@@ -125,3 +125,22 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
             instance.update(**a10_device_instance.get("a10_device_instance"))
 
             return self._make_a10_device_instance_dict(instance)
+
+    def _get_a10_device_keys():
+        pass
+
+    def _make_a10_device_key(self, a10_device_key_db, fields=None):
+        res = {'id': a10_device_key_db.id,
+               'name': a10_device_key_db.name,
+               'description': a10_device_key_db.description}
+
+    def create_a10_device_key():
+        pass
+
+    def update_a10_device_key():
+        pass
+
+    def delete_a10_device_key():
+        pass
+
+
