@@ -147,3 +147,43 @@ class A10DeviceInstancePluginBase(ServicePluginBase):
     @abc.abstractmethod
     def update_a10_device_instance(self, context, id, a10_device_instance):
         pass
+
+    @abc.abstractmethod
+    def get_a10_device_keys(self, context, filters=None, fields=None):
+        pass
+
+    @abc.abstractmethod
+    def get_a10_device_key(self, context, filters=None, fields=None):
+        pass
+
+    @abc.abstractmethod
+    def create_a10_device_key(self, context, key):
+        pass
+
+    @abc.abstractmethod
+    def update_a10_device_key(self, context, id, key):
+        pass
+
+    @abc.abstractmethod
+    def delete_a10_device_key(self, context, id):
+        pass
+
+    @abc.abstractmethod
+    def get_a10_device_values(self, context, filters=None, fields=None):
+        pass
+
+    @abc.abstractmethod
+    def get_a10_device_value(self, context, filters=None, fields=None):
+        pass
+
+    @abc.abstractmethod
+    def create_a10_device_value(self, context, key_id, device_id, value):
+        pass
+
+    @abc.abstractmethod
+    def update_a10_device_value(self, context, id, value):
+        pass
+
+    @abc.abstractmethod
+    def delete_a10_device_value(self, context, id, value):
+        pass

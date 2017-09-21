@@ -126,21 +126,105 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
 
             return self._make_a10_device_instance_dict(instance)
 
-    def _get_a10_device_keys():
-        pass
+         
+    def _get_a10_device_key(self, context, key_id):
+        try:
+            return self._get_by_id(context, models.A10DeviceKey, key_id)
+        except Exception:
+            raise a10DeviceInstance.A10DeviceInstanceNotFoundError(key_id)
 
     def _make_a10_device_key(self, a10_device_key_db, fields=None):
         res = {'id': a10_device_key_db.id,
                'name': a10_device_key_db.name,
                'description': a10_device_key_db.description}
 
-    def create_a10_device_key():
-        pass
+        return self._fields(res, fields)
 
-    def update_a10_device_key():
-        pass
+    def create_a10_device_key(self, context, a10_device_key):
+        body = self._get_body(a10_device_key)
+        with context.session.begin(subtransactions=True):
+            device_key_record = models.A10DeviceKey(
+                id=_uuid_str(),
+                name=body.get('name', ''),
+                description=body.get('description', ''))
+            context.session.add(device_key_record)
 
-    def delete_a10_device_key():
-        pass
+        return self._make_a10_device_key(device_key_record)
 
+    def update_a10_device_key(self, id, a10_device_key):
+        with context.session.begin(subtransactions=True):
+            device_key_record = self._get_by_id(context, models.A10DeviceKey, id)
+            key.update(**a10_device_key.get("a10_device_key"))
 
+            return self._make_a10_device_key(device_key_record)
+
+    def delete_a10_device_key(self, context, id):
+        with context.session.begin(substransactions=True):
+            LOG.debug("A10DeviceKeyDbMixin:delete_a10_device_key() id={}".format(id))
+            device_key = self._get_a10_device_key(context, id)
+
+            context.session.delete(device_key)
+
+    def get_a10_device_key(self, context, key_id, fields=None):
+        device_key = self._get_a10_device_key(context, key_id)
+        return self._make_a10_device_key(device_key, fields)
+
+    def get_a10_device_keys(self, context, filters=None, fields=None,
+                                 sorts=None, limit=None, marker=None,
+                                 page_reverse=False):
+        LOG.debug("A10DeviceInstanceDbMixin:get_a10_device_key()")
+        return self._get_collection(context, models.A10DeviceKey,
+                                    self._make_a10_device_key, filters=filters,
+                                    fields=fields, sorts=sorts, limit=limit,
+                                    marker_obj=marker, page_reverse=page_reverse)
+
+    def _get_a10_device_value(self, context, value_id):
+        try:
+            return self._get_by_id(context, models.A10DeviceValue, value_id)
+        except Exception:
+            raise a10DeviceInstance.A10DeviceInstanceNotFoundError(value_id)
+
+    def _make_a10_device_value(self, a10_device_value_db, fields=None):
+        res = {'id': a10_device_value_db.id,
+               'key_id': a10_device_value_db.key_id,
+               'device_id': a10_device_value_db.device_id,
+               'value': a10_device_value_db.value}
+
+    def create_a10_device_value(self, context, a10_device_value):
+        body = self._get_body(a10_device_value)
+        with context.session.begin(subtransactions=True):
+            device_value_record = models.A10DeviceValue(
+                id=_uuid_str(),
+                key_id=body.get('key_id'),
+                device_id=body.get('device_id'),
+                value=body.get('value', ''))
+            context.session.add(device_value_record)
+
+        return self._make_a10_device_key(device_value_record)
+
+    def update_a10_device_value(self, id, a10_device_value):
+        with context.session.begin(subtransactions=True):
+            device_key_record = self._get_by_id(context, models.A10DeviceValue, id)
+            key.update(**a10_device_value.get("a10_device_value"))
+
+            return self._make_a10_device_key(device_key_record)
+
+    def delete_a10_device_value(self, context, id):
+        with context.session.begin(substransactions=True):
+            LOG.debug("A10DeviceKeyDbMixin:delete_a10_device_value() id={}".format(id))
+            device_value = self._get_a10_device_value(context, id)
+
+            context.session.delete(device_value)
+
+    def get_a10_device_value(self, context, value_id, fields=None):
+        device_value = self._get_a10_device_value(context, value_id)
+        return self._make_a10_device_key(device_value, fields)
+
+    def get_a10_device_values(self, context, filters=None, fields=None,
+                                 sorts=None, limit=None, marker=None,
+                                 page_reverse=False):
+        LOG.debug("A10DeviceInstanceDbMixin:get_a10_device_value()")
+        return self._get_collection(context, models.A10DeviceValue,
+                                    self._make_a10_device_value, filters=filters,
+                                    fields=fields, sorts=sorts, limit=limit,
+                                    marker_obj=marker, page_reverse=page_reverse)
