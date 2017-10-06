@@ -49,7 +49,7 @@ _ALIAS = constants.A10_DEVICE_INSTANCE_EXT
 
 
 # TODO(rename this to *Extension to avoid config file confusion)
-class A10DeviceInstance(extensions.ExtensionDescriptor):
+class A10deviceinstance(extensions.ExtensionDescriptor):
 
     nextensions.register_custom_supported_check(
         _ALIAS, lambda: True, plugin_agnostic=True)
@@ -87,7 +87,7 @@ class A10DeviceInstance(extensions.ExtensionDescriptor):
         return resources
 
     def update_attributes_map(self, attributes):
-        super(A10DeviceInstance, self).update_attributes_map(
+        super(A10deviceinstance, self).update_attributes_map(
             attributes,
             extension_attrs_map=RESOURCE_ATTRIBUTE_MAP)
 
@@ -153,11 +153,11 @@ class A10DeviceInstancePluginBase(ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def get_a10_device_key(self, context, filters=None, fields=None):
+    def create_a10_device_key(self, context, key):
         pass
 
     @abc.abstractmethod
-    def create_a10_device_key(self, context, key):
+    def get_a10_device_key(self, context, id, fields=None):
         pass
 
     @abc.abstractmethod
@@ -173,7 +173,7 @@ class A10DeviceInstancePluginBase(ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def get_a10_device_value(self, context, filters=None, fields=None):
+    def get_a10_device_value(self, context, id, fields=None):
         pass
 
     @abc.abstractmethod

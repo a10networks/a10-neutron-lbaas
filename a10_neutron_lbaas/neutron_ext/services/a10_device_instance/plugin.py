@@ -29,7 +29,7 @@ _API = 0
 _VTHUNDER_CONFIG = 1
 _INSTANCE = 2
 _DB = 3
-_device_mappings = [("id", None, None, "id"),
+_mappings = [("id", None, None, "id"),
                     ("tenant_id", None, None, "tenant_id"),
                     ("tenant_id", None, None, "project_id"),
                     ("project_id", None, None, "tenant_id"),
@@ -154,3 +154,20 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         imgr.delete_instance(nova_instance_id)
 
         return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
+
+    def get_a10_device_keys(self, context, filters=None, fields=None):
+        LOG.debug(
+            "A10DeviceInstancePlugin.get_a10_instances(): filters=%s, fields=%s",
+            filters,
+            fields)
+
+        return {}
+
+    def get_a10_device_key(self, context, id, fields=None):
+        LOG.debug("A10DeviceInstancePlugin.get_a10_instance(): id=%s, fields=%s",
+                  id, fields)
+
+        #db_instance = super(A10DeviceInstancePlugin, self).get_a10_device_key(
+            #context, id, fields=fields)
+
+        return {}#_make_api_dict(db_instance)
