@@ -153,11 +153,11 @@ class A10DeviceInstancePluginBase(ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def get_a10_device_key(self, context, filters=None, fields=None):
+    def create_a10_device_key(self, context, key):
         pass
 
     @abc.abstractmethod
-    def create_a10_device_key(self, context, key):
+    def get_a10_device_key(self, context, id, fields=None):
         pass
 
     @abc.abstractmethod
@@ -173,7 +173,7 @@ class A10DeviceInstancePluginBase(ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def get_a10_device_value(self, context, filters=None, fields=None):
+    def get_a10_device_value(self, context, id, fields=None):
         pass
 
     @abc.abstractmethod
