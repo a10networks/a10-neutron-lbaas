@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
+import itertools
 from oslo_log import log as logging
 
 import a10_neutron_lbaas.a10_config as a10_config
@@ -29,11 +30,34 @@ _API = 0
 _VTHUNDER_CONFIG = 1
 _INSTANCE = 2
 _DB = 3
-_mappings = [("id", None, None, "id"),
-                    ("tenant_id", None, None, "tenant_id"),
-                    ("tenant_id", None, None, "project_id"),
-                    ("project_id", None, None, "tenant_id"),
-                    ("project_id", None, None, "project_id"),
+
+_vthunder_mappings = [("id", None, None, "id"),
+                      ("tenant_id", None, None, "tenant_id"),
+                      ("tenant_id", None, None, "project_id"),
+                      ("project_id", None, None, "tenant_id"),
+                      ("project_id", None, None, "project_id"),
+                      ("name", None, None, "name"),
+                      ("description", None, None, "description"),
+                      ("host", None, "ip_address", "host"),
+                      ("username", "username", None, "username"),
+                      ("password", "password", None, "password"),
+                      ("api_version", "api_version", None, "api_version"),
+                      ("protocol", "protocol", None, "protocol"),
+                      ("port", "port", None, "port"),
+                      ("nova_instance_id", None, "nova_instance_id", "nova_instance_id"),
+                      (None, "autosnat", None, "autosnat"),
+                      (None, "v_method", None, "v_method"),
+                      (None, "shared_partition", None, "shared_partition"),
+                      (None, "use_float", None, "use_float"),
+                      (None, "default_virtual_server_vrid", None, "default_virtual_server_vrid"),
+                      (None, "ipinip", None, "ipinip"),
+                      (None, "write_memory", None, "write_memory"),
+                      ("management_network", "vthunder_management_network", None, None),
+                      ("data_networks", "vthunder_data_networks", None, None),
+                      ("image", "glance_image", None, None),
+                      ("flavor", "nova_flavor", None, None)]
+
+_device_mappings = [("id", None, None, "id"),
                     ("name", None, None, "name"),
                     ("description", None, None, "description"),
                     ("host", None, "ip_address", "host"),
@@ -42,21 +66,19 @@ _mappings = [("id", None, None, "id"),
                     ("api_version", "api_version", None, "api_version"),
                     ("protocol", "protocol", None, "protocol"),
                     ("port", "port", None, "port"),
-                    ("nova_instance_id", None, "nova_instance_id", "nova_instance_id"),
                     (None, "autosnat", None, "autosnat"),
                     (None, "v_method", None, "v_method"),
                     (None, "shared_partition", None, "shared_partition"),
                     (None, "use_float", None, "use_float"),
                     (None, "default_virtual_server_vrid", None, "default_virtual_server_vrid"),
                     (None, "ipinip", None, "ipinip"),
-                    (None, "write_memory", None, "write_memory"),
-                    ("management_network", "vthunder_management_network", None, None),
-                    ("data_networks", "vthunder_data_networks", None, None),
-                    ("image", "glance_image", None, None),
-                    ("flavor", "nova_flavor", None, None)]
+                    (None, "write_memory", None, "write_memory")]
 
+_key_mappings = []
 
-def _convert(source, from_type, to_type):
+_value_mappings = []
+
+def _convert(source, from_type, to_type, _mappings):
     result = {}
 
     for mapping in _mappings:
@@ -73,8 +95,8 @@ def _convert(source, from_type, to_type):
     return result
 
 
-def _make_api_dict(db_record):
-    return _convert(db_record, _DB, _API)
+def _make_api_dict(db_record, _mappings):
+    return _convert(db_record, _DB, _API, _mappings)
 
 
 class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
@@ -90,7 +112,7 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         db_instances = super(A10DeviceInstancePlugin, self).get_a10_device_instances(
             context, filters=filters, fields=fields)
 
-        return map(_make_api_dict, db_instances)
+        return map(_make_api_dict, db_instances, itertools.repeat(_vthunder_mappings, len(db_instances)))
 
     def create_a10_device_instance(self, context, a10_device_instance):
         """Attempt to create instance using neutron context"""
@@ -119,16 +141,15 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         db_instance = super(A10DeviceInstancePlugin, self).create_a10_device_instance(
             context, {resources.RESOURCE: db_record})
 
-        return _make_api_dict(db_instance)
+        return _make_api_dict(db_instance, itertools.repeat(_device_mappings, len(db_instance)))
 
     def get_a10_device_instance(self, context, id, fields=None):
         LOG.debug("A10DeviceInstancePlugin.get_a10_instance(): id=%s, fields=%s",
                   id, fields)
-
         db_instance = super(A10DeviceInstancePlugin, self).get_a10_device_instance(
             context, id, fields=fields)
 
-        return _make_api_dict(db_instance)
+        return _make_api_dict(db_instance, itertools.repeat(_device_mappings, len(db_instance)))
 
     def update_a10_device_instance(self, context, id, a10_device_instance):
         LOG.debug(
@@ -141,7 +162,7 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
             id,
             a10_device_instance)
 
-        return _make_api_dict(db_instance)
+        return _make_api_dict(db_instance, itertools.repeat(_device_mapping, len(db_instance)))
 
     def delete_a10_device_instance(self, context, id):
         LOG.debug("A10DeviceInstancePlugin.delete(): id=%s", id)
@@ -154,14 +175,6 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         imgr.delete_instance(nova_instance_id)
 
         return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
-
-    def get_a10_device_keys(self, context, filters=None, fields=None):
-        LOG.debug(
-            "A10DeviceInstancePlugin.get_a10_instances(): filters=%s, fields=%s",
-            filters,
-            fields)
-
-        return {}
 
     def get_a10_device_key(self, context, id, fields=None):
         LOG.debug("A10DeviceInstancePlugin.get_a10_instance(): id=%s, fields=%s",
