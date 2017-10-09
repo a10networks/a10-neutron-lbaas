@@ -15,7 +15,7 @@
 import abc
 import six
 
-from a10_openstack_lib.resources import a10_device_instance
+from a10_openstack_lib.resources import a10_device
 import a10_openstack_lib.resources.validators as a10_validators
 
 from neutron.api import extensions as nextensions
@@ -39,17 +39,17 @@ from a10_neutron_lbaas.neutron_ext.common import exceptions
 from a10_neutron_lbaas.neutron_ext.common import extensions
 from a10_neutron_lbaas.neutron_ext.common import resources
 
-RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_instance.RESOURCE_ATTRIBUTE_MAP,
+RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device.RESOURCE_ATTRIBUTE_MAP,
                                                   attributes)
 
 attributes.add_validators(resources.apply_template(
     a10_validators.VALIDATORS, attributes.validators))
 
-_ALIAS = constants.A10_DEVICE_INSTANCE_EXT
+_ALIAS = constants.A10_DEVICE_EXT
 
 
 # TODO(rename this to *Extension to avoid config file confusion)
-class A10deviceinstance(extensions.ExtensionDescriptor):
+class A10device(extensions.ExtensionDescriptor):
 
     nextensions.register_custom_supported_check(
         _ALIAS, lambda: True, plugin_agnostic=True)
@@ -59,7 +59,7 @@ class A10deviceinstance(extensions.ExtensionDescriptor):
 
     @classmethod
     def get_alias(cls):
-        return constants.A10_DEVICE_INSTANCE_EXT
+        return constants.A10_DEVICE_EXT
 
     @classmethod
     def get_namespace(cls):
@@ -71,7 +71,7 @@ class A10deviceinstance(extensions.ExtensionDescriptor):
 
     @classmethod
     def get_description(cls):
-        return ("A10 Device Instances")
+        return ("A10 Device")
 
     @classmethod
     def get_resources(cls):
@@ -82,12 +82,12 @@ class A10deviceinstance(extensions.ExtensionDescriptor):
         attr_map = RESOURCE_ATTRIBUTE_MAP
         resources = resource_helper.build_resource_info(my_plurals,
                                                         attr_map,
-                                                        constants.A10_DEVICE_INSTANCE)
+                                                        constants.A10_DEVICE)
 
         return resources
 
     def update_attributes_map(self, attributes):
-        super(A10deviceinstance, self).update_attributes_map(
+        super(A10device, self).update_attributes_map(
             attributes,
             extension_attrs_map=RESOURCE_ATTRIBUTE_MAP)
 
@@ -98,54 +98,74 @@ class A10deviceinstance(extensions.ExtensionDescriptor):
             return {}
 
 
-class A10DeviceInstanceNotFoundError(exceptions.NotFound):
+class A10DeviceNotFoundError(exceptions.NotFound):
 
-    def __init__(self, a10_device_instance_id):
-        self.msg = _("A10 Device Instance {} could not be found.")
-        super(A10DeviceInstanceNotFoundError, self).__init__()
+    def __init__(self, a10_device_id):
+        self.msg = _("A10 Device {} could not be found.")
+        super(A10DeviceNotFoundError, self).__init__()
 
 
-class A10DeviceInstanceInUseError(exceptions.InUse):
+class A10DeviceInUseError(exceptions.InUse):
 
-    def __init__(self, a10_device_instance_id):
-        self.message = _("A10 Device Instance is in use and cannot be deleted.")
+    def __init__(self, a10_device_id):
+        self.message = _("A10 Device is in use and cannot be deleted.")
         self.msg = self.message
-        super(A10DeviceInstanceInUseError, self).__init__()
+        super(A10DeviceInUseError, self).__init__()
 
 
 @six.add_metaclass(abc.ABCMeta)
-class A10DeviceInstancePluginBase(ServicePluginBase):
+class A10DevicePluginBase(ServicePluginBase):
 
     def get_plugin_name(self):
-        return constants.A10_DEVICE_INSTANCE
+        return constants.A10_DEVICE
 
     def get_plugin_description(self):
-        return constants.A10_DEVICE_INSTANCE
+        return constants.A10_DEVICE
 
     def get_plugin_type(self):
-        return constants.A10_DEVICE_INSTANCE
+        return constants.A10_DEVICE
 
     def __init__(self):
-        super(A10DeviceInstancePluginBase, self).__init__()
+        super(A10DevicePluginBase, self).__init__()
 
     @abc.abstractmethod
-    def get_a10_device_instances(self, context, filters=None, fields=None):
+    def get_vthunders(self, context, filters=None, fields=None):
         pass
 
     @abc.abstractmethod
-    def create_a10_device_instance(self, context, device_instance):
+    def create_thunder(self, context, vthunder):
         pass
 
     @abc.abstractmethod
-    def get_a10_device_instance(self, context, id, fields=None):
+    def get_vthuner(self, context, id, fields=None):
         pass
 
     @abc.abstractmethod
-    def delete_a10_device_instance(self, context, id):
+    def delete_vthunder(self, context, id):
         pass
 
     @abc.abstractmethod
-    def update_a10_device_instance(self, context, id, a10_device_instance):
+    def update_vthunder(self, context, id, vthunder):
+        pass
+
+    @abc.abstractmethod
+    def get_a10_devices(self, context, filters=None, fields=None):
+        pass
+
+    @abc.abstractmethod
+    def create_a10_device(self, context, a10_device):
+        pass
+
+    @abc.abstractmethod
+    def get_a10_device(self, context, id, fields=None):
+        pass
+
+    @abc.abstractmethod
+    def delete_a10_device(self, context, id):
+        pass
+
+    @abc.abstractmethod
+    def update_a10_device(self, context, id, a10_device):
         pass
 
     @abc.abstractmethod

@@ -15,7 +15,7 @@
 import logging
 import uuid
 
-from a10_openstack_lib.resources import a10_device_instance as a10_device_instance_resources
+from a10_openstack_lib.resources import a10_device as a10_device
 from neutron.db import common_db_mixin
 
 from a10_neutron_lbaas import a10_config
@@ -151,7 +151,7 @@ class A10DeviceInstanceDbMixin(common_db_mixin.CommonDbMixin,
 
         return self._make_a10_device_key(device_key_record)
 
-    def update_a10_device_key(self, id, a10_device_key):
+    def update_a10_device_key(self, context, id, a10_device_key):
         with context.session.begin(subtransactions=True):
             device_key_record = self._get_by_id(context, models.A10DeviceKey, id)
             key.update(**a10_device_key.get("a10_device_key"))
