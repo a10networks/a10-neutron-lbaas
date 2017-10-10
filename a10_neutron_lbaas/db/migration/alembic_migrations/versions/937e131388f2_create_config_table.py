@@ -29,23 +29,45 @@ import sqlalchemy as sa  # noqa
 
 
 def upgrade():
+    try:
+        op.rename_table(
+            'a10_device_instances',
+            'a10_devices'
+        )
+    except Exception:
+        pass
+
     op.create_table(
         'a10_device_key',
-        sa.Column('id', sa.String(32), primary_key=True, nullable=False),
+        sa.Column('tenant_id', sa.String(36), nullable=False), 
+        sa.Column('id', sa.String(36), primary_key=True, nullable=False),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.Column('name', sa.String(255), nullable=False),
         sa.Column('description', sa.String(1024), nullable=False),
     )
 
     op.create_table(
         'a10_device_value',
-        sa.Column('id', sa.String(32), primary_key=True, nullable=False),
-        sa.Column('device_id', sa.String(36), sa.ForeignKey('a10_device_instances.id'), nullable=False),
-        sa.Column('key_id', sa.String(32), sa.ForeignKey('a10_device_key.id'), nullable=False),
+        sa.Column('tenant_id', sa.String(36), nullable=False),
+        sa.Column('id', sa.String(36), primary_key=True, nullable=False),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
+        sa.Column('associated_obj_id', sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False),
+        sa.Column('key_id', sa.String(36), sa.ForeignKey('a10_device_key.id'), nullable=False),
         sa.Column('value', sa.String(255), nullable=False),
     )
 
 
 
 def downgrade():
+    try:
+        op.rename_table(
+            'a10_devices',
+            'a10_device_instances'
+        )
+    except Exception:
+        pass
+
     op.drop_table('a10_device_value')
     op.drop_table('a10_device_key')

@@ -20,10 +20,9 @@ def _uuid_str():
     return str(uuid.uuid4())
 
 
-class A10DeviceInstance(model_base.A10BaseMixin, model_base.A10Base):
-    """An orchestrated vThunder that is being used as a device."""
+class A10Device(model_base.A10BaseMixin, model_base.A10Base):
 
-    __tablename__ = 'a10_device_instances'
+    __tablename__ = 'a10_devices'
 
     # This field is directly analagous to the device name in config.py;
     # and will be used as such throughout.
@@ -47,31 +46,25 @@ class A10DeviceInstance(model_base.A10BaseMixin, model_base.A10Base):
     nova_instance_id = sa.Column(sa.String(36), nullable=True)
     host = sa.Column(sa.String(255), nullable=False)
 
-    # TODO(dougwig) -- later - reference to scheduler, or capacity, or?
-    # TODO(dougwig) -- later - should add state enum here
+    config = orm.relationship("A10DeviceValue", back_populates="associated_device")
 
-    # For "device" dicts, use a10_config.get_device()
-    # For client objects, use _get_a10_client with the a10_config device dict
-
-
-class A10DeviceKey(model_base.A10Base):
+class A10DeviceKey(model_base.A10Base, model_base.A10BaseMixin):
 
     __tablename__ = 'a10_device_key'
 
-    id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
-    name = sa.Column(sa.String(255), nullable=False)
+    name = sa.Column(sa.String(255), nullable=False, unique=True)
     description = sa.Column(sa.String(1024), nullable=False)
+    associated_value = orm.relationship("A10DeviceValue", back_populates="associated_key")
 
 
-class A10DeviceValue(model_base.A10Base):
+class A10DeviceValue(model_base.A10Base, model_base.A10BaseMixin):
 
     __tablename__ = 'a10_device_value'
 
-    id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
-    device_id = sa.Column(sa.String(36), sa.ForeignKey('a10_device_instances.id'), nullable=False)
-    key_id = sa.Column(sa.String(32), sa.ForeignKey('a10_device_key.id'), nullable=False)
+    associated_obj_id = sa.Column(sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False)
+    key_id = sa.Column(sa.String(36), sa.ForeignKey('a10_device_key.id'), nullable=False)
 
     value = sa.Column(sa.String(255), nullable=False)
 
-    uuid = orm.relationship(A10DeviceInstance, uselist=False)
-    device_key = orm.relationship(A10DeviceKey, uselist=False)
+    associated_device = orm.relationship("A10Device", back_populates="config")
+    associated_key = orm.relationship("A10DeviceKey", back_populates="associated_value")

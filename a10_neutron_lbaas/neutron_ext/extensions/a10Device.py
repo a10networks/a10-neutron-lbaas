@@ -18,8 +18,10 @@ import six
 from a10_openstack_lib.resources import a10_device
 import a10_openstack_lib.resources.validators as a10_validators
 
+from neutron import policy
 from neutron.api import extensions as nextensions
 from neutron.api.v2 import resource_helper
+from neutron.api.v2.base import Controller
 # neutron.services got moved to neutron_lib
 try:
     # F811 (redefinition of ServicePluginBase) suppressed
@@ -48,6 +50,30 @@ attributes.add_validators(resources.apply_template(
 _ALIAS = constants.A10_DEVICE_EXT
 
 
+
+def _item(self, request, id, do_authz=False, field_list=None,
+          parent_id=None):
+    """Retrieves and formats a single element of the requested entity."""
+    kwargs = {'fields': field_list}
+    action = self._plugin_handlers[self.SHOW]
+    if parent_id:
+        kwargs[self._parent_id_name] = parent_id
+    obj_getter = getattr(self._plugin, action)
+    obj, extra_resources = obj_getter(request.context, id, **kwargs)
+
+    if extra_resources:
+        for resource in extra_resources:
+            for key in resource.keys():
+                self._attr_info[key] = resource[key]
+    
+    if do_authz:
+        policy.enforce(request.context,
+                       action,
+                       obj,
+                       pluralized=self._collection)
+
+    return obj
+
 # TODO(rename this to *Extension to avoid config file confusion)
 class A10device(extensions.ExtensionDescriptor):
 
@@ -55,7 +81,7 @@ class A10device(extensions.ExtensionDescriptor):
         _ALIAS, lambda: True, plugin_agnostic=True)
 
     def get_name(cls):
-        return "A10 Device Instances"
+        return "A10 Device"
 
     @classmethod
     def get_alias(cls):
@@ -76,6 +102,7 @@ class A10device(extensions.ExtensionDescriptor):
     @classmethod
     def get_resources(cls):
         """Returns external resources."""
+        Controller._item = _item
         my_plurals = resource_helper.build_plural_mappings(
             {}, RESOURCE_ATTRIBUTE_MAP)
         attributes.PLURALS.update(my_plurals)
@@ -127,26 +154,6 @@ class A10DevicePluginBase(ServicePluginBase):
 
     def __init__(self):
         super(A10DevicePluginBase, self).__init__()
-
-    @abc.abstractmethod
-    def get_vthunders(self, context, filters=None, fields=None):
-        pass
-
-    @abc.abstractmethod
-    def create_thunder(self, context, vthunder):
-        pass
-
-    @abc.abstractmethod
-    def get_vthuner(self, context, id, fields=None):
-        pass
-
-    @abc.abstractmethod
-    def delete_vthunder(self, context, id):
-        pass
-
-    @abc.abstractmethod
-    def update_vthunder(self, context, id, vthunder):
-        pass
 
     @abc.abstractmethod
     def get_a10_devices(self, context, filters=None, fields=None):
