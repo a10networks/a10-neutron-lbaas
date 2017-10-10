@@ -55,7 +55,7 @@ class A10device(extensions.ExtensionDescriptor):
         _ALIAS, lambda: True, plugin_agnostic=True)
 
     def get_name(cls):
-        return "A10 Device Instances"
+        return "A10 Device"
 
     @classmethod
     def get_alias(cls):
@@ -133,11 +133,11 @@ class A10DevicePluginBase(ServicePluginBase):
         pass
 
     @abc.abstractmethod
-    def create_thunder(self, context, vthunder):
+    def create_vthunder(self, context, vthunder):
         pass
 
     @abc.abstractmethod
-    def get_vthuner(self, context, id, fields=None):
+    def get_vthunder(self, context, id, fields=None):
         pass
 
     @abc.abstractmethod
