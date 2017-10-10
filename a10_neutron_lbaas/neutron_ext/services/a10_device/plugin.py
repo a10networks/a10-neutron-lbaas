@@ -19,9 +19,9 @@ import a10_neutron_lbaas.a10_config as a10_config
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.common import resources as common_resources
 
-import a10_neutron_lbaas.neutron_ext.db.a10_device_instance as a10_device_instance
+import a10_neutron_lbaas.neutron_ext.db.a10_device as a10_device
 import a10_neutron_lbaas.vthunder.instance_manager as instance_manager
-from a10_openstack_lib.resources import a10_device_instance as resources
+from a10_openstack_lib.resources import a10_device as resources
 
 LOG = logging.getLogger(__name__)
 
@@ -99,24 +99,24 @@ def _make_api_dict(db_record, _mappings):
     return _convert(db_record, _DB, _API, _mappings)
 
 
-class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
+class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
-    supported_extension_aliases = [constants.A10_DEVICE_INSTANCE_EXT]
+    supported_extension_aliases = [constants.A10_DEVICE_EXT]
 
-    def get_a10_device_instances(self, context, filters=None, fields=None):
+    def get_vthunder(self, context, filters=None, fields=None):
         LOG.debug(
-            "A10DeviceInstancePlugin.get_a10_instances(): filters=%s, fields=%s",
+            "A10DevicePlugin.get_vthunder(): filters=%s, fields=%s",
             filters,
             fields)
 
-        db_instances = super(A10DeviceInstancePlugin, self).get_a10_device_instances(
+        db_instances = super(A10DevicePlugin, self).get_a10_device(
             context, filters=filters, fields=fields)
 
         return map(_make_api_dict, db_instances, itertools.repeat(_vthunder_mappings, len(db_instances)))
 
-    def create_a10_device_instance(self, context, a10_device_instance):
-        """Attempt to create instance using neutron context"""
-        LOG.debug("A10DeviceInstancePlugin.create(): a10_device_instance=%s", a10_device_instance)
+    def create_vthunder(self, context, vthunder):
+        """Attempt to create vthunder using neutron context"""
+        LOG.debug("A10DevicePlugin.create(): vthunder=%s", vthunder)
 
         config = a10_config.A10Config()
         vthunder_defaults = config.get_vthunder_config()
@@ -124,7 +124,7 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
         imgr = instance_manager.InstanceManager.from_config(config, context)
 
         dev_instance = common_resources.remove_attributes_not_specified(
-            a10_device_instance.get(resources.RESOURCE))
+            a10_device_instance.get(resources.DEVICES))
 
         # Create the instance with specified defaults.
         vthunder_config = vthunder_defaults.copy()
@@ -138,49 +138,48 @@ class A10DeviceInstancePlugin(a10_device_instance.A10DeviceInstanceDbMixin):
 
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
-        db_instance = super(A10DeviceInstancePlugin, self).create_a10_device_instance(
-            context, {resources.RESOURCE: db_record})
+        db_instance = super(A10DevicePlugin, self).create_a10_device(
+            context, {resources.DEVICES: db_record})
 
         return _make_api_dict(db_instance, itertools.repeat(_device_mappings, len(db_instance)))
 
-    def get_a10_device_instance(self, context, id, fields=None):
-        LOG.debug("A10DeviceInstancePlugin.get_a10_instance(): id=%s, fields=%s",
+    def get_vthunder(self, context, id, fields=None):
+        LOG.debug("A10DevicePlugin.get_vthunder(): id=%s, fields=%s",
                   id, fields)
-        db_instance = super(A10DeviceInstancePlugin, self).get_a10_device_instance(
+        db_instance = super(A10DevicePlugin, self).get_a10_device(
             context, id, fields=fields)
 
         return _make_api_dict(db_instance, itertools.repeat(_device_mappings, len(db_instance)))
 
-    def update_a10_device_instance(self, context, id, a10_device_instance):
+    def update_vthunder(self, context, id, vthunder):
         LOG.debug(
-            "A10DeviceInstancePlugin.update_a10_device_instance(): id=%s, instance=%s",
+            "A10DevicePlugin.update_vthunder(): id=%s, vthunder=%s",
             id,
-            a10_device_instance)
+            vthunder)
 
-        db_instance = super(A10DeviceInstancePlugin, self).update_a10_device_instance(
+        db_instance = super(A10DevicePlugin, self).update_vthunder(
             context,
             id,
-            a10_device_instance)
+            vthunder)
 
         return _make_api_dict(db_instance, itertools.repeat(_device_mapping, len(db_instance)))
 
-    def delete_a10_device_instance(self, context, id):
-        LOG.debug("A10DeviceInstancePlugin.delete(): id=%s", id)
+    def delete_vthunder(self, context, id):
+        LOG.debug("A10DevicePlugin.delete(): id=%s", id)
         # Deleting the actual instance requires knowing the nova instance ID
-        instance = super(A10DeviceInstancePlugin, self).get_a10_device_instance(context,
-                                                                                id)
-        nova_instance_id = instance.get("nova_instance_id")
+        vthunder = super(A10DevicePlugin, self).get_a10_device(context, id)
+        nova_instance_id = vthunder.get("nova_instance_id")
         config = a10_config.A10Config()
         imgr = instance_manager.InstanceManager.from_config(config, context)
         imgr.delete_instance(nova_instance_id)
 
-        return super(A10DeviceInstancePlugin, self).delete_a10_device_instance(context, id)
+        return super(A10DevicePlugin, self).delete_a10_device(context, id)
 
     def get_a10_device_key(self, context, id, fields=None):
-        LOG.debug("A10DeviceInstancePlugin.get_a10_instance(): id=%s, fields=%s",
+        LOG.debug("A10DevicePlugin.get_a10_device_key(): id=%s, fields=%s",
                   id, fields)
 
-        #db_instance = super(A10DeviceInstancePlugin, self).get_a10_device_key(
-            #context, id, fields=fields)
+        db_instance = super(A10DevicePlugin, self).get_a10_device_key(
+            context, id, fields=fields)
 
-        return {}#_make_api_dict(db_instance)
+        return _make_api_dict(db_instance, itertools.repeat(_device_key_mappings, len(db_instance)))
