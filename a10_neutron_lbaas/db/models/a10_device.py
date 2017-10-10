@@ -20,10 +20,9 @@ def _uuid_str():
     return str(uuid.uuid4())
 
 
-class A10DeviceInstance(model_base.A10BaseMixin, model_base.A10Base):
-    """An orchestrated vThunder that is being used as a device."""
+class A10Device(model_base.A10BaseMixin, model_base.A10Base):
 
-    __tablename__ = 'a10_device_instances'
+    __tablename__ = 'a10_devices'
 
     # This field is directly analagous to the device name in config.py;
     # and will be used as such throughout.
@@ -68,10 +67,10 @@ class A10DeviceValue(model_base.A10Base):
     __tablename__ = 'a10_device_value'
 
     id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
-    device_id = sa.Column(sa.String(36), sa.ForeignKey('a10_device_instances.id'), nullable=False)
+    device_id = sa.Column(sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False)
     key_id = sa.Column(sa.String(32), sa.ForeignKey('a10_device_key.id'), nullable=False)
 
     value = sa.Column(sa.String(255), nullable=False)
 
-    uuid = orm.relationship(A10DeviceInstance, uselist=False)
+    uuid = orm.relationship(A10Device, uselist=False)
     device_key = orm.relationship(A10DeviceKey, uselist=False)
