@@ -29,10 +29,13 @@ import sqlalchemy as sa  # noqa
 
 
 def upgrade():
-    op.rename_table(
-        'a10_device_instances',
-        'a10_devices'
-    )
+    try:
+        op.rename_table(
+            'a10_device_instances',
+            'a10_devices'
+        )
+    except Exception:
+        pass
 
     op.create_table(
         'a10_device_key',
@@ -44,7 +47,7 @@ def upgrade():
     op.create_table(
         'a10_device_value',
         sa.Column('id', sa.String(32), primary_key=True, nullable=False),
-        sa.Column('device_id', sa.String(36), sa.ForeignKey('a10_device.id'), nullable=False),
+        sa.Column('device_id', sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False),
         sa.Column('key_id', sa.String(32), sa.ForeignKey('a10_device_key.id'), nullable=False),
         sa.Column('value', sa.String(255), nullable=False),
     )
@@ -52,9 +55,13 @@ def upgrade():
 
 
 def downgrade():
-    op.rename_table(
-        'a10_devices',
-        'a10_device_instances'
-    )
+    try:
+        op.rename_table(
+            'a10_devices',
+            'a10_device_instances'
+        )
+    except Exception:
+        pass
+
     op.drop_table('a10_device_value')
     op.drop_table('a10_device_key')
