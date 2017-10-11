@@ -98,7 +98,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
         return self._make_a10_device_dict(device_record)
 
-    def get_a10_device_(self, context, a10_device_id, fields=None):
+    def get_a10_device(self, context, a10_device_id, fields=None):
         device = self._get_a10_device(context, a10_device_id)
         return self._make_a10_device_dict(device, fields)
 
