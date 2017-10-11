@@ -28,6 +28,8 @@ LOG = logging.getLogger(__name__)
 # api, vthunder, instance, and db keys
 _API = 0
 _VTHUNDER_CONFIG = 1
+#_KEY_CONFIG = 2
+#_VALUE_CONFIG = 3
 _INSTANCE = 2
 _DB = 3
 
@@ -103,24 +105,24 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
     supported_extension_aliases = [constants.A10_DEVICE_EXT]
 
-    def get_vthunder(self, context, filters=None, fields=None):
+    def get_a10_vthunders(self, context, filters=None, fields=None):
         LOG.debug(
             "A10DevicePlugin.get_vthunder(): filters=%s, fields=%s",
             filters,
             fields)
 
-        db_instances = super(A10DevicePlugin, self).get_a10_device(
+        db_instances = super(A10DevicePlugin, self).get_a10_devices(
             context, filters=filters, fields=fields)
 
         return map(_make_api_dict, db_instances, itertools.repeat(_vthunder_mappings, len(db_instances)))
 
-    def create_vthunder(self, context, vthunder):
+    def create_a10_vthunder(self, context, vthunder):
         """Attempt to create vthunder using neutron context"""
         LOG.debug("A10DevicePlugin.create(): vthunder=%s", vthunder)
 
         config = a10_config.A10Config()
         vthunder_defaults = config.get_vthunder_config()
-
+        import pdb; pdb.set_trace()
         imgr = instance_manager.InstanceManager.from_config(config, context)
 
         dev_instance = common_resources.remove_attributes_not_specified(
@@ -143,7 +145,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
         return _make_api_dict(db_instance, itertools.repeat(_device_mappings, len(db_instance)))
 
-    def get_vthunder(self, context, id, fields=None):
+    def get_a10_vthunder(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_vthunder(): id=%s, fields=%s",
                   id, fields)
         db_instance = super(A10DevicePlugin, self).get_a10_device(
@@ -151,7 +153,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
         return _make_api_dict(db_instance, itertools.repeat(_device_mappings, len(db_instance)))
 
-    def update_vthunder(self, context, id, vthunder):
+    def update_a10_vthunder(self, context, id, vthunder):
         LOG.debug(
             "A10DevicePlugin.update_vthunder(): id=%s, vthunder=%s",
             id,
@@ -164,7 +166,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
         return _make_api_dict(db_instance, itertools.repeat(_device_mapping, len(db_instance)))
 
-    def delete_vthunder(self, context, id):
+    def delete_a10_vthunder(self, context, id):
         LOG.debug("A10DevicePlugin.delete(): id=%s", id)
         # Deleting the actual instance requires knowing the nova instance ID
         vthunder = super(A10DevicePlugin, self).get_a10_device(context, id)

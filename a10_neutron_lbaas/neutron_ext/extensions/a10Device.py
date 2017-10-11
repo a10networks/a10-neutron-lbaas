@@ -129,23 +129,7 @@ class A10DevicePluginBase(ServicePluginBase):
         super(A10DevicePluginBase, self).__init__()
 
     @abc.abstractmethod
-    def get_vthunders(self, context, filters=None, fields=None):
-        pass
-
-    @abc.abstractmethod
-    def create_vthunder(self, context, vthunder):
-        pass
-
-    @abc.abstractmethod
-    def get_vthunder(self, context, id, fields=None):
-        pass
-
-    @abc.abstractmethod
-    def delete_vthunder(self, context, id):
-        pass
-
-    @abc.abstractmethod
-    def update_vthunder(self, context, id, vthunder):
+    def get_a10_vthunders(self, context, filters=None, fields=None):
         pass
 
     @abc.abstractmethod
