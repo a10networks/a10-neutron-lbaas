@@ -53,22 +53,20 @@ class A10Device(model_base.A10BaseMixin, model_base.A10Base):
     # For client objects, use _get_a10_client with the a10_config device dict
 
 
-class A10DeviceKey(model_base.A10Base):
+class A10DeviceKey(model_base.A10Base, model_base.A10BaseMixin):
 
     __tablename__ = 'a10_device_key'
 
-    id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
     name = sa.Column(sa.String(255), nullable=False)
     description = sa.Column(sa.String(1024), nullable=False)
 
 
-class A10DeviceValue(model_base.A10Base):
+class A10DeviceValue(model_base.A10Base, model_base.A10BaseMixin):
 
     __tablename__ = 'a10_device_value'
 
-    id = sa.Column(sa.String(32), primary_key=True, default=_uuid_str, nullable=False)
     device_id = sa.Column(sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False)
-    key_id = sa.Column(sa.String(32), sa.ForeignKey('a10_device_key.id'), nullable=False)
+    key_id = sa.Column(sa.String(36), sa.ForeignKey('a10_device_key.id'), nullable=False)
 
     value = sa.Column(sa.String(255), nullable=False)
 

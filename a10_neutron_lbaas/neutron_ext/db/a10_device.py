@@ -39,7 +39,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         self.config = a10_config.A10Config()
 
     def _get_device_body(self, a10_device):
-        body = a10_device[a10_device_resources.DEVICES]
+        body = a10_device[a10_device_resources.DEVICE]
         return resources.remove_attributes_not_specified(body)
 
     def _get_a10_device(self, context, a10_device_id):
@@ -72,7 +72,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         return self._fields(res, fields)
 
     def create_a10_device(self, context, a10_device):
-        body = self._get_body(a10_device)
+        body = self._get_device_body(a10_device)
         with context.session.begin(subtransactions=True):
             device_record = models.A10Device(
                 id=_uuid_str(),
@@ -128,7 +128,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             return self._make_a10_device_dict(device)
 
     def _get_device_key_body(self, a10_device_key):
-        body = a10_device[a10_device_resources.DEVICE_KEYS]
+        body = a10_device_key[a10_device_resources.DEVICE_KEY]
         return resources.remove_attributes_not_specified(body)
          
     def _get_a10_device_key(self, context, key_id):
@@ -139,6 +139,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
     def _make_a10_device_key(self, a10_device_key_db, fields=None):
         res = {'id': a10_device_key_db.id,
+               'tenant_id': a10_device_key_db.tenant_id,
                'name': a10_device_key_db.name,
                'description': a10_device_key_db.description}
 
@@ -149,6 +150,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         with context.session.begin(subtransactions=True):
             device_key_record = models.A10DeviceKey(
                 id=_uuid_str(),
+                tenant_id=context.tenant_id,
                 name=body.get('name', ''),
                 description=body.get('description', ''))
             context.session.add(device_key_record)
@@ -183,7 +185,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                                     marker_obj=marker, page_reverse=page_reverse)
 
     def _get_device_value_body(self, a10_device_value):
-        body = a10_device[a10_device_resources.DEVICE_VALUES]
+        body = a10_device_value[a10_device_resources.DEVICE_VALUE]
         return resources.remove_attributes_not_specified(body)
 
     def _get_a10_device_value(self, context, value_id):
@@ -192,8 +194,14 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         except Exception:
             raise a10Device.A10DeviceNotFoundError(value_id)
 
+    def _get_associated_value_list(self, context, device_id):
+        with context.session.begin(subtransactions=True):
+            device_value_list = context.session.query(models.A10DeviceValue).filter_by(
+                device_id = device_id)
+
     def _make_a10_device_value(self, a10_device_value_db, fields=None):
         res = {'id': a10_device_value_db.id,
+               'tenant_id': a10_device_value_db.tenant_id,
                'key_id': a10_device_value_db.key_id,
                'device_id': a10_device_value_db.device_id,
                'value': a10_device_value_db.value}
@@ -205,12 +213,13 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         with context.session.begin(subtransactions=True):
             device_value_record = models.A10DeviceValue(
                 id=_uuid_str(),
+                tenant_id=context.tenant_id,
                 key_id=body.get('key_id'),
                 device_id=body.get('device_id'),
                 value=body.get('value', ''))
             context.session.add(device_value_record)
 
-        return self._make_a10_device_key(device_value_record)
+        return self._make_a10_device_value(device_value_record)
 
     def update_a10_device_value(self, id, a10_device_value):
         with context.session.begin(subtransactions=True):
@@ -228,7 +237,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
     def get_a10_device_value(self, context, value_id, fields=None):
         device_value = self._get_a10_device_value(context, value_id)
-        return self._make_a10_device_key(device_value, fields)
+        return self._make_a10_device_value(device_value, fields)
 
     def get_a10_device_values(self, context, filters=None, fields=None,
                                  sorts=None, limit=None, marker=None,
