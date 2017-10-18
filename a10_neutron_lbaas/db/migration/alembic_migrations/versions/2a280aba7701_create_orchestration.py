@@ -50,7 +50,7 @@ def upgrade():
         sa.Column('ipinip', sa.Boolean(), nullable=False),
         sa.Column('write_memory', sa.Boolean(), nullable=False),
 
-        sa.Column('nova_instance_id', sa.String(36), nullable=False),
+        sa.Column('nova_instance_id', sa.String(36), nullable=True),
         sa.Column('host', sa.String(255), nullable=False)
     )
     op.create_table(
@@ -63,10 +63,8 @@ def upgrade():
         sa.Column('pool_id', sa.String(36)),
         sa.Column('loadbalancer_id', sa.String(36)),
     )
-    pass
 
 
 def downgrade():
     op.drop_table('a10_slbs')
     op.drop_table('a10_device_instances')
-    pass
