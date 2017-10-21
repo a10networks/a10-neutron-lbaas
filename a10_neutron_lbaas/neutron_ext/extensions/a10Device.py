@@ -129,10 +129,6 @@ class A10DevicePluginBase(ServicePluginBase):
         super(A10DevicePluginBase, self).__init__()
 
     @abc.abstractmethod
-    def get_a10_vthunders(self, context, filters=None, fields=None):
-        pass
-
-    @abc.abstractmethod
     def get_a10_devices(self, context, filters=None, fields=None):
         pass
 
