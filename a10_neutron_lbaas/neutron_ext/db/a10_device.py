@@ -44,32 +44,36 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
     def _get_a10_device(self, context, a10_device_id):
         try:
-            return self._get_by_id(context, models.A10Device, a10_device_id)
+            with context.session.begin(subtransactions=True):
+                import pdb; pdb.set_trace()
+                device_value_object_list = context.session.query(models.A10Device).filter_by(
+                    id=a10_device_id).join("config").all()
+                return device_value_object_list
         except Exception:
             raise a10Device.A10DeviceNotFoundError(a10_device_id)
 
     def _make_a10_device_dict(self, a10_device_db, fields=None):
-        res = {'id': a10_device_db.id,
-               'name': a10_device_db.name,
-               'description': a10_device_db.description,
-               'tenant_id': a10_device_db.tenant_id,
-               'username': a10_device_db.username,
-               'password': a10_device_db.password,
-               'api_version': a10_device_db.api_version,
-               'protocol': a10_device_db.protocol,
-               'port': a10_device_db.port,
-               'autosnat': a10_device_db.autosnat,
-               'v_method': a10_device_db.v_method,
-               'shared_partition': a10_device_db.shared_partition,
-               'use_float': a10_device_db.use_float,
-               'default_virtual_server_vrid': a10_device_db.default_virtual_server_vrid,
-               'ipinip': a10_device_db.ipinip,
-               # Not all device records are nova instances
-               'nova_instance_id': a10_device_db.nova_instance_id,
-               'host': a10_device_db.host,
-               'write_memory': a10_device_db.write_memory}
-
-        return self._fields(res, fields)
+        device_res = {'id': a10_device_db.id,
+                      'name': a10_device_db.name,
+                      'description': a10_device_db.description,
+                      'tenant_id': a10_device_db.tenant_id,
+                      'username': a10_device_db.username,
+                      'password': a10_device_db.password,
+                      'api_version': a10_device_db.api_version,
+                      'protocol': a10_device_db.protocol,
+                      'port': a10_device_db.port,
+                      'autosnat': a10_device_db.autosnat,
+                      'v_method': a10_device_db.v_method,
+                      'shared_partition': a10_device_db.shared_partition,
+                      'use_float': a10_device_db.use_float,
+                      'default_virtual_server_vrid': a10_device_db.default_virtual_server_vrid,
+                      'ipinip': a10_device_db.ipinip,
+                      # Not all device records are nova instances
+                      'nova_instance_id': a10_device_db.nova_instance_id,
+                      'host': a10_device_db.host,
+                      'write_memory': a10_device_db.write_memory}
+        
+        return self._fields(device_res, fields)
 
     def create_a10_device(self, context, a10_device):
         body = self._get_device_body(a10_device)
@@ -165,7 +169,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             return self._make_a10_device_key(device_key_record)
 
     def delete_a10_device_key(self, context, id):
-        with context.session.begin(substransactions=True):
+        with context.session.begin(subtransactions=True): 
             LOG.debug("A10DeviceDbMixin:delete_a10_device_key() id={}".format(id))
             device_key = self._get_a10_device_key(context, id)
 
@@ -194,19 +198,23 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         except Exception:
             raise a10Device.A10DeviceNotFoundError(value_id)
 
-    def _get_associated_value_list(self, context, device_id):
-        with context.session.begin(subtransactions=True):
-            device_value_list = context.session.query(models.A10DeviceValue).filter_by(
-                device_id = device_id)
-
     def _make_a10_device_value(self, a10_device_value_db, fields=None):
         res = {'id': a10_device_value_db.id,
                'tenant_id': a10_device_value_db.tenant_id,
                'key_id': a10_device_value_db.key_id,
-               'device_id': a10_device_value_db.device_id,
+               'associated_obj_id': a10_device_value_db.associated_obj_id,
                'value': a10_device_value_db.value}
 
         return self._fields(res, fields)
+
+    def _get_associated_value_list(self, context, device_id):
+        with context.session.begin(subtransactions=True):
+            device_value_object_list = context.session.query(models.A10DeviceValue).filter_by(
+                device_id = device_id).all()
+            device_value_list = []
+            for value in device_value_object_list:
+                device_value_list.append(self._make_a10_device_value(value))
+        return device_value_list
 
     def create_a10_device_value(self, context, a10_device_value):
         body = self._get_device_value_body(a10_device_value)
@@ -215,7 +223,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 id=_uuid_str(),
                 tenant_id=context.tenant_id,
                 key_id=body.get('key_id'),
-                device_id=body.get('device_id'),
+                associated_obj_id=body.get('associated_obj_id'),
                 value=body.get('value', ''))
             context.session.add(device_value_record)
 
@@ -229,7 +237,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             return self._make_a10_device_key(device_key_record)
 
     def delete_a10_device_value(self, context, id):
-        with context.session.begin(substransactions=True):
+        with context.session.begin(subtransactions=True):
             LOG.debug("A10DeviceDbMixin:delete_a10_device_value() id={}".format(id))
             device_value = self._get_a10_device_value(context, id)
 

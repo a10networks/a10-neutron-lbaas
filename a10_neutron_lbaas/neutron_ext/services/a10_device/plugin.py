@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 # api, vthunder, instance, and db keys
 _API = 0
-_DEVICE_CONFIG = 1
+_VTHUNDER_CONFIG = 1
 _VTHUNDER = 2
 _DB = 3
 
@@ -58,9 +58,9 @@ _vthunder_mappings = [("id", None, None, "id"),
                       ("image", "glance_image", None, None),
                       ("flavor", "nova_flavor", None, None)]
 
-def _convert(source, from_type, to_type, _mappings):
+def _convert(source, from_type, to_type):
     result = {}
-    for mapping in _mappings:
+    for mapping in _vthunder_mappings:
         source_key = mapping[from_type]
         if source_key is None or source_key not in source:
             continue
@@ -74,8 +74,8 @@ def _convert(source, from_type, to_type, _mappings):
     return result
 
 
-def _make_api_dict(db_record, _mappings):
-    return _convert(db_record, _DB, _API, _mappings)
+def _make_api_dict(db_record):
+    return _convert(db_record, _DB, _API)
 
 
 class A10DevicePlugin(a10_device.A10DeviceDbMixin):
@@ -98,7 +98,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
                 cnt -= 1
             cnt += 1
 
-        return map(_make_api_dict, db_instances, itertools.repeat(_vthunder_mappings, len(db_instances)))
+        return map(_make_api_dict, db_instances)
 
     
     def create_a10_vthunder(self, context, a10_vthunder):
@@ -110,7 +110,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         imgr = instance_manager.InstanceManager.from_config(config, context)
 
         dev_instance = common_resources.remove_attributes_not_specified(
-            a10_vthunder.get(resources.DEVICES))
+            a10_vthunder.get(resources.VTHUNDER))
 
         # Create the instance with specified defaults.
         vthunder_config = vthunder_defaults.copy()
@@ -125,21 +125,20 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
         db_instance = super(A10DevicePlugin, self).create_a10_device(
-            context, {resources.VTHUNDERS: db_record})
+            context, {resources.VTHUNDER: db_record})
 
-        return _make_api_dict(db_instance, itertools.repeat(_device_mappings, len(db_instance)))
+        return _make_api_dict(db_instance)
 
     def get_a10_vthunder(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_vthunder(): id=%s, fields=%s",
                   id, fields)
-
-        db_instance = super(A10DevicePlugin, self).get_a10_devices(
-            context, filters=filters, fields=fields)
+        db_instance = super(A10DevicePlugin, self).get_a10_device(
+            context, id, fields=fields)
 
         if not db_instance.get("nova_instance_id"):
             return {}
 
-        return _make_api_dict(context, id, db_instance, _device_mappings, fields=fields)
+        return _make_api_dict(db_instance)
 
     def update_a10_vthunder(self, context, id, vthunder):
         LOG.debug(
@@ -152,7 +151,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
             id,
             vthunder)
 
-        return _make_api_dict(id, db_instance, _device_mapping)
+        return _make_api_dict(db_instance)
 
     def delete_a10_vthunder(self, context, id):
         LOG.debug("A10DevicePlugin.a10_vthunder_delete(): id=%s", id)
@@ -182,12 +181,6 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
                 cnt -= 1
             cnt += 1
 
-        for instance in db_instances:
-            value_list = super(A10DevicePlugin, self)._get_associated_value_list(
-                context, instance["id"])
-            if value_list:
-                instance.update(value_list)
-
         return db_instances
 
     def create_a10_device(self, context, a10_device):
@@ -200,11 +193,10 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
     def get_a10_device(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_a10_device(): id=%s, fields=%s",
                   id, fields)
-
         db_instance = super(A10DevicePlugin, self).get_a10_device(
             context, id, fields=fields)
-        db_instance.update(super(A10DevicePlugin, self).get_a10_device_values(
-            context, filters=None, fields=None))
+        #db_instance.update(super(A10DevicePlugin, self).get_a10_device_values(
+            #context, filters=None, fields=None))
         if db_instance.get("nova_instance_id"):
             return {}
 
@@ -273,7 +265,6 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
     def create_a10_device_value(self, context, a10_device_value):
         """Attempt to create vthunder using neutron context"""
         LOG.debug("A10DevicePlugin.create_a10_device_value(): device=%s", a10_device_value)
-
         # Else, raise an exception because that's what we would do anyway
         return super(A10DevicePlugin, self).create_a10_device_value(context, a10_device_value)
 
@@ -282,7 +273,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
                   id, fields)
 
         db_instance = super(A10DevicePlugin, self).get_a10_device_value(
-            context, filters=filters, fields=fields)
+            context, id, fields=fields)
 
         return db_instance
 
