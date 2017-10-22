@@ -17,11 +17,16 @@ import uuid
 
 from a10_openstack_lib.resources import a10_device as a10_device_resources
 from neutron.db import common_db_mixin
+from neutron.api.v2.base import Controller
 
 from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.neutron_ext.common import resources
 from a10_neutron_lbaas.neutron_ext.extensions import a10Device
+from neutron.api.v2 import resource_helper
+
+from a10_neutron_lbaas.neutron_ext.common import attributes
+from a10_neutron_lbaas.neutron_ext.common import constants
 
 
 LOG = logging.getLogger(__name__)
@@ -43,37 +48,60 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         return resources.remove_attributes_not_specified(body)
 
     def _get_a10_device(self, context, a10_device_id):
-        try:
-            with context.session.begin(subtransactions=True):
-                import pdb; pdb.set_trace()
-                device_value_object_list = context.session.query(models.A10Device).filter_by(
-                    id=a10_device_id).join("config").all()
-                return device_value_object_list
-        except Exception:
-            raise a10Device.A10DeviceNotFoundError(a10_device_id)
+        with context.session.begin(subtransactions=True):
+            device_value_object_list = context.session.query(models.A10Device).filter_by(
+                id=a10_device_id).one()
+            if not device_value_object_list:
+                raise a10Device.A10DeviceNotFoundError(a10_device_id)
+            return device_value_object_list
+
+    def _rebuild_resources(self, resource_map):
+        my_plurals = resource_helper.build_plural_mappings(
+            {}, resource_map)
+        attributes.PLURALS.update(my_plurals)
+        resources = resource_helper.build_resource_info(my_plurals,
+                                                        resource_map,
+                                                        constants.A10_DEVICE)
+        return resources
 
     def _make_a10_device_dict(self, a10_device_db, fields=None):
-        device_res = {'id': a10_device_db.id,
-                      'name': a10_device_db.name,
-                      'description': a10_device_db.description,
-                      'tenant_id': a10_device_db.tenant_id,
-                      'username': a10_device_db.username,
-                      'password': a10_device_db.password,
-                      'api_version': a10_device_db.api_version,
-                      'protocol': a10_device_db.protocol,
-                      'port': a10_device_db.port,
-                      'autosnat': a10_device_db.autosnat,
-                      'v_method': a10_device_db.v_method,
-                      'shared_partition': a10_device_db.shared_partition,
-                      'use_float': a10_device_db.use_float,
-                      'default_virtual_server_vrid': a10_device_db.default_virtual_server_vrid,
-                      'ipinip': a10_device_db.ipinip,
-                      # Not all device records are nova instances
-                      'nova_instance_id': a10_device_db.nova_instance_id,
-                      'host': a10_device_db.host,
-                      'write_memory': a10_device_db.write_memory}
-        
-        return self._fields(device_res, fields)
+        res = {'id': a10_device_db.id,
+               'name': a10_device_db.name,
+               'description': a10_device_db.description,
+               'tenant_id': a10_device_db.tenant_id,
+               'username': a10_device_db.username,
+               'password': a10_device_db.password,
+               'api_version': a10_device_db.api_version,
+               'protocol': a10_device_db.protocol,
+               'port': a10_device_db.port,
+               'autosnat': a10_device_db.autosnat,
+               'v_method': a10_device_db.v_method,
+               'shared_partition': a10_device_db.shared_partition,
+               'use_float': a10_device_db.use_float,
+               'default_virtual_server_vrid': a10_device_db.default_virtual_server_vrid,
+               'ipinip': a10_device_db.ipinip,
+               # Not all device records are nova instances
+               'nova_instance_id': a10_device_db.nova_instance_id,
+               'host': a10_device_db.host,
+               'write_memory': a10_device_db.write_memory,
+               'extra_resources': []
+              }
+
+        for device_value in a10_device_db.config:
+            key = device_value.associated_key.name
+            value = device_value.value
+            mapped_resource = {
+                'allow_post': True,
+                'allow_put': True,
+                'validate': {
+                    'type:string': None,
+                },
+                'is_visible': True,
+                'default': str(value)
+            }
+            res[str(key)] = str(value)
+            res['extra_resources'].append({str(key): mapped_resource})
+        return self._fields(res, fields)
 
     def create_a10_device(self, context, a10_device):
         body = self._get_device_body(a10_device)
