@@ -52,7 +52,7 @@ class A10DeviceKey(model_base.A10Base, model_base.A10BaseMixin):
 
     __tablename__ = 'a10_device_key'
 
-    name = sa.Column(sa.String(255), nullable=False)
+    name = sa.Column(sa.String(255), nullable=False, unique=True)
     description = sa.Column(sa.String(1024), nullable=False)
     associated_value = orm.relationship("A10DeviceValue", back_populates="associated_key")
 

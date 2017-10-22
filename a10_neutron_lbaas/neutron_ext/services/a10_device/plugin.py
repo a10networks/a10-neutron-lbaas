@@ -195,12 +195,11 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
                   id, fields)
         db_instance = super(A10DevicePlugin, self).get_a10_device(
             context, id, fields=fields)
-        #db_instance.update(super(A10DevicePlugin, self).get_a10_device_values(
-            #context, filters=None, fields=None))
         if db_instance.get("nova_instance_id"):
             return {}
-
-        return db_instance
+        extra_resources = db_instance['extra_resources']
+        del db_instance['extra_resources']
+        return db_instance, extra_resources
 
     def update_a10_device(self, context, id, device):
         LOG.debug(
