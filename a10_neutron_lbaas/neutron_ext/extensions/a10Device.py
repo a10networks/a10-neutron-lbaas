@@ -18,8 +18,10 @@ import six
 from a10_openstack_lib.resources import a10_device
 import a10_openstack_lib.resources.validators as a10_validators
 
+from neutron import policy
 from neutron.api import extensions as nextensions
 from neutron.api.v2 import resource_helper
+from neutron.api.v2.base import Controller
 # neutron.services got moved to neutron_lib
 try:
     # F811 (redefinition of ServicePluginBase) suppressed
@@ -47,6 +49,32 @@ attributes.add_validators(resources.apply_template(
 
 _ALIAS = constants.A10_DEVICE_EXT
 
+
+
+def _item(self, request, id, do_authz=False, field_list=None,
+          parent_id=None):
+    """Retrieves and formats a single element of the requested entity."""
+    kwargs = {'fields': field_list}
+    action = self._plugin_handlers[self.SHOW]
+    if parent_id:
+        kwargs[self._parent_id_name] = parent_id
+    obj_getter = getattr(self._plugin, action)
+    obj, extra_resources = obj_getter(request.context, id, **kwargs)
+
+    for resource in extra_resources:
+        for key in resource.keys():
+            self._attr_info[key] = resource[key]
+
+    # Check authz
+    # FIXME(salvatore-orlando): obj_getter might return references to
+    # other resources. Must check authZ on them too.
+    if do_authz:
+        policy.enforce(request.context,
+                       action,
+                       obj,
+                       pluralized=self._collection)
+    import pdb; pdb.set_trace()
+    return obj
 
 # TODO(rename this to *Extension to avoid config file confusion)
 class A10device(extensions.ExtensionDescriptor):
@@ -76,6 +104,7 @@ class A10device(extensions.ExtensionDescriptor):
     @classmethod
     def get_resources(cls):
         """Returns external resources."""
+        Controller._item = _item
         my_plurals = resource_helper.build_plural_mappings(
             {}, RESOURCE_ATTRIBUTE_MAP)
         attributes.PLURALS.update(my_plurals)
