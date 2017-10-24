@@ -61,19 +61,17 @@ def _item(self, request, id, do_authz=False, field_list=None,
     obj_getter = getattr(self._plugin, action)
     obj, extra_resources = obj_getter(request.context, id, **kwargs)
 
-    for resource in extra_resources:
-        for key in resource.keys():
-            self._attr_info[key] = resource[key]
-
-    # Check authz
-    # FIXME(salvatore-orlando): obj_getter might return references to
-    # other resources. Must check authZ on them too.
+    if extra_resources:
+        for resource in extra_resources:
+            for key in resource.keys():
+                self._attr_info[key] = resource[key]
+    
     if do_authz:
         policy.enforce(request.context,
                        action,
                        obj,
                        pluralized=self._collection)
-    import pdb; pdb.set_trace()
+
     return obj
 
 # TODO(rename this to *Extension to avoid config file confusion)
