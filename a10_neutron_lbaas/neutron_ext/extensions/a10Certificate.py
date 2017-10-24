@@ -19,8 +19,8 @@ import six
 import a10_openstack_lib.resources.a10_certificate as a10_certificate
 import a10_openstack_lib.resources.validators as a10_validators
 
-from neutron.api.v2 import resource_helper
 from neutron.api import extensions as nextensions
+from neutron.api.v2 import resource_helper
 
 # neutron.services got moved to neutron_lib
 try:

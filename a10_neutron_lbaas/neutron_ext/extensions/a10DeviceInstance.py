@@ -49,7 +49,7 @@ _ALIAS = constants.A10_DEVICE_INSTANCE_EXT
 
 
 # TODO(rename this to *Extension to avoid config file confusion)
-class A10DeviceInstance(extensions.ExtensionDescriptor):
+class A10deviceinstance(extensions.ExtensionDescriptor):
 
     nextensions.register_custom_supported_check(
         _ALIAS, lambda: True, plugin_agnostic=True)
@@ -87,7 +87,7 @@ class A10DeviceInstance(extensions.ExtensionDescriptor):
         return resources
 
     def update_attributes_map(self, attributes):
-        super(A10DeviceInstance, self).update_attributes_map(
+        super(A10deviceinstance, self).update_attributes_map(
             attributes,
             extension_attrs_map=RESOURCE_ATTRIBUTE_MAP)
 
