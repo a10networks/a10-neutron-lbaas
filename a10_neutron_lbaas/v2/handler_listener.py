@@ -330,7 +330,8 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # Device-specific defaults have precedence over global
         rv.update(self._get_global_vport_defaults(c))
         rv.update(self._get_device_vport_defaults(c))
-        self._get_name_matches(rv, vport_name, self._get_expressions(c))
+        if vport_name and len(vport_name) > 0:
+            self._get_name_matches(rv, vport_name, self._get_expressions(c))
         return rv
 
     def _get_expressions(self, c):
