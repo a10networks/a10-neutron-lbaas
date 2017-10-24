@@ -17,6 +17,7 @@ import logging
 import acos_client
 
 import a10_config
+import monkey_patch
 import version
 
 import v1.handler_hm
@@ -56,6 +57,9 @@ class A10OpenstackLBBase(object):
 
         LOG.info("A10-neutron-lbaas: pre-initializing, version=%s, acos_client=%s",
                  version.VERSION, acos_client.VERSION)
+
+        monkey = monkey_patch.MonkeyPatch(self.openstack_driver.plugin)
+        self.openstack_driver.plugin.stats = monkey.stats
 
         if provider is not None:
             self._late_init(provider)
