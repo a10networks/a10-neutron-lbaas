@@ -195,3 +195,19 @@ class TestLB(test_base.HandlerTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertIn("virtual_server.create", s)
         self.assertNotIn(str(expected), s)
+
+    def test_create_noname_noexception(self):
+        self.a.config.get_virtual_server_expressions = self._get_expressions_mock
+        expressions = self.a.config.get_virtual_server_expressions()
+
+        expected = expressions.get(self.EXPR_BEGIN, {}).get("json", None) or ""
+        p = 'TCP'
+        m = fake_objs.FakeLoadBalancer()
+        m.name = None
+        handler = self.a.lb
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("virtual_server.create", s)
+        self.assertNotIn(str(expected), s)
+

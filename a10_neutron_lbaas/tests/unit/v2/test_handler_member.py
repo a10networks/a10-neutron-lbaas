@@ -194,3 +194,22 @@ class TestMembers(test_base.HandlerTestBase):
             status=mock.ANY,
             config_defaults={},
             axapi_args={'server': {}})
+
+    def test_create_empty_name_noexception(self):
+        self.a.config.get_member_expressions = self._get_expressions_mock
+
+        admin_state = self.a.last_client.slb.UP
+        m = fake_objs.FakeMember(admin_state_up=admin_state,
+                                         pool=mock.MagicMock())
+
+        m.name = None 
+
+        handler = self.a.member
+        handler.create(None, m)
+
+        self.a.last_client.slb.server.create.assert_called_with(
+            mock.ANY, mock.ANY,
+            status=mock.ANY,
+            config_defaults={},
+            axapi_args={'server': {}})
+

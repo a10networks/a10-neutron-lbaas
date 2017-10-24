@@ -189,3 +189,20 @@ class TestPools(test_base.HandlerTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertIn("service_group.create", s)
         self.assertNotIn(str(expected), s)
+
+    def test_create_empty_name_noexception(self):
+        self.a.config.get_service_group_expressions = self._get_expressions_mock
+        expressions = self.a.config.get_service_group_expressions()
+
+        expected = expressions["beginning"]
+        p = 'TCP'
+        m = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+
+        m.name = None
+        handler = self.a.pool
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("service_group.create", s)
+        self.assertNotIn(str(expected), s)
+

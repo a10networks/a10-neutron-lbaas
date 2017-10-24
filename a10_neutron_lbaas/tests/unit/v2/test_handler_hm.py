@@ -149,3 +149,18 @@ class TestHM(test_base.HandlerTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertIn("hm.create", s)
         self.assertNotIn(str(expected), s)
+
+    def test_create_noname_noexception(self):
+        self.a.config.get_monitor_expressions = self._get_expressions_mock
+        expressions = self.a.config.get_monitor_expressions()
+        expected = expressions.get(self.EXPR_BEGIN, {}).get("json", None) or ""
+
+        m = fake_objs.FakeHM('HTTPS')
+        m.name = None
+        handler = self.a.hm
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("hm.create", s)
+        self.assertNotIn(str(expected), s)
+

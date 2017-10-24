@@ -31,6 +31,9 @@ class HandlerBaseV2(base.HandlerBase):
     """
     def _get_name_matches(self, elem, os_name, redict):
         # for each key in the vport_defaults dictionary
+        if not os_name or len(os_name) < 1:
+            return
+
         for k, v in redict.iteritems():
             # check to see if the regex value matches.
             v = redict[k]
