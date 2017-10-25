@@ -13,7 +13,6 @@
 #    under the License.
 
 import logging
-import re
 
 import acos_client.errors as acos_errors
 
@@ -338,4 +337,3 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         rv = {}
         rv = c.a10_driver.config.get_vport_expressions()
         return rv
-

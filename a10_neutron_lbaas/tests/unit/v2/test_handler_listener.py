@@ -348,7 +348,7 @@ class TestListeners(test_base.HandlerTestBase):
 
     def test_create_vport_expressions_match_beginning(self):
         self._test_create_expressions("securelistener", self.EXPR_BEGIN)
-        
+
     def test_create_vport_expressions_match_end(self):
         self._test_create_expressions("blahweb", self.EXPR_END)
 
@@ -375,9 +375,9 @@ class TestListeners(test_base.HandlerTestBase):
 
     def test_create_vport_expressions_empty(self):
         get_expr_mock = mock.MagicMock()
-        get_expr_mock.return_value = {} 
+        get_expr_mock.return_value = {}
         self.a.config.get_vport_expressions = get_expr_mock
-        expressions = self.a.config.get_vport_expressions()
+
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
@@ -391,12 +391,12 @@ class TestListeners(test_base.HandlerTestBase):
         get_expr_mock = mock.MagicMock()
         get_expr_mock.return_value = {}
         self.a.config.get_vport_expressions = get_expr_mock
-        expressions = self.a.config.get_vport_expressions()
+
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
         m = fake_objs.FakeListener(p, 2222, pool=pool, loadbalancer=lb)
-        m.name = None 
+        m.name = None
         handler = self.a.listener
         handler.create(None, m)
         # This test should just run without raising any exceptions

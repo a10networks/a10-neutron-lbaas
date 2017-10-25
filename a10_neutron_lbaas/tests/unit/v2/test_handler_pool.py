@@ -205,4 +205,3 @@ class TestPools(test_base.HandlerTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertIn("service_group.create", s)
         self.assertNotIn(str(expected), s)
-

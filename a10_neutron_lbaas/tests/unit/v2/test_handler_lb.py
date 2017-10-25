@@ -160,7 +160,7 @@ class TestLB(test_base.HandlerTestBase):
         self.a.config.get_virtual_server_expressions = self._get_expressions_mock
         expressions = expressions or self.a.config.get_virtual_server_expressions()
         expected = expressions.get(pattern, {}).get("json", None) or ""
-        p = 'TCP'
+
         m = fake_objs.FakeLoadBalancer()
         m.name = os_name
         handler = self.a.lb
@@ -186,7 +186,7 @@ class TestLB(test_base.HandlerTestBase):
         self.a.config.get_virtual_server_expressions = self._get_expressions_mock
         expressions = self.a.config.get_virtual_server_expressions()
         expected = expressions.get(self.EXPR_BEGIN, {}).get("json", None) or ""
-        p = 'TCP'
+
         m = fake_objs.FakeLoadBalancer()
         m.name = "mylb"
         handler = self.a.lb
@@ -201,7 +201,7 @@ class TestLB(test_base.HandlerTestBase):
         expressions = self.a.config.get_virtual_server_expressions()
 
         expected = expressions.get(self.EXPR_BEGIN, {}).get("json", None) or ""
-        p = 'TCP'
+
         m = fake_objs.FakeLoadBalancer()
         m.name = None
         handler = self.a.lb
@@ -210,4 +210,3 @@ class TestLB(test_base.HandlerTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertIn("virtual_server.create", s)
         self.assertNotIn(str(expected), s)
-

@@ -200,9 +200,9 @@ class TestMembers(test_base.HandlerTestBase):
 
         admin_state = self.a.last_client.slb.UP
         m = fake_objs.FakeMember(admin_state_up=admin_state,
-                                         pool=mock.MagicMock())
+                                 pool=mock.MagicMock())
 
-        m.name = None 
+        m.name = None
 
         handler = self.a.member
         handler.create(None, m)
@@ -212,4 +212,3 @@ class TestMembers(test_base.HandlerTestBase):
             status=mock.ANY,
             config_defaults={},
             axapi_args={'server': {}})
-

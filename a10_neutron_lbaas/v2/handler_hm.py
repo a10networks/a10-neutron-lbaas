@@ -108,7 +108,6 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
         with a10.A10DeleteContext(self, context, hm) as c:
             self._delete(c, context, hm)
 
-
     def _get_expressions(self, c):
         rv = {}
         rv = c.a10_driver.config.get_monitor_expressions()

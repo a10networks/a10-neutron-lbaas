@@ -9,8 +9,9 @@ mox3
 nose
 nose-exclude
 oslotest
-# flake8 doesn't like pbr 2.0.0 yet
-pbr!=2.1.0,>=2.0.0 # Apache-2.0
+# requirement from neutron p
+pbr!=2.1.0,>=2.0.0
+>>>>>>> now with PEP
 pifpaf
 pymysql
 testresources

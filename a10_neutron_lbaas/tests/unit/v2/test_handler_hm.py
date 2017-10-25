@@ -25,8 +25,9 @@ class TestHM(test_base.HandlerTestBase):
             None, model)
         self.a.last_client.slb.hm.create.assert_called_with(
             'fake-hm-id-001', mon_type, 7, 7, 8,
-            method=method, url=url, expect_code=expect_code,config_defaults=mock.ANY, axapi_args={},
-            )
+            method=method, url=url, expect_code=expect_code,
+            config_defaults=mock.ANY, axapi_args={},
+        )
 
     def assert_create_sets_delay_timeout(self, model, mon_type, method, url, expect_code):
         model.timeout = 10
@@ -163,4 +164,3 @@ class TestHM(test_base.HandlerTestBase):
         s = str(self.a.last_client.mock_calls)
         self.assertIn("hm.create", s)
         self.assertNotIn(str(expected), s)
-

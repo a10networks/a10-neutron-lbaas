@@ -155,7 +155,7 @@ class A10Config(object):
         if self._config.keystone_auth_url is None:
             self._config.keystone_auth_url = self._get_neutron_conf(
                 'keystone_authtoken', 'auth_uri')
-        
+
         # TODO(mdurrant) - There's a way to do this with getattr/setattr
         self._vport_defaults = {}
         if hasattr(self._config, "vport_defaults"):
