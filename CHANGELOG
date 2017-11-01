@@ -1,0 +1,12 @@
+---------------------------
+a10-neutron-lbaas CHANGELOG
+---------------------------
+
+Unfortunately this document was not born at the same time as a10-neutron-lbaas. Changes tracked from 1.6.5 > onward
+
+* 1.6.5
+- Name-based configuration for LB/listener/pool/member/monitor
+- Per-device default configuration for LB/listener/pool/member/monitor
+- Global default configuration for LB/listener/pool/member/monitor
+- Extended stats support
+- Necessary changes for Ocata/Pike/Queens compatibility
