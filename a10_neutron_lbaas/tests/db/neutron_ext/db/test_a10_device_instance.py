@@ -31,9 +31,9 @@ class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
         super(TestA10DeviceInstanceDbMixin, self).setUp()
         self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
         nm = self._nm_patcher.start()
-        nm.get_service_plugins.return_value = {
-            nconstants.LOADBALANCERV2: mock.MagicMock()
-        }
+        # nm.get_service_plugins.return_value = {
+        #    nconstants.LOADBALANCERV2: mock.MagicMock()
+        # }
 
         self._config_cleanup = unit_config.use_config_dir()
 
