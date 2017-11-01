@@ -31,12 +31,13 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
 
         try:
             vip_meta = self.meta(lb, 'virtual_server', {})
-
+            os_name = lb.name
             set_method(
                 self._meta_name(lb),
                 lb.vip_address,
                 status,
                 vrid=c.device_cfg.get('default_virtual_server_vrid'),
+                config_defaults=self._get_config_defaults(c, os_name),
                 axapi_body=vip_meta)
         except acos_errors.Exists:
             pass
@@ -148,3 +149,8 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
     def refresh(self, context, lb):
         LOG.debug("LB Refresh called.")
         # Ensure all elements associated with this LB exist on the device.
+
+    def _get_expressions(self, c):
+        rv = {}
+        rv = c.a10_driver.config.get_virtual_server_expressions()
+        return rv

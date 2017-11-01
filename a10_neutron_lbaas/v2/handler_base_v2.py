@@ -15,9 +15,10 @@
 import a10_neutron_lbaas.handler_base as base
 import neutron_ops
 
+import re
+
 
 class HandlerBaseV2(base.HandlerBase):
-
     def __init__(self, a10_driver, openstack_manager, neutron=None):
         super(HandlerBaseV2, self).__init__(a10_driver)
         self.openstack_manager = openstack_manager
@@ -25,3 +26,31 @@ class HandlerBaseV2(base.HandlerBase):
             self.neutron = neutron
         else:
             self.neutron = neutron_ops.NeutronOpsV2(self)
+
+    """
+    Pass in an element, it's openstack name, and a dictionary of matches.
+    """
+    def _get_name_matches(self, elem, os_name, redict):
+        # for each key in the vport_defaults dictionary
+        if not os_name or len(os_name) < 1:
+            return
+
+        for k, v in redict.iteritems():
+            # check to see if the regex value matches.
+            v = redict[k]
+
+            regex_str = v["regex"]
+            json_merge = v["json"]
+            regex = re.compile(regex_str)
+            matched = regex.search(os_name)
+
+            if matched:
+                # If so, take those dictionary values and apply them to the object
+                elem.update(json_merge)
+                break
+
+    def _get_config_defaults(self, c, os_name):
+        rv = {}
+        # Device-specific defaults have precedence over global
+        self._get_name_matches(rv, os_name, self._get_expressions(c))
+        return rv

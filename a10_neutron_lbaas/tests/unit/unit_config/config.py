@@ -211,3 +211,50 @@ providers = {
         }
     }
 }
+
+
+# Name-based dynamic configuration
+vport_expressions = {
+    "descriptor": {
+        "regex": "^ABC123",
+        "json": {
+            "setting1": True
+        }
+    }
+}
+
+virtual_server_expressions = {
+    "descriptor": {
+        "regex": "^ABC123",
+        "json": {
+            "setting1": True
+        }
+    }
+}
+
+service_group_expressions = {
+    "descriptor": {
+        "regex": "^ABC123",
+        "json": {
+            "setting1": True
+        }
+    }
+}
+
+member_expressions = {
+    "descriptor": {
+        "regex": "^ABC123",
+        "json": {
+            "setting1": True
+        }
+    }
+}
+
+monitor_expressions = {
+    "descriptor": {
+        "regex": "^ABC123",
+        "json": {
+            "setting1": True
+        }
+    }
+}

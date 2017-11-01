@@ -29,10 +29,12 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
     def _set(self, set_method, c, context, pool, old_pool=None):
         self._update_session_persistence(old_pool, pool, c, context)
         args = {'service_group': self.meta(pool, 'service_group', {})}
+        os_name = pool.name
         set_method(
             self._meta_name(pool),
             protocol=openstack_mappings.service_group_protocol(c, pool.protocol),
             lb_method=openstack_mappings.service_group_lb_method(c, pool.lb_algorithm),
+            config_defaults=self._get_config_defaults(c, os_name),
             axapi_args=args)
 
         # session persistence might need a vport update
@@ -125,3 +127,8 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
                 result["members"] = stats.get("members", {})
 
         return result
+
+    def _get_expressions(self, c):
+        rv = {}
+        rv = c.a10_driver.config.get_service_group_expressions()
+        return rv

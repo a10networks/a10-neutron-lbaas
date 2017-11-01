@@ -38,7 +38,6 @@ class DbTestBase(test_case.TestCase):
         initial_engine = sqlalchemy.create_engine(str(sa_url))
         initial_connection = initial_engine.connect()
         self._undo.append(initial_connection.close)
-
         initial_connection.execute("CREATE DATABASE a10_test_db")
         self._undo.append(lambda: initial_engine.execute("DROP DATABASE a10_test_db"))
 

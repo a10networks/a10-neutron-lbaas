@@ -24,7 +24,7 @@ from a10_neutron_lbaas import constants
 LOG = logging.getLogger(__name__)
 
 
-class TestListeners(test_base.UnitTestBase):
+class TestListeners(test_base.HandlerTestBase):
 
     def test_create_no_lb(self):
         m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
@@ -272,3 +272,131 @@ class TestListeners(test_base.UnitTestBase):
 
     def test_create_source_nat_pool_negative(self):
         self._test_create_source_nat_pool(None)
+
+    def _set_device_config(self, key, value):
+        for k, v in self.a.config.devices.items():
+            v[key] = value
+
+    def _get_vport_config(self):
+        return {
+            "gslb-enable": 1
+        }
+
+    def test_create_vport_defaults_device(self):
+        expected = self._get_vport_config()
+        self._set_device_config("vport_defaults", expected)
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+
+        self.a.listener.create(None, m)
+        self.print_mocks()
+
+        s = str(self.a.last_client.mock_calls)
+
+        self.assertIn("vport.create", s)
+        self.assertIn(str(expected), s)
+
+    def test_create_vport_defaults_global(self):
+        expected = self.a.config.get_vport_defaults()
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        handler = self.a.listener
+        handler.create(None, m)
+        self.print_mocks()
+
+        s = str(self.a.last_client.mock_calls)
+
+        self.assertIn("vport.create", s)
+        self.assertIn(str(expected), s)
+
+    def _test_create_expressions(self, os_name, pattern, expressions=None):
+        self.a.config.get_vport_expressions = self._get_expressions_mock
+        expressions = expressions or self.a.config.get_vport_expressions()
+        expected = expressions.get(pattern, {}).get("json", {})
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        m.name = os_name
+        handler = self.a.listener
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn(str(expected), s)
+
+    def test_create_vport_expressions_none(self):
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        handler = self.a.listener
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+
+    def test_create_vport_expressions_match_beginning(self):
+        self._test_create_expressions("securelistener", self.EXPR_BEGIN)
+
+    def test_create_vport_expressions_match_end(self):
+        self._test_create_expressions("blahweb", self.EXPR_END)
+
+    def test_create_vport_expressions_match_charclass(self):
+        self._test_create_expressions("listenerwwwlis", self.EXPR_CLASS)
+
+    def test_create_vport_expressions_nomatch(self):
+        self.a.config.get_vport_expressions = self._get_expressions_mock
+        expressions = self.a.config.get_vport_expressions()
+
+        expected = expressions[self.EXPR_BEGIN].get("json", {})
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        m.name = "insecurelistener"
+        handler = self.a.listener
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertNotIn(str(expected), s)
+
+    def test_create_vport_expressions_empty(self):
+        get_expr_mock = mock.MagicMock()
+        get_expr_mock.return_value = {}
+        self.a.config.get_vport_expressions = get_expr_mock
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool, loadbalancer=lb)
+        m.name = "insecurelistener"
+        handler = self.a.listener
+        handler.create(None, m)
+        # This test should just run without raising any exceptions
+
+    def test_create_vport_expressions_noname(self):
+        get_expr_mock = mock.MagicMock()
+        get_expr_mock.return_value = {}
+        self.a.config.get_vport_expressions = get_expr_mock
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool, loadbalancer=lb)
+        m.name = None
+        handler = self.a.listener
+        handler.create(None, m)
+        # This test should just run without raising any exceptions

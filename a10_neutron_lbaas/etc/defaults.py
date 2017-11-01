@@ -25,7 +25,8 @@ GLOBAL_DEFAULTS = {
     "keystone_auth_url": None,
     "keystone_version": 2,
     "plumbing_hooks_class": a10_neutron_lbaas.plumbing_hooks.PlumbingHooks,
-    "nova_api_version": "2.1"
+    "nova_api_version": "2.1",
+    "vport_defaults": {},
 }
 
 DEVICE_REQUIRED_FIELDS = [
@@ -47,7 +48,7 @@ DEVICE_OPTIONAL_DEFAULTS = {
     "ipinip": False,
     "ha_sync_list": [],
     "write_memory": True,
-
+    "vport_defaults": {},
     # "max_instance": 5000,
     # "method": "hash",
 

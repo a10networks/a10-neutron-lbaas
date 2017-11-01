@@ -30,7 +30,7 @@ def return_two(*args):
     return 2
 
 
-class TestMembers(test_base.UnitTestBase):
+class TestMembers(test_base.HandlerTestBase):
 
     def set_count_1(self):
         self.a.member.neutron.member_count = return_one
@@ -72,15 +72,18 @@ class TestMembers(test_base.UnitTestBase):
             status = self.a.last_client.slb.UP
         else:
             status = self.a.last_client.slb.DOWN
+        # TODO(mdurrant) - can we do this a better way without an if?
         if conn_limit < 1 or conn_limit > 8000000:
             self.a.last_client.slb.server.create.assert_called_with(
                 name, ip,
                 status=status,
+                config_defaults=mock.ANY,
                 axapi_args={'server': {}})
         else:
             self.a.last_client.slb.server.create.assert_called_with(
                 name, ip,
                 status=status,
+                config_defaults=mock.ANY,
                 axapi_args={'server': {'conn-limit': conn_limit}})
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             m.pool.id, name, m.protocol_port, status=status,
@@ -138,3 +141,74 @@ class TestMembers(test_base.UnitTestBase):
 
         self.a.last_client.slb.service_group.member.delete.assert_called_with(
             m.pool_id, name, m.protocol_port)
+
+    def _test_create_expressions(self, os_name, pattern, expressions=None):
+        self.a.config.get_member_expressions = self._get_expressions_mock
+        expressions = expressions or self.a.config.get_member_expressions()
+        expected = expressions.get(pattern, {}).get("json", {})
+        admin_state = self.a.last_client.slb.UP
+        m = fake_objs.FakeMember(admin_state_up=admin_state,
+                                 pool=mock.MagicMock())
+
+        m.name = os_name
+
+        handler = self.a.member
+        handler.create(None, m)
+
+        # s = str(self.a.last_client.mock_calls)
+        self.a.last_client.slb.server.create.assert_called_with(
+            mock.ANY,
+            mock.ANY,
+            status=mock.ANY,
+            config_defaults=expected,
+            axapi_args={'server': {}})
+        # self.assertIn("member.create", s)
+        # self.assertIn(str(expected), s)
+
+    def test_create_expressions_none(self):
+        self._test_create_expressions("server", None, {})
+
+    def test_create_expressions_match_beginning(self):
+        self._test_create_expressions("secureserver", self.EXPR_BEGIN)
+
+    def test_create_expressions_match_end(self):
+        self._test_create_expressions("serverweb", self.EXPR_END)
+
+    def test_create_expressions_match_charclass(self):
+        self._test_create_expressions("serverwwserver", self.EXPR_CLASS)
+
+    def test_create_expressions_nomatch(self):
+        self.a.config.get_member_expressions = self._get_expressions_mock
+
+        admin_state = self.a.last_client.slb.UP
+        m = fake_objs.FakeMember(admin_state_up=admin_state,
+                                 pool=mock.MagicMock())
+
+        m.name = "myserver"
+
+        handler = self.a.member
+        handler.create(None, m)
+
+        self.a.last_client.slb.server.create.assert_called_with(
+            mock.ANY, mock.ANY,
+            status=mock.ANY,
+            config_defaults={},
+            axapi_args={'server': {}})
+
+    def test_create_empty_name_noexception(self):
+        self.a.config.get_member_expressions = self._get_expressions_mock
+
+        admin_state = self.a.last_client.slb.UP
+        m = fake_objs.FakeMember(admin_state_up=admin_state,
+                                 pool=mock.MagicMock())
+
+        m.name = None
+
+        handler = self.a.member
+        handler.create(None, m)
+
+        self.a.last_client.slb.server.create.assert_called_with(
+            mock.ANY, mock.ANY,
+            status=mock.ANY,
+            config_defaults={},
+            axapi_args={'server': {}})

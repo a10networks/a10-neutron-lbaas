@@ -21,6 +21,7 @@ class FakeModel(object):
         self.id = kwargs.get('id', 'fake-id-001')
         self.tenant_id = kwargs.get('tenant_id', 'get-off-my-lawn')
         self.root_loadbalancer = None
+        self.name = kwargs.get("name", "fake-name")
 
 
 class FakePort(FakeModel):
@@ -164,6 +165,7 @@ class FakeListener(FakeModel):
                  loadbalancer=None, container_id=None, containers=None):
         super(FakeListener, self).__init__()
         self.id = 'fake-listen-id-001'
+        self.name = 'openstackname'
         self.protocol = protocol
         self.protocol_port = port
         self.admin_state_up = admin_state_up

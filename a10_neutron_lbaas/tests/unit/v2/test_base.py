@@ -24,3 +24,34 @@ class UnitTestBase(test_base.UnitTestBase):
     def print_mocks(self):
         super(UnitTestBase, self).print_mocks()
         print("NEUTRON ", self.a.neutron.mock_calls)
+
+
+class HandlerTestBase(UnitTestBase):
+    def __init__(self, *args):
+        super(HandlerTestBase, self).__init__(*args)
+        self.EXPR_BEGIN = "beginning"
+        self.EXPR_END = "end"
+        self.EXPR_CLASS = "charclass"
+
+    def _get_expressions_mock(self):
+        return {
+            self.EXPR_BEGIN: {
+                "regex": "^secure",
+                "json": {
+                    "template-virtual-port": "default",
+                    "no-logging": 1,
+                },
+            },
+            self.EXPR_END: {
+                "regex": ".*?web$",
+                "json": {
+                    "scaleout-bucket-count": 32
+                },
+            },
+            self.EXPR_CLASS: {
+                "regex": "[w]{2,3}",
+                "json": {
+                    "scaleout-bucket-count": 64
+                }
+            }
+        }

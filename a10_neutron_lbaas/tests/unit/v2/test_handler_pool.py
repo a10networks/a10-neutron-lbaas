@@ -20,7 +20,7 @@ import test_base
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 
 
-class TestPools(test_base.UnitTestBase):
+class TestPools(test_base.HandlerTestBase):
     def test_sanity(self):
         pass
 
@@ -95,6 +95,7 @@ class TestPools(test_base.UnitTestBase):
             pool.id,
             axapi_args={"service_group": {}},
             lb_method=mock.ANY,
+            config_defaults=mock.ANY,
             protocol=mock.ANY)
 
     def test_delete(self):
@@ -146,3 +147,61 @@ class TestPools(test_base.UnitTestBase):
     def test_stats_returns_members(self):
         pool, actual = self._test_stats()
         self.assertIn("members", actual)
+
+    def _test_create_expressions(self, os_name, pattern, expressions=None):
+        self.a.config.get_service_group_expressions = self._get_expressions_mock
+        expressions = expressions or self.a.config.get_service_group_expressions()
+        expected = expressions.get(pattern, {}).get("json", None) or ""
+        p = 'TCP'
+        m = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m.name = os_name
+        handler = self.a.pool
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("service_group.create", s)
+        self.assertIn(str(expected), s)
+
+    def test_create_expressions_none(self):
+        self._test_create_expressions("mypool", None, {})
+
+    def test_create_expressions_match_beginning(self):
+        self._test_create_expressions("securepool", self.EXPR_BEGIN)
+
+    def test_create_expressions_match_end(self):
+        self._test_create_expressions("poolweb", self.EXPR_END)
+
+    def test_create_expressions_match_charclass(self):
+        self._test_create_expressions("poolwwpool", self.EXPR_CLASS)
+
+    def test_create_expressions_nomatch(self):
+        self.a.config.get_service_group_expressions = self._get_expressions_mock
+        expressions = self.a.config.get_service_group_expressions()
+
+        expected = expressions["beginning"]
+        p = 'TCP'
+        m = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+
+        m.name = "thepool"
+        handler = self.a.pool
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("service_group.create", s)
+        self.assertNotIn(str(expected), s)
+
+    def test_create_empty_name_noexception(self):
+        self.a.config.get_service_group_expressions = self._get_expressions_mock
+        expressions = self.a.config.get_service_group_expressions()
+
+        expected = expressions["beginning"]
+        p = 'TCP'
+        m = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+
+        m.name = None
+        handler = self.a.pool
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("service_group.create", s)
+        self.assertNotIn(str(expected), s)
