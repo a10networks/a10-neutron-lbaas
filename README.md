@@ -308,6 +308,12 @@ Login to the GUI on your Thunder or AX device, and validate which configuration 
 
 _Repeat this for all configuration steps, then delete all resources if ADPs are configured. They should be deleted when the tenant has no more resources configured._
 
+## Default and Name-based configuration
+See [name-based config example](https://github.com/a10networks/a10-neutron-lbaas/tree/master/a10_neutron_lbaas/etc) for details.
+
+## Changes
+See [CHANGELOG](https://github.com/a10networks/a10-neutron-lbaas/tree/master/CHANGELOG) for changes made. NOTE: We didn't have a changelog until 1.6.5
+
 ## A10 Community
 
 Feel free to fork, submit pull requests, or join us on freenode IRC, channel #a10-openstack. Serious support escalations and formal feature requests must
