@@ -18,6 +18,8 @@ import six
 from a10_openstack_lib.resources import a10_device
 import a10_openstack_lib.resources.validators as a10_validators
 
+from sqlalchemy.orm import exc
+
 from neutron import policy
 from neutron.api import extensions as nextensions
 from neutron.api.v2 import resource_helper
@@ -59,7 +61,9 @@ def _item(self, request, id, do_authz=False, field_list=None,
     if parent_id:
         kwargs[self._parent_id_name] = parent_id
     obj_getter = getattr(self._plugin, action)
-    obj, extra_resources = obj_getter(request.context, id, **kwargs)
+    net_obj = obj_getter(request.context, id, **kwargs)
+
+    obj, extra_resources = net_obj if type(net_obj) == type(()) else (net_obj, None) 
 
     if extra_resources:
         for resource in extra_resources:
@@ -125,7 +129,7 @@ class A10device(extensions.ExtensionDescriptor):
             return {}
 
 
-class A10DeviceNotFoundError(exceptions.NotFound):
+class A10DeviceNotFoundError(exc.NoResultFound):
 
     def __init__(self, a10_device_id):
         self.msg = _("A10 Device {} could not be found.")

@@ -43,7 +43,7 @@ if [ -n "$ao" ]; then
     ae="${ae}:${ao}/neutron_ext/extensions"
 fi
 
-sp="a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin"
+sp="a10_neutron_lbaas.neutron_ext.services.a10_device.plugin.A10DevicePlugin"
 if [ -n "$ao" ]; then
     sp="${sp},a10_openstack.neutron_ext.services.a10_scaling_group.plugin.A10ScalingGroupPlugin"
 fi
@@ -122,24 +122,24 @@ EOF
 elif [ "$1" = "vthunder-info" ]; then
     cat - <<EOF
 `boilerplate $2 $3 $4`
-print(im._device_instance(cfg.get_vthunder_config()))
+print(im._device_vthunder(cfg.get_vthunder_config()))
 EOF
 
     python <<EOF
 `boilerplate $2 $3 $4`
-print(im._device_instance(cfg.get_vthunder_config()))
+print(im._device_vthunder(cfg.get_vthunder_config()))
 EOF
 
 elif [ "$1" = "vthunder-boot" ]; then
     python <<EOF
 `boilerplate $2 $3 $4`
-print(im.create_device_instance(cfg.get_vthunder_config()))
+print(im.create_vthunder(cfg.get_vthunder_config()))
 EOF
 
 elif [ "$1" = "vthunder-destroy" ]; then
     python <<EOF
 $boilerplate
-print(im.delete_instance("$5"))
+print(im.delete_vthunder("$5"))
 EOF
 
 fi

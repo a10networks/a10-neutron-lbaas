@@ -48,10 +48,11 @@ class A10Device(model_base.A10BaseMixin, model_base.A10Base):
 
     config = orm.relationship("A10DeviceValue", back_populates="associated_device")
 
-class A10DeviceKey(model_base.A10Base, model_base.A10BaseMixin):
+class A10DeviceKey(model_base.A10Base):
 
     __tablename__ = 'a10_device_key'
 
+    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     name = sa.Column(sa.String(255), nullable=False, unique=True)
     description = sa.Column(sa.String(1024), nullable=False)
     associated_value = orm.relationship("A10DeviceValue", back_populates="associated_key")

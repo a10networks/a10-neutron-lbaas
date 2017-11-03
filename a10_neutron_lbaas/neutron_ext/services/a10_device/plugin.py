@@ -1,4 +1,4 @@
-# Copyright 2015,  A10 Networks
+# Copyright 2015-2017,  A10 Networks
 
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -120,14 +120,17 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_record = {}
         db_record.update(_convert(vthunder_config, _VTHUNDER_CONFIG, _DB))
         db_record.update(_convert(dev_instance, _API, _DB))
-        db_record.update(_convert(instance, _INSTANCE, _DB))
+        db_record.update(_convert(instance, _VTHUNDER, _DB))
 
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
         db_instance = super(A10DevicePlugin, self).create_a10_device(
-            context, {resources.VTHUNDER: db_record})
+            context, {resources.VTHUNDER: db_record}, resources.VTHUNDER)
 
-        return _make_api_dict(db_instance)
+        vthunder_dict = {'extra_resources': db_instance['extra_resources']}
+        vthunder_dict.update(_make_api_dict(db_instance))
+
+        return vthunder_dict 
 
     def get_a10_vthunder(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_vthunder(): id=%s, fields=%s",
@@ -136,9 +139,12 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
             context, id, fields=fields)
 
         if not db_instance.get("nova_instance_id"):
-            return {}, None
+            return {}
 
-        return _make_api_dict(db_instance), None
+        extra_resources = db_instance['extra_resources']
+        del db_instance['extra_resources']
+
+        return _make_api_dict(db_instance), extra_resources
 
     def update_a10_vthunder(self, context, id, vthunder):
         LOG.debug(
@@ -146,10 +152,8 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
             id,
             vthunder)
 
-        db_instance = super(A10DevicePlugin, self).update_vthunder(
-            context,
-            id,
-            vthunder)
+        db_instance = super(A10DevicePlugin, self).update_a10_device(
+            context, id, vthunder, 'vthunder')
 
         return _make_api_dict(db_instance)
 
@@ -196,7 +200,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_instance = super(A10DevicePlugin, self).get_a10_device(
             context, id, fields=fields)
         if db_instance.get("nova_instance_id"):
-            return {}, None
+            return {}
 
         extra_resources = db_instance['extra_resources']
         del db_instance['extra_resources']
@@ -207,7 +211,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         LOG.debug(
             "A10DevicePlugin.update_a10_device(): id=%s, device=%s",
             id,
-            vthunder)
+            device)
 
         return super(A10DevicePlugin, self).update_a10_device(
             context, id, device)
@@ -239,13 +243,13 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_instance = super(A10DevicePlugin, self).get_a10_device_key(
             context, id, fields=fields)
 
-        return db_instance, None
+        return db_instance
 
     def update_a10_device_key(self, context, id, key):
         LOG.debug(
             "A10DevicePlugin.update_a10_device_key(): id=%s, device=%s",
             id,
-            vthunder)
+            key)
 
         return super(A10DevicePlugin, self).update_a10_device_key(
             context, id, key)
@@ -276,7 +280,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_instance = super(A10DevicePlugin, self).get_a10_device_value(
             context, id, fields=fields)
 
-        return db_instance, None
+        return db_instance
 
     def update_a10_device_value(self, context, id, value):
         LOG.debug(
