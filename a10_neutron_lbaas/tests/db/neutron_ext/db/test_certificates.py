@@ -107,8 +107,6 @@ CERTIFICATE_EXT = "a10-certificate"
 
 #     def test_create_certificate(self):
 #         expected = {CERTIFICATE: self._build_test_certificate(_tenant_id)}
-#         import pdb
-#         pdb.set_trace()
 #         # self.plugin.create_a10_certificate = mock.Mock(return_value=expected[CERTIFICATE])
 
 #         self.api.post(_get_path(CERTIFICATES, fmt=self.fmt), self.serialize(expected),
