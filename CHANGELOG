@@ -3,7 +3,8 @@ a10-neutron-lbaas CHANGELOG
 ---------------------------
 
 Unfortunately this document was not born at the same time as a10-neutron-lbaas. Changes tracked from 1.6.5 > onward
-* 1.6.6
+
+* 1.6.7
 - Pinned acos-client dependency to v1.4.2
 
 * 1.6.5
