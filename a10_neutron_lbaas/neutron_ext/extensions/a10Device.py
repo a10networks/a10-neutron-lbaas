@@ -18,6 +18,8 @@ import six
 from a10_openstack_lib.resources import a10_device
 import a10_openstack_lib.resources.validators as a10_validators
 
+from sqlalchemy.orm import exc
+
 from neutron import policy
 from neutron.api import extensions as nextensions
 from neutron.api.v2 import resource_helper
@@ -125,7 +127,7 @@ class A10device(extensions.ExtensionDescriptor):
             return {}
 
 
-class A10DeviceNotFoundError(exceptions.NotFound):
+class A10DeviceNotFoundError(exc.NoResultFound):
 
     def __init__(self, a10_device_id):
         self.msg = _("A10 Device {} could not be found.")
@@ -137,7 +139,7 @@ class A10DeviceInUseError(exceptions.InUse):
     def __init__(self, a10_device_id):
         self.message = _("A10 Device is in use and cannot be deleted.")
         self.msg = self.message
-        super(A10DeviceInUseError, self).__init__()
+        super(A10DeviceInUseError, self).__iinit__()
 
 
 @six.add_metaclass(abc.ABCMeta)
