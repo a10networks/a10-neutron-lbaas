@@ -17,18 +17,24 @@ import mock
 from a10_openstack_lib.resources import a10_device as a10_device_resources
 
 import a10_neutron_lbaas.tests.db.test_base as test_base
+import a10_neutron_lbaas.tests.db.fake_obj as fake_obj
 import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 
 from a10_neutron_lbaas.neutron_ext.common import constants
-from a10_neutron_lbaas.neutron_ext.db import a10_device as a10_device
+from a10_neutron_lbaas.neutron_ext.db import a10_device
 from a10_neutron_lbaas.neutron_ext.extensions import a10Device
 from neutron.plugins.common import constants as nconstants
 
 
-class TestA10DeviceDbMixin(test_base.UnitTestBase):
+class TestA10DevicePluginBase(test_base.UnitTestBase):
+    """
+    The abstract class cannot be instantiated directly, therefore, it's
+    non-abstract methods must be teseted via a subclass. In this case,
+    A10DeviceDbMixin is used for testing purposes.
+    """
 
     def setUp(self):
-        super(TestA10DeviceDbMixin, self).setUp()
+        super(TestA10DevicePluginBase, self).setUp()
         self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
         nm = self._nm_patcher.start()
         nm.get_service_plugins.return_value = {
@@ -36,224 +42,170 @@ class TestA10DeviceDbMixin(test_base.UnitTestBase):
         }
 
         self._config_cleanup = unit_config.use_config_dir()
-
-        self.plugin = a10_device.A10DeviceDbMixin()
+        self.plugin_base = a10_device.A10DeviceDbMixin()
 
     def tearDown(self):
         self._config_cleanup()
-
-        super(TestA10DeviceDbMixin, self).tearDown()
+        super(TestA10DevicePluginBase, self).tearDown()
 
     def context(self):
         session = self.open_session()
-        context = mock.Mock(session=session, tenant_id='fake-tenant-id')
+        context = mock.MagicMock(session=session, tenant_id='fake-tenant-id')
         return context
 
-    def envelope_vthunder(self, body):
-        return {a10_device_resources.VTHUNDERS: body}
-
-    def envelope_device(self, body):
-        return {a10_device_resources.DEVICES: body}
-
-    def envelope_device_key(self, body):
-        return {a10_device_resources.DEVICE_KEYS: body}
-
-    def envelope_device_value(self, body):
-        return {a10_device_resources.DEVICE_VALUES: body}
-
-class TestA10DeviceDb(TestA10DeviceDbMixin):
-
-    def setUp(self):
-        super(TestA10DeviceDb, self).setUp()
-
-    def tearDown(self):
-        super(TestA10DeviceDb, self).tearDown()
-
     def test_get_plugin_name(self):
-        self.assertIsNot(self.plugin.get_plugin_name(), None)
+        self.assertIsNot(self.plugin_base.get_plugin_name(), None)
 
     def test_get_plugin_description(self):
-        self.assertIsNot(self.plugin.get_plugin_description(), None)
+        self.assertIsNot(self.plugin_base.get_plugin_description(), None)
 
     def test_get_plugin_type(self):
-        self.assertEqual(self.plugin.get_plugin_type(), constants.A10_DEVICE)
+        self.assertEqual(self.plugin_base.get_plugin_type(), constants.A10_DEVICE)
+
+    def envelope_device(self, body):
+        return {a10_device_resources.DEVICE: body}
+
+    def envelope_device_key(self, body):
+        return {a10_device_resources.DEVICE_KEY: body}
+
+    def envelope_device_value(self, body):
+        return {a10_device_resources.DEVICE_VALUE: body}
+
+class TestA10DeviceDbMixin(TestA10DevicePluginBase):
+
+    def setUp(self):
+        super(TestA10DeviceDbMixin, self).setUp()
+        self.db_extension = self.plugin_base
+
+    def tearDown(self):
+        super(TestA10DeviceDbMixin, self).tearDown()
+
+    def fake_vthunder(self):
+        return self.fake_device().update({'nova_instance_id':  'fake-instance-id'})
 
     def fake_device(self):
-        return {
-            'name': 'fake-name',
-            'description': 'fake-description',
-            'host': 'fake-host',
-            'api_version': 'fake-version',
-            'username': 'fake-username',
-            'password': 'fake-password',
-            'autosnat': False,
-            'default_virtual_server_vrid': None,
-            'ipinip': False,
-            'use_float': False,
-            'v_method': 'LSI',
-            'shared_partition': 'shared',
-            'write_memory': False,
-            'nova_instance_id': 'fake-instance-id',
-            'project_id': 'fake-tenant-id',
-            'protocol': 'https',
-            'port': 442
-        }
+        fake_device = fake_obj.FakeA10Device()
+        return fake_device
 
-    def fake_deviceinstance_options(self):
+    def fake_device_options(self):
         return {
             'protocol': 'http',
             'port': 12345
-        }
+        }    
 
-    def test_a10_device_create(self):
-        instance = self.fake_device()
+    def test_make_device_dict(self):
+        device = self.fake_device()
+        device.id = 'new-id'
+        device.tenant_id = 'new-tenant-id'
+
+        result = self.db_extension._make_a10_device_dict(device)
+
+        del device.config
+        device.project_id = 'new-tenant-id'
+        device.extra_resources = []
+        self.assertEqual(result, device.__dict__)
+
+    def test_make_device_dict_fields(self):
+        pass
+
+    def test_create_a10_device(self):
+        device = self.fake_device()
         context = self.context()
-        result = self.plugin.create_a10_device(context, self.envelope_device(instance))
+        self.db_extension._make_device_dict = mock.Mock(return_value=device.__dict__)
+        result = self.db_extension.create_a10_device(context, self.envelope_device(device.__dict__))
         context.session.commit()
         self.assertIsNot(result['id'], None)
 
         expected = {}
-        expected.update(instance)
+        expected.update(device.__dict__)
         expected.update(
             {
                 'id': result['id'],
                 'tenant_id': context.tenant_id,
-                'project_id': context.tenant_id
-
+                'project_id': context.tenant_id,
+                'extra_resources': []
             })
+        del expected['config']
         self.assertEqual(expected, result)
 
-    def test_create_a10_device_options(self):
-        instance = self.fake_device()
-        instance.update(self.fake_device_options())
+    def test_get_a10_device(self):
+        device = self.fake_device()
+        create_context = self.context()
+        self.db_extension._make_device_dict = mock.Mock(return_value=device.__dict__)
+        create_result = self.db_extension.create_a10_device(create_context, self.envelope_device(device.__dict__))
+        create_context.session.commit()
         context = self.context()
-        result = self.plugin.create_a10_device(context, self.envelope(instance))
-        context.session.commit()
-        self.assertIsNot(result['id'], None)
-        expected = instance.copy()
-        expected.update(
-            {
-                'id': result['id'],
-                'tenant_id': context.tenant_id,
-                'project_id': context.tenant_id
-            })
 
-        self.assertEqual(expected, result)
+        result = self.db_extension.get_a10_device(context, create_result['id'])
+        self.assertEqual(create_result, result)
 
-    def test_create_a10_device_default_port(self):
-        instance = self.fake_device()
-        instance['port'] = 80
-        instance['protocol'] = 'http'
+    def test_get_a10_device_extra(self):
+        device = self.fake_device()
+        device.config = [self.fake_device_value()]
+        create_context = self.context()
+        self.db_extension._make_device_dict = mock.Mock(return_value=device.__dict__)
+        create_result = self.db_extension.create_a10_device(create_context, self.envelope_device(device.__dict__))
+        create_context.session.commit()
         context = self.context()
-        result = self.plugin.create_a10_device(context, self.envelope_device(instance))
-        context.session.commit()
-        self.assertIsNot(result['id'], None)
-        self.assertEqual(80, result['port'])
 
-    def teat_update_a10_device(self):
-        pass
+        result = self.db_extension.get_a10_device(context, create_result['id'])
+        self.assertEqual(create_result, result)
+
+    def test_get_a10_devices(self):
+        device = self.fake_device()
+        create_context = self.context()
+        self.db_extension._make_device_dict = mock.Mock(return_value=device.__dict__)
+        create_result = self.db_extension.create_a10_device(create_context, self.envelope_device(device.__dict__))
+        create_context.session.commit()
+        context = self.context()
+
+        result = self.db_extension.get_a10_device(context, create_result['id'])
+        self.assertEqual([create_result], result)
 
     def test_delete_a10_device(self):
         pass
 
-    def test_get_a10_device(self):
-        instance = self.fake_device()
-        create_context = self.context()
-        create_result = self.plugin.create_a10_device(create_context,
-                                                      self.envelope_develop(instance))
-        create_context.session.commit()
-        context = self.context()
-        result = self.plugin.get_a10_device(context, create_result['id'])
+    def test_update_a10_device(self):
+        pass
 
-        self.assertEqual(create_result, result)
+    def fake_device_key(self):
+        return fake_obj.FakeA10DeviceKey()
 
-    def test_get_a10_device_not_found(self):
-        context = self.context()
-        self.assertRaises(
-            a10Device.A10DeviceNotFoundError,
-            self.plugin.get_a10_device,
-            context,
-            'fake-deviceinstance-id')
-
-    def test_get_a10_devices(self):
-        instance = self.fake_device()
-        create_context = self.context()
-        create_result = self.plugin.create_a10_device(create_context,
-                                                      self.envelope_device(instance))
-        create_context.session.commit()
-
-        context = self.context()
-        result = self.plugin.get_a10_devices(context)
-
-        self.assertEqual([create_result], result)
-
-    def fake_key(self):
-        return {
-            'name': 'fake-name',
-            'description': 'fake-description',
-            'project_id': 'fake-tenant-id',
-        }
+    def test_make_device_key_dict(self):
+        pass
 
     def test_create_a10_device_key(self):
-        instance = self.fake_device()
-        context = self.context()
-        result = self.plugin.create_a10_device(context, self.envelope_develop_key(instance))
-        context.session.commit()
-        self.assertIsNot(result['id'], None)
+        pass
 
-        expected = {}
-        expected.update(instance)
-        expected.update(
-            {
-                'id': result['id'],
-                'tenant_id': context.tenant_id,
-                'project_id': context.tenant_id
+    def test_get_a10_device_key(self):
+        pass
 
-            })
-        self.assertEqual(expected, result)
-
-    def test_create_a10_device_options(self):
-        instance = self.fake_device()
-        instance.update(self.fake_device_options())
-        context = self.context()
-        result = self.plugin.create_a10_device(context, self.envelope_develop_key(instance))
-        context.session.commit()
-        self.assertIsNot(result['id'], None)
-        expected = instance.copy()
-        expected.update(
-            {
-                'id': result['id'],
-                'tenant_id': context.tenant_id,
-                'project_id': context.tenant_id
-            })
-
-        self.assertEqual(expected, result)
-
-    def test_update_a10_device_key(self):
+    def test_get_a10_device_keys(self):
         pass
 
     def test_delete_a10_device_key(self):
         pass
 
-    def test_get_a10_device_key(self):
-        instance = self.fake_key()
-        create_context = self.context()
-        create_result = self.plugin.create_a10_device_key(create_context,
-                                                          self.envelope_develop_key(instance))
-        create_context.session.commit()
-        context = self.context()
-        result = self.plugin.get_a10_device_key(context, create_result['id'])
+    def test_update_a10_device_key(self):
+        pass
 
-        self.assertEqual(create_result, result)
+    def fake_device_value(self):
+        return fake_obj.FakeA10DeviceValue()
 
-    def test_get_a10_device_keys(self):
-        instance = self.fake_key()
-        create_context = self.context()
-        create_result = self.plugin.create_a10_device_key(create_context,
-                                                          self.envelope_device_key(instance))
-        create_context.session.commit()
+    def test_make_device_value_dict(self):
+        pass
 
-        context = self.context()
-        result = self.plugin.get_a10_device_keys(context)
+    def test_create_a10_device_value(self):
+        pass
 
-        self.assertEqual([create_result], result)
+    def test_get_a10_device_value(self):
+        pass
+
+    def test_get_a10_device_values(self):
+        pass
+
+    def test_delete_a10_device_value(self):
+        pass
+
+    def test_update_a10_device_value(self):
+        pass
