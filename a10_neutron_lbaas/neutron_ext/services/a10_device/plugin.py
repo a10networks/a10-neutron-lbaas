@@ -120,7 +120,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_record = {}
         db_record.update(_convert(vthunder_config, _VTHUNDER_CONFIG, _DB))
         db_record.update(_convert(dev_instance, _API, _DB))
-        db_record.update(_convert(instance, _INSTANCE, _DB))
+        db_record.update(_convert(instance, _VTHUNDER, _DB))
 
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
