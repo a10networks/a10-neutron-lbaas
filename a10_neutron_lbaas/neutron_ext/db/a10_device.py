@@ -18,6 +18,7 @@ import uuid
 from a10_openstack_lib.resources import a10_device as a10_device_resources
 from neutron.db import common_db_mixin
 from neutron.api.v2.base import Controller
+from sqlalchemy.orm.exc import NoResultFound
 
 from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.db import models
@@ -49,9 +50,10 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
     def _get_a10_device(self, context, a10_device_id):
         with context.session.begin(subtransactions=True):
-            device_value_object_list = context.session.query(models.A10Device).filter_by(
-                id=a10_device_id).one()
-            if not device_value_object_list:
+            try:
+                device_value_object_list = context.session.query(models.A10Device).filter_by(
+                    id=a10_device_id).one()
+            except NoResultFound:
                 raise a10Device.A10DeviceNotFoundError(a10_device_id)
             return device_value_object_list
 
@@ -169,7 +171,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         except Exception:
             raise a10Device.A10DeviceNotFoundError(key_id)
 
-    def _make_a10_device_key(self, a10_device_key_db, fields=None):
+    def _make_a10_device_key_dict(self, a10_device_key_db, fields=None):
         res = {'id': a10_device_key_db.id,
                'tenant_id': a10_device_key_db.tenant_id,
                'name': a10_device_key_db.name,
@@ -187,14 +189,14 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 description=body.get('description', ''))
             context.session.add(device_key_record)
 
-        return self._make_a10_device_key(device_key_record)
+        return self._make_a10_device_key_dict(device_key_record)
 
     def update_a10_device_key(self, context, id, a10_device_key):
         with context.session.begin(subtransactions=True):
             device_key_record = self._get_by_id(context, models.A10DeviceKey, id)
-            key.update(**a10_device_key.get("a10_device_key"))
+            device_key_record.update(**a10_device_key.get("a10_device_key"))
 
-            return self._make_a10_device_key(device_key_record)
+            return self._make_a10_device_key_dict(device_key_record)
 
     def delete_a10_device_key(self, context, id):
         with context.session.begin(subtransactions=True): 
@@ -205,14 +207,14 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
     def get_a10_device_key(self, context, key_id, fields=None):
         device_key = self._get_a10_device_key(context, key_id)
-        return self._make_a10_device_key(device_key, fields)
+        return self._make_a10_device_key_dict(device_key, fields)
 
     def get_a10_device_keys(self, context, filters=None, fields=None,
                                  sorts=None, limit=None, marker=None,
                                  page_reverse=False):
         LOG.debug("A10DeviceDbMixin:get_a10_device_key()")
         return self._get_collection(context, models.A10DeviceKey,
-                                    self._make_a10_device_key, filters=filters,
+                                    self._make_a10_device_key_dict, filters=filters,
                                     fields=fields, sorts=sorts, limit=limit,
                                     marker_obj=marker, page_reverse=page_reverse)
 
@@ -226,7 +228,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         except Exception:
             raise a10Device.A10DeviceNotFoundError(value_id)
 
-    def _make_a10_device_value(self, a10_device_value_db, fields=None):
+    def _make_a10_device_value_dict(self, a10_device_value_db, fields=None):
         res = {'id': a10_device_value_db.id,
                'tenant_id': a10_device_value_db.tenant_id,
                'key_id': a10_device_value_db.key_id,
@@ -241,7 +243,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 device_id = device_id).all()
             device_value_list = []
             for value in device_value_object_list:
-                device_value_list.append(self._make_a10_device_value(value))
+                device_value_list.append(self._make_a10_device_value_dict(value))
         return device_value_list
 
     def create_a10_device_value(self, context, a10_device_value):
@@ -255,14 +257,14 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 value=body.get('value', ''))
             context.session.add(device_value_record)
 
-        return self._make_a10_device_value(device_value_record)
+        return self._make_a10_device_value_dict(device_value_record)
 
-    def update_a10_device_value(self, id, a10_device_value):
+    def update_a10_device_value(self, context, id, a10_device_value):
         with context.session.begin(subtransactions=True):
-            device_key_record = self._get_by_id(context, models.A10DeviceValue, id)
-            key.update(**a10_device_value.get("a10_device_value"))
+            device_value_record = self._get_by_id(context, models.A10DeviceValue, id)
+            device_value_record.update(**a10_device_value.get("a10_device_value"))
 
-            return self._make_a10_device_key(device_key_record)
+            return self._make_a10_device_value_dict(device_value_record)
 
     def delete_a10_device_value(self, context, id):
         with context.session.begin(subtransactions=True):
@@ -273,13 +275,13 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
     def get_a10_device_value(self, context, value_id, fields=None):
         device_value = self._get_a10_device_value(context, value_id)
-        return self._make_a10_device_value(device_value, fields)
+        return self._make_a10_device_value_dict(device_value, fields)
 
     def get_a10_device_values(self, context, filters=None, fields=None,
                                  sorts=None, limit=None, marker=None,
                                  page_reverse=False):
         LOG.debug("A10DeviceDbMixin:get_a10_device_value()")
         return self._get_collection(context, models.A10DeviceValue,
-                                    self._make_a10_device_value, filters=filters,
+                                    self._make_a10_device_value_dict, filters=filters,
                                     fields=fields, sorts=sorts, limit=limit,
                                     marker_obj=marker, page_reverse=page_reverse)

@@ -83,13 +83,10 @@ class FakeA10DeviceKey(object):
 
 class FakeA10DeviceValue(object):
 
-    def __init__(self):
-        self.name = 'fake-name'
-        self.key_id = 'fake-key-id'
-        self.associated_obj_id = 'fake-obj-id'
+    def __init__(self, device_id, key_id):
+        self.associated_obj_id = device_id
+        self.key_id = key_id
         self.value = 'fake-value'
-        self.description = 'fake-description'
-        self.associated_key = FakeA10DeviceKey()
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item
