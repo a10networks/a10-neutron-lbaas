@@ -22,6 +22,7 @@ import a10_neutron_lbaas.neutron_ext.common.constants as constants
 from a10_neutron_lbaas.neutron_ext.extensions import a10Device
 import a10_neutron_lbaas.neutron_ext.services.a10_device.plugin as plugin
 from a10_neutron_lbaas.tests.db.neutron_ext.db import test_a10_device
+from a10_neutron_lbaas.tests.db import fake_obj
 
 
 class TestPlugin(test_a10_device.TestA10DevicePluginBase):
@@ -50,6 +51,9 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_supported_extension_aliases(self):
         sea = self.plugin.supported_extension_aliases
         self.assertEqual([constants.A10_DEVICE_EXT], sea)
+
+    def fake_device(self):
+        return fake_obj.FakeA10Device()
 
     def fake_instance(self, *args, **kwargs):
         return {
@@ -99,27 +103,6 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
 
     def device_value_default_options(self):
         return self.blank(resources.DEVICE_VALUES)
-
-    def fake_device(self):
-        return {
-            'name': 'fake-name',
-            'description': 'fake-description',
-            'host': 'fake-host',
-            'api_version': 'fake-version',
-            'username': 'fake-username',
-            'password': 'fake-password',
-            'autosnat': False,
-            'default_virtual_server_vrid': None,
-            'nova_instance_id': None,
-            'ipinip': False,
-            'use_float': False,
-            'v_method': 'LSI',
-            'shared_partition': 'shared',
-            'write_memory': False,
-            'project_id': 'fake-tenant-id',
-            'protocol': 'https',
-            'port': 442
-        }
 
     def test_create_calls_instance_manager(self):
         context = self.context()
@@ -229,14 +212,13 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         self.assertEqual([create_result], result)
 
     def test_create_a10_device(self):
-        device = self.fakedevice()
+        device = self.fake_device()
         context = self.context()
-        result = self.plugin.create_a10_device(context, self.envelope_device(device))
+        result = self.plugin.create_a10_device(context, self.envelope_device(device.__dict__))
         self.assertIsNotNone(result['id'])
 
         expected = self.device_default_options()
-        expected.update(device)
-        expected.update(self.fake_device())
+        expected.update(device.__dict__)
         expected.update(
             {
                 'id': result['id'],
@@ -252,11 +234,11 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_create_a10_device_options(self):
         device = self.fake_device()
         context = self.context()
-        result = self.plugin.create_a10_device(context, self.envelope_device(device))
+        result = self.plugin.create_a10_device(context, self.envelope_device(device.__dict__))
         self.assertIsNotNone(result['id'])
 
         expected = self.device_default_options()
-        expected.update(device)
+        expected.update(device.__dict__)
         expected.update(
             {
                 'id': result['id'],
@@ -291,7 +273,7 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         device = self.fake_device()
         create_context = self.context()
         create_result = self.plugin.create_a10_device(create_context,
-                                                      self.envelope_device(device))
+                                                      self.envelope_device(device.__dict__))
 
         context = self.context()
         result = self.plugin.get_a10_device(context, create_result['id'])

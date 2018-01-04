@@ -111,7 +111,6 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
     def test_create_a10_device(self):
         device = self.fake_device()
         context = self.context()
-        self.db_extension._make_device_dict = mock.Mock(return_value=device.__dict__)
         result = self.db_extension.create_a10_device(context, self.envelope_device(device.__dict__))
         context.session.commit()
         self.assertIsNot(result['id'], None)
@@ -131,7 +130,6 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
     def test_get_a10_device(self):
         device = self.fake_device()
         create_context = self.context()
-        self.db_extension._make_device_dict = mock.Mock(return_value=device.__dict__)
         create_result = self.db_extension.create_a10_device(create_context, self.envelope_device(device.__dict__))
         create_context.session.commit()
         context = self.context()
@@ -141,9 +139,8 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
 
     def test_get_a10_device_extra(self):
         device = self.fake_device()
-        device.config = [self.fake_device_value()]
+        device.config = [self.fake_device()]
         create_context = self.context()
-        self.db_extension._make_device_dict = mock.Mock(return_value=device.__dict__)
         create_result = self.db_extension.create_a10_device(create_context, self.envelope_device(device.__dict__))
         create_context.session.commit()
         context = self.context()
@@ -154,58 +151,279 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
     def test_get_a10_devices(self):
         device = self.fake_device()
         create_context = self.context()
-        self.db_extension._make_device_dict = mock.Mock(return_value=device.__dict__)
         create_result = self.db_extension.create_a10_device(create_context, self.envelope_device(device.__dict__))
         create_context.session.commit()
         context = self.context()
 
-        result = self.db_extension.get_a10_device(context, create_result['id'])
+        result = self.db_extension.get_a10_devices(context)
         self.assertEqual([create_result], result)
 
     def test_delete_a10_device(self):
-        pass
+        device = self.fake_device()
+        create_context = self.context()
+        create_result = self.db_extension.create_a10_device(create_context, self.envelope_device(device.__dict__))
+        create_context.session.commit()
+        self.assertIsNot(create_result['id'], None)
 
+        delete_context = self.context()
+        self.db_extension.delete_a10_device(delete_context, create_result['id'])
+
+        context = self.context()
+        self.assertRaises(a10Device.A10DeviceNotFoundError, self.db_extension.get_a10_device, context, create_result['id'])
+        
     def test_update_a10_device(self):
-        pass
+        device = self.fake_device()
+        context = self.context()
+        create_result =  self.db_extension.create_a10_device(context, self.envelope_device(device.__dict__))
+        context.session.commit()
+
+        device.use_float = True
+        result = self.db_extension.update_a10_device(context, create_result['id'], self.envelope_device(device.__dict__))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+
+        expected = {}
+        expected.update(device.__dict__)
+        expected.update(
+            {
+                'id': result['id'],
+                'tenant_id': context.tenant_id,
+                'project_id': context.tenant_id,
+                'extra_resources': []
+            })
+        del expected['config']
+        self.assertEqual(expected, result)
+
 
     def fake_device_key(self):
         return fake_obj.FakeA10DeviceKey()
 
     def test_make_device_key_dict(self):
-        pass
+        device_key = self.fake_device_key()
+        device_key.id = 'new-id'
+        device_key.tenant_id = 'new-tenant-id'
+
+        result = self.db_extension._make_a10_device_key_dict(device_key)
+
+        device_key.project_id = 'new-tenant-id'
+        self.assertEqual(result, device_key.__dict__)
 
     def test_create_a10_device_key(self):
-        pass
+        device_key = self.fake_device_key()
+        context = self.context()
+        result = self.db_extension.create_a10_device_key(context, self.envelope_device_key(device_key.__dict__))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+
+        expected = {}
+        expected.update(device_key.__dict__)
+        expected.update(
+            {   
+                'id': result['id'],
+                'tenant_id': context.tenant_id,
+                'project_id': context.tenant_id,
+            })
+        self.assertEqual(expected, result)
 
     def test_get_a10_device_key(self):
-        pass
+        device_key = self.fake_device_key()
+        create_context = self.context()
+        create_result = self.db_extension.create_a10_device_key(create_context, self.envelope_device_key(device_key.__dict__))
+        create_context.session.commit()
+        context = self.context()
+
+        result = self.db_extension.get_a10_device_key(context, create_result['id'])
+        self.assertEqual(create_result, result)
 
     def test_get_a10_device_keys(self):
-        pass
+        device_key = self.fake_device_key()
+        create_context = self.context()
+        create_result = self.db_extension.create_a10_device_key(create_context, self.envelope_device_key(device_key.__dict__))
+        create_context.session.commit()
+        context = self.context()
+
+        result = self.db_extension.get_a10_device_keys(context)
+        self.assertEqual([create_result], result)
 
     def test_delete_a10_device_key(self):
-        pass
+        device_key = self.fake_device_key()
+        create_context = self.context()
+        create_result = self.db_extension.create_a10_device_key(create_context, self.envelope_device_key(device_key.__dict__))
+        create_context.session.commit()
+        self.assertIsNot(create_result['id'], None)
+
+        delete_context = self.context()
+        self.db_extension.delete_a10_device_key(delete_context, create_result['id'])
+
+        context = self.context()
+        self.assertRaises(a10Device.A10DeviceNotFoundError, self.db_extension.get_a10_device_key, context, create_result['id'])
 
     def test_update_a10_device_key(self):
-        pass
+        device_key = self.fake_device_key()
+        context = self.context()
+        create_result =  self.db_extension.create_a10_device_key(context, self.envelope_device_key(device_key.__dict__))
+        context.session.commit()
 
-    def fake_device_value(self):
-        return fake_obj.FakeA10DeviceValue()
+        device_key.description = "i_dnt_like_spam"
+        result = self.db_extension.update_a10_device_key(context, create_result['id'], self.envelope_device_key(device_key.__dict__))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+
+        expected = {}
+        expected.update(device_key.__dict__)
+        expected.update(
+            {
+                'id': result['id'],
+                'tenant_id': context.tenant_id,
+                'project_id': context.tenant_id,
+            })
+        self.assertEqual(expected, result)
+
+    def fake_device_value(self, device_id, key_id):
+        return fake_obj.FakeA10DeviceValue(device_id, key_id)
 
     def test_make_device_value_dict(self):
-        pass
+        device_value = self.fake_device_value('fake-device-id', 'fake-key-id')
+        device_value.id = 'new-id'
+        device_value.tenant_id = 'new-tenant-id'
+
+        result = self.db_extension._make_a10_device_value_dict(device_value)
+
+        device_value.project_id = 'new-tenant-id'
+        self.assertEqual(result, device_value.__dict__)
 
     def test_create_a10_device_value(self):
-        pass
+        device = self.fake_device()
+        device_context = self.context()
+        device_result = self.db_extension.create_a10_device(device_context, self.envelope_device(device.__dict__))
+        device_context.session.commit()
+        self.assertIsNot(device_result['id'], None)
+
+        key = self.fake_device_key()
+        key_context = self.context()
+        key_result = self.db_extension.create_a10_device_key(key_context, self.envelope_device_key(key.__dict__))
+        key_context.session.commit()
+        self.assertIsNot(key_result['id'], None)
+
+        device_value = self.fake_device_value(device_id=device_result['id'], key_id=key_result['id'])
+        context = self.context()
+        result = self.db_extension.create_a10_device_value(context, self.envelope_device_value(device_value.__dict__))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+
+        expected = {}
+        expected.update(device_value.__dict__)
+        expected.update(
+            {
+                'id': result['id'],
+                'tenant_id': context.tenant_id,
+                'project_id': context.tenant_id,
+            })
+        self.assertEqual(expected, result)
+
 
     def test_get_a10_device_value(self):
-        pass
+        device = self.fake_device()
+        device_context = self.context()
+        device_result = self.db_extension.create_a10_device(device_context, self.envelope_device(device.__dict__))
+        device_context.session.commit()
+        self.assertIsNot(device_result['id'], None)
+
+        key = self.fake_device_key()
+        key_context = self.context()
+        key_result = self.db_extension.create_a10_device_key(key_context, self.envelope_device_key(key.__dict__))
+        key_context.session.commit()
+        self.assertIsNot(key_result['id'], None)
+
+        device_value = self.fake_device_value(device_id=device_result['id'], key_id=key_result['id'])
+        value_context = self.context()
+        create_result = self.db_extension.create_a10_device_value(value_context, self.envelope_device_value(device_value.__dict__))
+        value_context.session.commit()
+        self.assertIsNot(key_result['id'], None)
+
+        context = self.context()
+
+        result = self.db_extension.get_a10_device_value(context, create_result['id'])
+        self.assertEqual(create_result, result)
 
     def test_get_a10_device_values(self):
-        pass
+        device = self.fake_device()
+        device_context = self.context()
+        device_result = self.db_extension.create_a10_device(device_context, self.envelope_device(device.__dict__))
+        device_context.session.commit()
+        self.assertIsNot(device_result['id'], None)
+
+        key = self.fake_device_key()
+        key_context = self.context()
+        key_result = self.db_extension.create_a10_device_key(key_context, self.envelope_device_key(key.__dict__))
+        key_context.session.commit()
+        self.assertIsNot(key_result['id'], None)
+
+        device_value = self.fake_device_value(device_id=device_result['id'], key_id=key_result['id'])
+        value_context = self.context()
+        create_result = self.db_extension.create_a10_device_value(value_context, self.envelope_device_value(device_value.__dict__))
+        value_context.session.commit()
+
+        context = self.context()
+
+        result = self.db_extension.get_a10_device_values(context)
+        self.assertEqual([create_result], result)
 
     def test_delete_a10_device_value(self):
-        pass
+        device = self.fake_device()
+        device_context = self.context()
+        device_result = self.db_extension.create_a10_device(device_context, self.envelope_device(device.__dict__))
+        device_context.session.commit()
+        self.assertIsNot(device_result['id'], None)
+
+        key = self.fake_device_key()
+        key_context = self.context()
+        key_result = self.db_extension.create_a10_device_key(key_context, self.envelope_device_key(key.__dict__))
+        key_context.session.commit()
+        self.assertIsNot(key_result['id'], None)
+
+        device_value = self.fake_device_value(device_id=device_result['id'], key_id=key_result['id'])
+        value_context = self.context()
+        create_result = self.db_extension.create_a10_device_value(value_context, self.envelope_device_value(device_value.__dict__))
+        value_context.session.commit()
+
+        delete_context = self.context()
+        self.db_extension.delete_a10_device_value(delete_context, create_result['id'])
+
+        context = self.context()
+        self.assertRaises(a10Device.A10DeviceNotFoundError, self.db_extension.get_a10_device_value, context, create_result['id'])
 
     def test_update_a10_device_value(self):
-        pass
+        device = self.fake_device()
+        device_context = self.context()
+        device_result = self.db_extension.create_a10_device(device_context, self.envelope_device(device.__dict__))
+        device_context.session.commit()
+        self.assertIsNot(device_result['id'], None)
+
+        key = self.fake_device_key()
+        key_context = self.context()
+        key_result = self.db_extension.create_a10_device_key(key_context, self.envelope_device_key(key.__dict__))
+        key_context.session.commit()
+        self.assertIsNot(key_result['id'], None)
+
+        device_value = self.fake_device_value(device_id=device_result['id'], key_id=key_result['id'])
+        value_context = self.context()
+        create_result = self.db_extension.create_a10_device_value(value_context, self.envelope_device_value(device_value.__dict__))
+        value_context.session.commit()
+        self.assertIsNot(key_result['id'], None)
+
+        context = self.context()
+        device_value.value = "i_dnt_like_spam"
+        result = self.db_extension.update_a10_device_value(context, create_result['id'], self.envelope_device_value(device_value.__dict__))
+        context.session.commit()
+        self.assertIsNot(result['id'], None)
+
+        expected = {}
+        expected.update(device_value.__dict__)
+        expected.update(
+            {
+                'id': result['id'],
+                'tenant_id': context.tenant_id,
+                'project_id': context.tenant_id,
+            })
+        self.assertEqual(expected, result)
