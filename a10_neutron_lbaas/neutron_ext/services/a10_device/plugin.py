@@ -125,7 +125,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         # If success, return the created DB record
         # Else, raise an exception because that's what we would do anyway
         db_instance = super(A10DevicePlugin, self).create_a10_device(
-            context, {resources.VTHUNDER: db_record})
+            context, {resources.VTHUNDER: db_record}, resources.VTHUNDER)
 
         return _make_api_dict(db_instance)
 

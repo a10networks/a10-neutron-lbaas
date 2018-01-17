@@ -44,8 +44,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         super(A10DeviceDbMixin, self).__init__(*args, **kwargs)
         self.config = a10_config.A10Config()
 
-    def _get_device_body(self, a10_device):
-        body = a10_device[a10_device_resources.DEVICE]
+    def _get_device_body(self, a10_device, resource):
+        body = a10_device[resource]
         return resources.remove_attributes_not_specified(body)
 
     def _get_a10_device(self, context, a10_device_id):
@@ -105,8 +105,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             res['extra_resources'].append({str(key): mapped_resource})
         return self._fields(res, fields)
 
-    def create_a10_device(self, context, a10_device):
-        body = self._get_device_body(a10_device)
+    def create_a10_device(self, context, a10_device, resource='a10_device'):
+        body = self._get_device_body(a10_device, resource)
         with context.session.begin(subtransactions=True):
             device_record = models.A10Device(
                 id=_uuid_str(),
