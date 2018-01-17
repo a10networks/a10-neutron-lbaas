@@ -65,6 +65,9 @@ class TestA10DevicePluginBase(test_base.UnitTestBase):
     def envelope_device(self, body):
         return {a10_device_resources.DEVICE: body}
 
+    def envelope_vthunder(self, body):
+        return {a10_device_resources.VTHUNDER: body}
+
     def envelope_device_key(self, body):
         return {a10_device_resources.DEVICE_KEY: body}
 
