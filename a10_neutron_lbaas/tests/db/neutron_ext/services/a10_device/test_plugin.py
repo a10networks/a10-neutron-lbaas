@@ -34,8 +34,8 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
 
         self.maxDiff = None
 
-        self.instance_manager = mock.MagicMock()
-        self.instance_manager.create_device.side_effect = self.fake_instance
+        self.instance_manager = mock.Mock()
+        self.instance_manager.create_device_instance.side_effect = self.fake_instance
 
         self.vthunder_defaults = a10_config.A10Config().get_vthunder_config()
 
@@ -120,7 +120,6 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_create_a10_vthunder(self):
         instance = {}
         context = self.context()
-        import pdb; pdb.set_trace()
         result = self.plugin.create_a10_vthunder(context, self.envelope_vthunder(instance))
         self.assertIsNotNone(result['id'])
 
@@ -166,15 +165,15 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_update_a10_vthunder_options(self):
         instance = self.vthunder_default_options()
         create_context = self.context()
-        create_result = self.plugin.create_a10_device(create_context,
-                                                      self.envelope_device(instance))
+        create_result = self.plugin.create_a10_vthunder(create_context,
+                                                        self.envelope_vthunder(instance))
         self.assertIsNotNone(create_result['id'])
 
         request = self.fake_vthunder()
         context = self.context()
         result = self.plugin.update_a10_device(context,
                                                create_result['id'],
-                                               self.envelope_device(request))
+                                               self.envelope_vthunder(request))
 
         expected = create_result.copy()
         expected.update(request)
@@ -184,8 +183,8 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_get_a10_vthunder(self):
         instance = self.fake_device_basic_config()
         create_context = self.context()
-        create_result = self.plugin.create_a10_device(create_context,
-                                                      self.envelope_device(instance))
+        create_result = self.plugin.create_a10_vthunder(create_context,
+                                                        self.envelope_vthunder(instance))
 
         context = self.context()
         result = self.plugin.get_a10_device(context, create_result['id'])
@@ -203,12 +202,12 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_get_a10_vthunders(self):
         instance = self.fake_device_basic_config()
         create_context = self.context()
-        create_result = self.plugin.create_a10_device(create_context,
-                                                      self.envelope_device(instance))
+        create_result = self.plugin.create_a10_vthunder(create_context,
+                                                        self.envelope_vthunder(instance))
         create_context.session.commit()
 
         context = self.context()
-        result = self.plugin.get_a10_device(context)
+        result = self.plugin.get_a10_vthunder(context)
 
         self.assertEqual([create_result], result)
 
@@ -294,7 +293,7 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         device = self.fake_device()
         create_context = self.context()
         create_result = self.plugin.create_a10_device(create_context,
-                                                      self.envelope_device(device))
+                                                      self.envelope_device(device.__dict__))
         create_context.session.commit()
 
         context = self.context()
