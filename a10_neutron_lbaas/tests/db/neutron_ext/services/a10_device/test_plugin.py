@@ -120,6 +120,7 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_create_a10_vthunder(self):
         instance = {}
         context = self.context()
+        import pdb; pdb.set_trace()
         result = self.plugin.create_a10_vthunder(context, self.envelope_vthunder(instance))
         self.assertIsNotNone(result['id'])
 
