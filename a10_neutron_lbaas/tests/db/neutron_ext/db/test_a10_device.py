@@ -23,7 +23,11 @@ import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import a10_device
 from a10_neutron_lbaas.neutron_ext.extensions import a10Device
-from neutron.plugins.common import constants as nconstants
+
+try:
+    from neutron_lib.plugins import constants as nconstants
+except ImportError:
+    from neutron.plugins.common import constants as nconstants
 
 
 class TestA10DevicePluginBase(test_base.UnitTestBase):
