@@ -11,7 +11,6 @@ nose-exclude
 oslotest
 # requirement from neutron p
 pbr!=2.1.0,>=2.0.0
->>>>>>> now with PEP
 pifpaf
 pymysql
 testresources
