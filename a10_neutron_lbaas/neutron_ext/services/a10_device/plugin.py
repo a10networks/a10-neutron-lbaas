@@ -127,7 +127,10 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_instance = super(A10DevicePlugin, self).create_a10_device(
             context, {resources.VTHUNDER: db_record}, resources.VTHUNDER)
 
-        return _make_api_dict(db_instance)
+        vthunder_dict = {'extra_resources': db_instance['extra_resources']}
+        vthunder_dict.update(_make_api_dict(db_instance))
+
+        return vthunder_dict 
 
     def get_a10_vthunder(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_vthunder(): id=%s, fields=%s",
@@ -138,7 +141,10 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         if not db_instance.get("nova_instance_id"):
             return {}, None
 
-        return _make_api_dict(db_instance), None
+        extra_resources = db_instance['extra_resources']
+        del db_instance['extra_resources']
+
+        return _make_api_dict(db_instance), extra_resources
 
     def update_a10_vthunder(self, context, id, vthunder):
         LOG.debug(
@@ -146,10 +152,8 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
             id,
             vthunder)
 
-        db_instance = super(A10DevicePlugin, self).update_vthunder(
-            context,
-            id,
-            vthunder)
+        db_instance = super(A10DevicePlugin, self).update_a10_device(
+            context, id, vthunder, 'vthunder')
 
         return _make_api_dict(db_instance)
 
@@ -207,7 +211,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         LOG.debug(
             "A10DevicePlugin.update_a10_device(): id=%s, device=%s",
             id,
-            vthunder)
+            device)
 
         return super(A10DevicePlugin, self).update_a10_device(
             context, id, device)
@@ -245,7 +249,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         LOG.debug(
             "A10DevicePlugin.update_a10_device_key(): id=%s, device=%s",
             id,
-            vthunder)
+            key)
 
         return super(A10DevicePlugin, self).update_a10_device_key(
             context, id, key)

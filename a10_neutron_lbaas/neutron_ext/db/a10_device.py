@@ -153,11 +153,11 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             device = self._get_by_id(context, models.A10Device, id)
             context.session.delete(device)
 
-    def update_a10_device(self, context, id, a10_device):
+    def update_a10_device(self, context, id, a10_device, resource='a10_device'):
         with context.session.begin(subtransactions=True):
             device = self._get_by_id(context, models.A10Device,
                                        id)
-            device.update(**a10_device.get("a10_device"))
+            device.update(**a10_device.get(resource))
 
             return self._make_a10_device_dict(device)
 
