@@ -79,9 +79,9 @@ class A10Context(object):
 
     def get_partition_key(self):
         # If use_parent_project is enabled, return that. Else, typical behavior. 
-        import pdb; pdb.set_trace()
         self.partition_key = self.tenant_id
         if self.a10_driver.config.get("use_parent_project"):
+            # Hoping we can avoid making this call but I don't think thats possible
             keystone_context = keystone_helpers.KeystoneFromContext(self.a10_driver.config, self.openstack_context)
             thisproject = keystone_context.client.projects.get(self.tenant_id)
             if not thisproject.parent_id == thisproject.domain_id:
