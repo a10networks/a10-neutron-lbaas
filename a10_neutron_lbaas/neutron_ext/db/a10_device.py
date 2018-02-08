@@ -22,6 +22,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.db import models
+
 from a10_neutron_lbaas.neutron_ext.common import resources
 from a10_neutron_lbaas.neutron_ext.extensions import a10Device
 from neutron.api.v2 import resource_helper
@@ -66,6 +67,16 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                                                         constants.A10_DEVICE)
         return resources
 
+    def _add_device_kv(self, context, config, device_id):
+        for k,v in config.items():
+            device_value = {'a10_device_value' : {
+                               'key_id': k,
+                               'value': v,
+                               'associated_obj_id': device_id
+                               }
+                           }
+            self.create_a10_device_value(context, device_value)
+
     def _make_a10_device_dict(self, a10_device_db, fields=None):
         res = {'id': a10_device_db.id,
                'name': a10_device_db.name,
@@ -107,9 +118,16 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
     def create_a10_device(self, context, a10_device, resource='a10_device'):
         body = self._get_device_body(a10_device, resource)
+        device_id = _uuid_str()
+
+        config = {}
+        for entry in a10_device[resource]['config'].split(','):
+            config.update(dict([tuple(entry.split('='))]))
+
+        config = self._config_keys_exist(context, config) 
         with context.session.begin(subtransactions=True):
             device_record = models.A10Device(
-                id=_uuid_str(),
+                id=device_id,
                 tenant_id=context.tenant_id,
                 name=body.get('name', ''),
                 description=body.get('description', ''),
@@ -129,6 +147,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 write_memory=body.get('write_memory', False),
                 host=body['host'])
             context.session.add(device_record)
+
+        self._add_device_kv(context, config, device_id)
 
         return self._make_a10_device_dict(device_record)
 
@@ -151,6 +171,9 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             LOG.debug("A10DeviceDbMixin:delete_a10_device() id=%s" %
                       (id))
             device = self._get_by_id(context, models.A10Device, id)
+            values = self._get_associated_value_list(context, device.id)
+            for value in values:
+                self.delete_a10_device_value(value['id'])
             context.session.delete(device)
 
     def update_a10_device(self, context, id, a10_device, resource='a10_device'):
@@ -164,16 +187,29 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
     def _get_device_key_body(self, a10_device_key):
         body = a10_device_key[a10_device_resources.DEVICE_KEY]
         return resources.remove_attributes_not_specified(body)
-         
+
+    def _get_a10_device_key_name(self, context, key_name):
+        try:
+            return context.session.query(models.A10DeviceKey).filter_by(name=key_name).one()
+        except Exception:
+            raise a10Device.A10DeviceNotFoundError(key_name)
+
     def _get_a10_device_key(self, context, key_id):
         try:
             return self._get_by_id(context, models.A10DeviceKey, key_id)
         except Exception:
             raise a10Device.A10DeviceNotFoundError(key_id)
+ 
+    def _config_keys_exist(self, context, config):
+        for key in list(config.keys()):
+            value = config[key]
+            key_id = self._get_a10_device_key_name(context, key).id
+            del config[key]
+            config[key_id] = value
+        return config
 
     def _make_a10_device_key_dict(self, a10_device_key_db, fields=None):
         res = {'id': a10_device_key_db.id,
-               'tenant_id': a10_device_key_db.tenant_id,
                'name': a10_device_key_db.name,
                'description': a10_device_key_db.description}
 
@@ -184,7 +220,6 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         with context.session.begin(subtransactions=True):
             device_key_record = models.A10DeviceKey(
                 id=_uuid_str(),
-                tenant_id=context.tenant_id,
                 name=body.get('name', ''),
                 description=body.get('description', ''))
             context.session.add(device_key_record)
