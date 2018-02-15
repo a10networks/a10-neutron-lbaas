@@ -98,6 +98,9 @@ class A10Config(object):
                 LOG.debug("global setting %s=%s", dk, getattr(self._config, dk))
 
         self._devices = {}
+        if not hasattr(self._config, "devices"):
+            self._config.devices = {}
+
         for k, v in self._config.devices.items():
             if 'status' in v and not v['status']:
                 LOG.debug("status is False, skipping dev: %s", v)
