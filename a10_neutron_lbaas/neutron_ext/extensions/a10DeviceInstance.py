@@ -125,7 +125,7 @@ class A10DeviceInstancePluginBase(ServicePluginBase):
     def get_plugin_type(self):
         return constants.A10_DEVICE_INSTANCE
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super(A10DeviceInstancePluginBase, self).__init__()
 
     @abc.abstractmethod
