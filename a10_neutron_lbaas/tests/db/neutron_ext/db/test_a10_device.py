@@ -146,12 +146,20 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
 
     def test_get_a10_device_extra(self):
         device = self.fake_device()
-        device.config = [self.fake_device()]
+        device.config = "test_key=1"
+        create_context = self.context()
+
+        device_key = self.fake_device_key()
+        device_key.name = "test_key"
+        key_context = self.context()
+        self.db_extension.create_a10_device_key(key_context, self.envelope_device_key(device_key.__dict__))
+        key_context.session.commit()
+
         create_context = self.context()
         create_result = self.db_extension.create_a10_device(create_context, self.envelope_device(device.__dict__))
         create_context.session.commit()
-        context = self.context()
 
+        context = self.context()
         result = self.db_extension.get_a10_device(context, create_result['id'])
         self.assertEqual(create_result, result)
 
@@ -185,6 +193,7 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
         context.session.commit()
 
         device.use_float = True
+        del device.__dict__['config']
         result = self.db_extension.update_a10_device(context, create_result['id'], self.envelope_device(device.__dict__))
         context.session.commit()
         self.assertIsNot(result['id'], None)
@@ -198,7 +207,6 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
                 'project_id': context.tenant_id,
                 'extra_resources': []
             })
-        del expected['config']
         self.assertEqual(expected, result)
 
 
@@ -208,11 +216,8 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
     def test_make_device_key_dict(self):
         device_key = self.fake_device_key()
         device_key.id = 'new-id'
-        device_key.tenant_id = 'new-tenant-id'
 
         result = self.db_extension._make_a10_device_key_dict(device_key)
-
-        device_key.project_id = 'new-tenant-id'
         self.assertEqual(result, device_key.__dict__)
 
     def test_create_a10_device_key(self):
@@ -227,8 +232,6 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
         expected.update(
             {   
                 'id': result['id'],
-                'tenant_id': context.tenant_id,
-                'project_id': context.tenant_id,
             })
         self.assertEqual(expected, result)
 
@@ -281,8 +284,6 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
         expected.update(
             {
                 'id': result['id'],
-                'tenant_id': context.tenant_id,
-                'project_id': context.tenant_id,
             })
         self.assertEqual(expected, result)
 
@@ -324,7 +325,7 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
             {
                 'id': result['id'],
                 'tenant_id': context.tenant_id,
-                'project_id': context.tenant_id,
+                'project_id': context.tenant_id
             })
         self.assertEqual(expected, result)
 

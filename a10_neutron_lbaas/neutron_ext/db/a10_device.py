@@ -121,8 +121,9 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         device_id = _uuid_str()
 
         config = {}
-        for entry in a10_device[resource]['config'].split(','):
-            config.update(dict([tuple(entry.split('='))]))
+        for entry in a10_device[resource].get('config', '').split(','):
+            if entry:
+                config.update(dict([tuple(entry.split('='))]))
 
         config = self._config_keys_exist(context, config) 
         with context.session.begin(subtransactions=True):
@@ -275,7 +276,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
     def _get_associated_value_list(self, context, device_id):
         with context.session.begin(subtransactions=True):
             device_value_object_list = context.session.query(models.A10DeviceValue).filter_by(
-                device_id = device_id).all()
+                associated_obj_id = device_id).all()
             device_value_list = []
             for value in device_value_object_list:
                 device_value_list.append(self._make_a10_device_value_dict(value))

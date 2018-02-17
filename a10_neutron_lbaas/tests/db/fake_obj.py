@@ -40,7 +40,7 @@ class FakeA10Device(object):
         self.project_id = 'fake-tenant-id'
         self.protocol = 'https'
         self.port = 442
-        self.config = []
+        self.config = ''
         super(FakeA10Device, self).__init__()
 
     def __setitem__(self, key, item):

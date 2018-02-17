@@ -246,12 +246,13 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
 
         request = self.fake_device().__dict__
         request['name'] = 'shrubbery'
+        del request['config']
+        
         context = self.context()
         result = self.plugin.update_a10_device(context,
                                                create_result['id'],
                                                self.envelope_device(request))
 
-        del request['config']
         expected = create_result.copy()
         expected.update(request)
 
