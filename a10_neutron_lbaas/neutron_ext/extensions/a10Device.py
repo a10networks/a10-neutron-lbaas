@@ -61,7 +61,9 @@ def _item(self, request, id, do_authz=False, field_list=None,
     if parent_id:
         kwargs[self._parent_id_name] = parent_id
     obj_getter = getattr(self._plugin, action)
-    obj, extra_resources = obj_getter(request.context, id, **kwargs)
+    net_obj = obj_getter(request.context, id, **kwargs)
+
+    obj, extra_resources = net_obj if type(net_obj) == type(()) else (net_obj, None) 
 
     if extra_resources:
         for resource in extra_resources:

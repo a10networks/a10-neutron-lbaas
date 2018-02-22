@@ -139,7 +139,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
             context, id, fields=fields)
 
         if not db_instance.get("nova_instance_id"):
-            return {}, None
+            return {}
 
         extra_resources = db_instance['extra_resources']
         del db_instance['extra_resources']
@@ -200,7 +200,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_instance = super(A10DevicePlugin, self).get_a10_device(
             context, id, fields=fields)
         if db_instance.get("nova_instance_id"):
-            return {}, None
+            return {}
 
         extra_resources = db_instance['extra_resources']
         del db_instance['extra_resources']
@@ -243,7 +243,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_instance = super(A10DevicePlugin, self).get_a10_device_key(
             context, id, fields=fields)
 
-        return db_instance, None
+        return db_instance
 
     def update_a10_device_key(self, context, id, key):
         LOG.debug(
@@ -280,7 +280,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         db_instance = super(A10DevicePlugin, self).get_a10_device_value(
             context, id, fields=fields)
 
-        return db_instance, None
+        return db_instance
 
     def update_a10_device_value(self, context, id, value):
         LOG.debug(
