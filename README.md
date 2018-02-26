@@ -5,8 +5,8 @@ A10 Networks LBaaS Driver for Thunder, vThunder and AX Series Appliances
 
 Supported releases:
 
-* OpenStack: Icehouse, Juno, Kilo, Liberty, Mitaka
-* LBaaS versions: v1, v2
+* OpenStack: Liberty - Pike Releases
+* LBaaS versions: v2
 * ACOS versions: ACOS 2/AxAPI 2.1 (ACOS 2.7.2+), ACOS 4/AxAPI 3.0 (ACOS 4.0.1-GA +)
 
 Working but not available for support:
@@ -15,7 +15,7 @@ Working but not available for support:
 
 Unsupported, but may work with minor tweaking:
 
-* OpenStack: Havana
+* OpenStack: v1 on any release, v2 Havana through Kilo
 
 ## A10 github repos
 
