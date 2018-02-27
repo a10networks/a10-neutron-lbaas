@@ -17,8 +17,8 @@
 This module includes fake objects used for testing db extensions as well as service plugins.
 These classes have primarily been constructed to handle cases in which the data needs to be
 tested on in dictionary and object form.
-
 """
+
 
 class FakeA10Device(object):
 
@@ -58,15 +58,15 @@ class FakeA10Device(object):
             'allow_put': True,
             'validate': {
                 'type:string': None,
-                },
+            },
             'is_visible': True,
             'default': 'fake-value'
-            }
+        }
         return mapped_resource
 
 
 class FakeA10DeviceKey(object):
-    
+
     def __init__(self):
         self.name = 'fake-name'
         self.description = 'fake-description'

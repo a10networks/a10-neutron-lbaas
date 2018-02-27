@@ -20,10 +20,10 @@ import a10_openstack_lib.resources.validators as a10_validators
 
 from sqlalchemy.orm import exc
 
-from neutron import policy
 from neutron.api import extensions as nextensions
-from neutron.api.v2 import resource_helper
 from neutron.api.v2.base import Controller
+from neutron.api.v2 import resource_helper
+from neutron import policy
 # neutron.services got moved to neutron_lib
 try:
     # F811 (redefinition of ServicePluginBase) suppressed
@@ -52,7 +52,6 @@ attributes.add_validators(resources.apply_template(
 _ALIAS = constants.A10_DEVICE_EXT
 
 
-
 def _item(self, request, id, do_authz=False, field_list=None,
           parent_id=None):
     """Retrieves and formats a single element of the requested entity."""
@@ -63,13 +62,13 @@ def _item(self, request, id, do_authz=False, field_list=None,
     obj_getter = getattr(self._plugin, action)
     net_obj = obj_getter(request.context, id, **kwargs)
 
-    obj, extra_resources = net_obj if type(net_obj) == type(()) else (net_obj, None) 
+    obj, extra_resources = net_obj if isinstance(net_obj, tuple) else (net_obj, None)
 
     if extra_resources:
         for resource in extra_resources:
             for key in resource.keys():
                 self._attr_info[key] = resource[key]
-    
+
     if do_authz:
         policy.enforce(request.context,
                        action,
@@ -77,6 +76,7 @@ def _item(self, request, id, do_authz=False, field_list=None,
                        pluralized=self._collection)
 
     return obj
+
 
 # TODO(rename this to *Extension to avoid config file confusion)
 class A10device(extensions.ExtensionDescriptor):

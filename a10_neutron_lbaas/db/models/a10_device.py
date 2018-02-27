@@ -10,11 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
+import uuid
 
 from a10_neutron_lbaas.db import model_base
+
 
 def _uuid_str():
     return str(uuid.uuid4())
@@ -47,6 +48,7 @@ class A10Device(model_base.A10BaseMixin, model_base.A10Base):
     host = sa.Column(sa.String(255), nullable=False)
 
     config = orm.relationship("A10DeviceValue", back_populates="associated_device")
+
 
 class A10DeviceKey(model_base.A10Base):
 

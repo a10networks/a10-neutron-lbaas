@@ -15,21 +15,18 @@
 import logging
 import uuid
 
-from a10_openstack_lib.resources import a10_device as a10_device_resources
+from neutron.api.v2 import resource_helper
 from neutron.db import common_db_mixin
-from neutron.api.v2.base import Controller
 from sqlalchemy.orm.exc import NoResultFound
 
 from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.db import models
 
-from a10_neutron_lbaas.neutron_ext.common import resources
-from a10_neutron_lbaas.neutron_ext.extensions import a10Device
-from neutron.api.v2 import resource_helper
-
 from a10_neutron_lbaas.neutron_ext.common import attributes
 from a10_neutron_lbaas.neutron_ext.common import constants
-
+from a10_neutron_lbaas.neutron_ext.common import resources
+from a10_neutron_lbaas.neutron_ext.extensions import a10Device
+from a10_openstack_lib.resources import a10_device as a10_device_resources
 
 LOG = logging.getLogger(__name__)
 
@@ -68,13 +65,12 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         return resources
 
     def _add_device_kv(self, context, config, device_id):
-        for k,v in config.items():
-            device_value = {'a10_device_value' : {
-                               'key_id': k,
-                               'value': v,
-                               'associated_obj_id': device_id
-                               }
-                           }
+        for k, v in config.items():
+            device_value = {'a10_device_value': {
+                            'key_id': k,
+                            'value': v,
+                            'associated_obj_id': device_id}
+                            }
             self.create_a10_device_value(context, device_value)
 
     def _make_a10_device_dict(self, a10_device_db, fields=None):
@@ -97,8 +93,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                'nova_instance_id': a10_device_db.nova_instance_id,
                'host': a10_device_db.host,
                'write_memory': a10_device_db.write_memory,
-               'extra_resources': []
-              }
+               'extra_resources': []}
 
         for device_value in a10_device_db.config:
             key = device_value.associated_key.name
@@ -125,7 +120,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             if entry:
                 config.update(dict([tuple(entry.split('='))]))
 
-        config = self._config_keys_exist(context, config) 
+        config = self._config_keys_exist(context, config)
         with context.session.begin(subtransactions=True):
             device_record = models.A10Device(
                 id=device_id,
@@ -179,8 +174,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
     def update_a10_device(self, context, id, a10_device, resource='a10_device'):
         with context.session.begin(subtransactions=True):
-            device = self._get_by_id(context, models.A10Device,
-                                       id)
+            device = self._get_by_id(context, models.A10Device, id)
             device.update(**a10_device.get(resource))
 
             return self._make_a10_device_dict(device)
@@ -200,7 +194,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             return self._get_by_id(context, models.A10DeviceKey, key_id)
         except Exception:
             raise a10Device.A10DeviceNotFoundError(key_id)
- 
+
     def _config_keys_exist(self, context, config):
         for key in list(config.keys()):
             value = config[key]
@@ -235,7 +229,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             return self._make_a10_device_key_dict(device_key_record)
 
     def delete_a10_device_key(self, context, id):
-        with context.session.begin(subtransactions=True): 
+        with context.session.begin(subtransactions=True):
             LOG.debug("A10DeviceDbMixin:delete_a10_device_key() id={}".format(id))
             device_key = self._get_a10_device_key(context, id)
 
@@ -246,8 +240,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         return self._make_a10_device_key_dict(device_key, fields)
 
     def get_a10_device_keys(self, context, filters=None, fields=None,
-                                 sorts=None, limit=None, marker=None,
-                                 page_reverse=False):
+                            sorts=None, limit=None, marker=None,
+                            page_reverse=False):
         LOG.debug("A10DeviceDbMixin:get_a10_device_key()")
         return self._get_collection(context, models.A10DeviceKey,
                                     self._make_a10_device_key_dict, filters=filters,
@@ -276,7 +270,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
     def _get_associated_value_list(self, context, device_id):
         with context.session.begin(subtransactions=True):
             device_value_object_list = context.session.query(models.A10DeviceValue).filter_by(
-                associated_obj_id = device_id).all()
+                associated_obj_id=device_id).all()
             device_value_list = []
             for value in device_value_object_list:
                 device_value_list.append(self._make_a10_device_value_dict(value))
@@ -314,8 +308,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         return self._make_a10_device_value_dict(device_value, fields)
 
     def get_a10_device_values(self, context, filters=None, fields=None,
-                                 sorts=None, limit=None, marker=None,
-                                 page_reverse=False):
+                              sorts=None, limit=None, marker=None,
+                              page_reverse=False):
         LOG.debug("A10DeviceDbMixin:get_a10_device_value()")
         return self._get_collection(context, models.A10DeviceValue,
                                     self._make_a10_device_value_dict, filters=filters,

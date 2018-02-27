@@ -22,8 +22,8 @@ import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
 from a10_neutron_lbaas.neutron_ext.extensions import a10Device
 import a10_neutron_lbaas.neutron_ext.services.a10_device.plugin as plugin
-from a10_neutron_lbaas.tests.db.neutron_ext.db import test_a10_device
 from a10_neutron_lbaas.tests.db import fake_obj
+from a10_neutron_lbaas.tests.db.neutron_ext.db import test_a10_device
 
 plugin_path = "a10_neutron_lbaas.neutron_ext.services.a10_device.plugin"
 
@@ -129,8 +129,8 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         expected = self.vthunder_default_options()
         expected.update(instance)
         expected.update(
-            {   
-                'id': result['id'], 
+            {
+                'id': result['id'],
                 'nova_instance_id': result['nova_instance_id'],
                 'host': result['host'],
                 'tenant_id': context.tenant_id,
@@ -247,7 +247,7 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         request = self.fake_device().__dict__
         request['name'] = 'shrubbery'
         del request['config']
-        
+
         context = self.context()
         result = self.plugin.update_a10_device(context,
                                                create_result['id'],

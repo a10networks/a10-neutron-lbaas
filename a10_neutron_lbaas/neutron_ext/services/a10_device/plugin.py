@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
-import itertools
 from oslo_log import log as logging
 
 import a10_neutron_lbaas.a10_config as a10_config
@@ -58,6 +57,7 @@ _vthunder_mappings = [("id", None, None, "id"),
                       ("image", "glance_image", None, None),
                       ("flavor", "nova_flavor", None, None)]
 
+
 def _convert(source, from_type, to_type):
     result = {}
     for mapping in _vthunder_mappings:
@@ -100,7 +100,6 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
         return map(_make_api_dict, db_instances)
 
-    
     def create_a10_vthunder(self, context, a10_vthunder):
         """Attempt to create vthunder using neutron context"""
         LOG.debug("A10DevicePlugin.create(): vthunder=%s", a10_vthunder)
@@ -130,7 +129,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         vthunder_dict = {'extra_resources': db_instance['extra_resources']}
         vthunder_dict.update(_make_api_dict(db_instance))
 
-        return vthunder_dict 
+        return vthunder_dict
 
     def get_a10_vthunder(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_vthunder(): id=%s, fields=%s",
@@ -294,4 +293,3 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
     def delete_a10_device_value(self, context, id):
         LOG.debug("A10DevicePlugin.a10_device_delete_value(): id=%s", id)
         return super(A10DevicePlugin, self).delete_a10_device_value(context, id)
-
