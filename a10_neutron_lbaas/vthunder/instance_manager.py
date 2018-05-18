@@ -22,6 +22,8 @@ import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
 
+import glanceclient.client as glance_client
+
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.vthunder.keystone as a10_keystone
 
@@ -68,7 +70,7 @@ class InstanceManager(object):
 
     def __init__(self, ks_session, network_ks_session=None,
                  nova_api=None, nova_version=NOVA_VERSION,
-                 neutron_api=None):
+                 neutron_api=None, glance_api=None, glance_version=GLANCE_VERSION):
 
         # This is the keystone session that we use for spawning instances,
         # aka our "service tenant" user.
@@ -86,6 +88,8 @@ class InstanceManager(object):
             nova_version, session=self._ks_session)
         self._neutron_api = neutron_api or neutron_client.Client(
             NEUTRON_VERSION, session=self._ks_session)
+	self._glance_api = glance_api or glance_client.Client(glance_version, session=self._ks_session)
+
 
     @classmethod
     def _factory_with_service_tenant(cls, config, user_keystone_session):
@@ -246,7 +250,7 @@ class InstanceManager(object):
                       ((hasattr(x, "name") and x.name is not None and identifier in x.name)
                        or (hasattr(x, "id") and x.id == identifier)))
         try:
-            images = self._nova_api.glance.list()
+            images = self._glance_api.list()
         except Exception as ex:
             raise a10_ex.ImageNotFoundError(
                 "Unable to retrieve images from nova.  Error %s" % (ex))
