@@ -40,7 +40,7 @@ CREATE_TIMEOUT = 900
 KEYSTONE_VERSION = "3.0"
 NOVA_VERSION = "2.1"
 NEUTRON_VERSION = "2.0"
-GLANCE_VERSION = "2.4"
+GLANCE_VERSION = 2.4 
 OS_INTERFACE_URLS = ["public", "publicURL"]
 
 _default_server = {
@@ -103,9 +103,10 @@ class InstanceManager(object):
             service_ks = ks
 
         nova_version = config.get('nova_api_version')
+        glance_version = config.get("glance_api_version")
         return InstanceManager(
             ks_session=service_ks.session, network_ks_session=ks.session,
-            nova_version=nova_version)
+            nova_version=nova_version, glance_version=glance_version)
 
     @classmethod
     def from_config(cls, config, openstack_context=None):
@@ -251,10 +252,10 @@ class InstanceManager(object):
                       ((hasattr(x, "name") and x.name is not None and identifier in x.name)
                        or (hasattr(x, "id") and x.id == identifier)))
         try:
-            images = self._glance_api.list()
+            images = list(self._glance_api.images.list())
         except Exception as ex:
             raise a10_ex.ImageNotFoundError(
-                "Unable to retrieve images from nova.  Error %s" % (ex))
+                "Unable to retrieve images from glance.  Error %s" % (ex))
         filtered = filter(img_filter, images)
         if filtered:
             result = filtered[0]
