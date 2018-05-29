@@ -56,8 +56,6 @@ class NeutronOpsV2(object):
 
         return pool.listener
 
-        
-
     def bcm_factory(self):
         from neutron_lbaas.services.loadbalancer.plugin import CERT_MANAGER_PLUGIN
         return CERT_MANAGER_PLUGIN.CertManager()
