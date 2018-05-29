@@ -59,6 +59,13 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
 
     def _create(self, c, context, hm, **kwargs):
         try:
+            listener = self.neutron_ops.hm_get_listener(context, hm)
+            hm.port = listener.protocol_port
+        except:
+            LOG.warn("Listener for HM could not be located")
+
+        # Send listener port to acos create
+        try:
             self._set(c, c.client.slb.hm.create, context, hm, **kwargs)
         except acos_errors.Exists:
             pass
