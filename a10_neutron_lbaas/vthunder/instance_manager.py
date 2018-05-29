@@ -22,6 +22,8 @@ import neutronclient.neutron.client as neutron_client
 import novaclient.client as nova_client
 import novaclient.exceptions as nova_exceptions
 
+import glanceclient.client as glance_client
+
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 import a10_neutron_lbaas.vthunder.keystone as a10_keystone
 
@@ -38,6 +40,7 @@ CREATE_TIMEOUT = 900
 KEYSTONE_VERSION = "3.0"
 NOVA_VERSION = "2.1"
 NEUTRON_VERSION = "2.0"
+GLANCE_VERSION = 2.4 
 OS_INTERFACE_URLS = ["public", "publicURL"]
 
 _default_server = {
@@ -68,7 +71,7 @@ class InstanceManager(object):
 
     def __init__(self, ks_session, network_ks_session=None,
                  nova_api=None, nova_version=NOVA_VERSION,
-                 neutron_api=None):
+                 neutron_api=None, glance_api=None, glance_version=GLANCE_VERSION):
 
         # This is the keystone session that we use for spawning instances,
         # aka our "service tenant" user.
@@ -86,6 +89,8 @@ class InstanceManager(object):
             nova_version, session=self._ks_session)
         self._neutron_api = neutron_api or neutron_client.Client(
             NEUTRON_VERSION, session=self._ks_session)
+    	self._glance_api = glance_api or glance_client.Client(glance_version, session=self._ks_session)
+
 
     @classmethod
     def _factory_with_service_tenant(cls, config, user_keystone_session):
@@ -98,9 +103,10 @@ class InstanceManager(object):
             service_ks = ks
 
         nova_version = config.get('nova_api_version')
+        glance_version = config.get("glance_api_version")
         return InstanceManager(
             ks_session=service_ks.session, network_ks_session=ks.session,
-            nova_version=nova_version)
+            nova_version=nova_version, glance_version=glance_version)
 
     @classmethod
     def from_config(cls, config, openstack_context=None):
@@ -246,10 +252,10 @@ class InstanceManager(object):
                       ((hasattr(x, "name") and x.name is not None and identifier in x.name)
                        or (hasattr(x, "id") and x.id == identifier)))
         try:
-            images = self._nova_api.glance.list()
+            images = list(self._glance_api.images.list())
         except Exception as ex:
             raise a10_ex.ImageNotFoundError(
-                "Unable to retrieve images from nova.  Error %s" % (ex))
+                "Unable to retrieve images from glance.  Error %s" % (ex))
         filtered = filter(img_filter, images)
         if filtered:
             result = filtered[0]

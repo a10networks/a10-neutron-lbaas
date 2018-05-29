@@ -84,9 +84,9 @@ class TestInstanceManager(test_base.UnitTestBase):
         self.vthunder_tenant_name = "tenantive-tenant"
         self.user = "user"
         self.password = "password"
-        self.target = im.InstanceManager(self.ks_version, self.auth_url, self.vthunder_tenant_name,
-                                         self.user, self.password, nova_api=self.nova_api,
-                                         neutron_api=self.neutron_api)
+        self.target = im.InstanceManager(self.ks_session,
+                                         nova_api=self.nova_api,
+                                         neutron_api=self.neutron_api, glance_api=self.glance_api)
 
     def server_get_side_effect(self, args):
         if len(instance_states) > 0:
@@ -134,6 +134,8 @@ class TestInstanceManager(test_base.UnitTestBase):
 
         self.neutron_api.get_a10_instances = mock.Mock(return_value=[{}])
         self.neutron_api.create_a10_instance = mock.Mock(return_value=self.fake_created)
+
+        self.ks_session = mock.Mock()
 
     def _fake_instance(self, id=1, name="instance001", image=None, flavor=None, nics=[]):
         return mocks.FakeInstance(id=id, name=name, image=image, flavor=flavor, nics=nics)
