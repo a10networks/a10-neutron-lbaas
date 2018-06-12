@@ -1,5 +1,5 @@
 a10-openstack-lib>=0.2.0
-acos-client>=1.4.2
+acos-client>=1.4.3
 debtcollector
 
 # Many of our requirements have to be the same as the underlying neutron,
