@@ -33,6 +33,8 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
         url = None
         expect_code = None
         os_name = hm.name
+        port = kwargs.get("port") 
+
         if hm.type in ['HTTP', 'HTTPS']:
             method = hm.http_method
             url = hm.url_path
@@ -44,7 +46,7 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
 
         set_method(hm_name, openstack_mappings.hm_type(c, hm.type),
                    hm.delay, hm.timeout, hm.max_retries,
-                   method=method, url=url, expect_code=expect_code,
+                   method=method, url=url, expect_code=expect_code, port=port,
                    config_defaults=self._get_config_defaults(c, os_name),
                    axapi_args=args)
 
@@ -58,6 +60,13 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
             health_monitor="", health_check_disable=True)
 
     def _create(self, c, context, hm, **kwargs):
+        try:
+            listener = self.neutron.hm_get_listener(context, hm)
+            kwargs["port"] = listener.protocol_port
+        except:
+            LOG.warn("Listener for HM could not be located")
+
+        # Send listener port to acos create
         try:
             self._set(c, c.client.slb.hm.create, context, hm, **kwargs)
         except acos_errors.Exists:
