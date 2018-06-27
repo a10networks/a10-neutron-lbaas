@@ -20,6 +20,7 @@ except ImportError:
     # v2 does not exist before Kilo
     pass
 
+
 class NeutronOpsV2(object):
 
     def __init__(self, handler):
