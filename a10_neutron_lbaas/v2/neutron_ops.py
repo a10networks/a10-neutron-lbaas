@@ -53,14 +53,6 @@ class NeutronOpsV2(object):
     def pool_get(self, context, pool_id):
         return self.plugin.db.get_pool(context, pool_id)
 
-    def hm_get_listener(self, context, hm):
-        # get the pool attached to the HM
-        pool_id = hm.pool.id
-        pool_qry = context.session.query(lb_db.PoolV2)
-        pool = pool_qry.filter_by(id=pool_id).first()
-
-        return pool.listener
-
     def bcm_factory(self):
         from neutron_lbaas.services.loadbalancer.plugin import CERT_MANAGER_PLUGIN
         return CERT_MANAGER_PLUGIN.CertManager()
