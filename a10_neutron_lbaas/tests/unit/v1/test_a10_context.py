@@ -30,6 +30,8 @@ class TestA10Context(test_base.UnitTestBase):
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
         self.m = {'id': 'fake-id-001', 'tenant_id': 'faketen1'}
+        a10.a10_context.A10Context.get_partition_key = mock.MagicMock()
+        a10.a10_context.A10Context.partition_key = 'faketen1'
 
     def test_context(self):
         with a10.A10Context(self.handler, self.ctx, self.m) as c:
@@ -119,6 +121,7 @@ class TestA10ContextADP(TestA10Context):
 
     def setUp(self):
         super(TestA10ContextADP, self).setUp()
+        a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock()
         self.reset_v_method('adp')
 
     def tearDown(self):

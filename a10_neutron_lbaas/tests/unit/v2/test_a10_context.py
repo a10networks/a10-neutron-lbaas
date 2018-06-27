@@ -14,10 +14,10 @@
 
 import mock
 
-import a10_neutron_lbaas.v2.v2_context as a10
-
 import fake_objs
+import mocks
 import test_base
+import a10_neutron_lbaas.v2.v2_context as a10
 
 
 class FakeException(Exception):
@@ -38,16 +38,19 @@ class TestA10Context(test_base.UnitTestBase):
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
         self.m = fake_objs.FakeLoadBalancer()
+        self.a10 = a10
+        self.a10.a10_context.A10Context.get_partition_key = mock.MagicMock()
+        self.a10.a10_context.A10Context.partition_key = 'get-off-my-lawn'
 
     def test_context(self):
-        with a10.A10Context(self.handler, self.ctx, self.m) as c:
+        with self.a10.A10Context(self.handler, self.ctx, self.m) as c:
             self.empty_mocks()
             c
         self.empty_close_mocks()
 
     def test_context_e(self):
         try:
-            with a10.A10Context(self.handler, self.ctx, self.m) as c:
+            with self.a10.A10Context(self.handler, self.ctx, self.m) as c:
                 self.empty_mocks()
                 c
                 raise FakeException()
@@ -55,20 +58,20 @@ class TestA10Context(test_base.UnitTestBase):
             self.empty_close_mocks()
 
     def test_write(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='ax-write') as c:
+        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='ax-write') as c:
             c
         self.a.last_client.system.action.write_memory.assert_called()
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_no_write(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='ax-nowrite') as c:
+        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='ax-nowrite') as c:
             c
         self.a.last_client.system.action.write_memory.assert_not_called()
         self.a.last_client.session.close.assert_called_with()
 
     def test_write_e(self):
         try:
-            with a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
+            with self.a10.A10WriteContext(self.handler, self.ctx, self.m) as c:
                 c
                 raise FakeException()
         except FakeException:
@@ -76,7 +79,7 @@ class TestA10Context(test_base.UnitTestBase):
             pass
 
     def test_write_status(self):
-        with a10.A10WriteStatusContext(self.handler, self.ctx, self.m) as c:
+        with self.a10.A10WriteStatusContext(self.handler, self.ctx, self.m) as c:
             c
         self.print_mocks()
         self.a.openstack_driver.pool.successful_completion.assert_called_with(
@@ -84,7 +87,7 @@ class TestA10Context(test_base.UnitTestBase):
 
     def test_write_status_e(self):
         try:
-            with a10.A10WriteStatusContext(self.handler, self.ctx,
+            with self.a10.A10WriteStatusContext(self.handler, self.ctx,
                                            self.m) as c:
                 c
                 raise FakeException()
@@ -94,7 +97,7 @@ class TestA10Context(test_base.UnitTestBase):
             pass
 
     def test_delete(self):
-        with a10.A10DeleteContext(self.handler, self.ctx, self.m) as c:
+        with self.a10.A10DeleteContext(self.handler, self.ctx, self.m) as c:
             c
         self.print_mocks()
         self.a.openstack_driver.pool.successful_completion.assert_called_with(
@@ -102,7 +105,7 @@ class TestA10Context(test_base.UnitTestBase):
 
     def test_delete_e(self):
         try:
-            with a10.A10DeleteContext(self.handler, self.ctx, self.m) as c:
+            with self.a10.A10DeleteContext(self.handler, self.ctx, self.m) as c:
                 c
                 raise FakeException()
         except FakeException:
@@ -110,11 +113,11 @@ class TestA10Context(test_base.UnitTestBase):
             pass
 
     def test_partition_name(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
+        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             self.assertEqual(c.partition_name, 'shared')
 
     def test_partition_name_withalt(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-alt') as c:
+        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-alt') as c:
             self.assertEqual(c.partition_name, 'mypart')
 
 
@@ -146,11 +149,11 @@ class TestA10ContextADP(TestA10Context):
         self.a.last_client.session.close.assert_called_with()
 
     def test_partition_name(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
+        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             self.assertEqual(c.partition_name, self.m.tenant_id[0:13])
 
     def test_partition_name_withalt(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-alt') as c:
+        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-alt') as c:
             # shared_partition has no effect on an ADP configured device
             self.assertEqual(c.partition_name, self.m.tenant_id[0:13])
 
@@ -158,7 +161,7 @@ class TestA10ContextADP(TestA10Context):
 class TestA10ContextHA(TestA10Context):
 
     def test_ha(self):
-        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='ax4') as c:
+        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='ax4') as c:
             c
         self.a.last_client.ha.sync.assert_called_with('1.1.1.1', 'admin', 'a10')
         self.a.last_client.session.close.assert_called_with()
