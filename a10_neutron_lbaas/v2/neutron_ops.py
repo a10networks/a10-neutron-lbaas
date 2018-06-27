@@ -20,7 +20,6 @@ except ImportError:
     # v2 does not exist before Kilo
     pass
 
-
 class NeutronOpsV2(object):
 
     def __init__(self, handler):
@@ -46,8 +45,21 @@ class NeutronOpsV2(object):
         return context.session.query(lb_db.LoadBalancer).filter_by(
             tenant_id=tenant_id).count()
 
+    def loadbalancer_parent(self, context, idlist):
+        lb_count = context.session.query(lb_db.LoadBalancer).filter(
+            lb_db.LoadBalancer.tenant_id.in_(idlist)).all()
+        return len(lb_count)
+
     def pool_get(self, context, pool_id):
         return self.plugin.db.get_pool(context, pool_id)
+
+    def hm_get_listener(self, context, hm):
+        # get the pool attached to the HM
+        pool_id = hm.pool.id
+        pool_qry = context.session.query(lb_db.PoolV2)
+        pool = pool_qry.filter_by(id=pool_id).first()
+
+        return pool.listener
 
     def bcm_factory(self):
         from neutron_lbaas.services.loadbalancer.plugin import CERT_MANAGER_PLUGIN
