@@ -52,4 +52,4 @@ class A10DeleteContext(a10_context.A10DeleteContextBase):
 
     def remaining_root_objects(self):
         ctx = self.openstack_context
-        return self.handler.neutron.loadbalancer_total(ctx, self.tenant_id)
+        return self.handler.neutron.loadbalancer_total(ctx, self.partition_key)
