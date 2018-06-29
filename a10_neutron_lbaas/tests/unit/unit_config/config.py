@@ -14,6 +14,8 @@
 
 verify_appliances = True
 
+use_parent_project = True 
+
 devices = {
     "ax1": {
         "name": "ax1",
