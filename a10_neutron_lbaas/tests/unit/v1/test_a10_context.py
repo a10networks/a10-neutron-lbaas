@@ -13,6 +13,8 @@
 #    under the License.
 
 import mock
+import sys
+import types
 
 import a10_neutron_lbaas.v1.v1_context as a10
 
@@ -25,12 +27,38 @@ class FakeException(Exception):
 
 class TestA10Context(test_base.UnitTestBase):
 
+    def _py2_copy(self, func):
+        copy_func = types.FunctionType(func.func_code, func.func_globals,
+                                       name=func.func_name,
+                                       argdefs=func.func_defaults,
+                                       closure=func.func_closure)
+        return copy_func
+
+    def _py3_copy(self, func):
+        copy_func = types.FunctionType(func.__code__,
+                                       func.__globals__,
+                                       name=func.__name__,
+                                       argdefs=func.__defaults__,
+                                       closure=func.__closure__)
+        return copy_func
+
+    def _copy_func(self, func):
+        if sys.version_info[0] == 2:
+            return self._py2_copy(func)
+        else:
+            return self._py3_copy(func)
+
+    def _clean_import(self):
+        a10.a10_context.A10Context.get_partition_key = self.partition_key_save
+
     def setUp(self, **kwargs):
         super(TestA10Context, self).setUp(**kwargs)
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
         self.m = {'id': 'fake-id-001', 'tenant_id': 'faketen1'}
-        a10.a10_context.A10Context.get_partition_key = mock.MagicMock()
+        self.partition_key_save = self._copy_func(a10.a10_context.A10Context.get_partition_key)
+        self.addCleanup(self._clean_import)
+        a10.a10_context.A10Context.get_partition_key = mock.Mock()
         a10.a10_context.A10Context.partition_key = 'faketen1'
 
     def test_context(self):
@@ -121,7 +149,6 @@ class TestA10ContextADP(TestA10Context):
 
     def setUp(self):
         super(TestA10ContextADP, self).setUp()
-        a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock()
         self.reset_v_method('adp')
 
     def tearDown(self):

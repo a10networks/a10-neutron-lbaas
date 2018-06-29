@@ -16,7 +16,6 @@ class TestA10PartitionKey(test_base.UnitTestBase):
 
     def setUp(self, **kwargs):
         super(TestA10PartitionKey, self).setUp(**kwargs)
-        self.a10 = a10
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
         self.m = fake_objs.FakeLoadBalancer()
@@ -24,16 +23,15 @@ class TestA10PartitionKey(test_base.UnitTestBase):
     def test_use_parent(self):
         fake_keystone = mock.MagicMock()
         fake_keystone.client.projects.get = mock.MagicMock(return_value=fake_objs.FakeKeystoneClient("brick"))
-        self.a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock(return_value=fake_keystone)
+        a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock(return_value=fake_keystone)
 
-        import pdb; pdb.set_trace()
-        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             self.assertEqual(c.partition_key, "brick")
 
     def test_use_parent_no_parent(self):
         fake_keystone = mock.MagicMock()
         fake_keystone.client.projects.get = mock.MagicMock(return_value=fake_objs.FakeKeystoneClient("roundtable"))
-        self.a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock(return_value=fake_keystone)
+        a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock(return_value=fake_keystone)
 
-        with self.a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
+        with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             self.assertEqual(c.partition_key, "roundtable")
