@@ -253,6 +253,6 @@ class FakeCertificateBinding(FakeModel):
 
 class FakeKeystoneClient(object):
 
-    def __init__(self, parent_id=None):
+    def __init__(self, parent_id='default'):
         self.parent_id = parent_id
-        self.domain_id = 'roundtable'
+        self.domain_id = 'default'

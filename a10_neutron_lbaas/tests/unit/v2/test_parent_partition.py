@@ -34,4 +34,4 @@ class TestA10PartitionKey(test_base.UnitTestBase):
         a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock(return_value=fake_keystone)
 
         with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
-            self.assertEqual(c.partition_key, "roundtable")
+            self.assertEqual(c.partition_key, "get-off-my-lawn")
