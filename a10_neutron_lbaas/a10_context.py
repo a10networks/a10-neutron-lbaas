@@ -179,7 +179,7 @@ class A10DeleteContextBase(A10WriteContext):
         self.get_partition_key()
         n = self.remaining_root_objects()
         LOG.debug("A10DeleteContext.partition_cleanup_check(): n=%s" % (n))
-        if n == 0:
+        if n == 0 and self.a10_driver.config.get("delete_partitions"):
             try:
                 name = self.partition_key[0:13]
                 if not name:
