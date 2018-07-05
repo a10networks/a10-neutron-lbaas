@@ -165,7 +165,7 @@ class A10DeleteContextBase(A10WriteContext):
 
         n = self.remaining_root_objects()
         LOG.debug("A10DeleteContext.partition_cleanup_check(): n=%s" % (n))
-        if n == 0:
+        if n == 0 and not self.a10_driver.config.get("disable_partition_delete"):
             try:
                 name = self.tenant_id[0:13]
                 if not name:
