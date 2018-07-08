@@ -1,4 +1,4 @@
-a10-openstack-lib>=0.2.0
+a10-openstack-lib>=0.2.1
 acos-client>=1.4.3
 debtcollector
 
