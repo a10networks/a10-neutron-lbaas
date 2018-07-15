@@ -36,9 +36,9 @@ class AcosWrapper(object):
         except Exception as ex:
             raise ex
         
-    def create_ve(self, ve_ifnum, ip, mask, use_dhcp):
+    def create_ve(self, vlan_id, ip, mask, dhcp=False):
         try:
-            return self._client.interface.ve.create(ifnum, ip, mask, dhcp=use_dhcp)
+            return self._client.interface.ve.create(vlan_id, ip_address=ip, ip_mask=mask, dhcp=dhcp)
         #TODO(mdurrant) Narrow exception handling.
         except Exception as ex:
             raise ex
@@ -61,7 +61,8 @@ class NeutronDbWrapper(object):
         self._session = session 
 
     def get_segment(self, port_id, level):
-        binding_level = self.__session.query(PortBindingLevel).filter_by(port_id=port_id, level=level).first()
+        import pdb; pdb.set_trace()
+        binding_level = self._session.query(PortBindingLevel).filter_by(port_id=port_id, level=level).first()
         segment = self._session.query(NetworkSegment).filter_by(id=binding_level.segment_id).first()
         return segment
 
@@ -75,13 +76,14 @@ class NeutronDbWrapper(object):
         # If there's no IP, , log it and return an error
         # If we successfully get an IP, create a port with the specified MAC and device data
         # If port creation fails, deallocate the IP
-        ip = None
-        port = None
-        return ip, port
+        ip = "10.10.10.10" 
+        port = {} 
+        mask = "255.0.0.0"
+        return ip, mask, port
          
 
     def get_ipallocationpool_by_subnet_id(self, subnet_id):
-        return _session.query(models_v2.IPAllocationPool).filter(models_v2.IPAllocationPool.subnet_id == subnet_id).first(
+        return _session.query(models_v2.IPAllocationPool).filter(models_v2.IPAllocationPool.subnet_id == subnet_id).first()
 
     def get_ipallocations_by_subnet_id(self, subnet_id):
         return _session.query(models_v2.IPAllocation).filter_by(subnet_id=subnet_id).all()
@@ -187,4 +189,10 @@ class NeutronDbWrapper(object):
         except Exception as ex:
             log.exception(ex)
 
-        return port["id"] 
+        return port["id"]
+
+    def update_port(self, port_id, mac):
+        with _session.begin(subtransactions=True):
+            port = _session.query(Port).filter_by(id=port_id).first()
+            port.mac_address = mac
+            session.add(port)             
