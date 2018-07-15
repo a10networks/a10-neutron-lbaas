@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import mock
 
 from a10_neutron_lbaas.tests.unit import test_base
@@ -31,15 +32,10 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
 
     def setUp(self, *args, **kwargs):
         super(TestVlanPortBindingPlumbing, self).setUp(*args, **kwargs)
-        config = self._build_config_mock(use_database=False)
-        driver = self._build_driver_mock(config=config)
-        devices = {"a": {"host": "1.2.3.4"}}
-        self.os_context = test_base._build_openstack_context()
-        self.a10_context = mock.Mock()
-        self.target = portbinding_vlan.VlanPortBindingPlumbingHooks(driver, devices)
+        self._build_mocks()
+        self.target = portbinding_vlan.VlanPortBindingPlumbingHooks(self._driver, self._devices)
 
     def test_select_device(self):
-
         a = self.target.select_device("first-token")
         self.target.select_device("second-token")
         self.assertEqual(a, self.target.select_device("first-token"))
@@ -48,11 +44,21 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
         vip = mock.Mock()
         self.target.after_vip_create(self.a10_context, self.os_context, vip)
 
-    def _build_config_mock(self, **kwargs):
-        return FakeConfig(**kwargs) 
 
-    def _build_driver_mock(self, **kwargs):
-        rval = mock.Mock(**kwargs)
+    def _build_mocks(self):
+        # a10_context dependencies
+        self._devices = {"a": {"host": "1.2.3.4", "api_version": "3.0"}}
+        self._driver=mock.Mock()
+        self._client = self._build_client() 
+        self._config = FakeConfig(use_database=False) 
+        self._a10_driver = mock.Mock(config=self._config)
+        self.a10_context = mock.Mock(a10_driver=self._a10_driver,client=self._client)
+        self._session = mock.Mock()
+        self.os_context = mock.Mock(session=self._session,tenant_id="tenant")
 
+    def _build_client(self):
+        rval = mock.Mock()
+        ve_json = '{"ve":{"oper":{"state":"DOWN","line_protocol":"DOWN","link_type":"VirtualEthernet","mac":"ffff.ffff.78de"},"a10-url":"/axapi/v3/interface/ve/255/oper","ifnum":5}}'
+        rval.interface.ve.get_oper = lambda x: json.loads(ve_json)
+    
         return rval
-

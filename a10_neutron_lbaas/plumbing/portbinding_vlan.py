@@ -56,7 +56,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         if vlan_id:
             # Get the associated VE
             ve = acos.get_ve(vlan_id)
-            ve_mac = ve["mac"]
+            ve_mac = ve["ve"]["oper"]["mac"]
         # 
         else:
             return
