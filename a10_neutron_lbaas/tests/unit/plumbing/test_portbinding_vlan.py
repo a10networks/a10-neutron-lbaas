@@ -34,6 +34,8 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
         config = self._build_config_mock(use_database=False)
         driver = self._build_driver_mock(config=config)
         devices = {"a": {"host": "1.2.3.4"}}
+        self.os_context = test_base._build_openstack_context()
+        self.a10_context = mock.Mock()
         self.target = portbinding_vlan.VlanPortBindingPlumbingHooks(driver, devices)
 
     def test_select_device(self):
@@ -43,7 +45,8 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
         self.assertEqual(a, self.target.select_device("first-token"))
 
     def test_after_vip_create(self):
-        pass 
+        vip = mock.Mock()
+        self.target.after_vip_create(self.a10_context, self.os_context, vip)
 
     def _build_config_mock(self, **kwargs):
         return FakeConfig(**kwargs) 

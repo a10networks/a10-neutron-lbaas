@@ -12,14 +12,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log
+
 import acos_client
 
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.db import portbinding_db
-
+from a10_neutron_lbaas.plumbing.wrappers import NeutronDbWrapper
+from a10_neutron_lbaas.plumbing.wrappers import AcosWrapper
 
 import simple 
+
+
+LOG = log.getLogger(__name__)
 
 class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
     def after_member_create(self, a10_context, os_context, member):
@@ -29,41 +35,48 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         pass
 
     def after_vip_create(self, a10_context, os_context, vip):
-        import pdb; pdb.set_trace()
         # Get the IDs of all the things we need. 
+        acos_client = a10_context.client
+
+        db = NeutronDbWrapper(os_context.session)
+        acos = AcosWrapper(a10_context.acos_client)
+        
         vip_port = vip.vip_port
         subnet_id = vip.vip_subnet_id 
         port_id = vip_port.id
         network_id = vip_port.network_id
-        acos_client = a10_context.client
-        a10_config = a10_context.config
         # 
         # Get {network_id} attached to the port.network_id
         # Get the segment associated to {network_id} with the network matching our criteria
-        segment = portbinding_db.get_network_segment(network_id)
+        segment = dbwrapper.get_segment(network_id)
         # Get {vlan_id} from the segment
         vlan_id = segment.segmentation_id
-        # Get the associated VE
-        ve = acos_client.interface.ve.get(vlan_id)
+
+        ve = True 
+        if vlan_id:
+            # Get the associated VE
+            ve = acos.interface.ve.get(vlan_id)
+            ve_mac = ve["mac"]
         # 
+        else:
+            return
         if not ve:
             # If DHCP, we can configure the interface with DHCP
-            use_dhcp = config.get("plumb_vlan_dhcp")
+            # use_dhcp = config.get("plumb_vlan_dhcp")
             if not use_dhcp:
                 # Allocate IP from the subnet.
-                ip,port = neutron_wrapper.allocate_ip(subnet_id)
+                ip,port = neutron_wrapper.allocate_ip(subnet_id, ve_mac)
             # Create the VLAN with configured interfaces
-            interfaces = config.get("vlan_interfaces")
-            created_vlan = self._create_vlan(acos_client, vlan_id, interfaces) 
+            # interfaces = config.get("vlan_interfaces")
+            created_vlan = acos.create_vlan(acos_client, vlan_id, interfaces)
+            LOG.info("Created VLAN {0} with interfaces {1}", vlan_id, interfaces)
             ve_dict = self._build_ve_dict(vlan_id, use_dhcp, ip, mask)
             # Try to create it. If we catch a "exists in another partition" error, raise it.
-            created_ve = self._create_ve(acos_client, **ve_dict)
-            ve_oper = acos_client.interface.ve.get_oper(vlan_id)
-            ve_mac = ve_oper["mac"]
-
+            created_ve = acos.create_ve(acos_client, **ve_dict)
+            LOG.info("Created VE {0}", ve_dict)
             # Set necessary IP routes
-        # Update the port's MAC address to match the VE MAC
-            neutron_wrapper.update_port(port_id, ve_mac)
+            # Update the port's MAC address to match the VE MAC
+            # neutron_wrapper.update_port(port_id, ve_mac)
         LOG.info("Completed configuration for VIP {id} IP:{ip} VLAN:{vlan_id}".format(ip=ip, id=vip.id, vlan_id=vlan_id))
         # Enjoy a cold beer cuz we're done. 
         
@@ -77,12 +90,6 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         #TODO(mdurrant) Narrow exception handling.
         except Exception as ex:
             raise ex 
-
-    def _create_vlan(self, client, vlan_id, interfaces={}):
-        try:
-            client.vlan.create(vlan_id, ve=True, **interfaces)
-        except Exception as ex:
-            raise ex
 
     def _build_ve_dict(self, vlan_id, ip=None, mask=None, use_dhcp=None):
         rval = {"vlan_id": vlan_id}

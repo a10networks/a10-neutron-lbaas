@@ -227,3 +227,10 @@ devices = {
 #     }
 # }
 vport_defaults = {}
+
+vlan_interfaces = {
+    "tagged_eths": [3,4],
+    "tagged_trunks": [1]
+}
+
+plumb_vlan_dhcp = True
