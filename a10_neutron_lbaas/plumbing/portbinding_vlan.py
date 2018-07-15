@@ -14,7 +14,6 @@
 
 from oslo_log import log
 
-import acos_client
 
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
@@ -36,26 +35,27 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
 
     def after_vip_create(self, a10_context, os_context, vip):
         # Get the IDs of all the things we need. 
-        acos_client = a10_context.client
-
         db = NeutronDbWrapper(os_context.session)
-        acos = AcosWrapper(a10_context.acos_client)
-        
+        acos = AcosWrapper(a10_context.client)
+        config = a10_context.a10_driver.config
+
         vip_port = vip.vip_port
         subnet_id = vip.vip_subnet_id 
         port_id = vip_port.id
         network_id = vip_port.network_id
-        # 
+        
+        binding_level = config.get("vlan_binding_level")
+ 
         # Get {network_id} attached to the port.network_id
         # Get the segment associated to {network_id} with the network matching our criteria
-        segment = dbwrapper.get_segment(network_id)
+        segment = db.get_segment(port_id, binding_level)
         # Get {vlan_id} from the segment
         vlan_id = segment.segmentation_id
 
         ve = True 
         if vlan_id:
             # Get the associated VE
-            ve = acos.interface.ve.get(vlan_id)
+            ve = acos.get_ve(vlan_id)
             ve_mac = ve["mac"]
         # 
         else:
