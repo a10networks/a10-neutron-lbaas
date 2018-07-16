@@ -24,7 +24,12 @@ from neutron.db.models.segment import NetworkSegment, SegmentHostMapping
 from neutron.db.models_v2 import IPAllocation, IPAllocationPool, Route, SubnetRoute, Port, Subnet, Network
 from neutron.plugins.ml2.models import PortBinding, PortBindingLevel
 
+from acos_client import errors as acos_exc
 from a10_neutron_lbaas.db import models
+
+LOG = log.getLogger(__name__)
+_HPB_TEST = True
+
 
 class AcosWrapper(object):
     def __init__(self, client, *args, **kwargs):
@@ -32,28 +37,39 @@ class AcosWrapper(object):
 
     def create_vlan(self,  vlan_id, interfaces={}):
         try:
-            return self._client.vlan.create(vlan_id, ve=True, **interfaces)
+            return self._client.vlan.create(vlan_id, veth=True, **interfaces)
         except Exception as ex:
             raise ex
         
     def create_ve(self, vlan_id, ip, mask, dhcp=False):
+        mask = self._format_cidr(mask)   
+
         try:
-            return self._client.interface.ve.create(vlan_id, ip_address=ip, ip_mask=mask, dhcp=dhcp)
+            return self._client.interface.ve.create(vlan_id, ip_address=ip, ip_netmask=self._format_cidr(mask), dhcp=dhcp)
         #TODO(mdurrant) Narrow exception handling.
         except Exception as ex:
             raise ex
 
     def get_ve(self, ve_ifnum):
         rv = {}
-        import pdb;pdb.set_trace()
         try:
             ve = self._client.interface.ve.get_oper(ve_ifnum)
             rv = ve
         # TODO)mdurrant) Narrow exception handling
+        except acos_exc.NotFound as notfound_ex:
+            # Eat the notfound error, return empty dict. 
+            pass
         except Exception as ex:
             raise ex
         return rv
-    
+
+    def _format_cidr(self, cidr):
+        marker = "/"
+        if cidr[0] != marker:
+            beg = cidr.find(marker)
+            cidr = cidr[beg:]
+        return cidr 
+
 
 class NeutronDbWrapper(object):
     """Wraps neutron DB ops for easy testing""" 
@@ -61,13 +77,20 @@ class NeutronDbWrapper(object):
         self._session = session 
 
     def get_segment(self, port_id, level):
-        import pdb; pdb.set_trace()
+        if _HPB_TEST:
+            port = self._session.query(Port).filter_by(id=port_id).first()
+            segment = self._session.query(NetworkSegment).filter_by(network_id=port.network_id).first()
+            return segment
+
         binding_level = self._session.query(PortBindingLevel).filter_by(port_id=port_id, level=level).first()
-        segment = self._session.query(NetworkSegment).filter_by(id=binding_level.segment_id).first()
-        return segment
+        if binding_level:
+            segment = self._session.query(NetworkSegment).filter_by(id=binding_level.segment_id).first()
+            return segment
+        # No binding leve
+        LOG.error("Could not find binding level for port:{0} level:{1}".format(port_id, level))
 
     def get_subnet(self, id):
-        subnet = self._session.query(Subnet).filter_by(id)
+        subnet = self._session.query(Subnet).filter_by(id=id).first()
         return subnet
 
     def allocate_ip_for_subnet(self, subnet_id, mac):
@@ -76,21 +99,20 @@ class NeutronDbWrapper(object):
         # If there's no IP, , log it and return an error
         # If we successfully get an IP, create a port with the specified MAC and device data
         # If port creation fails, deallocate the IP
-        ip = "10.10.10.10" 
-        port = {} 
-        mask = "255.0.0.0"
-        return ip, mask, port
+        subnet = self.get_subnet(subnet_id)
+        ip, mask, port_id = self.a10_allocate_ip_from_dhcp_range(subnet, "vlan", mac)
+        return ip, mask, port_id
          
 
     def get_ipallocationpool_by_subnet_id(self, subnet_id):
-        return _session.query(models_v2.IPAllocationPool).filter(models_v2.IPAllocationPool.subnet_id == subnet_id).first()
+        return self._session.query(IPAllocationPool).filter(IPAllocationPool.subnet_id == subnet_id).first()
 
     def get_ipallocations_by_subnet_id(self, subnet_id):
-        return _session.query(models_v2.IPAllocation).filter_by(subnet_id=subnet_id).all()
+        return self._session.query(IPAllocation).filter_by(subnet_id=subnet_id).all()
 
     def create_port(self, record):
-        with _session.begin(subtransactions=True):
-            port = models_v2.Port(
+        with self._session.begin(subtransactions=True):
+            port = Port(
                 id=uuidutils.generate_uuid(),
                 tenant_id=record['tenant_id'],
                 name=record["name"],
@@ -101,31 +123,31 @@ class NeutronDbWrapper(object):
                 device_id=record["device_id"],
                 device_owner=record["device_owner"]
             )
-            session.add(port)
+            self._session.add(port)
 
             return port
 
     def get_ipallocation_with_port_by_subnet_id(self, subnet_id, ip_address, port_name):
-        result = _session.query(models_v2.IPAllocation, models_v2.Port)\
-            .join(models_v2.Port, models_v2.Port.name == port_name)\
-            .filter_by(models_v2.IPAllocation.ip_address == ip_address and\
-              models_v2.IPAllocation.port_id == port_name and\
-              subnet_id == models_v2.IPAllocation.subnet_id).first()
+        result = self._session.query(IPAllocation, Port)\
+            .join(Port, Port.name == port_name)\
+            .filter_by(IPAllocation.ip_address == ip_address and\
+              IPAllocation.port_id == port_name and\
+              subnet_id == IPAllocation.subnet_id).first()
         return result
 
     def create_ipallocation(self, ipa):
-        with _session.begin(subtransactions=True):
-            ipallocation = models_v2.IPAllocation(
+        with self._session.begin(subtransactions=True):
+            ipallocation = IPAllocation(
                 ip_address=ipa["ip_address"],
                 network_id=ipa["network_id"],
                 port_id=ipa["port_id"],
                 subnet_id=ipa["subnet_id"]
             )
-            session.add(ipallocation)
+            self._session.add(ipallocation)
 
         return ipallocation
 
-    def a10_allocate_ip_from_dhcp_range(self, subnet, interface_id):
+    def a10_allocate_ip_from_dhcp_range(self, subnet, interface_id, mac):
         """Search for an available IP.addr from unallocated IPAllocationPool range.
         If no addresses are available then an error is raised. Returns the address as a string.
         This search is conducted by a difference of the IPAllocationPool set_a and the current IP
@@ -152,24 +174,27 @@ class NeutronDbWrapper(object):
             log.error(msg)
             raise a10ex(msg)
 
+
         mark_in_use = {
             "ip_address": result,
             "network_id": network_id,
-            "port_id": self.create_a10_port(project_id, nterface_id, network_id),
+            "port_id": self.create_a10_port(project_id, interface_id, network_id, mac_address=mac),
             "subnet_id": subnet["id"]
         }
 
         self.create_ipallocation(mark_in_use)
 
-        return result
+        return result, subnet["cidr"], mark_in_use["port_id"] 
 
     def create_a10_port(self, tenant_id, lif_id, net_id, owner=None, mac_address=None):
         port_name = "A10_DEV_{0}_PART_{1}_LIF_{2}".format("VXLAN", tenant_id[0:13],
                                                           lif_id)
 
-        mac = [random.randint(0x00, 0xff), random.randint(0x00, 0xff), random.randint(0x00, 0xff)]
-        mac_last = ':'.join(map(lambda x: "%02x" % x, mac))
-        macaddress = mac_address or "00:1F:A0:{0}".format(mac_last)
+        if not mac_address:
+            mac_address = [random.randint(0x00, 0xff), random.randint(0x00, 0xff), random.randint(0x00, 0xff)]
+            mac_last = ':'.join(map(lambda x: "%02x" % x, mac_address))
+            mac_address = "00:1F:A0:{0}".format(mac_last)
+        macaddress = mac_address
         device_owner = owner or "network:a10networks"
 
         port = {
@@ -187,12 +212,12 @@ class NeutronDbWrapper(object):
         try:
             port = self.create_port(port)
         except Exception as ex:
-            log.exception(ex)
+            LOG.exception(ex)
 
         return port["id"]
 
     def update_port(self, port_id, mac):
-        with _session.begin(subtransactions=True):
-            port = _session.query(Port).filter_by(id=port_id).first()
+        with self._session.begin(subtransactions=True):
+            port = self._session.query(Port).filter_by(id=port_id).first()
             port.mac_address = mac
-            session.add(port)             
+            self._session.add(port)             
