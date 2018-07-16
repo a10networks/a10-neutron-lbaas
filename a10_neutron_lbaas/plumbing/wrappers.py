@@ -15,17 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo_log import log
-
 import netaddr
+import random
 
+from oslo_log import log
 from oslo_utils import uuidutils
 
 from neutron.db.models import segment as segmodels
 from neutron.db import models_v2 as nmodels
 from neutron.plugins.ml2 import models as pmodels
 
-from a10_neutron_lbaas.db import models
 from acos_client import errors as acos_exc
 
 LOG = log.getLogger(__name__)
@@ -58,7 +57,7 @@ class AcosWrapper(object):
             ve = self._client.interface.ve.get_oper(ve_ifnum)
             rv = ve
         # TODO(mdurrant) Narrow exception handling
-        except acos_exc.NotFound as notfound_ex:
+        except acos_exc.NotFound:
             # Eat the notfound error, return empty dict.
             pass
         except Exception as ex:
@@ -85,9 +84,11 @@ class NeutronDbWrapper(object):
                 network_id=port.network_id).first()
             return segment
 
-        binding_level = self._session.query(pmodels.PortBindingLevel).filter_by(port_id=port_id, level=level).first()
+        binding_level = self._session.query(pmodels.PortBindingLevel).filter_by(
+            port_id=port_id, level=level).first()
         if binding_level:
-            segment = self._session.query(segmodels.NetworkSegment).filter_by(id=binding_level.segment_id).first()
+            segment = self._session.query(segmodels.NetworkSegment).filter_by(
+                id=binding_level.segment_id).first()
             return segment
         # No binding leve
         LOG.error("Could not find binding level for port:{0} level:{1}".format(port_id, level))
@@ -97,7 +98,7 @@ class NeutronDbWrapper(object):
         return subnet
 
     def allocate_ip_for_subnet(self, subnet_id, mac):
-        """Allocates an IP from the specified subnet and creates a port with the returned IP and MAC"""
+        """Allocates an IP from the specified subnet and creates a port"""
         # Get an available IP and mark it as used before someone else does
         # If there's no IP, , log it and return an error
         # If we successfully get an IP, create a port with the specified MAC and device data
@@ -106,12 +107,12 @@ class NeutronDbWrapper(object):
         ip, mask, port_id = self.a10_allocate_ip_from_dhcp_range(subnet, "vlan", mac)
         return ip, mask, port_id
 
-
     def get_ipallocationpool_by_subnet_id(self, subnet_id):
-        return self._session.query(nmodels.IPAllocationPool).filter(nmodels.IPAllocationPool.subnet_id == subnet_id).first()
+        return self._session.query(nmodels.IPAllocationPool).filter(
+            nmodels.IPAllocationPool.subnet_id == subnet_id).first()
 
     def get_ipallocations_by_subnet_id(self, subnet_id):
-        return self._session.query(nmodels.IPAllocation).filter_by(nmodels.subnet_id=subnet_id).all()
+        return self._session.query(nmodels.IPAllocation).filter_by(subnet_id=subnet_id).all()
 
     def create_port(self, record):
         with self._session.begin(subtransactions=True):
@@ -133,9 +134,9 @@ class NeutronDbWrapper(object):
     def get_ipallocation_with_port_by_subnet_id(self, subnet_id, ip_address, port_name):
         result = self._session.query(nmodels.IPAllocation, nmodels.Port)\
             .join(nmodels.Port, nmodels.Port.name == port_name)\
-            .filter_by(nmodels.IPAllocation.ip_address == ip_address and\
-              nmodels.IPAllocation.port_id == port_name and\
-              subnet_id == nmodels.IPAllocation.subnet_id).first()
+            .filter_by(nmodels.IPAllocation.ip_address == ip_address and
+                       nmodels.IPAllocation.port_id == port_name and
+                       subnet_id == nmodels.IPAllocation.subnet_id).first()
         return result
 
     def create_ipallocation(self, ipa):
@@ -153,8 +154,8 @@ class NeutronDbWrapper(object):
     def a10_allocate_ip_from_dhcp_range(self, subnet, interface_id, mac):
         """Search for an available IP.addr from unallocated nmodels.IPAllocationPool range.
         If no addresses are available then an error is raised. Returns the address as a string.
-        This search is conducted by a difference of the nmodels.IPAllocationPool set_a and the current IP
-        allocations.
+        This search is conducted by a difference of the nmodels.IPAllocationPool set_a
+        and the current IP allocations.
         """
         subnet_id = subnet["id"]
         network_id = subnet["network_id"]
@@ -174,9 +175,8 @@ class NeutronDbWrapper(object):
             result = str(netaddr.IPAddress((set_a - set_b).pop()))
         except KeyError:
             msg = "Can not allocate ip address for VTEP"
-            log.error(msg)
-            raise a10ex(msg)
-
+            LOG.error(msg)
+            raise Exception(msg)
 
         mark_in_use = {
             "ip_address": result,
@@ -194,7 +194,10 @@ class NeutronDbWrapper(object):
                                                           lif_id)
 
         if not mac_address:
-            mac_address = [random.randint(0x00, 0xff), random.randint(0x00, 0xff), random.randint(0x00, 0xff)]
+            mac_address = [
+                random.randint(0x00, 0xff),
+                random.randint(0x00, 0xff),
+                random.randint(0x00, 0xff)]
             mac_last = ':'.join(map(lambda x: "%02x" % x, mac_address))
             mac_address = "00:1F:A0:{0}".format(mac_last)
         macaddress = mac_address
@@ -208,8 +211,8 @@ class NeutronDbWrapper(object):
             "mac_address": macaddress,
             "admin_state_up": 1,
             "status": 'ACTIVE',
-            "device_id": tenant_id+net_id,
-            "device_owner": "network:vxlan"
+            "device_id": net_id,
+            "device_owner": device_owner
         }
 
         try:
