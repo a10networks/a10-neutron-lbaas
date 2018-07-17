@@ -25,6 +25,7 @@ from neutron.db.models import segment as segmodels
 from neutron.db import models_v2 as nmodels
 from neutron.plugins.ml2 import models as pmodels
 
+from a10_neutron_lbaas.plumbing.utils import IPHelpers
 from acos_client import errors as acos_exc
 
 LOG = log.getLogger(__name__)
@@ -73,6 +74,9 @@ class AcosWrapper(object):
 
 
 class NeutronDbWrapper(object):
+    VLAN_PORT_NAME_FORMAT = "A10_VLANHBPHOOK_PROJECT_{project_id}_NET_{network_id}"
+    VLAN_PORT_OWNER = "network:A10networks"
+
     """Wraps neutron DB ops for easy testing"""
     def __init__(self, session, *args, **kwargs):
         self._session = session
@@ -161,25 +165,20 @@ class NeutronDbWrapper(object):
         network_id = subnet["network_id"]
         project_id = subnet["project_id"]
 
-        ip_range_result = self.get_ipallocationpool_by_subnet_id(subnet_id)
-        ip_in_use_list = (self.get_ipallocations_by_subnet_id(subnet_id))
+        iprange_result = self.get_ipallocationpool_by_subnet_id(subnet_id)
+        ip_in_use_list = [x.ip_address for x in self.get_ipallocations_by_subnet_id(subnet_id)]
 
-        set_a = netaddr.IPSet(netaddr.IPRange(ip_range_result.first_ip, ip_range_result.last_ip))
-        set_b = netaddr.IPSet()
+        range_begin, range_end = iprange_result.first_ip, iprange_result.last_ip
+        ip_address = IPHelpers.find_unused_ip(range_begin,range_end, ip_in_use_list)
 
-        for in_use in ip_in_use_list:
-            set_b.add(in_use.ip_address)
-
-        # just catch the error if they key is not present means difference returned 0.
-        try:
-            result = str(netaddr.IPAddress((set_a - set_b).pop()))
-        except KeyError:
-            msg = "Can not allocate ip address for VTEP"
+        if not ip_address:
+            msg = "Cannot allocate from subnet {0}".format(subnet) 
             LOG.error(msg)
-            raise Exception(msg)
+            # TODO(mdurrant) - Raise neutron exception
+            raise Exception
 
         mark_in_use = {
-            "ip_address": result,
+            "ip_address": ip_address, 
             "network_id": network_id,
             "port_id": self.create_a10_port(project_id, interface_id, network_id, mac_address=mac),
             "subnet_id": subnet["id"]
@@ -187,28 +186,23 @@ class NeutronDbWrapper(object):
 
         self.create_ipallocation(mark_in_use)
 
-        return result, subnet["cidr"], mark_in_use["port_id"]
+        return ip_address, subnet["cidr"], mark_in_use["port_id"]
 
     def create_a10_port(self, tenant_id, lif_id, net_id, owner=None, mac_address=None):
-        port_name = "A10_DEV_{0}_PART_{1}_LIF_{2}".format("VXLAN", tenant_id[0:13],
-                                                          lif_id)
+        # TODO(mdurrant) Move port naming to config
+        port_name = self.VLAN_PORT_NAME_FORMAT.format(project_id=tenant_id, network_id=net_id)
 
         if not mac_address:
-            mac_address = [
-                random.randint(0x00, 0xff),
-                random.randint(0x00, 0xff),
-                random.randint(0x00, 0xff)]
-            mac_last = ':'.join(map(lambda x: "%02x" % x, mac_address))
-            mac_address = "00:1F:A0:{0}".format(mac_last)
-        macaddress = mac_address
-        device_owner = owner or "network:a10networks"
+            mac_address = ip_helpers.generate_random_mac("00:1F:A0")
+        
+        device_owner = owner or self.VLAN_PORT_OWNER 
 
         port = {
             "id": uuidutils.generate_uuid(),
             "tenant_id": tenant_id,
             "name": port_name,
             "network_id": net_id,
-            "mac_address": macaddress,
+            "mac_address": mac_address,
             "admin_state_up": 1,
             "status": 'ACTIVE',
             "device_id": net_id,
@@ -227,3 +221,18 @@ class NeutronDbWrapper(object):
             port = self._session.query(nmodels.Port).filter_by(id=port_id).first()
             port.mac_address = mac
             self._session.add(port)
+
+    def cleanup_vlan_ports(self, last_lb):
+        vip_port = last_lb.vip_port
+        network_id, port_id, tenant_id = vip_port.network_id, vip_port.id, vip_port.tenant_id
+        port_name = self.VLAN_PORT_NAME_FORMAT.format(project_id=tenant_id,network_id=network_id)
+        query_args = {
+            "network_id": network_id,
+            "project_id": tenant_id,
+            # "name": port_name,
+            "device_owner": self.VLAN_PORT_OWNER
+        }
+
+        with self._session.begin(subtransactions=True):
+            port = self._session.query(nmodels.Port).filter_by(**query_args).first()
+            self._session.delete(port)

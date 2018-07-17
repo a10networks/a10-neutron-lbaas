@@ -171,6 +171,9 @@ class A10DeleteContextBase(A10WriteContext):
                 if not name:
                     return
                 self.hooks.partition_delete(self.client, self.openstack_context, name)
+                # If the hook has an explicit "cleanup for all cleanup" methods, run it passing the client and last object.
+                if hasattr(self.hooks, "partition_delete_last"):
+                    self.hooks.partition_delete_last(self.client, self.openstack_context, name, self.openstack_lbaas_obj)
                 LOG.debug("hooks.partition_delete of %s succeeded " % (name))
                 self.partition_deleted = True
             except Exception:
