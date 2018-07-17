@@ -66,6 +66,10 @@ class AcosWrapper(object):
 class NeutronDbWrapper(object):
     VLAN_PORT_NAME_FORMAT = "A10_VLANHBPHOOK_PROJECT_{project_id}_NET_{network_id}"
     VLAN_PORT_OWNER = "network:a10networks"
+    BINDING_VNIC_TYPE = "normal"
+    BINDING_PROFILE = ""
+    BINDING_VIF_TYPE = "unbound"
+    BINDING_VIF_DETAILS = ""
 
     """Wraps neutron DB ops for easy testing"""
     def __init__(self, session, *args, **kwargs):
@@ -197,6 +201,23 @@ class NeutronDbWrapper(object):
             "device_id": device_id,
             "device_owner": device_owner
         }
+
+    def create_port_binding(self, port_id, host):
+        return self._create_port_binding(port_id, host, BINDING_VNIC_TYPE, BINDING_PROFILE, 
+                                         BINDING_VIF_TYPE, BINDING_VIF_DETAILS);
+
+    def _create_port_binding(self, port_id, host, vnic_type, profile, vif_type, vif_details, status="ACTIVE"):
+        with self._session.begin(subtransactions=True):
+            binding = pmodels.PortBinding(
+                port_id = port_id,
+                host = host,
+                vnic_type = vnic_type,
+                vif_type=vif_type,
+                profile=profile,
+                vif_details=vif_details,
+                status=status,
+            )
+            self._session.add(port)
 
     def update_port(self, port_id, mac):
         with self._session.begin(subtransactions=True):
