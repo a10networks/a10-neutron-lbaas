@@ -23,6 +23,8 @@ import simple
 LOG = log.getLogger(__name__)
 
 
+VLAN_LOG_FMT = "VLAN:{0} Project:{1} Network:{2}"
+
 class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
     def after_member_create(self, a10_context, os_context, member):
         pass
@@ -39,10 +41,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         vip_port = vip.vip_port
         subnet_id = vip.vip_subnet_id
         port_id = vip_port.id
-        # network_id = vip_port.network_id
-
-        # Initialize sentinel values
-        # ve, ve_ip, ve_port, ve_mask, ve_mac = None, None, None, None, None
+        network_id = vip_port.network_id
+        tenant_id = vip.tenant_id
 
         try:
             binding_level = config.get("vlan_binding_level")
@@ -57,20 +57,25 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         segment = db.get_segment(port_id, binding_level)
         # Get {vlan_id} from the segment
         vlan_id = segment.segmentation_id
+
         ve = None
         # Is there one assigned to the segment?
         if not vlan_id:
             LOG.info(
                 "No VLAN ID for port {0} on segment {1}. Exiting hook.".format(port_id, segment.id))
             return
-        # Get the associated VE if so.
+        
+        # Format the string we're going to use a gazillion times for logging.
+        VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)   
 
+        # Get the associated VE
         ve = acos.get_ve(vlan_id)
+        # TODO(mdurrant) - Can we hit the DB instead of hitting ACOS?
         # If the VE already exists, the VLAN already exists and in most cases we're done.
         # Log that this happened.
         # TODO(mdurrant) - Find a way to check if it's in another partition and gripe loudly.
         if ve:
-            LOG.info("Configuration for VLAN {0} previously created".format(vlan_id))
+            LOG.info("Configuration for {0} previously created".format(VE_LOG_ENTRY))
             return
 
         # If DHCP, we can configure the interface with DHCP
@@ -85,26 +90,36 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         ve_mac = ve_pre.get("ve").get("oper").get("mac")
         ve_mac = self._format_mac(ve_mac)
 
+        # Create a neutron port for VE interface using returned VE MAC
+        ve_nport = db.create_port(network_id, tenant_id, ve_mac, network_id)
+        # Set defaults
+        ve_ip, ve_mask, ve_port = None, None, ve_nport.id
+
         if not use_dhcp:
             # Allocate IP from the subnet.
-            ve_ip, ve_mask, ve_port = db.allocate_ip_for_subnet(subnet_id, ve_mac)
+            ve_ip, ve_mask, ve_port = db.allocate_ip_for_subnet(subnet_id, ve_mac, ve_nport.id)
 
         LOG.info("Created VLAN {0} with interfaces {1}".format(str(vlan_id), str(interfaces)))
         ve_dict = self._build_ve_dict(vlan_id, ve_ip, ve_mask, use_dhcp)
-        # Try to create it. If we catch a "exists in another partition" error, raise it.
-        acos.create_ve(**ve_dict)
-        ve_post = acos.get_ve(vlan_id)
-        # If the created VE doesn't have an IP, we kinda need to wait til it has one.
+        
+        # Try to create it. If an exception is raised, it's logged and we stop here. 
+        ve_created = acos.create_ve(ve_dict)
+        if not ve_created:
+            LOG.error("Exception creating VE interface for VLAN:{0}".format(vlan_id))
+            return
+
+        # Log the created VE for troubleshooting purposes.
+        LOG.info("Created VE {0}", str(ve_created))
+
+        # Get the IP address of the port
         if use_dhcp:
             LOG.info("VE {0}", str(ve_post))
         # TODO(mdurrant) - Something to handle waiting for DHCP else this whole thing falls ove.r
 
-        LOG.info("Created VE {0}", ve_dict)
-        # Set necessary IP routes
-        #
+        
         # Else, it already exists and we're good
-        LOG.info("Configured for VIP {id} IP:{ip} VLAN:{vlan_id}".format(
-            ip=ve_ip, id=vip.id, vlan_id=vlan_id))
+        LOG.info("Configured {0} with interface IP: {1}".format(
+            VE_LOG_ENTRY, ve_ip))
         # fin.
 
     def after_vip_update(self, a10_context, os_context, vip):
@@ -118,16 +133,15 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
 
         db = NeutronDbWrapper(openstack_context.session)
         LOG.info("Cleanup ports for {0}".format(name))
-        import pdb;pdb.set_trace()
         db.cleanup_vlan_ports(lbaas_obj)
 
     def _build_ve_dict(self, vlan_id, ip=None, mask=None, use_dhcp=None):
-        rval = {"vlan_id": vlan_id}
+        rval = {"ifnum": vlan_id}
         if use_dhcp:
             rval["dhcp"] = use_dhcp
         if ip and mask:
-            rval["ip"] = ip
-            rval["mask"] = mask
+            rval["ip_address"] = ip
+            rval["ip_netmask"] = mask
 
         return rval
 
@@ -135,3 +149,10 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         raw_mac = raw_mac.replace(".", "")
         mac = ':'.join(a + b for a, b in zip(raw_mac[::2], raw_mac[1::2]))
         return mac
+
+    def _format_cidr(self, cidr):
+        marker = "/"
+        if cidr[0] != marker:
+            beg = cidr.find(marker)
+            cidr = cidr[beg:]
+        return cidr

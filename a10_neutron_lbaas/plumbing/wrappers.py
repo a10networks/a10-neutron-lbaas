@@ -42,13 +42,13 @@ class AcosWrapper(object):
         except Exception as ex:
             raise ex
 
-    def create_ve(self, vlan_id, ip, mask, dhcp=False):
-        mask = self._format_cidr(mask)
-
+    def create_ve(self, ve_dict):
         try:
-            return self._client.interface.ve.create(vlan_id, ip_address=ip,
-                                                    ip_netmask=self._format_cidr(mask), dhcp=dhcp)
+            return self._client.interface.ve.create(**ve_dict)
         # TODO(mdurrant) Narrow exception handling.
+        except acos_exc.DhcpAcquireFailed:
+            LOG.error("UNABLE TO CREATE VE INTERFACE {0}".format(str(ve_dict)))
+            return None
         except Exception as ex:
             raise ex
 
@@ -65,17 +65,10 @@ class AcosWrapper(object):
             raise ex
         return rv
 
-    def _format_cidr(self, cidr):
-        marker = "/"
-        if cidr[0] != marker:
-            beg = cidr.find(marker)
-            cidr = cidr[beg:]
-        return cidr
-
 
 class NeutronDbWrapper(object):
     VLAN_PORT_NAME_FORMAT = "A10_VLANHBPHOOK_PROJECT_{project_id}_NET_{network_id}"
-    VLAN_PORT_OWNER = "network:A10networks"
+    VLAN_PORT_OWNER = "network:a10networks"
 
     """Wraps neutron DB ops for easy testing"""
     def __init__(self, session, *args, **kwargs):
@@ -101,14 +94,14 @@ class NeutronDbWrapper(object):
         subnet = self._session.query(nmodels.Subnet).filter_by(id=id).first()
         return subnet
 
-    def allocate_ip_for_subnet(self, subnet_id, mac):
+    def allocate_ip_for_subnet(self, subnet_id, mac, port_id):
         """Allocates an IP from the specified subnet and creates a port"""
         # Get an available IP and mark it as used before someone else does
         # If there's no IP, , log it and return an error
         # If we successfully get an IP, create a port with the specified MAC and device data
         # If port creation fails, deallocate the IP
         subnet = self.get_subnet(subnet_id)
-        ip, mask, port_id = self.a10_allocate_ip_from_dhcp_range(subnet, "vlan", mac)
+        ip, mask, port_id = self.a10_allocate_ip_from_dhcp_range(subnet, "vlan", mac, port_id)
         return ip, mask, port_id
 
     def get_ipallocationpool_by_subnet_id(self, subnet_id):
@@ -118,7 +111,15 @@ class NeutronDbWrapper(object):
     def get_ipallocations_by_subnet_id(self, subnet_id):
         return self._session.query(nmodels.IPAllocation).filter_by(subnet_id=subnet_id).all()
 
-    def create_port(self, record):
+    def create_port(self, network_id, project_id, mac_address, device_id):
+        device_owner = self.VLAN_PORT_OWNER
+        device_id = network_id
+        name = self.VLAN_PORT_NAME_FORMAT.format(project_id=project_id, network_id=network_id)
+        port_dict = self._build_port_dict(project_id, name, network_id, mac_address, device_id, 
+                                          device_owner)
+        return self.create_port_from_dict(port_dict)
+
+    def create_port_from_dict(self, record):
         with self._session.begin(subtransactions=True):
             port = nmodels.Port(
                 id=uuidutils.generate_uuid(),
@@ -155,7 +156,7 @@ class NeutronDbWrapper(object):
 
         return ipallocation
 
-    def a10_allocate_ip_from_dhcp_range(self, subnet, interface_id, mac):
+    def a10_allocate_ip_from_dhcp_range(self, subnet, interface_id, mac, port_id):
         """Search for an available IP.addr from unallocated nmodels.IPAllocationPool range.
         If no addresses are available then an error is raised. Returns the address as a string.
         This search is conducted by a difference of the nmodels.IPAllocationPool set_a
@@ -180,7 +181,7 @@ class NeutronDbWrapper(object):
         mark_in_use = {
             "ip_address": ip_address, 
             "network_id": network_id,
-            "port_id": self.create_a10_port(project_id, interface_id, network_id, mac_address=mac),
+            "port_id": port_id, 
             "subnet_id": subnet["id"]
         }
 
@@ -188,33 +189,19 @@ class NeutronDbWrapper(object):
 
         return ip_address, subnet["cidr"], mark_in_use["port_id"]
 
-    def create_a10_port(self, tenant_id, lif_id, net_id, owner=None, mac_address=None):
-        # TODO(mdurrant) Move port naming to config
-        port_name = self.VLAN_PORT_NAME_FORMAT.format(project_id=tenant_id, network_id=net_id)
 
-        if not mac_address:
-            mac_address = ip_helpers.generate_random_mac("00:1F:A0")
-        
-        device_owner = owner or self.VLAN_PORT_OWNER 
-
-        port = {
+    def _build_port_dict(self, tenant_id, name, network_id, mac_address, device_id, device_owner):
+        return {
             "id": uuidutils.generate_uuid(),
             "tenant_id": tenant_id,
-            "name": port_name,
-            "network_id": net_id,
+            "name": name,
+            "network_id": network_id,
             "mac_address": mac_address,
             "admin_state_up": 1,
-            "status": 'ACTIVE',
-            "device_id": net_id,
+            "status": "ACTIVE",
+            "device_id": device_id,
             "device_owner": device_owner
         }
-
-        try:
-            port = self.create_port(port)
-        except Exception as ex:
-            LOG.exception(ex)
-
-        return port["id"]
 
     def update_port(self, port_id, mac):
         with self._session.begin(subtransactions=True):
@@ -235,4 +222,5 @@ class NeutronDbWrapper(object):
 
         with self._session.begin(subtransactions=True):
             port = self._session.query(nmodels.Port).filter_by(**query_args).first()
-            self._session.delete(port)
+            if port:
+                self._session.delete(port)
