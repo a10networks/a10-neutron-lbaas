@@ -15,9 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import netaddr
-import random
-
 from oslo_log import log
 from oslo_utils import uuidutils
 
@@ -115,7 +112,7 @@ class NeutronDbWrapper(object):
         device_owner = self.VLAN_PORT_OWNER
         device_id = network_id
         name = self.VLAN_PORT_NAME_FORMAT.format(project_id=project_id, network_id=network_id)
-        port_dict = self._build_port_dict(project_id, name, network_id, mac_address, device_id, 
+        port_dict = self._build_port_dict(project_id, name, network_id, mac_address, device_id,
                                           device_owner)
         return self.create_port_from_dict(port_dict)
 
@@ -164,31 +161,29 @@ class NeutronDbWrapper(object):
         """
         subnet_id = subnet["id"]
         network_id = subnet["network_id"]
-        project_id = subnet["project_id"]
 
         iprange_result = self.get_ipallocationpool_by_subnet_id(subnet_id)
         ip_in_use_list = [x.ip_address for x in self.get_ipallocations_by_subnet_id(subnet_id)]
 
         range_begin, range_end = iprange_result.first_ip, iprange_result.last_ip
-        ip_address = IPHelpers.find_unused_ip(range_begin,range_end, ip_in_use_list)
+        ip_address = IPHelpers.find_unused_ip(range_begin, range_end, ip_in_use_list)
 
         if not ip_address:
-            msg = "Cannot allocate from subnet {0}".format(subnet) 
+            msg = "Cannot allocate from subnet {0}".format(subnet)
             LOG.error(msg)
             # TODO(mdurrant) - Raise neutron exception
             raise Exception
 
         mark_in_use = {
-            "ip_address": ip_address, 
+            "ip_address": ip_address,
             "network_id": network_id,
-            "port_id": port_id, 
+            "port_id": port_id,
             "subnet_id": subnet["id"]
         }
 
         self.create_ipallocation(mark_in_use)
 
         return ip_address, subnet["cidr"], mark_in_use["port_id"]
-
 
     def _build_port_dict(self, tenant_id, name, network_id, mac_address, device_id, device_owner):
         return {
@@ -211,8 +206,8 @@ class NeutronDbWrapper(object):
 
     def cleanup_vlan_ports(self, last_lb):
         vip_port = last_lb.vip_port
-        network_id, port_id, tenant_id = vip_port.network_id, vip_port.id, vip_port.tenant_id
-        port_name = self.VLAN_PORT_NAME_FORMAT.format(project_id=tenant_id,network_id=network_id)
+        network_id, tenant_id = vip_port.network_id, vip_port.tenant_id
+        # port_name = self.VLAN_PORT_NAME_FORMAT.format(project_id=tenant_id,network_id=network_id)
         query_args = {
             "network_id": network_id,
             "project_id": tenant_id,

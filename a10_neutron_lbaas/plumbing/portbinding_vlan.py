@@ -25,6 +25,7 @@ LOG = log.getLogger(__name__)
 
 VLAN_LOG_FMT = "VLAN:{0} Project:{1} Network:{2}"
 
+
 class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
     def after_member_create(self, a10_context, os_context, member):
         pass
@@ -64,13 +65,12 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
             LOG.info(
                 "No VLAN ID for port {0} on segment {1}. Exiting hook.".format(port_id, segment.id))
             return
-        
+
         # Format the string we're going to use a gazillion times for logging.
-        VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)   
+        VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)
 
         # Get the associated VE
         ve = acos.get_ve(vlan_id)
-        # TODO(mdurrant) - Can we hit the DB instead of hitting ACOS?
         # If the VE already exists, the VLAN already exists and in most cases we're done.
         # Log that this happened.
         # TODO(mdurrant) - Find a way to check if it's in another partition and gripe loudly.
@@ -101,8 +101,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
 
         LOG.info("Created VLAN {0} with interfaces {1}".format(str(vlan_id), str(interfaces)))
         ve_dict = self._build_ve_dict(vlan_id, ve_ip, ve_mask, use_dhcp)
-        
-        # Try to create it. If an exception is raised, it's logged and we stop here. 
+
+        # Try to create it. If an exception is raised, it's logged and we stop here.
         ve_created = acos.create_ve(ve_dict)
         if not ve_created:
             LOG.error("Exception creating VE interface for VLAN:{0}".format(vlan_id))
@@ -113,10 +113,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
 
         # Get the IP address of the port
         if use_dhcp:
-            LOG.info("VE {0}", str(ve_post))
-        # TODO(mdurrant) - Something to handle waiting for DHCP else this whole thing falls ove.r
+            LOG.info("VE {0}", str(ve_created))
 
-        
         # Else, it already exists and we're good
         LOG.info("Configured {0} with interface IP: {1}".format(
             VE_LOG_ENTRY, ve_ip))
