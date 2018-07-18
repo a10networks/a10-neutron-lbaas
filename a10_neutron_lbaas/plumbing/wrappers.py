@@ -203,8 +203,8 @@ class NeutronDbWrapper(object):
         }
 
     def create_port_binding(self, port_id, host):
-        return self._create_port_binding(port_id, host, BINDING_VNIC_TYPE, BINDING_PROFILE, 
-                                         BINDING_VIF_TYPE, BINDING_VIF_DETAILS);
+        return self._create_port_binding(port_id, host, self.BINDING_VNIC_TYPE, self.BINDING_PROFILE, 
+                                         self.BINDING_VIF_TYPE, self.BINDING_VIF_DETAILS);
 
     def _create_port_binding(self, port_id, host, vnic_type, profile, vif_type, vif_details, status="ACTIVE"):
         with self._session.begin(subtransactions=True):
@@ -217,7 +217,7 @@ class NeutronDbWrapper(object):
                 vif_details=vif_details,
                 status=status,
             )
-            self._session.add(port)
+            self._session.add(binding)
 
     def update_port(self, port_id, mac):
         with self._session.begin(subtransactions=True):

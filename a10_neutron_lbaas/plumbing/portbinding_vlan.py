@@ -93,7 +93,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         # Create a neutron port for VE interface using returned VE MAC
         ve_nport = db.create_port(network_id, tenant_id, ve_mac, network_id)
         # TODO(mdurrant) - Should host be blank
-        ve_portbinding = db.create_port_binding(ve_nport.port_id, "")
+        ve_portbinding = db.create_port_binding(ve_nport.id, "")
         # Set defaults
         ve_ip, ve_mask, ve_port = None, None, ve_nport.id
 
