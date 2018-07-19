@@ -50,8 +50,8 @@ LOG = logging.getLogger(__name__)
 
 
 class A10Certificate(extensions.ExtensionDescriptor):
-    nextensions.register_custom_supported_check(
-        constants.A10_CERTIFICATE_EXT, lambda: True, plugin_agnostic=True)
+    # nextensions.register_custom_supported_check(
+    #    constants.A10_CERTIFICATE_EXT, lambda: True, plugin_agnostic=True)
 
     @classmethod
     def get_name(cls):
