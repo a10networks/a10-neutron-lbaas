@@ -18,9 +18,18 @@
 from oslo_log import log
 from oslo_utils import uuidutils
 
-from neutron.db.models import segment as segmodels
+
+# post-Kilo import.
+try:
+    from neutron.db.models.segment import NetworkSegment
+except ImportError:
+    # this moved to neutron.db.models.segment in kilo
+    from neutron.plugins.ml2.models import NetworkSegment
+
+
 from neutron.db import models_v2 as nmodels
-from neutron.plugins.ml2 import models as pmodels
+from neutron.plugins.ml2.models import PortBinding
+from neutron.plugins.ml2.models import PortBindingLevel
 
 from a10_neutron_lbaas.plumbing.utils import IPHelpers
 from acos_client import errors as acos_exc
@@ -78,14 +87,14 @@ class NeutronDbWrapper(object):
     def get_segment(self, port_id, level):
         if _HPB_TEST:
             port = self._session.query(nmodels.Port).filter_by(id=port_id).first()
-            segment = self._session.query(segmodels.NetworkSegment).filter_by(
+            segment = self._session.query(NetworkSegment).filter_by(
                 network_id=port.network_id).first()
             return segment
 
-        binding_level = self._session.query(pmodels.PortBindingLevel).filter_by(
+        binding_level = self._session.query(PortBindingLevel).filter_by(
             port_id=port_id, level=level).first()
         if binding_level:
-            segment = self._session.query(segmodels.NetworkSegment).filter_by(
+            segment = self._session.query(NetworkSegment).filter_by(
                 id=binding_level.segment_id).first()
             return segment
         # No binding leve
@@ -208,7 +217,7 @@ class NeutronDbWrapper(object):
 
     def _create_port_binding(self, port_id, host, vnic_type, profile, vif_type, vif_details, status="ACTIVE"):
         with self._session.begin(subtransactions=True):
-            binding = pmodels.PortBinding(
+            binding = PortBinding(
                 port_id = port_id,
                 host = host,
                 vnic_type = vnic_type,
