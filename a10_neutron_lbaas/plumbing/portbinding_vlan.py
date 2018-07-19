@@ -102,7 +102,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
             ve_ip, ve_mask, ve_port = db.allocate_ip_for_subnet(subnet_id, ve_mac, ve_nport.id)
 
         LOG.info("Created VLAN {0} with interfaces {1}".format(str(vlan_id), str(interfaces)))
-        ve_dict = self._build_ve_dict(vlan_id, ve_ip, self._format_cidr(ve_mask), use_dhcp)
+        ve_dict = self._build_ve_dict(vlan_id, ve_ip, ve_mask, use_dhcp)
 
         # Try to create it. If an exception is raised, it's logged and we stop here.
         ve_created = acos.create_ve(ve_dict)
@@ -141,7 +141,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
             rval["dhcp"] = use_dhcp
         if ip and mask:
             rval["ip_address"] = ip
-            rval["ip_netmask"] = mask
+            rval["ip_netmask"] = self._format_cidr(mask)
 
         return rval
 
@@ -151,8 +151,9 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         return mac
 
     def _format_cidr(self, cidr):
+        # Takes "A.B.C.D/n" and returns the "/n" portion
         marker = "/"
-        if cidr[0] != marker:
+        if cidr and cidr[0] != marker:
             beg = cidr.find(marker)
             cidr = cidr[beg:]
         return cidr
