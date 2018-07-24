@@ -328,7 +328,13 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         rv = {}
         # Device-specific defaults have precedence over global
         rv.update(self._get_global_vport_defaults(c))
-        rv.update(self._get_device_vport_defaults(c))
+
+        # We made the unfortunate decision to override the get function
+        # This results in the inability to specify a default empty dict for non-existent values
+        try:
+            rv.update(self._get_device_vport_defaults(c))
+        except TypeError:
+            pass
         if vport_name and len(vport_name) > 0:
             self._get_name_matches(rv, vport_name, self._get_expressions(c))
         return rv

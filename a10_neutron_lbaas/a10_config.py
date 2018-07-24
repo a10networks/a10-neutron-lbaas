@@ -222,7 +222,7 @@ class A10Config(object):
         if self.get('use_database'):
             from a10_neutron_lbaas.db import models
 
-            instance = models.A10DeviceInstance.find_by(name=device_name, db_session=db_session)
+            instance = models.A10Device.find_by(name=device_name, db_session=db_session)
             if instance is not None:
                 self._devices[device_name] = instance.as_dict()
                 return self._devices[device_name]
@@ -234,7 +234,7 @@ class A10Config(object):
             from a10_neutron_lbaas.db import models
 
             d = dict(self._devices.items())
-            for x in models.A10DeviceInstance.find_all():
+            for x in models.A10Device.find_all():
                 d[x.name] = x.as_dict()
             return d
         return self._devices

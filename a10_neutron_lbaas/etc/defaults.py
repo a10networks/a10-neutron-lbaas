@@ -18,7 +18,7 @@ import a10_neutron_lbaas.plumbing_hooks
 
 GLOBAL_DEFAULTS = {
     "verify_appliances": False,
-    "use_database": False,
+    "use_database": True,
     "database_connection": None,
     "neutron_conf_dir": '/etc/neutron',
     "member_name_use_uuid": False,
@@ -33,12 +33,12 @@ DEVICE_REQUIRED_FIELDS = [
     "host",
     "username",
     "password",
+    "api_version",
 ]
 
 DEVICE_OPTIONAL_DEFAULTS = {
     "protocol": "https",
     "port": 443,
-    "api_version": "2.1",
     "status": True,
     "autosnat": False,
     "v_method": "LSI",
