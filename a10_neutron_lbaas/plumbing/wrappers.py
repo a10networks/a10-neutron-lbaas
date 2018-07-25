@@ -37,6 +37,10 @@ from acos_client import errors as acos_exc
 LOG = log.getLogger(__name__)
 _HPB_TEST = True
 
+# THIS FLAG IS CRUCIAL FOR KILO COMPATIBILITY
+# THIS USES tenant_id INSTEAD OF project_id
+_IS_KILO = True
+
 
 class AcosWrapper(object):
     def __init__(self, client, *args, **kwargs):
@@ -138,6 +142,7 @@ class NeutronDbWrapper(object):
                 network_id=record["network_id"],
                 mac_address=record["mac_address"],
                 admin_state_up=record["admin_state_up"],
+		# ACTIVE by default
                 status=record["status"],
                 device_id=record["device_id"],
                 device_owner=record["device_owner"]
@@ -224,7 +229,7 @@ class NeutronDbWrapper(object):
                 vif_type=vif_type,
                 profile=profile,
                 vif_details=vif_details,
-                status=status,
+                # status=status,
             )
             self._session.add(binding)
 
@@ -238,9 +243,11 @@ class NeutronDbWrapper(object):
         vip_port = last_lb.vip_port
         network_id, tenant_id = vip_port.network_id, vip_port.tenant_id
         # port_name = self.VLAN_PORT_NAME_FORMAT.format(project_id=tenant_id,network_id=network_id)
+	project_id_fieldname = "project_id" if not _IS_KILO else "tenant_id"
+
         query_args = {
             "network_id": network_id,
-            "project_id": tenant_id,
+            project_id_fieldname: tenant_id,
             # "name": port_name,
             "device_owner": self.VLAN_PORT_OWNER
         }
