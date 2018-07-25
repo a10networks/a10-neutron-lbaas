@@ -135,7 +135,10 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
     def partition_delete_last(self, client, openstack_context, name, lbaas_obj):
         # After partition delete, remove any neutron ports created by this hook owned by the tenant
         # Make sure the last object is an LB. The data model ensures this but ... just in case.
-        if not lbaas_obj or type(lbaas_obj).__name__ != "LoadBalancer":
+    	# or type(lbaas_obj).__name__ != "LoadBalancer":
+        import pdb; pdb.set_trace()
+        if not lbaas_obj:
+            LOG.info("No lbaas obj was set for cleanup, exiting cleanup")
             return
 
         db = NeutronDbWrapper(openstack_context.session)

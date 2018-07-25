@@ -240,10 +240,20 @@ class NeutronDbWrapper(object):
             self._session.add(port)
 
     def cleanup_vlan_ports(self, last_lb):
-        vip_port = last_lb.vip_port
-        network_id, tenant_id = vip_port.network_id, vip_port.tenant_id
+        if hasattr(last_lb, "vip_port"):
+            vip_port = last_lb.vip_port
+            network_id = vip_port.network_id
+            tenant_id = last_lb.tenant_id
+        # v1 obj model
+        else:
+	    # It's a pool, not a vip, we can work with that
+            subnet_id = last_lb["subnet_id"]
+            subnet = self.get_subnet(subnet_id)
+            network_id = subnet["network_id"]
+            tenant_id = last_lb["tenant_id"]
+
         # port_name = self.VLAN_PORT_NAME_FORMAT.format(project_id=tenant_id,network_id=network_id)
-	project_id_fieldname = "project_id" if not _IS_KILO else "tenant_id"
+        project_id_fieldname = "project_id" if not _IS_KILO else "tenant_id"
 
         query_args = {
             "network_id": network_id,
