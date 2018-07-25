@@ -118,7 +118,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
             return
 
         # Log the created VE for troubleshooting purposes.
-        LOG.info("Created VE {0}", str(ve_created))
+        LOG.info("Created VE {0}", str(vlan_id))
 
         # Get the IP address of the port
         if use_dhcp:
