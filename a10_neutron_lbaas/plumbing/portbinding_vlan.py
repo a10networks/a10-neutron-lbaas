@@ -38,13 +38,20 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         db = NeutronDbWrapper(os_context.session)
         acos = AcosWrapper(a10_context.client)
         config = a10_context.a10_driver.config
-
-        vip_port = vip.vip_port
-        subnet_id = vip.vip_subnet_id
-        port_id = vip_port.id
-        network_id = vip_port.network_id
-        tenant_id = vip.tenant_id
-
+        # v2 obj model
+        if hasattr(vip, "vip_port"):
+            vip_port = vip.vip_port
+            subnet_id = vip.vip_subnet_id
+            port_id = vip_port.id
+            network_id = vip_port.network_id
+            tenant_id = vip.tenant_id
+        # v1 obj model
+        else:
+            subnet_id = vip["subnet_id"]
+            port_id = vip["port_id"]
+            subnet = db.get_subnet(subnet_id)
+            network_id = subnet["network_id"]
+            tenant_id = vip["tenant_id"] 
         try:
             binding_level = config.get("vlan_binding_level")
         except Exception as ex:
