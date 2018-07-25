@@ -136,7 +136,6 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         # After partition delete, remove any neutron ports created by this hook owned by the tenant
         # Make sure the last object is an LB. The data model ensures this but ... just in case.
     	# or type(lbaas_obj).__name__ != "LoadBalancer":
-        import pdb; pdb.set_trace()
         if not lbaas_obj:
             LOG.info("No lbaas obj was set for cleanup, exiting cleanup")
             return
