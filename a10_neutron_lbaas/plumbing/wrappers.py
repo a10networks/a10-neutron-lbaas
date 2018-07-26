@@ -96,6 +96,9 @@ class NeutronDbWrapper(object):
     def __init__(self, session, *args, **kwargs):
         self._session = session
 
+    def get_port(self, port_id):
+        return self._session.query(nmodels.Port).filter(nmodels.Port.id == port_id).first()
+
     def get_segment(self, port_id, level):
         if _HPB_TEST:
             port = self._session.query(nmodels.Port).filter_by(id=port_id).first()

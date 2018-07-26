@@ -75,7 +75,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
                 "No VLAN ID for port {0} on segment {1}. Exiting hook.".format(port_id, segment.id))
             return
         # Format the string we're going to use a gazillion times for logging.
-        # VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)
+        VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)
 
         # Get the associated VE
         # ve = acos.get_ve(vlan_id)
@@ -104,7 +104,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         vip_port = db.get_port(port_id)
         vip_mac = vip_port["mac_address"]
         acos.update_vip(vip_id, vip_mac, vlan_id)
-
+        LOG.info("Updated VIP {0} with mac {1} vlan {2}".format(vip_id, vip_mac, vlan_id))
         # TODO(mdurrant) - Should host be blank
         # ve_portbinding = db.create_port_binding(ve_nport.id, "")
         # Set defaults
@@ -131,8 +131,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         #    LOG.info("VE {0}", str(ve_created))
 
         # Else, it already exists and we're good
-        LOG.info("Configured {0} with interface IP: {1}".format(
-            VE_LOG_ENTRY, ve_ip))
+        # LOG.info("Configured {0} with interface IP: {1}".format(
+        #    VE_LOG_ENTRY, ve_ip))
         # fin.
 
     def after_vip_update(self, a10_context, os_context, vip):
@@ -149,6 +149,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         # db = NeutronDbWrapper(openstack_context.session)
         # LOG.info("Cleanup ports for {0}".format(name))
         # db.cleanup_vlan_ports(lbaas_obj)
+        # 
+        pass
 
     def _build_ve_dict(self, vlan_id, ip=None, mask=None, use_dhcp=None):
         rval = {"ifnum": vlan_id}
