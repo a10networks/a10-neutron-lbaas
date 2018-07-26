@@ -75,6 +75,14 @@ class AcosWrapper(object):
             raise ex
         return rv
 
+    def update_vip(self, vip_id, mac_address, vlan_id):
+        vip = None
+        try:
+            vip = self._client.slb.virtual_server.update(vip_id, mac=1, mac_address=mac_address, vlan=vlan_id)
+        except Exception as ex:
+            raise ex
+        return vip
+
 
 class NeutronDbWrapper(object):
     VLAN_PORT_NAME_FORMAT = "A10_VLANHBPHOOK_PROJECT_{project_id}_NET_{network_id}"
