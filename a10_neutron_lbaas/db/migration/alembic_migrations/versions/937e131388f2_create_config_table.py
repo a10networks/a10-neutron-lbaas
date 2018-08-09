@@ -52,11 +52,12 @@ def upgrade():
         sa.Column('id', sa.String(36), primary_key=True, nullable=False),
         sa.Column('created_at', sa.DateTime, nullable=False),
         sa.Column('updated_at', sa.DateTime, nullable=False),
-        sa.Column('associated_obj_id', sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False),
-        sa.Column('key_id', sa.String(36), sa.ForeignKey('a10_device_key.id'), nullable=False),
+        sa.Column('associated_obj_id', sa.String(36),
+                  sa.ForeignKey('a10_devices.id'), nullable=False),
+        sa.Column('key_id', sa.String(36), sa.ForeignKey('a10_device_key.id'),
+                  nullable=False),
         sa.Column('value', sa.String(255), nullable=False),
     )
-
 
 
 def downgrade():

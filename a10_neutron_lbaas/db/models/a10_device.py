@@ -10,11 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
+import uuid
 
 from a10_neutron_lbaas.db import model_base
+
 
 def _uuid_str():
     return str(uuid.uuid4())
@@ -35,18 +36,12 @@ class A10Device(model_base.A10BaseMixin, model_base.A10Base):
     api_version = sa.Column(sa.String(12), nullable=False)
     protocol = sa.Column(sa.String(32), nullable=False)
     port = sa.Column(sa.Integer, nullable=False)
-    autosnat = sa.Column(sa.Boolean(), nullable=False)
-    v_method = sa.Column(sa.String(32), nullable=False)
-    shared_partition = sa.Column(sa.String(1024), nullable=False)
-    use_float = sa.Column(sa.Boolean(), nullable=False)
-    default_virtual_server_vrid = sa.Column(sa.Integer, nullable=True)
-    ipinip = sa.Column(sa.Boolean(), nullable=False)
-    write_memory = sa.Column(sa.Boolean(), nullable=False)
 
     nova_instance_id = sa.Column(sa.String(36), nullable=True)
     host = sa.Column(sa.String(255), nullable=False)
 
-    config = orm.relationship("A10DeviceValue", back_populates="associated_device")
+    a10_opts = orm.relationship("A10DeviceValue", back_populates="associated_device")
+
 
 class A10DeviceKey(model_base.A10Base):
 
@@ -62,10 +57,11 @@ class A10DeviceValue(model_base.A10Base, model_base.A10BaseMixin):
 
     __tablename__ = 'a10_device_value'
 
+    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     associated_obj_id = sa.Column(sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False)
     key_id = sa.Column(sa.String(36), sa.ForeignKey('a10_device_key.id'), nullable=False)
 
-    value = sa.Column(sa.String(255), nullable=False)
+    value = sa.Column(sa.String(255), nullable=True)
 
-    associated_device = orm.relationship("A10Device", back_populates="config")
+    associated_device = orm.relationship("A10Device", back_populates="a10_opts")
     associated_key = orm.relationship("A10DeviceKey", back_populates="associated_value")

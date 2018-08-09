@@ -39,7 +39,6 @@ devices = {
         "password": "a10",
         "status": False,
         "api_version": "2.1",
-        "v_method": "LSI",
         "max_instance": 5000,
         "use_float": True,
         "method": "hash"
@@ -51,6 +50,7 @@ devices = {
         "password": "a10",
         "status": True,
         "api_version": "2.1",
+        "v_method": "LSI",
         "max_instance": 5000,
         "use_float": True,
     },
@@ -59,6 +59,7 @@ devices = {
         "username": "admin",
         "password": "a10",
         "api_version": "2.1",
+        "v_method": "LSI",
         "use_float": True,
         "ha_sync_list": [
             {
@@ -76,6 +77,7 @@ devices = {
         "password": "a10",
         "status": True,
         "api_version": "2.1",
+        "v_method": "LSI",
         "max_instance": 5000,
         "use_float": True,
     },
@@ -86,6 +88,7 @@ devices = {
         "password": "a10",
         "status": True,
         "api_version": "3.0",
+        "v_method": "LSI",
         "max_instance": 5000,
         "use_float": True,
     },
@@ -111,13 +114,15 @@ devices = {
         "protocol": "https",
         "v_method": "LSI",
         "shared_partition": "mypart",
+        "api_version": "3.0",
     },
     "axadp-noalt": {
         "host": "10.10.100.24",
         "username": "admin",
         "password": "a10",
         "protocol": "https",
-        "v_method": "LSI"
+        "v_method": "LSI",
+        "api_version": "3.0",
     },
     "ax-nowrite": {
         "host": "10.10.100.24",
@@ -125,12 +130,16 @@ devices = {
         "password": "a10",
         "protocol": "https",
         "write_memory": False,
+        "v_method": "LSI",
+        "api_version": "3.0",
     },
     "ax-write": {
         "host": "10.10.100.24",
         "username": "admin",
         "password": "a10",
         "protocol": "https",
+        "v_method": "LSI",
+        "api_version": "3.0",
     },
     "axipinip": {
         "host": "10.48.5.219",
@@ -138,6 +147,7 @@ devices = {
         "username": "admin",
         "password": "a10",
         "status": True,
+        "v_method": "LSI",
         "api_version": "2.1",
         "max_instance": 5000,
         "use_float": True,

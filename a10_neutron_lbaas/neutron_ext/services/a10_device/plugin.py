@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
-import itertools
 from oslo_log import log as logging
 
 import a10_neutron_lbaas.a10_config as a10_config
@@ -43,6 +42,7 @@ _vthunder_mappings = [("id", None, None, "id"),
                       ("username", "username", None, "username"),
                       ("password", "password", None, "password"),
                       ("api_version", "api_version", None, "api_version"),
+                      ("a10_opts", "a10_opts", None, "a10_opts"),
                       ("protocol", "protocol", None, "protocol"),
                       ("port", "port", None, "port"),
                       ("nova_instance_id", None, "nova_instance_id", "nova_instance_id"),
@@ -57,6 +57,7 @@ _vthunder_mappings = [("id", None, None, "id"),
                       ("data_networks", "vthunder_data_networks", None, None),
                       ("image", "glance_image", None, None),
                       ("flavor", "nova_flavor", None, None)]
+
 
 def _convert(source, from_type, to_type):
     result = {}
@@ -100,7 +101,6 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
         return map(_make_api_dict, db_instances)
 
-    
     def create_a10_vthunder(self, context, a10_vthunder):
         """Attempt to create vthunder using neutron context"""
         LOG.debug("A10DevicePlugin.create(): vthunder=%s", a10_vthunder)
@@ -130,7 +130,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         vthunder_dict = {'extra_resources': db_instance['extra_resources']}
         vthunder_dict.update(_make_api_dict(db_instance))
 
-        return vthunder_dict 
+        return vthunder_dict
 
     def get_a10_vthunder(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_a10_vthunder(): id=%s, fields=%s",
@@ -153,7 +153,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
             vthunder)
 
         db_instance = super(A10DevicePlugin, self).update_a10_device(
-            context, id, vthunder, 'vthunder')
+            context, id, vthunder, 'a10_vthunder')
 
         return _make_api_dict(db_instance)
 
@@ -187,29 +187,38 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
         return db_instances
 
-    def create_a10_device(self, context, a10_device):
+    def convert_a10_device_body(self, body, tenant_id, device_id, resource='a10_device'):
+        '''
+        Convert --a10-opts sub-dict to same level as other passed options and
+        set default values to body
+        '''
+        LOG.debug("A10DevicePlugin.convert_a10_device_body()")
+        return super(A10DevicePlugin, self).convert_a10_device_body(
+            body, tenant_id, device_id, resource)
+
+    def create_a10_device(self, context, a10_device, resource='a10_device'):
         """Attempt to create vthunder using neutron context"""
-        LOG.debug("A10DevicePlugin.create_a10_device(): device=%s", a10_device)
+        LOG.debug("A10DevicePlugin.create_a10_device(): device=%s resource=%s"
+                  % (a10_device, resource))
 
         # Else, raise an exception because that's what we would do anyway
         # Catch database error when a10_device table doesn't exist yet and return an empty list
         from sqlalchemy.exc import ProgrammingError
         try:
-            return super(A10DevicePlugin, self).create_a10_device(context, a10_device)
+            return super(A10DevicePlugin, self).create_a10_device(context, a10_device, resource)
         except ProgrammingError as e:
-            # NO_SUCH_TABLE = 1146 in https://github.com/PyMySQL/PyMySQL/blob/master/pymysql/constants/ER.py
+            # NO_SUCH_TABLE = PyMySQL 1146
             if '1146' in e.message:
-                LOG.debug("A10DevicePlugin:create_a10_devices() Handling \"Table Doesn't Exist\" ProgrammingError Exception:  %s" %
-                      ( e.message ))
+                LOG.debug("A10DevicePlugin:create_a10_devices() Handling ",
+                          "\"Table Doesn't Exist\" ProgrammingError ",
+                          "Exception:  %s" % (e.message))
                 return ['Table is not there...']
             else:
                 raise
 
-
-
     def get_a10_device(self, context, id, fields=None):
-        LOG.debug("A10DevicePlugin.get_a10_device(): id=%s, fields=%s",
-                  id, fields)
+        LOG.debug("A10DevicePlugin.get_a10_device(): id=%s, fields=%s" %
+                  (id, fields))
         db_instance = super(A10DevicePlugin, self).get_a10_device(
             context, id, fields=fields)
         if db_instance.get("nova_instance_id"):
@@ -218,6 +227,8 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
         try:
             extra_resources = db_instance['extra_resources']
             del db_instance['extra_resources']
+            LOG.debug("A10DevicePlugin.get_a10_device(): extra_resources=%s" %
+                      (extra_resources))
             return db_instance, extra_resources
         except KeyError:
             return db_instance, []
@@ -246,7 +257,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
     def create_a10_device_key(self, context, a10_device_key):
         """Attempt to create vthunder using neutron context"""
-        LOG.debug("A10DevicePlugin.create_a10_device(): device=%s", a10_device_key)
+        LOG.debug("A10DevicePlugin.create_a10_device_key(): device=%s", a10_device_key)
 
         # Else, raise an exception because that's what we would do anyway
         return super(A10DevicePlugin, self).create_a10_device_key(context, a10_device_key)
@@ -297,16 +308,14 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
         return db_instance
 
-    def update_a10_device_value(self, context, id, value):
+    def update_a10_device_value(self, context, key_id, device_id, value):
         LOG.debug(
-            "A10DevicePlugin.update_a10_device_value(): id=%s, device=%s",
-            id,
-            value)
+            "A10DevicePlugin.update_a10_device_value(): key_id=%s, device_id=%s, value=%s" %
+            (key_id, device_id, value))
 
         return super(A10DevicePlugin, self).update_a10_device_value(
-            context, id, value)
+            context, key_id, device_id, value)
 
     def delete_a10_device_value(self, context, id):
         LOG.debug("A10DevicePlugin.a10_device_delete_value(): id=%s", id)
         return super(A10DevicePlugin, self).delete_a10_device_value(context, id)
-

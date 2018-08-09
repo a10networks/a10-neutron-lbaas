@@ -40,7 +40,7 @@ CREATE_TIMEOUT = 900
 KEYSTONE_VERSION = "3.0"
 NOVA_VERSION = "2.1"
 NEUTRON_VERSION = "2.0"
-GLANCE_VERSION = 2.4 
+GLANCE_VERSION = 2.4
 OS_INTERFACE_URLS = ["public", "publicURL"]
 
 _default_server = {
@@ -89,8 +89,8 @@ class InstanceManager(object):
             nova_version, session=self._ks_session)
         self._neutron_api = neutron_api or neutron_client.Client(
             NEUTRON_VERSION, session=self._ks_session)
-    	self._glance_api = glance_api or glance_client.Client(glance_version, session=self._ks_session)
-
+        self._glance_api = glance_api or glance_client.Client(
+            glance_version, session=self._ks_session)
 
     @classmethod
     def _factory_with_service_tenant(cls, config, user_keystone_session):

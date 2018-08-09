@@ -22,8 +22,8 @@ import a10_neutron_lbaas.a10_config as a10_config
 import a10_neutron_lbaas.neutron_ext.common.constants as constants
 from a10_neutron_lbaas.neutron_ext.extensions import a10Device
 import a10_neutron_lbaas.neutron_ext.services.a10_device.plugin as plugin
-from a10_neutron_lbaas.tests.db.neutron_ext.db import test_a10_device
 from a10_neutron_lbaas.tests.db import fake_obj
+from a10_neutron_lbaas.tests.db.neutron_ext.db import test_a10_device
 
 plugin_path = "a10_neutron_lbaas.neutron_ext.services.a10_device.plugin"
 
@@ -58,6 +58,9 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def fake_device(self):
         return fake_obj.FakeA10Device()
 
+    def fake_vthunder(self):
+        return fake_obj.FakeA10vThunder()
+
     def fake_instance(self, *args, **kwargs):
         return {
             'nova_instance_id': str(uuid.uuid4()),
@@ -71,19 +74,22 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
             'api_version': 'fake-version',
             'username': 'fake-username',
             'password': 'fake-password',
-            'protocol': 'http',
-            'port': 12345
+            'protocol': 'https',
+            'port': '12345'
         }
 
     def _build_instance(self):
         return {
-            "vthunder": {
-                "name": "asdf",
-                "host": "10.10.42.42",
-                "image": "MY_FAKE_IMAGE",
-                "flavor": "MY_FAKE_FLAVOR",
-                "management_network": "this_network",
-                "data_networks": ["that_network"],
+            'a10_vthunder': {
+                'name': 'asdf',
+                'host': '10.10.42.42',
+                'username': 'fake-username',
+                'password': 'fake-password',
+                'api_version': 'fake-version',
+                'image': 'MY_FAKE_IMAGE',
+                'flavor': 'MY_FAKE_FLAVOR',
+                'management_network': 'this_network',
+                'data_networks': ['that_network'],
             }
         }
 
@@ -121,56 +127,69 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         self.assertTrue(delete_call.called)
 
     def test_create_a10_vthunder(self):
-        instance = {}
+        instance = self.fake_device_basic_config()
         context = self.context()
-        result = self.plugin.create_a10_vthunder(context, self.envelope_vthunder(instance))
+        result = self.plugin.create_a10_vthunder(
+            context, self.envelope_vthunder(instance))
         self.assertIsNotNone(result['id'])
 
+        result.pop('extra_resources', None)
         expected = self.vthunder_default_options()
-        expected.update(instance)
         expected.update(
-            {   
-                'id': result['id'], 
+            self.plugin.validate_a10_opts(instance,
+                                          'a10_vthunder'))
+        expected.pop('a10_opts', None)
+        expected.update(
+            {
+                'id': result['id'],
                 'nova_instance_id': result['nova_instance_id'],
                 'host': result['host'],
                 'tenant_id': context.tenant_id,
                 'project_id': context.tenant_id,
-                'api_version': self.vthunder_defaults['api_version'],
-                'username': self.vthunder_defaults['username'],
-                'password': self.vthunder_defaults['password'],
-                'protocol': self.vthunder_defaults['protocol'],
-                'port': self.vthunder_defaults['port'],
-                'extra_resources': [],
+                'api_version': 'fake-version',
+                'name': 'fake-name',
+                'username': 'fake-username',
+                'password': 'fake-password',
+                'protocol': 'https',
+                'port': 12345,
+                #'extra_resources': [],
                 'description': '',
             })
 
         self.assertEqual(expected, result)
 
     def test_create_a10_vthunder_options(self):
-        instance = self.fake_device_basic_config()
+        instance = self.fake_vthunder()
         context = self.context()
-        result = self.plugin.create_a10_vthunder(context, self.envelope_vthunder(instance))
+        result = self.plugin.create_a10_vthunder(
+            context, self.envelope_vthunder(instance.__dict__))
         self.assertIsNotNone(result['id'])
 
+        result.pop('extra_resources', None)
         expected = self.vthunder_default_options()
-        expected.update(instance)
+        # Convert a10_opts dict to flat device record ready to insert into db
+        expected.update(
+            self.plugin.a10_device_body_defaults(instance.__dict__,
+                                                 context.tenant_id,
+                                                 result['id']))
+        expected.pop('a10_opts', None)
         expected.update(
             {
                 'id': result['id'],
                 'nova_instance_id': result['nova_instance_id'],
                 'host': result['host'],
-                'extra_resources': [],
                 'tenant_id': context.tenant_id,
                 'project_id': context.tenant_id,
-            })
+                #'extra_resources': [],
 
+            })
         self.assertEqual(expected, result)
 
     def test_update_a10_vthunder_options(self):
-        instance = self.vthunder_default_options()
+        instance = self.fake_vthunder()
         create_context = self.context()
         create_result = self.plugin.create_a10_vthunder(create_context,
-                                                        self.envelope_vthunder(instance))
+                                                        self.envelope_vthunder(instance.__dict__))
         self.assertIsNotNone(create_result['id'])
 
         request = self.fake_device_basic_config()
@@ -186,10 +205,10 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         self.assertEqual(expected, result)
 
     def test_get_a10_vthunder(self):
-        instance = self.fake_device_basic_config()
+        instance = self.fake_vthunder()
         create_context = self.context()
-        create_result = self.plugin.create_a10_vthunder(create_context,
-                                                        self.envelope_vthunder(instance))
+        create_result = self.plugin.create_a10_vthunder(
+            create_context, self.envelope_vthunder(instance.__dict__))
 
         context = self.context()
         result = self.plugin.get_a10_vthunder(context, create_result['id'])
@@ -220,11 +239,23 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_create_a10_device(self):
         device = self.fake_device()
         context = self.context()
-        result = self.plugin.create_a10_device(context, self.envelope_device(device.__dict__))
+        result = self.plugin.create_a10_device(
+            context, self.envelope_device(device.__dict__))
         self.assertIsNotNone(result['id'])
 
-        expected = device.__dict__
-        del expected['config']
+        result.pop('extra_resources', None)
+        expected = {}
+        # Convert a10_opts dict to flat device record ready to insert into db
+        expected.update(
+            self.plugin.a10_device_body_defaults(device.__dict__,
+                                                 context.tenant_id,
+                                                 result['id'],
+                                                 'a10_device'))
+        expected.update(
+            self.plugin.a10_opts_defaults(
+                self.plugin.validate_a10_opts(
+                    device.a10_opts, 'a10_device'), 'a10_device'))
+        expected.pop('config', None)
         expected.update(
             {
                 'id': result['id'],
@@ -232,7 +263,8 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
                 'tenant_id': context.tenant_id,
                 'project_id': context.tenant_id,
                 'nova_instance_id': None,
-                'extra_resources': []
+                'conn_limit': str(expected['conn_limit']),
+                #'extra_resources': []
             })
 
         self.assertEqual(expected, result)
@@ -240,14 +272,18 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
     def test_update_a10_device_options(self):
         device = self.fake_device()
         create_context = self.context()
-        create_result = self.plugin.create_a10_device(create_context,
-                                                      self.envelope_device(device.__dict__))
+        create_result = self.plugin.create_a10_device(
+            create_context, self.envelope_device(device.__dict__))
         self.assertIsNotNone(create_result['id'])
 
-        request = self.fake_device().__dict__
-        request['name'] = 'shrubbery'
-        del request['config']
-        
+        request = {}
+        request.update(
+            self.plugin.a10_device_body_defaults(device.__dict__,
+                                                 create_context.tenant_id,
+                                                 create_result['id']))
+        request.pop('config', None)
+        request.update({'name': 'shrubbery'})
+
         context = self.context()
         result = self.plugin.update_a10_device(context,
                                                create_result['id'],
@@ -343,8 +379,8 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         context = self.context()
         value = fake_obj.FakeA10DeviceValue('spam&eggs', 'shrubbery')
 
-        self.plugin.update_a10_device_value(context, 'spam&eggs',
-                                            self.envelope_device_key(value.__dict__))
+        self.plugin.update_a10_device_value(
+            context, value.key_id, value.associated_obj_id, 'New-Fake-Value')
         test_super.assert_called()
 
     @patch(plugin_path + ".a10_device.A10DeviceDbMixin.get_a10_device_values")

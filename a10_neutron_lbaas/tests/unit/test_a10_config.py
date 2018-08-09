@@ -25,7 +25,7 @@ class TestA10Config(test_base.UnitTestBase):
         # A better test would seem to be be parsnig the JSON structure found in the file
         # and comparing that against what we get in devices.
         # This actually tests the number of devices with status == True
-        self.assertEqual(10, len(self.a.config.get_devices()))
+        self.assertEqual(11, len(self.a.config.get_devices()))
 
     def test_expected_ports(self):
         self.assertEqual(8443, self.a.config.get_device('ax1')['port'])
@@ -39,7 +39,10 @@ class TestA10Config(test_base.UnitTestBase):
 
     def test_v_method(self):
         for k, v in self.a.config.get_devices().items():
-            self.assertEqual('LSI', v['v_method'].upper())
+            try:
+                self.assertEqual('LSI', v['v_method'].upper())
+            except KeyError:
+                self.assertEqual('LSI', None)
 
     def test_alternate_shared_partition(self):
         self.assertTrue(self.a.config.get_device('axadp-alt')['shared_partition'])
