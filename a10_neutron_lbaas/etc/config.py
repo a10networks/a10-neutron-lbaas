@@ -45,14 +45,27 @@
 
 # member_name_use_uuid = False
 
+# For Keystone v2:
+
 # If not None, use this keystone auth URL instead of the one from the
 # neutron.conf file.
 
-# keystone_auth_url = None
+# keystone_auth_url = 'http://X.X.X.X/identity'
 
 # Which version of the keystone protocol to use
 
-# keystone_version = 2
+# keystone_version = 2 
+
+# For Keystone v3:
+
+# If not None, use this keystone auth URL instead of the one from the
+# neutron.conf file.
+
+# keystone_auth_url = 'http://X.X.X.X/identity/v3'
+
+# Which version of the keystone protocol to use
+
+# keystone_version = 3
 
 # Certain functions of this driver can be overridden by passing in an alternate
 # set of plumbing hooks, including scheduling where a tenant's VIPs are going
@@ -80,6 +93,10 @@
 # Nova API version; defaults to '2.1' (hint: use '2' for kilo.)
 
 # nova_api_version = '2.1'
+
+# Glance API Version, defauts to 2
+
+# glance_api_version = 2
 
 #
 # Main devices dictionary, containing a list of available ACOS devices.
