@@ -14,6 +14,8 @@ Contents:
    cli
    scaling
    scaling_api
+   ssl
+   ssl_api
 
 
 Indices and tables
