@@ -7,10 +7,14 @@ Unfortunately this document was not born at the same time as a10-neutron-lbaas. 
 - Move devices dict out of config.py into a DB
 - Pinned a10-openstack-lib dependency to v0.2.1
 - Changed name of a10_device_instance module to a10_device as well as classes and functions that contained A10DeviceInstance to A10Device.
-- Important: the preferred service_plugin name used in neutron.conf
+- The preferred service_plugin name used in neutron.conf
   will no longer be: a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin
   it will be:        a10_neutron_lbaas.neutron_ext.services.a10_device.plugin.A10DevicePlugin
 - Backwards compatibility with the service_plugin name a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin will be preserved.
+- Catching DB error during a10-device-list prior to a10_device table being created before any a10_devices exist.
+- Moved all ACOS specific options as a list passed to --a10-opts for a10-device-create, a10-device-update, a10-vthunder-create and a10-vthunder-update
+- write_memory defaults to True
+- Storing all a10-opts values in the a10_device_key and a10_device_value neutron database tables
 
 * 1.6.8
 - Pinned acos-client dependency to v1.4.3
