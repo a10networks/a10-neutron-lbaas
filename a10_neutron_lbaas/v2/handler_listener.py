@@ -150,8 +150,10 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # This doesn't do anything anymore.
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
         template_args.update(**self._get_vport_defaults(c, os_name))
-
+        msg = "VPORT_STUFF???????", listener.loadbalancer, dir(listener.loadbalancer), 
+        LOG.debug(msg)
         try:
+
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
@@ -163,7 +165,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 status=status,
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
-                source_nat_pool=c.device_cfg.get('source_nat_pool'),
+                source_nat_pool=listener.root_loadbalancer.id,
                 # Device-level defaults
                 vport_defaults=self._get_vport_defaults(c, os_name),
                 axapi_body=vport_meta,
@@ -337,3 +339,4 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         rv = {}
         rv = c.a10_driver.config.get_vport_expressions()
         return rv
+

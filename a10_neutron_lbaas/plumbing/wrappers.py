@@ -18,9 +18,19 @@
 from oslo_log import log
 from oslo_utils import uuidutils
 
-from neutron.db.models import segment as segmodels
+import acos_client as client
+
+# post-Kilo import.
+try:
+    from neutron.db.models.segment import NetworkSegment
+except ImportError:
+    # this moved to neutron.db.models.segment in kilo
+    from neutron.plugins.ml2.models import NetworkSegment
+
+
 from neutron.db import models_v2 as nmodels
-from neutron.plugins.ml2 import models as pmodels
+from neutron.plugins.ml2.models import PortBinding
+from neutron.plugins.ml2.models import PortBindingLevel
 
 from a10_neutron_lbaas.plumbing.utils import IPHelpers
 from acos_client import errors as acos_exc
@@ -28,16 +38,28 @@ from acos_client import errors as acos_exc
 LOG = log.getLogger(__name__)
 _HPB_TEST = True
 
+# THIS FLAG IS CRUCIAL FOR KILO COMPATIBILITY
+# THIS USES tenant_id INSTEAD OF project_id
+_IS_KILO = True
+
 
 class AcosWrapper(object):
     def __init__(self, client, *args, **kwargs):
         self._client = client
 
-    def create_vlan(self, vlan_id, interfaces={}):
+    def create_nat_pool(self,name, start_addr, end_addr,cidr):
         try:
-            return self._client.vlan.create(vlan_id, veth=True, **interfaces)
+            return self._client.nat.pool.create(name, start_addr, end_addr,cidr)
         except Exception as ex:
             raise ex
+
+    def create_vlan(self, vlan_id, interfaces={}):
+        try:
+            return self._client.vlan.create(vlan_id, veth=False, **interfaces)
+        except Exception as ex:
+            LOG.debug(ex)
+            pass
+            #raise ex
 
     def create_ve(self, ve_dict):
         try:
@@ -62,6 +84,14 @@ class AcosWrapper(object):
             raise ex
         return rv
 
+    def update_vip(self, vip_id, mac_address, vlan_id):
+        vip = None
+        try:
+            vip = self._client.slb.virtual_server.update(vip_id, mac=1, mac_address=mac_address, vlan=vlan_id)
+        except Exception as ex:
+            raise ex
+        return vip
+
 
 class NeutronDbWrapper(object):
     VLAN_PORT_NAME_FORMAT = "A10_VLANHBPHOOK_PROJECT_{project_id}_NET_{network_id}"
@@ -75,17 +105,20 @@ class NeutronDbWrapper(object):
     def __init__(self, session, *args, **kwargs):
         self._session = session
 
+    def get_port(self, port_id):
+        return self._session.query(nmodels.Port).filter(nmodels.Port.id == port_id).first()
+
     def get_segment(self, port_id, level):
         if _HPB_TEST:
             port = self._session.query(nmodels.Port).filter_by(id=port_id).first()
-            segment = self._session.query(segmodels.NetworkSegment).filter_by(
+            segment = self._session.query(NetworkSegment).filter_by(
                 network_id=port.network_id).first()
             return segment
 
-        binding_level = self._session.query(pmodels.PortBindingLevel).filter_by(
+        binding_level = self._session.query(PortBindingLevel).filter_by(
             port_id=port_id, level=level).first()
         if binding_level:
-            segment = self._session.query(segmodels.NetworkSegment).filter_by(
+            segment = self._session.query(NetworkSegment).filter_by(
                 id=binding_level.segment_id).first()
             return segment
         # No binding leve
@@ -129,6 +162,7 @@ class NeutronDbWrapper(object):
                 network_id=record["network_id"],
                 mac_address=record["mac_address"],
                 admin_state_up=record["admin_state_up"],
+		# ACTIVE by default
                 status=record["status"],
                 device_id=record["device_id"],
                 device_owner=record["device_owner"]
@@ -208,14 +242,14 @@ class NeutronDbWrapper(object):
 
     def _create_port_binding(self, port_id, host, vnic_type, profile, vif_type, vif_details, status="ACTIVE"):
         with self._session.begin(subtransactions=True):
-            binding = pmodels.PortBinding(
+            binding = PortBinding(
                 port_id = port_id,
                 host = host,
                 vnic_type = vnic_type,
                 vif_type=vif_type,
                 profile=profile,
                 vif_details=vif_details,
-                status=status,
+                # status=status,
             )
             self._session.add(binding)
 
@@ -226,12 +260,24 @@ class NeutronDbWrapper(object):
             self._session.add(port)
 
     def cleanup_vlan_ports(self, last_lb):
-        vip_port = last_lb.vip_port
-        network_id, tenant_id = vip_port.network_id, vip_port.tenant_id
+        if hasattr(last_lb, "vip_port"):
+            vip_port = last_lb.vip_port
+            network_id = vip_port.network_id
+            tenant_id = last_lb.tenant_id
+        # v1 obj model
+        else:
+	    # It's a pool, not a vip, we can work with that
+            subnet_id = last_lb["subnet_id"]
+            subnet = self.get_subnet(subnet_id)
+            network_id = subnet["network_id"]
+            tenant_id = last_lb["tenant_id"]
+
         # port_name = self.VLAN_PORT_NAME_FORMAT.format(project_id=tenant_id,network_id=network_id)
+        project_id_fieldname = "project_id" if not _IS_KILO else "tenant_id"
+
         query_args = {
             "network_id": network_id,
-            "project_id": tenant_id,
+            project_id_fieldname: tenant_id,
             # "name": port_name,
             "device_owner": self.VLAN_PORT_OWNER
         }
@@ -240,3 +286,4 @@ class NeutronDbWrapper(object):
             port = self._session.query(nmodels.Port).filter_by(**query_args).first()
             if port:
                 self._session.delete(port)
+

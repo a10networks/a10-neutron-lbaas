@@ -226,10 +226,11 @@ devices = {
 #         'password': ''
 #     }
 # }
+
 vport_defaults = {}
+vport_binding_level = 0
 
 vlan_interfaces = {
-    "tagged_eths": [3,4],
     "tagged_trunks": [1]
 }
 
