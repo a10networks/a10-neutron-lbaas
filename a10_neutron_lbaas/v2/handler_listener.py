@@ -152,6 +152,18 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         template_args.update(**self._get_vport_defaults(c, os_name))
         msg = "VPORT_STUFF???????", listener.loadbalancer, dir(listener.loadbalancer), 
         LOG.debug(msg)
+
+        vport_defaults = self._get_vport_defaults(c, os_name)
+
+        # ADD A CONDITION TO VPORT DEFAULTS TO FIX THIS
+        # EXAMPLE:
+        # "condition": {"field": "protocol", "op": "=", "value": "http"}}
+        if "ha-conn-mirror" in vport_defaults and protocol.lower() not in ("tcp", "udp"):
+            del vport_defaults["ha-conn-mirror"]
+
+        if "template-http" in vport_defaults and protocol.lower() not in ("http", "https"):
+            del vport_defaults["template-http"]
+
         try:
 
             set_method(
@@ -167,7 +179,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 ipinip=c.device_cfg.get('ipinip'),
                 source_nat_pool=listener.root_loadbalancer.id,
                 # Device-level defaults
-                vport_defaults=self._get_vport_defaults(c, os_name),
+                vport_defaults=vport_defaults,
                 axapi_body=vport_meta,
                 **template_args)
         except acos_errors.Exists:
