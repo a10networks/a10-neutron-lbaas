@@ -33,6 +33,21 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
     def after_member_update(self, a10_context, os_context, member):
         pass
 
+    def pre_vip_create_v1(self,a10_context, os_context, vip):
+
+        msg = "PRE_CREATE_V1 hook firing", vip, dir(vip)
+        LOG.debug(msg)
+        cidr = self._get_vip_cidr(a10_context, os_context, vip, v1=True)
+        self._create_nat_pool(a10_context, os_context, vip, v1=True)
+        return cidr
+
+    def pre_vip_create_v2(self, a10_context, os_context, vip):
+        db = NeutronDbWrapper(os_context.session)
+        acos = AcosWrapper(a10_context.client)
+        config = a10_context.a10_driver.config
+        self._create_nat_pool(a10_context, os_context, vip, v1=False)
+        return self._get_vip_cidr(a10_context, os_context, vip)
+
     def after_vip_create(self, a10_context, os_context, vip):
         # Get the IDs of all the things we need.
         db = NeutronDbWrapper(os_context.session)
@@ -42,10 +57,12 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         if hasattr(vip, "vip_port"):
             vip_port = vip.vip_port
             subnet_id = vip.vip_subnet_id
+            subnet = db.get_subnet(subnet_id)
             port_id = vip_port.id
             network_id = vip_port.network_id
             tenant_id = vip.tenant_id
             vip_id = vip.id
+
         # v1 obj model
         else:
             subnet_id = vip["subnet_id"]
@@ -54,6 +71,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
             network_id = subnet["network_id"]
             tenant_id = vip["tenant_id"]
             vip_id = vip["id"]
+
+
         try:
             binding_level = config.get("vlan_binding_level")
         except Exception as ex:
@@ -75,7 +94,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
                 "No VLAN ID for port {0} on segment {1}. Exiting hook.".format(port_id, segment.id))
             return
         # Format the string we're going to use a gazillion times for logging.
-        VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)
+        #VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)
 
         # Get the associated VE
         # ve = acos.get_ve(vlan_id)
@@ -88,11 +107,12 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
 
         # If DHCP, we can configure the interface with DHCP
         # use_dhcp = config.get("plumb_vlan_dhcp")
-        # interfaces = config.get("vlan_interfaces")
+        #interfaces = config.get("vlan_interfaces")
 
         # Create the VLAN with configured interfaces
-        # interfaces = config.get("vlan_interfaces")
-        # acos.create_vlan(vlan_id, interfaces)
+        interfaces = config.get("vlan_interfaces")
+        acos.create_vlan(vlan_id, interfaces)
+
         # Get the MAC of the VE so we can create the port.
         # ve_pre = acos.get_ve(vlan_id)
         # ve_mac = ve_pre.get("ve").get("oper").get("mac")
@@ -114,7 +134,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
             # Allocate IP from the subnet.
         #    ve_ip, ve_mask, ve_port = db.allocate_ip_for_subnet(subnet_id, ve_mac, ve_nport.id)
 
-        # LOG.info("Created VLAN {0} with interfaces {1}".format(str(vlan_id), str(interfaces)))
+        LOG.info("Created VLAN {0} with interfaces {1}".format(str(vlan_id), str(interfaces)))
         # ve_dict = self._build_ve_dict(vlan_id, ve_ip, ve_mask, use_dhcp)
 
         # Try to create it. If an exception is raised, it's logged and we stop here.
@@ -174,3 +194,38 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
             beg = cidr.find(marker)
             cidr = cidr[beg:]
         return cidr
+
+    def _get_vip_cidr(self, a10_context, os_context, vip, v1=False):
+        db = NeutronDbWrapper(os_context.session)
+        acos = AcosWrapper(a10_context.client)
+        config = a10_context.a10_driver.config
+        if v1 is True:
+            sid = vip["subnet_id"]
+        else:
+            sid = vip.vip_subnet_id
+        vip_subnet_info = db.get_subnet(sid)
+        return self._format_cidr(vip_subnet_info.cidr)
+
+
+    def _create_nat_pool(self, a10_context, os_context, vip, v1=False):
+        msg = "CREATE_NAT", (v1 is True), v1, type(v1)
+        LOG.debug(msg)
+        db = NeutronDbWrapper(os_context.session)
+        acos = AcosWrapper(a10_context.client)
+        config = a10_context.a10_driver.config
+        vip_cidr = self._get_vip_cidr(a10_context, os_context, vip, v1=v1)
+        if v1 is True:
+            try:
+                acos.create_nat_pool(vip['id'], vip['address'], vip['address'], vip_cidr)
+            except Exception as ex:
+                raise ex
+        else:
+            try:
+                acos.create_nat_pool(vip.id, vip.vip_address, vip.vip_address, vip_cidr)
+            except Exception as ex:
+                raise ex
+
+
+
+
+

@@ -18,6 +18,7 @@
 from oslo_log import log
 from oslo_utils import uuidutils
 
+import acos_client as client
 
 # post-Kilo import.
 try:
@@ -46,11 +47,19 @@ class AcosWrapper(object):
     def __init__(self, client, *args, **kwargs):
         self._client = client
 
-    def create_vlan(self, vlan_id, interfaces={}):
+    def create_nat_pool(self,name, start_addr, end_addr,cidr):
         try:
-            return self._client.vlan.create(vlan_id, veth=True, **interfaces)
+            return self._client.nat.pool.create(name, start_addr, end_addr,cidr)
         except Exception as ex:
             raise ex
+
+    def create_vlan(self, vlan_id, interfaces={}):
+        try:
+            return self._client.vlan.create(vlan_id, veth=False, **interfaces)
+        except Exception as ex:
+            LOG.debug(ex)
+            pass
+            #raise ex
 
     def create_ve(self, ve_dict):
         try:
@@ -277,3 +286,4 @@ class NeutronDbWrapper(object):
             port = self._session.query(nmodels.Port).filter_by(**query_args).first()
             if port:
                 self._session.delete(port)
+
