@@ -151,6 +151,17 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
         template_args.update(**self._get_vport_defaults(c, os_name))
 
+        vport_defaults = self._get_vport_defaults(c, os_name)
+
+        # ADD A CONDITION TO VPORT DEFAULTS TO FIX THIS
+        # EXAMPLE:
+        # "condition": {"field": "protocol", "op": "=", "value": "http"}}
+        if "ha-conn-mirror" in vport_defaults and protocol.lower() not in ("tcp", "udp"):
+            del vport_defaults["ha-conn-mirror"]
+
+        if "template-http" in vport_defaults and protocol.lower() not in ("http", "https"):
+            del vport_defaults["template-http"]
+
         try:
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
