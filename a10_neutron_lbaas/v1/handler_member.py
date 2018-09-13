@@ -55,7 +55,7 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
                 else:
                     server_args['conn-limit'] = conn_limit
             server_args = {'server': server_args}
-            c.client.slb.server.create(server_name, server_ip,
+            c.client.slb.server.create(server_name, server_ip,member['protocol_port'],
                                        status=status,
                                        axapi_args=server_args)
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
@@ -121,3 +121,4 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
     def delete(self, context, member):
         with a10.A10DeleteContext(self, context, member) as c:
             self._delete(c, context, member)
+

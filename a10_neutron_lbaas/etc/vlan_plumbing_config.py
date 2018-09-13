@@ -27,7 +27,7 @@
 # the a10-neutron-lbaas package.
 # Recommended for all new installs.
 
-# use_database = False
+use_database = True 
 
 # The SQLAlchemy connection string to use to connect to the database.
 # If None, and use_database is True, the driver will attempt to use
@@ -45,27 +45,14 @@
 
 # member_name_use_uuid = False
 
-# For Keystone v2:
-
 # If not None, use this keystone auth URL instead of the one from the
 # neutron.conf file.
 
-# keystone_auth_url = 'http://X.X.X.X/identity'
+# keystone_auth_url = None
 
 # Which version of the keystone protocol to use
 
-# keystone_version = 2 
-
-# For Keystone v3:
-
-# If not None, use this keystone auth URL instead of the one from the
-# neutron.conf file.
-
-# keystone_auth_url = 'http://X.X.X.X/identity/v3'
-
-# Which version of the keystone protocol to use
-
-# keystone_version = 3
+# keystone_version = 2
 
 # Certain functions of this driver can be overridden by passing in an alternate
 # set of plumbing hooks, including scheduling where a tenant's VIPs are going
@@ -90,19 +77,25 @@
 # import a10_neutron_lbaas.plumbing.vthunder_per_vip as hooks
 # plumbing_hooks_class = hooks.VThunderPerVIPPlumbingHooks
 
+import a10_neutron_lbaas.plumbing.portbinding_vlan as hooks
+plumbing_hooks_class = hooks.VlanPortBindingPlumbingHooks
+
 # Nova API version; defaults to '2.1' (hint: use '2' for kilo.)
 
 # nova_api_version = '2.1'
-
-# Glance API Version, defauts to 2
-
-# glance_api_version = 2
 
 #
 # Main devices dictionary, containing a list of available ACOS devices.
 #
 
 devices = {
+    "ax411p1": {
+        "host": "10.48.1.30",
+        "username": "admin",
+        "password": "a10",
+        "api_version": "3.0",
+        "port": 443,
+    }
     # A sample ACOS 2.7.2 box
     # "ax2": {
     #     "host": "10.10.100.20",
@@ -110,9 +103,9 @@ devices = {
     #     "port": 8443,
     #     "username": "admin",
     #     "password": "a10",
-    #     "api_version": "2.1",
+    #     "api_version": "3.1",
     # },
-    # A sample ACOS 4.0.1 box
+    # A sample ACOS 5.0.1 box
     # "ax4": {
     #     "host": "10.10.100.20",
     #     "conn-limit": 8000000,
@@ -233,4 +226,12 @@ devices = {
 #         'password': ''
 #     }
 # }
+
 vport_defaults = {}
+vport_binding_level = 0
+
+vlan_interfaces = {
+    "tagged_trunks": [1]
+}
+
+plumb_vlan_dhcp = True
