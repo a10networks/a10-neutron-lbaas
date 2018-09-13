@@ -66,7 +66,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
 
 
             server_args = {'server': server_args}
-            c.client.slb.server.create(server_name, server_ip,member.protocol_port,
+            c.client.slb.server.create(server_name, server_ip,
                                        status=status,
                                        config_defaults=self._get_config_defaults(c, os_name),
                                        axapi_args=server_args)

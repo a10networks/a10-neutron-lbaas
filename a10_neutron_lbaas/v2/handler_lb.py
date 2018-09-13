@@ -29,17 +29,13 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         if not lb.admin_state_up:
             status = c.client.slb.DOWN
 
-        netmask = self.hooks.pre_vip_create_v2(c, context, lb)
-        msg = "THIS IS NETMASK", netmask
-        LOG.debug(msg)
-        vip_meta = self.meta(lb, 'virtual_server', {})
         try:
+            vip_meta = self.meta(lb, 'virtual_server', {})
             os_name = lb.name
             set_method(
                 self._meta_name(lb),
                 lb.vip_address,
                 status,
-                netmask = netmask,
                 vrid=c.device_cfg.get('default_virtual_server_vrid'),
                 config_defaults=self._get_config_defaults(c, os_name),
                 axapi_body=vip_meta)
