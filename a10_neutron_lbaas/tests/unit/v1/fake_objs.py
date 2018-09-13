@@ -80,3 +80,8 @@ class FakeMember(FakeModel):
         self.pool_id = pool_id
         self.protocol_port = '80'
         self.root_loadbalancer = FakeVIP()
+
+class FakeKeystoneClient(object):
+    def __init__(self, parent_id=None):
+        self.parent_id = parent_id
+        self.domain_id = 'roundtable'

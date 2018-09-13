@@ -16,6 +16,8 @@ import logging
 
 import acos_client.errors as acos_errors
 
+from a10_neutron_lbaas.vthunder import keystone as keystone_helpers
+
 LOG = logging.getLogger(__name__)
 
 
@@ -51,6 +53,7 @@ class A10Context(object):
         self.get_tenant_id()
         self.device_cfg = self._get_device()
         self.client = self._get_client(self.device_cfg)
+        self.get_partition_key()
         self.select_appliance_partition()
         if hasattr(self.hooks, 'after_select_partition'):
             self.hooks.after_select_partition(self)
@@ -74,12 +77,23 @@ class A10Context(object):
         else:
             self.tenant_id = self.openstack_lbaas_obj['tenant_id']
 
+    def get_partition_key(self):
+        # If use_parent_project is enabled, return that. Else, typical behavior. 
+        self.partition_key = self.tenant_id
+        if self.a10_driver.config.get("use_parent_project") and self.openstack_context:
+            # Hoping we can avoid making this call but I don't think thats possible
+            keystone_context = keystone_helpers.KeystoneFromContext(self.a10_driver.config, self.openstack_context)
+            thisproject = keystone_context.client.projects.get(self.tenant_id)
+            if not thisproject.parent_id == thisproject.domain_id:
+                self.partition_key = thisproject.parent_id
+
     def select_appliance_partition(self):
+        self.get_partition_key()
 
         name = self.device_cfg.get("shared_partition", "shared")
 
         if self.device_cfg['v_method'].lower() == 'adp':
-            name = self.tenant_id[0:13]
+            name = self.partition_key[0:13]
 
         # If we are not using appliance partitions, we are done.
         if name == 'shared':
@@ -162,12 +176,12 @@ class A10DeleteContextBase(A10WriteContext):
 
         if self.device_cfg['v_method'].lower() != 'adp':
             return
-
+        self.get_partition_key()
         n = self.remaining_root_objects()
         LOG.debug("A10DeleteContext.partition_cleanup_check(): n=%s" % (n))
-        if n == 0:
+        if n == 0 and not self.a10_driver.config.get("disable_partition_delete"):
             try:
-                name = self.tenant_id[0:13]
+                name = self.partition_key[0:13]
                 if not name:
                     return
                 self.hooks.partition_delete(self.client, self.openstack_context, name)

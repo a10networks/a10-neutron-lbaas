@@ -35,6 +35,17 @@
 
 # database_connection = None
 
+# Should only be set to true if projects have been created with
+# parent-child relationships within openstack.
+
+# use_parent_project = False
+
+#
+# Used to persist partitions upon deletion of lb objects
+#
+
+# disable_partition_delete = False
+
 # Sometimes we need things from neutron. We will look in the usual places,
 # but this is here if you need to override the location.
 
@@ -52,7 +63,9 @@
 
 # keystone_auth_url = 'http://X.X.X.X/identity'
 
+#
 # Which version of the keystone protocol to use
+#
 
 # keystone_version = 2 
 
