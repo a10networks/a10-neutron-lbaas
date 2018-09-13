@@ -160,10 +160,14 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         # "condition": {"field": "protocol", "op": "=", "value": "http"}}
         if "ha-conn-mirror" in vport_defaults and protocol.lower() not in ("tcp", "udp"):
             del vport_defaults["ha-conn-mirror"]
-            del template_args["ha-con-mirror"]
+
+        if "ha-conn-mirror" in template_args and protocol.lower() not in ("tcp", "udp"):
+            del template_args["ha-conn-mirror"]
 
         if "template-http" in vport_defaults and protocol.lower() not in ("http", "https"):
             del vport_defaults["template-http"]
+
+        if "template-http" in template_args and protocol.lower() not in ("http", "https"):
             del template_args["template-http"]
 
         try:
