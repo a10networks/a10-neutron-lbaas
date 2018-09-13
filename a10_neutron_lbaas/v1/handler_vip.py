@@ -68,9 +68,6 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                     pass
 
             vport_list = None
-            netmask = self.hooks.pre_vip_create_v1(c, context, vip)
-            msg = "THIS IS NETMASK", netmask
-            LOG.debug(msg)
             try:
                 vip_meta = self.meta(vip, 'virtual_server', {})
                 vport_list = vip_meta.pop('vport_list', None)
@@ -79,7 +76,6 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                     self._meta_name(vip),
                     vip['address'],
                     status,
-                    netmask = netmask,
                     vrid=c.device_cfg.get('default_virtual_server_vrid'),
                     axapi_body=vip_meta)
             except acos_errors.Exists:
@@ -101,9 +97,9 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                         s_pers_name=p.s_persistence(),
                         c_pers_name=p.c_persistence(),
                         status=status,
-                        autosnat=0,
+                        autosnat=c.device_cfg.get('autosnat'),
                         ipinip=c.device_cfg.get('ipinip'),
-                        source_nat_pool=vip['id'],
+                        source_nat_pool=c.device_cfg.get('source_nat_pool'),
                         axapi_body=vport)
                 except acos_errors.Exists:
                     pass
@@ -146,9 +142,9 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
                 s_pers_name=p.s_persistence(),
                 c_pers_name=p.c_persistence(),
                 status=status,
-                autosnat=0,
-                ipinip=0,
-                source_nat_pool=vip.id,
+                autosnat=c.device_cfg.get('autosnat'),
+                ipinip=c.device_cfg.get('ipinip'),
+                source_nat_pool=c.device_cfg.get('source_nat_pool'),
                 axapi_body=vport_meta)
 
             self.hooks.after_vip_update(c, context, vip)
