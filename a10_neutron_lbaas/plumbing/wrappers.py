@@ -36,11 +36,13 @@ from a10_neutron_lbaas.plumbing.utils import IPHelpers
 from acos_client import errors as acos_exc
 
 LOG = log.getLogger(__name__)
+# THIS FLAG IS CRITICAL FOR SYSTEMS WITH NO HPB
+# Instead of checking the hierarchical tables, we just grab the seg id from the LB net
 _HPB_TEST = True
 
 # THIS FLAG IS CRUCIAL FOR KILO COMPATIBILITY
 # THIS USES tenant_id INSTEAD OF project_id
-_IS_KILO = True
+_IS_KILO = False 
 
 
 class AcosWrapper(object):
