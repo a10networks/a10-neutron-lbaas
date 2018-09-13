@@ -91,7 +91,6 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
         self.assertEqual(a, self.target.select_device("first-token"))
 
     def test_after_vip_create(self):
-        import pdb; pdb.set_trace()
         self.target.after_vip_create(self.a10_context, self.os_context, self._vip)
         self._client.vlan.create.assert_called_once_with(_VLAN_ID, mock.ANY, mock.ANY)
 
