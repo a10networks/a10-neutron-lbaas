@@ -3,6 +3,13 @@ a10-neutron-lbaas CHANGELOG
 ---------------------------
 
 Unfortunately this document was not born at the same time as a10-neutron-lbaas. Changes tracked from 1.6.5 > onward
+* 1.7.0
+- Pinned acos-client dependency to v1.4.4
+- Support for utilizing parent project ID for partitioning
+- Support for HPB mechanism
+- Support for creating VE interfaces on LB vlans
+
+
 * 1.6.8
 - Pinned acos-client dependency to v1.4.3
 - HM creation now checks listener for port # so correct port # is used.
