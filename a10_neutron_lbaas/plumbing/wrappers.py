@@ -55,7 +55,7 @@ class AcosWrapper(object):
 
     def create_vlan(self, vlan_id, interfaces={}):
         try:
-            return self._client.vlan.create(vlan_id, veth=False, **interfaces)
+            return self._client.vlan.create(vlan_id, veth=True, **interfaces)
         except Exception as ex:
             LOG.debug(ex)
             pass

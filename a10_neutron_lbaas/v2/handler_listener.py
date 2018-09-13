@@ -170,6 +170,12 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         if "template-http" in template_args and protocol.lower() not in ("http", "https"):
             del template_args["template-http"]
 
+        if "no-dest-nat" in vport_defaults and protocol.lower() in ("http", "https"):
+            del vport_defaults["no-dest-nat"]
+
+        if "no-dest-nat" in template_args and protocol.lower() in ("http", "https"):
+            del template_args["no-dest-nat"]
+
         try:
 
             set_method(
@@ -183,7 +189,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 status=status,
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
-                source_nat_pool=listener.root_loadbalancer.id,
+                source_nat_pool=c.device_cfg.get('source_nat_pool'),
                 # Device-level defaults
                 vport_defaults=vport_defaults,
                 axapi_body=vport_meta,

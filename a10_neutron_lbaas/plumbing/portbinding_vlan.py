@@ -34,19 +34,20 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         pass
 
     def pre_vip_create_v1(self,a10_context, os_context, vip):
-
-        msg = "PRE_CREATE_V1 hook firing", vip, dir(vip)
-        LOG.debug(msg)
-        cidr = self._get_vip_cidr(a10_context, os_context, vip, v1=True)
-        self._create_nat_pool(a10_context, os_context, vip, v1=True)
-        return cidr
+        # msg = "PRE_CREATE_V1 hook firing", vip, dir(vip)
+        # LOG.debug(msg)
+        # cidr = self._get_vip_cidr(a10_context, os_context, vip, v1=True)
+        # self._create_nat_pool(a10_context, os_context, vip, v1=True)
+        # return cidr
+        pass
 
     def pre_vip_create_v2(self, a10_context, os_context, vip):
-        db = NeutronDbWrapper(os_context.session)
-        acos = AcosWrapper(a10_context.client)
-        config = a10_context.a10_driver.config
-        self._create_nat_pool(a10_context, os_context, vip, v1=False)
-        return self._get_vip_cidr(a10_context, os_context, vip)
+        # db = NeutronDbWrapper(os_context.session)
+        # acos = AcosWrapper(a10_context.client)
+        # config = a10_context.a10_driver.config
+        # self._create_nat_pool(a10_context, os_context, vip, v1=False)
+        # return self._get_vip_cidr(a10_context, os_context, vip)
+        pass
 
     def after_vip_create(self, a10_context, os_context, vip):
         # Get the IDs of all the things we need.
@@ -97,62 +98,64 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         #VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)
 
         # Get the associated VE
-        # ve = acos.get_ve(vlan_id)
+        ve = acos.get_ve(vlan_id)
         # If the VE already exists, the VLAN already exists and in most cases we're done.
         # Log that this happened.
         # TODO(mdurrant) - Find a way to check if it's in another partition and gripe loudly.
-        # if ve:
-        #    LOG.info("Configuration for {0} previously created".format(VE_LOG_ENTRY))
-        #    return
+        if ve:
+           LOG.info("Configuration for {0} previously created".format(vlan_id))
+           return
 
         # If DHCP, we can configure the interface with DHCP
-        # use_dhcp = config.get("plumb_vlan_dhcp")
-        #interfaces = config.get("vlan_interfaces")
+        use_dhcp = config.get("plumb_vlan_dhcp")
 
         # Create the VLAN with configured interfaces
         interfaces = config.get("vlan_interfaces")
         acos.create_vlan(vlan_id, interfaces)
 
         # Get the MAC of the VE so we can create the port.
-        # ve_pre = acos.get_ve(vlan_id)
-        # ve_mac = ve_pre.get("ve").get("oper").get("mac")
-        # ve_mac = self._format_mac(ve_mac)
+        ve_pre = acos.get_ve(vlan_id)
+        ve_mac = ve_pre.get("ve", {}).get("oper", {}).get("mac")
+        if not ve_mac:
+            LOG.error("Could not retrieve VE MAC, port binding operation failed.")
+            return
+        ve_mac = self._format_mac(ve_mac)
 
         # Create a neutron port for VE interface using returned VE MAC
-        # ve_nport = db.create_port(network_id, tenant_id, ve_mac, network_id)
+        ve_nport = db.create_port(network_id, tenant_id, ve_mac, network_id)
         # Get the vips port from neutron
         vip_port = db.get_port(port_id)
         vip_mac = vip_port["mac_address"]
         acos.update_vip(vip_id, vip_mac, vlan_id)
         LOG.info("Updated VIP {0} with mac {1} vlan {2}".format(vip_id, vip_mac, vlan_id))
         # TODO(mdurrant) - Should host be blank
-        # ve_portbinding = db.create_port_binding(ve_nport.id, "")
+        ve_portbinding = db.create_port_binding(ve_nport.id, "")
         # Set defaults
-        # ve_ip, ve_mask, ve_port = None, None, ve_nport.id
+        ve_ip, ve_mask, ve_port = None, None, ve_nport.id
 
-        # if not use_dhcp:
+        if not use_dhcp:
             # Allocate IP from the subnet.
-        #    ve_ip, ve_mask, ve_port = db.allocate_ip_for_subnet(subnet_id, ve_mac, ve_nport.id)
+            ve_ip, ve_mask, ve_port = db.allocate_ip_for_subnet(subnet_id, ve_mac, ve_nport.id)
 
         LOG.info("Created VLAN {0} with interfaces {1}".format(str(vlan_id), str(interfaces)))
-        # ve_dict = self._build_ve_dict(vlan_id, ve_ip, ve_mask, use_dhcp)
+        ve_dict = self._build_ve_dict(vlan_id, ve_ip, ve_mask, use_dhcp)
 
         # Try to create it. If an exception is raised, it's logged and we stop here.
-        # ve_created = acos.create_ve(ve_dict)
-        # if not ve_created:
-        #    LOG.error("Exception creating VE interface for VLAN:{0}".format(vlan_id))
-        #    return
+        ve_created = acos.create_ve(ve_dict)
+        if not ve_created:
+           LOG.error("Exception creating VE interface for VLAN:{0}".format(vlan_id))
+           return
 
         # Log the created VE for troubleshooting purposes.
-        # LOG.info("Created VE {0}", str(vlan_id))
+        LOG.info("Created VE {0}", str(vlan_id))
 
         # Get the IP address of the port
         # if use_dhcp:
         #    LOG.info("VE {0}", str(ve_created))
 
         # Else, it already exists and we're good
-        # LOG.info("Configured {0} with interface IP: {1}".format(
-        #    VE_LOG_ENTRY, ve_ip))
+        LOG.info("Configured {0} with interface IP: {1}".format(
+           vlan_id, ve_ip))
         # fin.
 
     def after_vip_update(self, a10_context, os_context, vip):
