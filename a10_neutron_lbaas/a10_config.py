@@ -184,6 +184,19 @@ class A10Config(object):
         if hasattr(self._config, "monitor_expressions"):
             self._monitor_expressions = self._config.monitor_expressions
 
+        # self._vlan_interfaces = {} 
+        # if hasattr(self._config, "vlan_interfaces"):
+        #    self._vlan_interfaces = self._config.vlan_interfaces
+
+        self._plumb_vlan_dhcp = False
+        if hasattr(self._config, "plumb_vlan_dhcp"):
+            self._plumb_vlan_dhcp = self._config.plumb_vlan_dhcp
+
+        self._vlan_binding_level = None
+        if hasattr(self._config, "vlan_binding_level"):
+            self._vlan_binding_level = self._config.vlan_binding_level
+
+
         # Setup some backwards compat stuff
         self.config = OldConfig(self)
 
@@ -259,6 +272,7 @@ class A10Config(object):
 
     def get_monitor_expressions(self):
         return self._monitor_expressions
+
 
     # backwards compat
     @removals.remove

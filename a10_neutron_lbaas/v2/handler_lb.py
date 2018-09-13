@@ -1,4 +1,4 @@
-# Copyright 2014, Doug Wiegley (dougwig), A10 Networks
+# Copyright 2014 A10 Networks
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -107,7 +107,9 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         }
 
     def create(self, context, lb):
+        LOG.debug('IN CREATE_TEST_V2')
         with a10.A10WriteStatusContext(self, context, lb, action='create') as c:
+            #This is to modify the VIP creation hooks and setup the source nat pool as needed.
             self._create(c, context, lb)
             self.hooks.after_vip_create(c, context, lb)
 
@@ -154,3 +156,4 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         rv = {}
         rv = c.a10_driver.config.get_virtual_server_expressions()
         return rv
+
