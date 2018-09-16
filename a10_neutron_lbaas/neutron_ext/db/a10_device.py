@@ -29,7 +29,6 @@ from a10_neutron_lbaas.neutron_ext.common import resources
 from a10_neutron_lbaas.neutron_ext.extensions import a10Device
 
 from a10_openstack_lib.resources import a10_device as a10_device_resources
-from a10_openstack_lib.resources import validators
 
 
 RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_resources.RESOURCE_ATTRIBUTE_MAP,
@@ -157,14 +156,14 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         opts_dict = {}
         valid_opts = RESOURCE_ATTRIBUTE_MAP[device_type].keys()
         for opt in opts:
-            #If a Key/Value assignment
+            # If a Key/Value assignment
             if '=' in opt:
                 (k, v) = opt.split('=')
                 if k in valid_opts:
                     opts_dict[k.replace('-', '_').strip()] = v.strip()
                 else:
                     LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s" % (k))
-            #Else a Boolean Option
+            # Else a Boolean Option
             else:
                 if opt in valid_opts:
                     opts_dict[opt.replace('-', '_').strip()] = True
@@ -179,9 +178,11 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                             elif opt_type.startswith("type:"):
                                 opts_dict[false_opt] = None
                     else:
-                        LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s" % (false_opt))
+                        LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s"
+                                  % (false_opt))
                 else:
-                    LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s" % (opt))
+                    LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s"
+                              % (opt))
 
         LOG.debug("A10DeviceDbMixin:_get_a10_opts() opts_dict=%s " % (opts_dict))
         return opts_dict
@@ -285,15 +286,15 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
         try:
             a10_opts = self._config_keys_exist(context, a10_opts)
-        #Create the keys if they don't exist already
+        # Create the keys if they don't exist already
         except Exception:
             LOG.debug("A10DeviceDbMixin:create_a10_device() a key doesn't exist!")
             for key in a10_opts.keys():
                 try:
                     self._get_a10_device_key_by_name(context, key)
                 except Exception:
-                    LOG.debug("A10DeviceDbMixin:create_a10_device() key:%s doesn't exist, creating..." %
-                              (key))
+                    LOG.debug("A10DeviceDbMixin:create_a10_device() key:%s doesn't exist, creating"
+                              % (key))
                     self.create_a10_device_key(
                         context, {a10_device_resources.DEVICE_KEY: {'name': key}})
             a10_opts = self._config_keys_exist(context, a10_opts)
@@ -317,8 +318,6 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
     def get_a10_devices(self, context, filters=None, fields=None,
                         sorts=None, limit=None, marker=None,
                         page_reverse=False):
-        LOG.debug("A10DeviceDbMixin:get_a10_devices() tenant_id=%s" %
-                  (context.tenant_id))
 
         # Catch database error when a10_device table doesn't exist yet and return an empty list
         try:

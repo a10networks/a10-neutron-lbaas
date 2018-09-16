@@ -155,7 +155,6 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
                 'tenant_id': context.tenant_id,
                 'project_id': context.tenant_id,
                 'conn_limit': str(expected['conn_limit'])
-                #'extra_resources': []
             })
         expected.pop('config', None)
         self.maxDiff = None
@@ -258,7 +257,9 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
                 'extra_resources': []
             })
         for a10_opt in a10_opts.keys():
-            (extra_resource, value) = self.db_extension._make_extra_resource(a10_opt, a10_opts[a10_opt], 'a10_device')
+            (extra_resource, value) = self.db_extension._make_extra_resource(a10_opt,
+                                                                             a10_opts[a10_opt],
+                                                                             'a10_device')
             expected['extra_resources'].append({str(a10_opt): extra_resource})
         expected['extra_resources'] = expected['extra_resources'].sort()
         result['extra_resources'] = result['extra_resources'].sort()

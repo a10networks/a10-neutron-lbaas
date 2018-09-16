@@ -109,11 +109,11 @@ class FakeA10vThunder(object):
         self.project_id = 'fake-tenant-id'
 
         self.api_version = 'fake-version'
-        #self.data_networks = ['that_network'],
-        #self.flavor = 'MY_FAKE_FLAVOR',
+        # self.data_networks = ['that_network'],
+        # self.flavor = 'MY_FAKE_FLAVOR',
         self.host = 'fake-host'
-        #self.image = 'MY_FAKE_IMAGE',
-        #self.management_network = 'this_network',
+        # self.image = 'MY_FAKE_IMAGE',
+        # self.management_network = 'this_network',
         self.password = 'fake-password'
         self.port = '12345'
         self.protocol = 'https'

@@ -152,7 +152,6 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
                 'password': 'fake-password',
                 'protocol': 'https',
                 'port': 12345,
-                #'extra_resources': [],
                 'description': '',
             })
 
@@ -180,7 +179,6 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
                 'host': result['host'],
                 'tenant_id': context.tenant_id,
                 'project_id': context.tenant_id,
-                #'extra_resources': [],
 
             })
         self.assertEqual(expected, result)
@@ -264,7 +262,6 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
                 'project_id': context.tenant_id,
                 'nova_instance_id': None,
                 'conn_limit': str(expected['conn_limit']),
-                #'extra_resources': []
             })
 
         self.assertEqual(expected, result)

@@ -248,7 +248,7 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
     def get_a10_device_keys(self, context, filters=None, fields=None):
         LOG.debug(
-            "A10DevicePlugin.get_a10_devices(): filters=%s, fields=%s",
+            "A10DevicePlugin.get_a10_device_keys(): filters=%s, fields=%s",
             filters,
             fields)
 

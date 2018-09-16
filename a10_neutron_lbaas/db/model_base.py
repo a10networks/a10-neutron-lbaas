@@ -18,6 +18,9 @@ import sqlalchemy as sa
 from sqlalchemy.inspection import inspect
 
 from a10_neutron_lbaas.db import api as db_api
+import logging
+LOG = logging.getLogger(__name__)
+
 
 Base = db_api.get_base()
 
@@ -40,6 +43,34 @@ class A10Base(Base):
             yield db.query(cls)
 
     @classmethod
+    def _get_a10_opts(cls, a10_opts):
+        '''
+        Takes a list of <a10_neutron_lbaas.db.models.a10_device.A10DeviceValue>
+        objects and returns a dict with key value mappings of the a10_opt key
+        name to a10_opt value.
+        Also modifies boolean type keys to True or False from 0 or 1.
+        '''
+        from a10_neutron_lbaas.neutron_ext.common import attributes
+        from a10_neutron_lbaas.neutron_ext.common import resources
+        from a10_openstack_lib.resources import a10_device as a10_device_resources
+        RESOURCE_ATTRIBUTE_MAP = resources.apply_template(
+            a10_device_resources.RESOURCE_ATTRIBUTE_MAP, attributes)
+
+        a10_opts_dict = {}
+        for a10_opt in a10_opts:
+            LOG.debug("_get_a10_opts: key: %s value: %s"
+                      % (a10_opt.associated_key.name, a10_opt.value))
+            mapped_resource = RESOURCE_ATTRIBUTE_MAP['a10_devices'][a10_opt.associated_key.name]
+            if 'type:boolean' in mapped_resource['validate'].keys():
+                value = mapped_resource['convert_to'](int(a10_opt.value))
+                LOG.debug("_get_a10_opts:convert %s to bool %s" %
+                          (a10_opt.associated_key.name, value))
+                a10_opts_dict[a10_opt.associated_key.name] = value
+            else:
+                a10_opts_dict[a10_opt.associated_key.name] = a10_opt.value
+        return a10_opts_dict
+
+    @classmethod
     def get(cls, key, db_session=None):
         with cls._query(db_session) as q:
             return q.get(key)
@@ -51,8 +82,12 @@ class A10Base(Base):
 
     @classmethod
     def find_by(cls, db_session=None, **kwargs):
+        d = {}
         with cls._query(db_session) as q:
-            return q.filter_by(**kwargs).first()
+            d = q.filter_by(**kwargs).first().as_dict()
+            d.update(cls._get_a10_opts(d.pop('a10_opts')))
+            LOG.debug("get_device d: %s" % (d))
+        return d
 
     @classmethod
     def find_by_attribute(cls, attribute_name, attribute, db_session=None):
@@ -64,6 +99,17 @@ class A10Base(Base):
     def find_all(cls, db_session=None):
         with cls._query(db_session) as q:
             return q.all()
+
+    @classmethod
+    def find_all_a10_device(cls, db_session=None, relationship=None):
+        d = {}
+        with cls._query(db_session) as q:
+            for x in q:
+                LOG.debug("get_devices name: %s" % (x.name))
+                LOG.debug("get_devices x.a10_opts value: %s" % (x.a10_opts))
+                d[x.name] = x.as_dict()
+                d[x.name].update(cls._get_a10_opts(d[x.name].pop('a10_opts')))
+            return d
 
     @classmethod
     def create(cls, **kwargs):
