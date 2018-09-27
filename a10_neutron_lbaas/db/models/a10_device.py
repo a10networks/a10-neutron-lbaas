@@ -21,12 +21,10 @@ def _uuid_str():
     return str(uuid.uuid4())
 
 
-class A10Device(model_base.A10BaseMixin, model_base.A10Base):
+class A10Device(model_base.A10BaseMixin, model_base.A10DeviceBase):
 
     __tablename__ = 'a10_devices'
 
-    # This field is directly analagous to the device name in config.py;
-    # and will be used as such throughout.
     name = sa.Column(sa.String(1024), nullable=False)
     description = sa.Column(sa.String(255), nullable=True)
 
@@ -49,7 +47,11 @@ class A10DeviceKey(model_base.A10Base):
 
     id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     name = sa.Column(sa.String(255), nullable=False, unique=True)
-    description = sa.Column(sa.String(1024), nullable=False)
+    description = sa.Column(sa.String(1024), nullable=True)
+
+    data_type = sa.Column(sa.String(255), nullable=True)
+    default_value = sa.Column(sa.String(255), nullable=True)
+
     associated_value = orm.relationship("A10DeviceValue", back_populates="associated_key")
 
 

@@ -37,7 +37,13 @@ def upgrade():
     op.drop_column('a10_devices', 'v_method')
     op.drop_column('a10_devices', 'write_memory')
     op.alter_column('a10_device_value', 'value', existing_type=sa.String(255), nullable=True)
-
+    op.alter_column('a10_device_key', 'description', existing_type=sa.String(1024), nullable=True)
+    op.add_column('a10_device_key',
+                  sa.Column('default_value', sa.String(255), nullable=True)
+                  )
+    op.add_column('a10_device_key',
+                  sa.Column('data_type', sa.String(255), nullable=True)
+                  )
 
 def downgrade():
     op.add_column('a10_devices',
@@ -64,3 +70,6 @@ def downgrade():
                   sa.Column('write_memory', sa.Boolean(), nullable=False)
                   )
     op.alter_column('a10_device_value', 'value', existing_type=sa.String(255), nullable=False)
+    op.alter_column('a10_device_key', 'description', existing_type=sa.String(1024), nullable=False)
+    op.drop_column('a10_device_key', 'default_value')
+    op.drop_column('a10_device_key', 'data_type')

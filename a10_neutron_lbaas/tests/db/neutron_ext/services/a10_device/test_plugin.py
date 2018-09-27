@@ -136,8 +136,7 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         result.pop('extra_resources', None)
         expected = self.vthunder_default_options()
         expected.update(
-            self.plugin.validate_a10_opts(instance,
-                                          'a10_vthunder'))
+            self.plugin.validate_a10_opts(instance))
         expected.pop('a10_opts', None)
         expected.update(
             {
@@ -252,7 +251,7 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
         expected.update(
             self.plugin.a10_opts_defaults(
                 self.plugin.validate_a10_opts(
-                    device.a10_opts, 'a10_device'), 'a10_device'))
+                    device.a10_opts), 'a10_device'))
         expected.pop('config', None)
         expected.update(
             {

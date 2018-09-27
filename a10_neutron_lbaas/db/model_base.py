@@ -32,6 +32,12 @@ def _uuid_str():
 def _get_date():
     return datetime.datetime.now()
 
+def convert_to_boolean(input):
+    if input:
+        return True
+    else:
+        return False
+
 
 class A10Base(Base):
     __abstract__ = True
@@ -41,34 +47,6 @@ class A10Base(Base):
     def _query(cls, db_session=None):
         with db_api.magic_session(db_session) as db:
             yield db.query(cls)
-
-    @classmethod
-    def _get_a10_opts(cls, a10_opts):
-        '''
-        Takes a list of <a10_neutron_lbaas.db.models.a10_device.A10DeviceValue>
-        objects and returns a dict with key value mappings of the a10_opt key
-        name to a10_opt value.
-        Also modifies boolean type keys to True or False from 0 or 1.
-        '''
-        from a10_neutron_lbaas.neutron_ext.common import attributes
-        from a10_neutron_lbaas.neutron_ext.common import resources
-        from a10_openstack_lib.resources import a10_device as a10_device_resources
-        RESOURCE_ATTRIBUTE_MAP = resources.apply_template(
-            a10_device_resources.RESOURCE_ATTRIBUTE_MAP, attributes)
-
-        a10_opts_dict = {}
-        for a10_opt in a10_opts:
-            LOG.debug("_get_a10_opts: key: %s value: %s"
-                      % (a10_opt.associated_key.name, a10_opt.value))
-            mapped_resource = RESOURCE_ATTRIBUTE_MAP['a10_devices'][a10_opt.associated_key.name]
-            if 'type:boolean' in mapped_resource['validate'].keys():
-                value = mapped_resource['convert_to'](int(a10_opt.value))
-                LOG.debug("_get_a10_opts:convert %s to bool %s" %
-                          (a10_opt.associated_key.name, value))
-                a10_opts_dict[a10_opt.associated_key.name] = value
-            else:
-                a10_opts_dict[a10_opt.associated_key.name] = a10_opt.value
-        return a10_opts_dict
 
     @classmethod
     def get(cls, key, db_session=None):
@@ -82,12 +60,8 @@ class A10Base(Base):
 
     @classmethod
     def find_by(cls, db_session=None, **kwargs):
-        d = {}
         with cls._query(db_session) as q:
-            d = q.filter_by(**kwargs).first().as_dict()
-            d.update(cls._get_a10_opts(d.pop('a10_opts')))
-            LOG.debug("get_device d: %s" % (d))
-        return d
+            return q.filter_by(**kwargs).first()
 
     @classmethod
     def find_by_attribute(cls, attribute_name, attribute, db_session=None):
@@ -99,17 +73,6 @@ class A10Base(Base):
     def find_all(cls, db_session=None):
         with cls._query(db_session) as q:
             return q.all()
-
-    @classmethod
-    def find_all_a10_device(cls, db_session=None, relationship=None):
-        d = {}
-        with cls._query(db_session) as q:
-            for x in q:
-                LOG.debug("get_devices name: %s" % (x.name))
-                LOG.debug("get_devices x.a10_opts value: %s" % (x.a10_opts))
-                d[x.name] = x.as_dict()
-                d[x.name].update(cls._get_a10_opts(d[x.name].pop('a10_opts')))
-            return d
 
     @classmethod
     def create(cls, **kwargs):
@@ -145,6 +108,52 @@ class A10Base(Base):
 
     created_at = sa.Column(sa.DateTime, default=_get_date, nullable=False)
     updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date, nullable=False)
+
+
+class A10DeviceBase(A10Base):
+    __abstract__ = True
+
+    @classmethod
+    def _get_a10_opts(cls, a10_opts):
+        '''
+        Takes a list of <a10_neutron_lbaas.db.models.a10_device.A10DeviceValue>
+        objects and returns a dict with key value mappings of the a10_opt key
+        name to a10_opt value.
+        Modifies the valeu based on the data_type of the key
+        '''
+
+        a10_opts_dict = {}
+        for a10_opt in a10_opts:
+            if 'boolean' in a10_opt.associated_key.data_type:
+                value = convert_to_boolean(int(a10_opt.value))
+                a10_opts_dict[a10_opt.associated_key.name] = value
+            elif 'integer' in a10_opt.associated_key.data_type:
+                value = int(a10_opt.value)
+                a10_opts_dict[a10_opt.associated_key.name] = value
+            elif 'list' in a10_opt.associated_key.data_type:
+                value = a10_opt.value.split(',')
+                a10_opts_dict[a10_opt.associated_key.name] = value
+            else:
+                a10_opts_dict[a10_opt.associated_key.name] = a10_opt.value
+        return a10_opts_dict
+
+    @classmethod
+    def find_a10_device_by(cls, db_session=None, **kwargs):
+        d = {}
+        with cls._query(db_session) as q:
+            d = q.filter_by(**kwargs).first().as_dict()
+            d.update(cls._get_a10_opts(d.pop('a10_opts')))
+            LOG.debug("find_a10_device_by: %s" % (d))
+        return d
+
+    @classmethod
+    def find_all_a10_devices(cls, db_session=None):
+        d = {}
+        with cls._query(db_session) as q:
+            for x in q:
+                d[x.id] = x.as_dict()
+                d[x.id].update(cls._get_a10_opts(x.a10_opts))
+            return d
 
 
 class A10BaseMixin(object):

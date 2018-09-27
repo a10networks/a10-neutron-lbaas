@@ -221,7 +221,7 @@ class A10Config(object):
         if device_name in self._devices:
             return self._devices.get(device_name, {})
         if self.get('use_database'):
-            d = models.A10Device.find_by(name=device_name, db_session=db_session)
+            d = models.A10Device.find_a10_device_by(name=device_name, db_session=db_session)
             if d is not None:
                 self._devices[device_name] = d
                 return self._devices[device_name]
@@ -231,8 +231,8 @@ class A10Config(object):
     def get_devices(self, db_session=None):
         if self.get('use_database'):
             d = dict(self._devices.items())
-            d.update(models.A10Device.find_all_a10_device())
-            LOG.debug("a10_config get_devices d: %s", d)
+            d.update(models.A10Device.find_all_a10_devices())
+            LOG.debug("a10_config get_devices: %s", d)
             return d
         return self._devices
 

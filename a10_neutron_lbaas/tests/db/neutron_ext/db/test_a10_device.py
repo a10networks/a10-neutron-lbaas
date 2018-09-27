@@ -147,8 +147,7 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
                                                        result['id']))
         expected.update(
             self.db_extension.a10_opts_defaults(
-                self.db_extension.validate_a10_opts(
-                    device.a10_opts, 'a10_device'), 'a10_device'))
+                self.db_extension.validate_a10_opts(device.a10_opts)))
         expected.update(
             {
                 'id': result['id'],
@@ -241,7 +240,7 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
         expected = {}
         # Create an a10_opts dict from the request body
         a10_opts = self.db_extension.validate_a10_opts(
-            device.__dict__.pop('a10_opts', []), 'a10_device')
+            device.__dict__.pop('a10_opts', []))
         a10_opts = self.db_extension.a10_opts_defaults()
         expected.update(a10_opts)
         expected.update(self.db_extension.a10_device_body_defaults(
@@ -257,9 +256,7 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
                 'extra_resources': []
             })
         for a10_opt in a10_opts.keys():
-            (extra_resource, value) = self.db_extension._make_extra_resource(a10_opt,
-                                                                             a10_opts[a10_opt],
-                                                                             'a10_device')
+            (extra_resource, value) = self.db_extension._make_extra_resource(a10_opt, a10_opts[a10_opt])
             expected['extra_resources'].append({str(a10_opt): extra_resource})
         expected['extra_resources'] = expected['extra_resources'].sort()
         result['extra_resources'] = result['extra_resources'].sort()

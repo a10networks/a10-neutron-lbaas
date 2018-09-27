@@ -31,15 +31,17 @@ from a10_neutron_lbaas.neutron_ext.extensions import a10Device
 from a10_openstack_lib.resources import a10_device as a10_device_resources
 
 
-RESOURCE_ATTRIBUTE_MAP = resources.apply_template(a10_device_resources.RESOURCE_ATTRIBUTE_MAP,
-                                                  attributes)
-
-
 LOG = logging.getLogger(__name__)
 
 
 def _uuid_str():
     return str(uuid.uuid4())
+
+def convert_to_boolean(input):
+    if input:
+        return True
+    else:
+        return False
 
 
 class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
@@ -80,7 +82,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                                                      device_id}}
             self.create_a10_device_value(context, device_value)
 
-    def _make_a10_device_dict(self, a10_device_db, fields=None):
+    def _make_a10_device_dict(self, a10_device_db, context, fields=None):
         res = {'description': a10_device_db.description,
                'id': a10_device_db.id,
                'name': a10_device_db.name,
@@ -101,27 +103,35 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         for device_value in a10_device_db.a10_opts:
             key = device_value.associated_key.name
             value = device_value.value
-            (extra_resource, value) = self._make_extra_resource(key, value, 'a10_device')
+            (extra_resource, value) = self._make_extra_resource(context, key, value)
             res[str(key)] = value
             if extra_resource:
                 res['extra_resources'].append({str(key): extra_resource})
 
         return self._fields(res, fields)
 
-    def _make_extra_resource(self, key, value, resource):
+    def _make_extra_resource(self, context, key, value):
         '''
-        Return mapped_resource dict, created from values in a10_openstack_lib.
-        If no values in RESOURCE_ATTRIBUTE_MAP then return an empty
+        Return mapped_resource dict, validate against the keys in the database
+        If no keys provided are in a10_device_keys table, then return an empty
         mapped_resource
         '''
-        device_type = resource + 's'
 
-        if (key in RESOURCE_ATTRIBUTE_MAP[device_type].keys()
-                and RESOURCE_ATTRIBUTE_MAP[device_type][key]['is_a10_opt']):
-            mapped_resource = RESOURCE_ATTRIBUTE_MAP[device_type][key]
+        valid_opts = self.get_a10_device_key_list(context)
+        if (key in valid_opts):
+            key_db = self._get_a10_device_key_by_name(context, key)
+            mapped_resource = {
+                'allow_post': True,
+                'allow_put': True,
+                'validate': {
+                    'type:' + key_db.data_type : None,
+                },
+                'is_visible': True,
+                'default': str(key_db.default_value)
+            }
 
-            if 'type:boolean' in mapped_resource['validate'].keys():
-                value = mapped_resource['convert_to'](int(value))
+            if 'boolean' in key_db.data_type:
+                value = convert_to_boolean(int(value))
                 LOG.debug("A10DeviceDbMixin:_make_extra_resource() convert %s to bool %s" %
                           (key, value))
         else:
@@ -130,12 +140,14 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
         return mapped_resource, value
 
-    def validate_a10_opts(self, a10_opts, resource):
+    def validate_a10_opts(self, context, a10_opts):
         LOG.debug("A10DeviceDbMixin:_get_a10_opts() a10_opts=%s, resource=%s" %
-                  (a10_opts, resource))
+                  (a10_opts))
 
-        device_type = resource + 's'
-
+        if not isinstance(a10_opts, list):
+            wrap = []
+            wrap.append(a10_opts)
+            a10_opts = wrap
         # Filter for options with commas in them
         # Split comma separated strings into separate options
         # append all options to new list
@@ -152,9 +164,9 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         # Assume an option name with no value is Boolean True
         # Appending 'no-' to any Boolean option will set it to False for updates
         # Lookup the type of any option with 'no-' prefix.  If not boolean, then
-        # it will be set to None (which will be NULL in the db)
+        # it will be set to None (which will be NULL in the db) or 0
         opts_dict = {}
-        valid_opts = RESOURCE_ATTRIBUTE_MAP[device_type].keys()
+        valid_opts = self.get_a10_device_key_list(context)
         for opt in opts:
             # If a Key/Value assignment
             if '=' in opt:
@@ -162,26 +174,29 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 if k in valid_opts:
                     opts_dict[k.replace('-', '_').strip()] = v.strip()
                 else:
-                    LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s" % (k))
-            # Else a Boolean Option
+                    LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s assigned value: %s" % (k, v))
+            # Else a Boolean Option or --no-something is being passed
             else:
                 if opt in valid_opts:
                     opts_dict[opt.replace('-', '_').strip()] = True
                 elif opt.startswith('no-'):
                     false_opt = opt.replace('no-', '').strip()
                     if false_opt in valid_opts:
-                        for opt_type in RESOURCE_ATTRIBUTE_MAP[
-                                device_type].get(false_opt).get(
-                                'validate').keys():
-                            if "type:boolean" in opt_type:
-                                opts_dict[false_opt.replace('-', '_').strip()] = False
-                            elif opt_type.startswith("type:"):
-                                opts_dict[false_opt] = None
+                        key_db = self._get_a10_device_key_by_name(context, false_opt)
+                        if 'boolean' in key_db.data_type:
+                            false_value = False
+                        elif 'string' in key_db.data_type:
+                            false_value = None
+                        elif 'integer' in key_db.data_type:
+                            false_value = 0
+                        elif 'list' in key_db.data_type:
+                            false_value = []
+                        opts_dict[false_opt.replace('-', '_').strip()] = false_value
                     else:
-                        LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s"
+                        LOG.error("A10DeviceDbMixin:_get_a10_opts() negative of invalid a10_opts option: %s"
                                   % (false_opt))
                 else:
-                    LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s"
+                    LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts boolean option: %s"
                               % (opt))
 
         LOG.debug("A10DeviceDbMixin:_get_a10_opts() opts_dict=%s " % (opts_dict))
@@ -278,7 +293,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                   (body))
 
         a10_opts = {}
-        a10_opts.update(self.validate_a10_opts(body.pop('a10_opts', []), resource))
+        a10_opts.update(self.validate_a10_opts(context, body.pop('a10_opts', [])))
         a10_opts = self.a10_opts_defaults(a10_opts, resource)
 
         LOG.debug("A10DeviceDbMixin:create_a10_device() before _config_keys_exist a10_opts=%s" %
@@ -309,11 +324,11 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
 
         self._add_device_kv(context, a10_opts, device_id)
 
-        return self._make_a10_device_dict(device_record)
+        return self._make_a10_device_dict(context, device_record)
 
     def get_a10_device(self, context, a10_device_id, fields=None):
         device = self._get_a10_device(context, a10_device_id)
-        return self._make_a10_device_dict(device, fields)
+        return self._make_a10_device_dict(context, device, fields)
 
     def get_a10_devices(self, context, filters=None, fields=None,
                         sorts=None, limit=None, marker=None,
@@ -353,13 +368,13 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             device = self._get_by_id(context, models.A10Device, device_id)
             LOG.debug("A10DeviceDbMixin:update_a10_device() device=%s" % (device))
             a10_opts = self.validate_a10_opts(
-                a10_device.get(resource).pop('a10_opts', []), resource)
+                a10_device.get(resource).pop('a10_opts', []))
             for a10_opt in a10_opts.keys():
                 self.update_a10_device_value(
                     context, self._get_a10_device_key_by_name(context, a10_opt).id,
                     device_id, a10_opts[a10_opt])
             device.update(**a10_device.get(resource))
-            return self._make_a10_device_dict(device)
+            return self._make_a10_device_dict(context, device)
 
     def _get_device_key_body(self, a10_device_key):
         body = a10_device_key[a10_device_resources.DEVICE_KEY]
@@ -390,7 +405,9 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
     def _make_a10_device_key_dict(self, a10_device_key_db, fields=None):
         res = {'id': a10_device_key_db.id,
                'name': a10_device_key_db.name,
-               'description': a10_device_key_db.description}
+               'description': a10_device_key_db.description,
+               'default_value': a10_device_key_db.default_value,
+               'data_type': a10_device_key_db.data_type}
 
         return self._fields(res, fields)
 
@@ -423,10 +440,19 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         device_key = self._get_a10_device_key(context, key_id)
         return self._make_a10_device_key_dict(device_key, fields)
 
+    def get_a10_device_key_list(self, context, filters=None, fields=None,
+                            sorts=None, limit=None, marker=None,
+                            page_reverse=False):
+        key_list = []
+        for key in self.get_a10_device_keys(context, fields="name"):
+            key_list.append(key['name'])
+        LOG.debug("A10DeviceDbMixin:get_a10_device_key_list() key_list: %s" % (key_list))
+        return key_list
+
     def get_a10_device_keys(self, context, filters=None, fields=None,
                             sorts=None, limit=None, marker=None,
                             page_reverse=False):
-        LOG.debug("A10DeviceDbMixin:get_a10_device_key()")
+        LOG.debug("A10DeviceDbMixin:get_a10_device_keys() context: %s filters: %s fields: %s" % (context, filters, fields))
         return self._get_collection(context, models.A10DeviceKey,
                                     self._make_a10_device_key_dict, filters=filters,
                                     fields=fields, sorts=sorts, limit=limit,
