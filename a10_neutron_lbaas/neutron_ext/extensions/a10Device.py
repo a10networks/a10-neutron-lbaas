@@ -136,6 +136,20 @@ class A10DeviceNotFoundError(exc.NoResultFound):
         super(A10DeviceNotFoundError, self).__init__()
 
 
+class A10DeviceKeyNotFoundError(exc.NoResultFound):
+
+    def __init__(self, a10_device_key):
+        self.msg = _("A10 Device Key {} could not be found.")
+        super(A10DeviceKeyNotFoundError, self).__init__()
+
+
+class A10DeviceValeuNotFoundError(exc.NoResultFound):
+
+    def __init__(self, a10_device_key):
+        self.msg = _("A10 Device Value {} could not be found.")
+        super(A10DeviceValueNotFoundError, self).__init__()
+
+
 class A10DeviceInUseError(exceptions.InUse):
 
     def __init__(self, a10_device_id):

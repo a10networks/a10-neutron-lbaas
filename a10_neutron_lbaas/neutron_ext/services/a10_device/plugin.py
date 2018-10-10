@@ -18,10 +18,13 @@ from oslo_log import log as logging
 import a10_neutron_lbaas.a10_config as a10_config
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.common import resources as common_resources
+from a10_neutron_lbaas.neutron_ext.extensions import a10Device
 
 import a10_neutron_lbaas.neutron_ext.db.a10_device as a10_device
 import a10_neutron_lbaas.vthunder.instance_manager as instance_manager
 from a10_openstack_lib.resources import a10_device as resources
+
+
 
 LOG = logging.getLogger(__name__)
 
@@ -215,6 +218,9 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
                 return ['Table is not there...']
             else:
                 raise
+        except a10Device.A10DeviceNotFoundError as e:
+            LOG.debug("A10DevicePlugin:create_a10_devices() Exception:  %s" % (e.message))
+            return 'Invalid a10_opt option passed'
 
     def get_a10_device(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_a10_device(): id=%s, fields=%s" %
@@ -248,9 +254,9 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
 
     def get_a10_device_keys(self, context, filters=None, fields=None):
         LOG.debug(
-            "A10DevicePlugin.get_a10_device_keys(): filters=%s, fields=%s",
+            "A10DevicePlugin.get_a10_device_keys(): filters=%s, fields=%s, context=%s",
             filters,
-            fields)
+            fields, context)
 
         return super(A10DevicePlugin, self).get_a10_device_keys(
             context, filters=filters, fields=fields)
