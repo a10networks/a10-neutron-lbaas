@@ -69,7 +69,7 @@ class TestSelectDevice(test_base.UnitTestBase):
         db = self.open_session()
         z = list(db.query(models.A10TenantBinding))
         self.assertEqual(z[0].tenant_id, TENANT_ID)
-        self.assertEqual(z[0].device_name, EXPECTED_DEV1)
+        self.assertEqual(z[0].device_id, EXPECTED_DEV1)
 
         h = hooks.PlumbingHooks(None, devices=devices2)
         db = self.open_session()

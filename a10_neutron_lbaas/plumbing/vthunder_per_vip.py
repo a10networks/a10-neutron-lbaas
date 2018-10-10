@@ -43,7 +43,7 @@ class VThunderPerVIPPlumbingHooks(vthunder_per_tenant.VThunderPerTenantPlumbingH
         root_id = lbaas_obj.root_loadbalancer.id
         slb = models.A10SLB.find_by(loadbalancer_id=root_id, db_session=db_session)
         if slb is not None:
-            d = self.driver.config.get_device(slb.device_name, db_session=db_session)
+            d = self.driver.config.get_device(device_name=slb.device_name, db_session=db_session)
             if d is None:
                 LOG.error(missing_instance)
                 raise ex.InstanceMissing(missing_instance)

@@ -30,14 +30,17 @@ class A10Context(object):
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
+        self.device_id = kwargs.get('device_id', None)
         self.action = kwargs.get('action', '')
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
         LOG.debug("A10Context action=%s", self.action)
         self.partition_name = "shared"
 
     def _get_device(self):
-        if self.device_name:
-            d = self.a10_driver.config.get_device(self.device_name)
+        if self.device_id:
+            d = self.a10_driver.config.get_device(device_id=self.device_id)
+        elif self.device_name:
+            d = self.a10_driver.config.get_device(device_name=self.device_name)
         else:
             d = self.a10_driver._select_a10_device(self.tenant_id, a10_context=self,
                                                    lbaas_obj=self.openstack_lbaas_obj,

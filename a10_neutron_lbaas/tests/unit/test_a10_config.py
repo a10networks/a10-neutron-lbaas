@@ -28,14 +28,14 @@ class TestA10Config(test_base.UnitTestBase):
         self.assertEqual(11, len(self.a.config.get_devices()))
 
     def test_expected_ports(self):
-        self.assertEqual(8443, self.a.config.get_device('ax1')['port'])
-        self.assertEqual(80, self.a.config.get_device('ax3')['port'])
-        self.assertEqual(443, self.a.config.get_device('ax4')['port'])
+        self.assertEqual(8443, self.a.config.get_device(device_name='ax1')['port'])
+        self.assertEqual(80, self.a.config.get_device(device_name='ax3')['port'])
+        self.assertEqual(443, self.a.config.get_device(device_name='ax4')['port'])
 
     def test_expected_protocols(self):
-        self.assertEqual('https', self.a.config.get_device('ax1')['protocol'])
-        self.assertEqual('http', self.a.config.get_device('ax3')['protocol'])
-        self.assertEqual('https', self.a.config.get_device('ax4')['protocol'])
+        self.assertEqual('https', self.a.config.get_device(device_name='ax1')['protocol'])
+        self.assertEqual('http', self.a.config.get_device(device_name='ax3')['protocol'])
+        self.assertEqual('https', self.a.config.get_device(device_name='ax4')['protocol'])
 
     def test_v_method(self):
         for k, v in self.a.config.get_devices().items():
@@ -45,7 +45,7 @@ class TestA10Config(test_base.UnitTestBase):
                 self.assertEqual('LSI', None)
 
     def test_alternate_shared_partition(self):
-        self.assertTrue(self.a.config.get_device('axadp-alt')['shared_partition'])
+        self.assertTrue(self.a.config.get_device(device_name='axadp-alt')['shared_partition'])
 
     def test_ip_in_ip(self):
         expected = True
