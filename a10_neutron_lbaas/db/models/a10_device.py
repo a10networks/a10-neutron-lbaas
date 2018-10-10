@@ -24,8 +24,10 @@ def _uuid_str():
 class A10Device(model_base.A10BaseMixin, model_base.A10DeviceBase):
 
     __tablename__ = 'a10_devices'
+    __table_args__ = (
+        sa.UniqueConstraint('tenant_id', name='uix_a10_devices_tenant_id'),)
 
-    name = sa.Column(sa.String(1024), nullable=False)
+    name = sa.Column(sa.String(1024), nullable=True)
     description = sa.Column(sa.String(255), nullable=True)
 
     username = sa.Column(sa.String(255), nullable=False)
@@ -38,32 +40,43 @@ class A10Device(model_base.A10BaseMixin, model_base.A10DeviceBase):
     nova_instance_id = sa.Column(sa.String(36), nullable=True)
     host = sa.Column(sa.String(255), nullable=False)
 
-    a10_opts = orm.relationship("A10DeviceValue", back_populates="associated_device")
+    a10_opts = orm.relationship(
+        "A10DeviceValue", back_populates="associated_device")
 
 
 class A10DeviceKey(model_base.A10Base):
 
     __tablename__ = 'a10_device_key'
+    __table_args__ = (
+        sa.UniqueConstraint('name', name='uix_a10_device_key_name'),)
 
-    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
+    id = sa.Column(
+        sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
     name = sa.Column(sa.String(255), nullable=False, unique=True)
     description = sa.Column(sa.String(1024), nullable=True)
 
     data_type = sa.Column(sa.String(255), nullable=True)
     default_value = sa.Column(sa.String(255), nullable=True)
 
-    associated_value = orm.relationship("A10DeviceValue", back_populates="associated_key")
+    associated_value = orm.relationship(
+        "A10DeviceValue", back_populates="associated_key")
 
 
 class A10DeviceValue(model_base.A10Base, model_base.A10BaseMixin):
 
     __tablename__ = 'a10_device_value'
+    __table_args__ = (
+        sa.UniqueConstraint('associated_obj_id', 'tenant_id', 'key_id',
+            name='uix_a10_device_value_key_id'),)
 
-    id = sa.Column(sa.String(36), primary_key=True, nullable=False, default=_uuid_str)
-    associated_obj_id = sa.Column(sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False)
-    key_id = sa.Column(sa.String(36), sa.ForeignKey('a10_device_key.id'), nullable=False)
+    associated_obj_id = sa.Column(
+        sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False)
+    key_id = sa.Column(
+        sa.String(36), sa.ForeignKey('a10_device_key.id'), nullable=False)
 
     value = sa.Column(sa.String(255), nullable=True)
 
-    associated_device = orm.relationship("A10Device", back_populates="a10_opts")
-    associated_key = orm.relationship("A10DeviceKey", back_populates="associated_value")
+    associated_device = orm.relationship(
+        "A10Device", back_populates="a10_opts")
+    associated_key = orm.relationship(
+        "A10DeviceKey", back_populates="associated_value")

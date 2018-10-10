@@ -39,37 +39,37 @@ def upgrade():
     op.alter_column('a10_device_value', 'value', existing_type=sa.String(255), nullable=True)
     op.alter_column('a10_device_key', 'description', existing_type=sa.String(1024), nullable=True)
     op.add_column('a10_device_key',
-                  sa.Column('default_value', sa.String(255), nullable=True)
-                  )
+                  sa.Column('default_value', sa.String(255), nullable=True))
     op.add_column('a10_device_key',
-                  sa.Column('data_type', sa.String(255), nullable=True)
-                  )
+                  sa.Column('data_type', sa.String(255), nullable=True))
+    op.create_unique_constraint('uix_a10_devices_tenant_id', 'a10_devices',
+                                ['tenant_id'])
+    op.create_unique_constraint('uix_a10_device_key_name', 'a10_device_key',
+                                ['name'])
+    op.create_unique_constraint('uix_a10_device_value_key_id', 'a10_device_value',
+                                ['associated_obj_id', 'tenant_id', 'key_id'])
 
 def downgrade():
     op.add_column('a10_devices',
-                  sa.Column('autosnat', sa.Boolean(), nullable=False)
-                  )
+                  sa.Column('autosnat', sa.Boolean(), nullable=False))
     op.add_column('a10_devices',
                   sa.Column('default_virtual_server_vrid', sa.Integer,
-                            nullable=True)
-                  )
+                            nullable=True))
     op.add_column('a10_devices',
-                  sa.Column('ipinip', sa.Boolean(), nullable=False)
-                  )
+                  sa.Column('ipinip', sa.Boolean(), nullable=False))
     op.add_column('a10_devices',
                   sa.Column('shared_partition', sa.String(1024),
-                            nullable=False)
-                  )
+                            nullable=False))
     op.add_column('a10_devices',
-                  sa.Column('use_float', sa.Boolean(), nullable=False)
-                  )
+                  sa.Column('use_float', sa.Boolean(), nullable=False))
     op.add_column('a10_devices',
-                  sa.Column('v_method', sa.String(32), nullable=False)
-                  )
+                  sa.Column('v_method', sa.String(32), nullable=False))
     op.add_column('a10_devices',
-                  sa.Column('write_memory', sa.Boolean(), nullable=False)
-                  )
+                  sa.Column('write_memory', sa.Boolean(), nullable=False))
     op.alter_column('a10_device_value', 'value', existing_type=sa.String(255), nullable=False)
     op.alter_column('a10_device_key', 'description', existing_type=sa.String(1024), nullable=False)
     op.drop_column('a10_device_key', 'default_value')
     op.drop_column('a10_device_key', 'data_type')
+    op.drop_constraint('uix_a10_devices_tenant_id', 'a10_devices', 'unique')
+    op.drop_constraint('uix_a10_device_key_name', 'a10_device_key', 'unique')
+    op.drop_constraint('uix_a10_device_value_key_id', 'a10_device_value', 'unique')
