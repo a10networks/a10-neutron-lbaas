@@ -51,24 +51,19 @@ class PlumbingHooks(base.BasePlumbingHooks):
     def _select_device_db(self, tenant_id, db_session=None):
         self._late_init()
 
-        # See if we have a saved tenant
-        a10 = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
+        a10 = models.A10Device.find_by_attribute(
+            'tenant_id', tenant_id, db_session=db_session)
         if a10 is not None:
-            if a10.device_name in self.devices:
-                return self.devices[a10.device_name]
+            if a10.id in self.devices:
+                return self.devices[a10.id]
             else:
                 raise ex.DeviceConfigMissing(
-                    'A10 device %s mapped to tenant %s is not present in config; '
-                    'add it back to config or migrate loadbalancers' %
-                    (a10.device_name, tenant_id))
-
-        # Nope, so we hash and save
-        d = self._select_device_hash(tenant_id)
-        models.A10TenantBinding.create_and_save(
-            tenant_id=tenant_id, device_name=d['name'],
-            db_session=db_session)
-
-        return d
+                    'A10 device retrieved for tenant id %s could not be found in'
+                    'database! A10 device: %s' % (tenant_id, a10.__dict__))
+        else:
+            raise ex.InstanceMissing(
+                'No A10 device is mapped to tenant %s in database.' %
+                (tenant_id))
 
     def select_device(self, tenant_id, **kwargs):
         if self.driver.config.get('use_database'):
