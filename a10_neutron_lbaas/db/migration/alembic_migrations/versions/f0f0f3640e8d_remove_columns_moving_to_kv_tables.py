@@ -42,12 +42,6 @@ def upgrade():
                   sa.Column('default_value', sa.String(255), nullable=True))
     op.add_column('a10_device_key',
                   sa.Column('data_type', sa.String(255), nullable=True))
-    op.create_unique_constraint('uix_a10_devices_tenant_id', 'a10_devices',
-                                ['tenant_id'])
-    op.create_unique_constraint('uix_a10_device_key_name', 'a10_device_key',
-                                ['name'])
-    op.create_unique_constraint('uix_a10_device_value_key_id', 'a10_device_value',
-                                ['associated_obj_id', 'tenant_id', 'key_id'])
 
 def downgrade():
     op.add_column('a10_devices',
@@ -70,6 +64,3 @@ def downgrade():
     op.alter_column('a10_device_key', 'description', existing_type=sa.String(1024), nullable=False)
     op.drop_column('a10_device_key', 'default_value')
     op.drop_column('a10_device_key', 'data_type')
-    op.drop_constraint('uix_a10_devices_tenant_id', 'a10_devices', 'unique')
-    op.drop_constraint('uix_a10_device_key_name', 'a10_device_key', 'unique')
-    op.drop_constraint('uix_a10_device_value_key_id', 'a10_device_value', 'unique')
