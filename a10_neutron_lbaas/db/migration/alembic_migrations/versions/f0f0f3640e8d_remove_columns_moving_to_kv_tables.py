@@ -28,6 +28,7 @@ from alembic import op  # noqa
 import sqlalchemy as sa  # noqa
 import sqlalchemy.sql as sasql  # noqa
 import uuid
+from datetime import datetime
 
 
 def upgrade():
@@ -49,35 +50,47 @@ def upgrade():
     key_table = sasql.table('a10_device_key',
         sasql.column('id', sa.String),
         sasql.column('name', sa.String),
+        sasql.column('created_at', sa.DateTime),
+        sasql.column('updated_at', sa.DateTime),
         sasql.column('description', sa.String),
         sasql.column('data_type', sa.String),
         sasql.column('default_value', sa.String))
+    dt=str(datetime.now())
     keys = [
         {'id': str(uuid.uuid4()), 'name': 'shared_partition',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': 'shared', 'data_type': 'string'},
         {'id': str(uuid.uuid4()), 'name': 'v_method',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': 'LSI', 'data_type': 'string'},
         {'id': str(uuid.uuid4()), 'name': 'write_memory',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': '1', 'data_type': 'boolean'},
         {'id': str(uuid.uuid4()), 'name': 'source_nat_pool',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': '', 'data_type': 'string'},
         {'id': str(uuid.uuid4()), 'name': 'autosnat',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': '0', 'data_type': 'boolean'},
         {'id': str(uuid.uuid4()), 'name': 'ipinip',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': '0', 'data_type': 'boolean'},
         {'id': str(uuid.uuid4()), 'name': 'use_float',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': '0', 'data_type': 'boolean'},
         {'id': str(uuid.uuid4()), 'name': 'default_virtual_server_vrid',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': '', 'data_type': 'string'},
         {'id': str(uuid.uuid4()), 'name': 'conn_limit',
+         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': '8000000', 'data_type': 'string'}]
     op.bulk_insert(key_table, keys)
