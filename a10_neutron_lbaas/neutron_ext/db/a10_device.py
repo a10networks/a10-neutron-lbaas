@@ -142,7 +142,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         return mapped_resource, value
 
     def validate_a10_opts(self, a10_opts):
-        LOG.debug("A10DeviceDbMixin:_get_a10_opts() a10_opts=%s" %
+        LOG.debug("A10DeviceDbMixin:validate_a10_opts() a10_opts=%s" %
                   (a10_opts))
 
         if not isinstance(a10_opts, list):
@@ -178,12 +178,12 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 key_db = self._get_a10_device_key_by_name(k)
                 if k in valid_opts:
                     if 'boolean' in key_db.data_type:
-                        LOG.error("A10DeviceDbMixin:_get_a10_opts() a10_opts boolean option: %s can not be assigned a value" % (k))
+                        LOG.error("A10DeviceDbMixin:validate_a10_opts() a10_opts boolean option: %s can not be assigned a value" % (k))
                         raise a10Device.A10DeviceKeyNotFoundError(k)
                     else:
                         opts_dict[k.replace('-', '_').strip()] = v.strip()
                 else:
-                    LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts option: %s assigned value: %s" % (k, v))
+                    LOG.error("A10DeviceDbMixin:validate_a10_opts() invalid a10_opts option: %s assigned value: %s" % (k, v))
                     raise a10Device.A10DeviceKeyNotFoundError(k)
 
             # Else a Boolean Option or --no-something is being passed
@@ -204,15 +204,15 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                             false_value = []
                         opts_dict[false_opt.replace('-', '_').strip()] = false_value
                     else:
-                        LOG.error("A10DeviceDbMixin:_get_a10_opts() negative of invalid a10_opts option: %s"
+                        LOG.error("A10DeviceDbMixin:validate_a10_opts() negative of invalid a10_opts option: %s"
                                   % (false_opt))
-                        raise a10Device.A10DeviceKeyNotFoundError(k)
+                        raise a10Device.A10DeviceKeyNotFoundError(false_opt)
                 else:
-                    LOG.error("A10DeviceDbMixin:_get_a10_opts() invalid a10_opts boolean option: %s"
+                    LOG.error("A10DeviceDbMixin:validate_a10_opts() invalid a10_opts boolean option: %s"
                               % (opt))
                     raise a10Device.A10DeviceKeyNotFoundError(opt)
 
-        LOG.debug("A10DeviceDbMixin:_get_a10_opts() opts_dict=%s " % (opts_dict))
+        LOG.debug("A10DeviceDbMixin:validate_a10_opts() opts_dict=%s " % (opts_dict))
         return opts_dict
 
     def a10_device_body_defaults(self, body, tenant_id, device_id):
