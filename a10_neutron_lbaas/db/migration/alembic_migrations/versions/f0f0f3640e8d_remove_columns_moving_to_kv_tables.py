@@ -26,9 +26,12 @@ depends_on = None
 
 from alembic import op  # noqa
 import sqlalchemy as sa  # noqa
+import sqlalchemy.sql as sasql  # noqa
+import uuid
 
 
 def upgrade():
+    
     op.drop_column('a10_devices', 'autosnat')
     op.drop_column('a10_devices', 'default_virtual_server_vrid')
     op.drop_column('a10_devices', 'ipinip')
@@ -42,6 +45,42 @@ def upgrade():
                   sa.Column('default_value', sa.String(255), nullable=True))
     op.add_column('a10_device_key',
                   sa.Column('data_type', sa.String(255), nullable=True))
+
+    key_table = sasql.table('a10_device_key',
+        sasql.column('id', sa.String),
+        sasql.column('name', sa.String),
+        sasql.column('description', sa.String),
+        sasql.column('data_type', sa.String),
+        sasql.column('default_value', sa.String))
+    keys = [
+        {'id': str(uuid.uuid4()), 'name': 'shared_partition',
+         'description':'',
+         'default_value': 'shared', 'data_type': 'string'},
+        {'id': str(uuid.uuid4()), 'name': 'v_method',
+         'description':'',
+         'default_value': 'LSI', 'data_type': 'string'},
+        {'id': str(uuid.uuid4()), 'name': 'write_memory',
+         'description':'',
+         'default_value': '1', 'data_type': 'boolean'},
+        {'id': str(uuid.uuid4()), 'name': 'source_nat_pool',
+         'description':'',
+         'default_value': '', 'data_type': 'string'},
+        {'id': str(uuid.uuid4()), 'name': 'autosnat',
+         'description':'',
+         'default_value': '0', 'data_type': 'boolean'},
+        {'id': str(uuid.uuid4()), 'name': 'ipinip',
+         'description':'',
+         'default_value': '0', 'data_type': 'boolean'},
+        {'id': str(uuid.uuid4()), 'name': 'use_float',
+         'description':'',
+         'default_value': '0', 'data_type': 'boolean'},
+        {'id': str(uuid.uuid4()), 'name': 'default_virtual_server_vrid',
+         'description':'',
+         'default_value': '', 'data_type': 'string'},
+        {'id': str(uuid.uuid4()), 'name': 'conn_limit',
+         'description':'',
+         'default_value': '8000000', 'data_type': 'string'}]
+    op.bulk_insert(key_table, keys)
 
 def downgrade():
     op.add_column('a10_devices',
@@ -64,3 +103,4 @@ def downgrade():
     op.alter_column('a10_device_key', 'description', existing_type=sa.String(1024), nullable=False)
     op.drop_column('a10_device_key', 'default_value')
     op.drop_column('a10_device_key', 'data_type')
+    op.execute('DELETE FROM a10_device_key;')
