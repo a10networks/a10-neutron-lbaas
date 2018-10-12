@@ -93,7 +93,7 @@ def upgrade():
          'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
          'description':'',
          'default_value': '8000000', 'data_type': 'string'}]
-    op.bulk_insert(key_table, keys)
+    op.bulk_insert(key_table, keys, multiinsert=False)
 
 def downgrade():
     op.add_column('a10_devices',
