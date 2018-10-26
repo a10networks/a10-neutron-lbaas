@@ -230,7 +230,7 @@ class A10Config(object):
 
     # TODO(dougwig) -- later - use of this method should be considered a scalability killer
     def get_devices(self, db_session=None):
-        if self.get('use_database'):
+        if self.use_database:
             d = dict(self._devices.items())
             d.update(models.A10Device.find_all_a10_devices())
             LOG.debug("a10_config get_devices: %s", d)
