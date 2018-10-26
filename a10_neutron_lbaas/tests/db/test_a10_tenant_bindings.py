@@ -28,7 +28,6 @@ class TestTenantBindings(test_base.UnitTestBase):
         x = models.A10TenantBinding(
             tenant_id='xxx',
             device_name='yyy',
-            device_id='032010b8-20e6-4b27-a6d0-6465e50a635d',
             created_at=dt)
         db.add(x)
         db.commit()
@@ -38,7 +37,6 @@ class TestTenantBindings(test_base.UnitTestBase):
         self.assertEqual(len(z), 1)
         self.assertEqual(z[0].tenant_id, 'xxx')
         self.assertEqual(z[0].device_name, 'yyy')
-        self.assertEqual(z[0].device_id, '032010b8-20e6-4b27-a6d0-6465e50a635d')
         self.assertTrue(len(z[0].id) == 36)
         self.assertEqual(z[0].created_at, dt)
 
@@ -46,7 +44,6 @@ class TestTenantBindings(test_base.UnitTestBase):
         x = models.A10TenantBinding.create_and_save(
             tenant_id='xxx2',
             device_name='yyy2',
-            device_id='032010b8-20e6-4b27-a6d0-6465e50a635d',
             created_at=dt,
             db_session=db)
 

@@ -72,6 +72,9 @@ class FakeA10DeviceKey(object):
     def __init__(self):
         self.name = 'fake-name'
         self.description = 'fake-description'
+        self.default_value = 'fake-value'
+        self.data_type = 'string'
+
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item
@@ -108,6 +111,13 @@ class FakeA10vThunder(object):
         self.nova_instance_id = None
         self.project_id = 'fake-tenant-id'
 
+        self.a10_opts = ['no-autosnat',
+                         'no-default_virtual_server_vrid',
+                         'no-ipinip',
+                         'shared_partition=shared',
+                         'no-use_float',
+                         'v_method=ADP',
+                         'write_memory']
         self.api_version = 'fake-version'
         # self.data_networks = ['that_network'],
         # self.flavor = 'MY_FAKE_FLAVOR',
