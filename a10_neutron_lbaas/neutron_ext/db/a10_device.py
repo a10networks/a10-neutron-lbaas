@@ -135,6 +135,11 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 value = convert_to_boolean(int(value))
                 LOG.debug("A10DeviceDbMixin:_make_extra_resource() "
                           "convert %s to bool %s" % (key, value))
+            elif 'string' in key_db.data_type:
+                if not value: 
+                    value = None
+                    LOG.debug("A10DeviceDbMixin:_make_extra_resource() "
+                              "convert key %s empty string to none" % (key))
         else:
             LOG.error("A10DeviceDbMixin:_make_extra_resource() key %s isn't valid" % (key))
             mapped_resource = None
@@ -169,6 +174,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         opts_dict = {}
         valid_opts = []
         for opt in self.get_a10_device_key_list():
+            LOG.error("A10DeviceDbMixin:validate_a10_opts() found a10_opt: %s in db" % (opt))
             valid_opts.append(opt)
             valid_opts.append(opt.replace('_','-'))
         for opt in opts:
@@ -204,8 +210,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                             false_value = []
                         opts_dict[false_opt.replace('-', '_').strip()] = false_value
                     else:
-                        LOG.error("A10DeviceDbMixin:validate_a10_opts() negative of invalid a10_opts option: %s"
-                                  % (false_opt))
+                        LOG.error("A10DeviceDbMixin:validate_a10_opts() negative of invalid a10_opts option: %s valid_opts: %s"
+                                  % (false_opt, valid_opts))
                         raise a10Device.A10DeviceKeyNotFoundError(false_opt)
                 else:
                     LOG.error("A10DeviceDbMixin:validate_a10_opts() invalid a10_opts boolean option: %s"
@@ -250,6 +256,10 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         body = self._get_device_body(a10_device, resource)
         device_id = _uuid_str()
 
+        # A device name is required, if none is specified use a10-id
+        if not body['name']:
+            body['name'] = 'a10-' + device_id
+
         LOG.debug("A10DeviceDbMixin:create_a10_device() body=%s" %
                   (body))
 
@@ -275,7 +285,6 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 raise
 
         self._add_device_kv(a10_opts, device_id)
-        #self._add_tenant_mapping(device_id)
 
         return self._make_a10_device_dict(device_record)
 
@@ -367,7 +376,9 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             device_key_record = models.A10DeviceKey(
                 id=_uuid_str(),
                 name=body.get('name', ''),
-                description=body.get('description', ''))
+                description=body.get('description', ''),
+                default_value=body.get('default_value', ''),
+                data_type=body.get('data_type', ''))
             self.context.session.add(device_key_record)
 
         return self._make_a10_device_key_dict(device_key_record)

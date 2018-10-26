@@ -151,8 +151,8 @@ class A10DeviceBase(A10Base):
         d = {}
         with cls._query(db_session) as q:
             for x in q:
-                d[x.id] = x.as_dict()
-                d[x.id].update(cls._get_a10_opts(x.a10_opts))
+                d[x.name] = x.as_dict()
+                d[x.name].update(cls._get_a10_opts(x.a10_opts))
             return d
 
 

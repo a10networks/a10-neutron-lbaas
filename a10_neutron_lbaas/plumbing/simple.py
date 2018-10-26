@@ -20,6 +20,7 @@ from a10_neutron_lbaas.db import models
 import base
 
 
+
 # The default set of plumbing hooks/scheduler, meant for hardware or manual orchestration
 
 class PlumbingHooks(base.BasePlumbingHooks):
@@ -51,22 +52,27 @@ class PlumbingHooks(base.BasePlumbingHooks):
     def _select_device_db(self, tenant_id, db_session=None):
         self._late_init()
 
-        a10 = models.A10Device.find_by_attribute(
-            'tenant_id', tenant_id, db_session=db_session)
+        # Check if the tenant_id is associated with an a10_tenant_binding db entry
+        a10 = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
         if a10 is not None:
-            if a10.id in self.devices:
-                return self.devices[a10.id]
+            if a10.device_name in self.devices:
+                return self.devices[a10.device_name]
             else:
                 raise ex.DeviceConfigMissing(
-                    'A10 device retrieved for tenant id %s could not be found in'
-                    'database! A10 device: %s' % (tenant_id, a10.__dict__))
-        else:
-            raise ex.InstanceMissing(
-                'No A10 device is mapped to tenant %s in database.' %
-                (tenant_id))
+                    'A10 device %s mapped to tenant %s is not present in config; '
+                    'add it back to config or migrate loadbalancers self.devices: %s' %
+                    (a10, tenant_id, self.devices))
+
+        # Nope, so we hash and save an entry in the a10_tenant_binding table
+        d = self._select_device_hash(tenant_id)
+        models.A10TenantBinding.create_and_save(
+            tenant_id=tenant_id, device_name=d['name'],
+            db_session=db_session)
+
+        return d
 
     def select_device(self, tenant_id, **kwargs):
-        if self.driver.config.get('use_database'):
+        if self.driver.config.use_database:
             return self._select_device_db(tenant_id)
         else:
             return self._select_device_hash(tenant_id)

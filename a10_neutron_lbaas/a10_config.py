@@ -218,20 +218,14 @@ class A10Config(object):
         return getattr(self._config, key)
 
     def get_device(self, device_name=None, device_id=None, db_session=None):
-        # device_name will only be a key if device is defined in the config.py file
         if device_name in self._devices:
             return self._devices.get(device_name, {})
         if self.get('use_database'):
             if device_name is not None:
                 d = models.A10Device.find_a10_device_by(name=device_name, db_session=db_session)
                 if d is not None:
-                    self._devices[device_id] = d
-                    return self._devices[device_id]
-            elif device_id is not None:
-                d = models.A10Device.find_a10_device_by(id=device_id, db_session=db_session)
-                if d is not None:
-                    self._devices[device_id] = d
-                    return self._devices[device_id]
+                    self._devices[device_name] = d
+                    return self._devices[device_name]
         return None
 
     # TODO(dougwig) -- later - use of this method should be considered a scalability killer
