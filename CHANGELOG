@@ -3,6 +3,10 @@ a10-neutron-lbaas CHANGELOG
 ---------------------------
 
 Unfortunately this document was not born at the same time as a10-neutron-lbaas. Changes tracked from 1.6.5 > onward
+* 1.7.1
+- Pinned acos-client dependency to 1.4.5
+- I missed the ref in setup.py on the last one. :doh:
+
 * 1.7.0
 - Pinned acos-client dependency to v1.4.4
 - Support for utilizing parent project ID for partitioning
