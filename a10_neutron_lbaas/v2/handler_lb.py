@@ -35,7 +35,8 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             set_method(
                 self._meta_name(lb),
                 lb.vip_address,
-                status,
+                arp_disable=c.device_cfg.get('arp_disable'),
+                status=status,
                 vrid=c.device_cfg.get('default_virtual_server_vrid'),
                 config_defaults=self._get_config_defaults(c, os_name),
                 axapi_body=vip_meta)
