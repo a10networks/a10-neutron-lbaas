@@ -63,7 +63,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                                 "bounds with value {0}. Please set to between " +
                                 "1-8000000. Defaulting to 8000000".format(conn_limit))
                 else:
-                    server_args['conn-limit'] = conn_limit
+                    server_args['conn_limit'] = conn_limit
 
             if conn_resume:
                 if conn_resume == 0 or conn_resume == 1:
