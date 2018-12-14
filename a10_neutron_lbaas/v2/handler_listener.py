@@ -188,6 +188,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
                 source_nat_pool=c.device_cfg.get('source_nat_pool'),
+                ha_conn_mirror=c.device_cfg.get('ha_conn_mirror'),
+                no_dest_nat=c.device_cfg.get('no_dest_nat'),
+                conn_limit=c.device_cfg.get('conn_limit'),
                 # Device-level defaults
                 vport_defaults=vport_defaults,
                 axapi_body=vport_meta,

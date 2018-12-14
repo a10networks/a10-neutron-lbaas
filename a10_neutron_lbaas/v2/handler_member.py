@@ -50,6 +50,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                                                c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
         conn_limit = c.device_cfg.get('conn-limit')
+        conn_resume = c.device_cfg.get('conn-resume')
         status = c.client.slb.UP
         if not member.admin_state_up:
             status = c.client.slb.DOWN
@@ -64,7 +65,14 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                                 "bounds with value {0}. Please set to between " +
                                 "1-8000000. Defaulting to 8000000".format(conn_limit))
                 else:
-                    server_args['conn-limit'] = conn_limit
+                    server_args['conn_limit'] = conn_limit
+
+            if conn_resume:
+                if conn_resume == 0 or conn_resume == 1:
+                    server_args['conn_resume'] = conn_resume
+                else:
+                    LOG.warning("The specified conn_resume value is invalid. \
+                    The value should be either 0 or 1")
 
             server_args = {'server': server_args}
 
