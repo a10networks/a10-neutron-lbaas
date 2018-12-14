@@ -37,6 +37,7 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
                 lb.vip_address,
                 status,
                 vrid=c.device_cfg.get('default_virtual_server_vrid'),
+                template_virtual_server=c.device_cfg.get('template-virtual-server'),
                 config_defaults=self._get_config_defaults(c, os_name),
                 axapi_body=vip_meta)
         except acos_errors.Exists:
