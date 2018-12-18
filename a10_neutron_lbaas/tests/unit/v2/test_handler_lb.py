@@ -111,8 +111,6 @@ class TestLB(test_base.HandlerTestBase):
     def test_create_default_vrid_set_v30(self):
         self._test_create_template_virtual_server("3.0", "testTemplate")
 
-
-
     # There's no code that causes listeners to be added
     # if they are present when the pool is created.
     # We'd use unittest.skip if it worked with cursed 2.6
