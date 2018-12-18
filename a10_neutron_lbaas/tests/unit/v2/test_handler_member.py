@@ -78,10 +78,10 @@ class TestMembers(test_base.HandlerTestBase):
         if conn_resume > 0 and conn_resume <= 1000000:
             server_args['conn_resume'] = conn_resume
         self.a.last_client.slb.server.create.assert_called_with(
-                name, ip,
-                status=status,
-                config_defaults=mock.ANY,
-                axapi_args={'server': server_args})
+            name, ip,
+            status=status,
+            config_defaults=mock.ANY,
+            axapi_args={'server': server_args})
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             m.pool.id, name, m.protocol_port, status=status,
             axapi_args={'member': {}})
@@ -129,7 +129,6 @@ class TestMembers(test_base.HandlerTestBase):
             self._test_create(conn_resume=0)
         except a10_ex.ConnLimitOutOfBounds:
             pass
-
 
     def test_update_down(self):
         m = fake_objs.FakeMember(False, pool=mock.MagicMock())
