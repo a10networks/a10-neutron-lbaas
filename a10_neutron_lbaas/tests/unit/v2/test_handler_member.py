@@ -55,7 +55,7 @@ class TestMembers(test_base.HandlerTestBase):
         self.a.member.neutron.member_count(
             None, fake_objs.FakeMember(pool=mock.MagicMock()))
 
-    def _test_create(self, admin_state_up=True, uuid_name=False, conn_limit=8000000):
+    def _test_create(self, admin_state_up=True, uuid_name=False, conn_limit=None, conn_resume=None):
         if uuid_name:
             old = self.a.config.get('member_name_use_uuid')
             self.a.config._config.member_name_use_uuid = True
@@ -73,19 +73,16 @@ class TestMembers(test_base.HandlerTestBase):
             status = self.a.last_client.slb.UP
         else:
             status = self.a.last_client.slb.DOWN
-        # TODO(mdurrant) - can we do this a better way without an if?
-        if conn_limit < 1 or conn_limit > 8000000:
-            self.a.last_client.slb.server.create.assert_called_with(
+        server_args = {}
+        if conn_limit > 0 and conn_limit <= 8000000:
+            server_args['conn_limit'] = conn_limit
+        if conn_resume > 0 and conn_resume <= 1000000:
+            server_args['conn_resume'] = conn_resume
+        self.a.last_client.slb.server.create.assert_called_with(
                 name, ip,
                 status=status,
                 config_defaults=mock.ANY,
-                axapi_args={'server': {}})
-        else:
-            self.a.last_client.slb.server.create.assert_called_with(
-                name, ip,
-                status=status,
-                config_defaults=mock.ANY,
-                axapi_args={'server': {'conn-limit': conn_limit}})
+                axapi_args={'server': server_args})
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             m.pool.id, name, m.protocol_port, status=status,
             axapi_args={'member': {}})
@@ -112,6 +109,28 @@ class TestMembers(test_base.HandlerTestBase):
             self._test_create(conn_limit=0)
         except a10_ex.ConnLimitOutOfBounds:
             pass
+
+    def test_create_connresume(self):
+        for k, v in self.a.config.get_devices().items():
+            v['conn-resume'] = 1337
+        self._test_create(conn_resume=1337)
+
+    def test_create_connresume_oob(self):
+        for k, v in self.a.config.get_devices().items():
+            v['conn-resume'] = 1000001
+        try:
+            self._test_create(conn_resume=1000001)
+        except a10_ex.ConnLimitOutOfBounds:
+            pass
+
+    def test_create_connresume_uob(self):
+        for k, v in self.a.config.get_devices().items():
+            v['conn-resume'] = 0
+        try:
+            self._test_create(conn_resume=0)
+        except a10_ex.ConnLimitOutOfBounds:
+            pass
+
 
     def test_update_down(self):
         m = fake_objs.FakeMember(False, pool=mock.MagicMock())
