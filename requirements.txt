@@ -1,5 +1,5 @@
 a10-openstack-lib>=0.2.0
-acos-client>=1.4.5
+acos-client>=1.4.6
 debtcollector
 netaddr
 
