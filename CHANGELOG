@@ -3,6 +3,10 @@ a10-neutron-lbaas CHANGELOG
 ---------------------------
 
 Unfortunately this document was not born at the same time as a10-neutron-lbaas. Changes tracked from 1.6.5 > onward
+* 1.7.3
+- Pinned acos-client dependency to 1.4.6
+- This ensures duplicate sg-bug fixed in acos-client 1.4.6 is tagged to thise release
+
 * 1.7.2
 - Corrected order of lb 'set' arguments so status/arp-disable don't get wires crossed.
 
