@@ -1,5 +1,3 @@
-Test
-
 # A10 Networks Openstack LBaaS v1/v2 Driver
 ===========================================
 
