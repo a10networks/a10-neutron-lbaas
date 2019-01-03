@@ -14,6 +14,7 @@
 
 import os
 
+from nose.plugins.attrib import attr
 import sqlalchemy
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import sessionmaker
@@ -22,6 +23,7 @@ from a10_neutron_lbaas.tests.db import session
 from a10_neutron_lbaas.tests import test_case
 
 
+@attr(db=True)
 class DbTestBase(test_case.TestCase):
 
     def setUp(self):

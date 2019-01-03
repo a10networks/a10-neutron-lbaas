@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from nose.plugins.attrib import attr
+
 import acos_client
 
 from a10_neutron_lbaas.db import models
@@ -44,6 +46,7 @@ EXPECTED_DEV2 = acos_client.Hash(devices2.keys()).get_server(TENANT_ID)
 HARDCODE_RESULT2 = 'dev2'
 
 
+@attr(db=True)
 class TestSelectDevice(test_base.UnitTestBase):
 
     def test_test_setup(self):

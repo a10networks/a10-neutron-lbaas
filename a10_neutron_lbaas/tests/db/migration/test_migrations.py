@@ -16,6 +16,8 @@ import copy
 import mock
 import os
 
+from nose.plugins.attrib import attr
+
 import alembic.command as alembic_command
 import alembic.config as alembic_config
 import alembic.op as op
@@ -26,6 +28,7 @@ import a10_neutron_lbaas.tests.db.session as session
 import test_base
 
 
+@attr(db=True)
 class TestMigrations(test_base.UnitTestBase):
 
     def setUp(self):
