@@ -14,6 +14,7 @@
 
 import json
 import mock
+from nosetests.plugins import attrib as attr
 
 from a10_neutron_lbaas.tests.unit import test_base
 
@@ -68,6 +69,7 @@ class FakeConfig(object):
     def get(self, key):
         return self._dict.get(key)
 
+@attr(db=True)
 class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
     version = "v2"
 
