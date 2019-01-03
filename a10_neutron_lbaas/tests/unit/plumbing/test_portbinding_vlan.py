@@ -14,7 +14,7 @@
 
 import json
 import mock
-from nosetests.plugins import attrib as attr
+from nose.plugins.attrib import attr
 
 from a10_neutron_lbaas.tests.unit import test_base
 
