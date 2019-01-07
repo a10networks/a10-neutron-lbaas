@@ -29,6 +29,7 @@ from a10_neutron_lbaas.v2 import handler_lb as v2_handler_lb
 from a10_neutron_lbaas.v2 import handler_listener as v2_handler_listener
 from a10_neutron_lbaas.v2 import handler_member as v2_handler_member
 from a10_neutron_lbaas.v2 import handler_pool as v2_handler_pool
+from a10_neutron_lbaas.v2 import handler_l7policy as v2_handler_l7policy 
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
@@ -150,6 +151,20 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
         return v2_handler_hm.HealthMonitorHandler(
             self,
             self.openstack_driver.health_monitor,
+            neutron=self.neutron)
+
+    @property
+    def l7policy(self):
+        return v2_handler_l7policy.L7PolicyHandler(
+            self,
+            self.openstack_driver.l7policy,
+            neutron=self.neutron)
+
+    @property
+    def l7rule(self):
+        return v2.handler_l7rule.L7RuleHandler(
+            self,
+            self.openstack_driver.l7rule,
             neutron=self.neutron)
 
 
