@@ -31,6 +31,7 @@ import v2.handler_listener
 import v2.handler_member
 import v2.handler_pool
 import v2.handler_l7policy
+import v2.handler_l7rule
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
