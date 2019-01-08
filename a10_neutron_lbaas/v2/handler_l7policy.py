@@ -18,6 +18,7 @@ import logging
 import v2_context as a10
 
 from a10_neutron_lbaas.acos import openstack_mappings
+from policy import PolicyUtil
 
 LOG = logging.getLogger(__name__)
 
@@ -34,7 +35,9 @@ class L7PolicyHandler(handler_base_v2.HandlerBaseV2):
                 filename= l7policy.id
                 size = 200
                 action="import"
-                script= "tcl script here!"
+                p = PolicyUtil()
+                script= p.createPolicy(l7policy)
+                print(script)
                 self._set(c.client.slb.aflex_policy.create,
                           c, context, l7policy, filename,script, size, action)
             except acos_errors.Exists:
