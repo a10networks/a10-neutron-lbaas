@@ -24,29 +24,34 @@ LOG = logging.getLogger(__name__)
 
 class L7RuleHandler(handler_base_v2.HandlerBaseV2):
 
-    def _set(self, set_method,c, context, l7policy, **kwargs):
-        set_method(l7policy)
+    def _set(self, set_method,c, context, l7policy, file="", script="", size=0, action="", **kwargs):
+        set_method(l7policy, file=file, script=script, size=size, action=action)
 
     def create(self, context, l7rule, **kwargs):
         import pdb; pdb.set_trace()
-        with a10.A10WriteStatusContext(self, context, l7rule) as c:
-            policyID = l7rule.l7policy_id
-            
+        l7policy = l7rule.policy 
+        with a10.A10WriteStatusContext(self, context, l7policy) as c:
             try:
-                # hardcoded for dev!!change!! policyID 
-                policyTCL = c.client.slb.aflex_policy.get("custom1") 
-            
-            except acos_errors.Exists:
-                pass
-
-            p = PolicyUtil()
-            #p.addRule(l7rule, policyTCL)
-            ans = p.ruleParser(l7rule)
- 
-            try:
+                filename= l7policy.id
+                action="import"
+                p = PolicyUtil()
+                script= p.createPolicy(l7policy)
+                size = len(script.encode('utf-8'))
                 self._set(c.client.slb.aflex_policy.create,
-                          c, context, l7policy)
+                          c, context, l7policy, filename,script, size, action)
             except acos_errors.Exists:
                 pass
 
+    def update(self, context, old_l7rule, l7rule, **kwargs):
+        self.create(context, l7rule, **kwargs)
 
+    def delete(self, context, l7rule):
+        policy = l7rule.policy
+        rules = l7rule.policy.rules
+        for index, rule in enumerate(rules):
+            if rule.id == l7rule.id:
+                del rules[index]
+                break
+        policy.rules = rules
+        l7rule.policy = policy
+        self.create(context, l7rule)

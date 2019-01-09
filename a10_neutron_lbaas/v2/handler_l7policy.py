@@ -29,17 +29,30 @@ class L7PolicyHandler(handler_base_v2.HandlerBaseV2):
         
     def create(self, context, l7policy, **kwargs):
         import pdb; pdb.set_trace()
-        print("placeholder")
         with a10.A10WriteStatusContext(self, context, l7policy) as c:
             try:
                 filename= l7policy.id
-                size = 200
                 action="import"
                 p = PolicyUtil()
                 script= p.createPolicy(l7policy)
-                print(script)
+                size = len(script.encode('utf-8'))
                 self._set(c.client.slb.aflex_policy.create,
                           c, context, l7policy, filename,script, size, action)
             except acos_errors.Exists:
                 pass
+
+    def update(self, context, old_l7policy, l7policy, **kwargs):
+        self.create(context, l7policy, **kwargs)
+
+    def _delete(self, c, context, l7policy):
+        LOG.debug("L7PolicyHandler.delete(): l7policy=%s, context=%s" % (l7policy, context))
+        try:
+            c.client.slb.aflex_policy.delete(l7policy)
+        except acos_errors.Exists:
+                pass
+
+    def delete(self, context, l7policy):
+        import pdb; pdb.set_trace()
+        with a10.A10DeleteContext(self, context, l7policy) as c:
+            self._delete(c, context, l7policy)
 
