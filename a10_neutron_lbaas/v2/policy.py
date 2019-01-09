@@ -30,20 +30,6 @@ COMPARE_TYPE_DICT = {
        "EQUAL_TO" : "equals"
     }
 
-class Policy:
-    def __init__(action, redirect_pool_id, redirect_url, rules ):
-        self.action = action
-        self.redirect_pool_id = redirect_pool_id
-        self.redirect_url = redirect_url
-        self.rules = rules
-
-class Rule:
-    def __init__(type, compare_type, key, value):
-        self.type = type
-        self.compare_type = compare_type
-        self.key = key
-        self.value = value
-
 class PolicyUtil():
     def __init__(self):
         self.base = """ when HTTP_REQUEST {{ \n
@@ -58,20 +44,21 @@ class PolicyUtil():
             actionString = "pool " + l7policy.redirect_pool.id 
 
         elif l7policy.action == "REDIRECT_TO_URL":
-            actionString = "[HTTP::redirect] "+ l7policy.redirect_url
+            actionString = "HTTP::redirect "+ l7policy.redirect_url
 
         else:
             actionString = "HTTP::close"
         # placeholder till rules
-        ruleString = "( true )"
+        ruleString = ""
+        if len(l7policy.rules) <= 0 :
+            ruleString = "( true )"
+        else:
+            ruleArray = []
+            for rule in l7policy.rules:
+                temp = self.ruleParser(rule)
+                ruleArray.append(temp)
+            ruleString = " and ".join(ruleArray)
         return self.base.format(ruleString,actionString)
-
-    def convertRules(self,l7Rule, policyTCL):
-        m = re.search('({.*})', policyTCL)
-        ruleString = m.group(0)
-        ruleString = ruleString.replace('{' , "").replace('}' , "")
-        rules = [x.strip() for x in ruleString.split('and')]
-        
         
     def ruleParser(self,l7rule):
         ruleString = "("
@@ -88,11 +75,16 @@ class PolicyUtil():
 
         #value 
         value_string = l7rule.value
-        ruleString += " " + value_string
+        ruleString += " \"" + value_string + "\""
        
         ruleString += ")"
-        print(ruleString)
+        return ruleString
 
+    def convertRules(self,l7Rule, policyTCL):
+        m = re.search('({.*})', policyTCL)
+        ruleString = m.group(0)
+        ruleString = ruleString.replace('{' , "").replace('}' , "")
+        rules = [x.strip() for x in ruleString.split('and')]
 
     def ruleObjectCreator(self, ruleSring):
         # ([HTTP::header name namer] equals value)
