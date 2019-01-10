@@ -17,7 +17,7 @@ from oslo_log import log
 from a10_neutron_lbaas.plumbing.wrappers import AcosWrapper
 from a10_neutron_lbaas.plumbing.wrappers import NeutronDbWrapper
 
-import simple
+from a10_neutron_lbaas.plumbing import simple
 
 
 LOG = log.getLogger(__name__)

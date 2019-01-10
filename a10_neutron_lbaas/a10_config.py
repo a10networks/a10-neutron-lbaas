@@ -12,11 +12,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import ConfigParser as ini
 import logging
 import os
 import runpy
 import sys
+
+# This is ConfigParser pre-Python3
+if sys.version_info < (3,):
+   import ConfigParser as ini
+else:
+   import configparser as ini
 
 from debtcollector import removals
 

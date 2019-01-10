@@ -12,8 +12,8 @@
 #    under the License.
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-import fake_objs
-import test_base
+from . import fake_objs
+from . import test_base
 
 
 def return_one(*args):

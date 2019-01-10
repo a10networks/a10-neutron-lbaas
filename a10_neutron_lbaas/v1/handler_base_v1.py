@@ -13,7 +13,7 @@
 #    under the License.
 
 from a10_neutron_lbaas import handler_base
-import neutron_ops
+from a10_neutron_lbaas.v1 import neutron_ops
 
 
 class HandlerBaseV1(handler_base.HandlerBase):

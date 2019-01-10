@@ -16,7 +16,7 @@ import logging
 import mock
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-import fake_objs
+from . import fake_objs
 import test_base
 
 LOG = logging.getLogger(__name__)

@@ -89,7 +89,7 @@ class InstanceManager(object):
             nova_version, session=self._ks_session)
         self._neutron_api = neutron_api or neutron_client.Client(
             NEUTRON_VERSION, session=self._ks_session)
-    	self._glance_api = glance_api or glance_client.Client(glance_version, session=self._ks_session)
+        self._glance_api = glance_api or glance_client.Client(glance_version, session=self._ks_session)
 
 
     @classmethod

@@ -1,5 +1,7 @@
-a10-openstack-lib>=0.2.0
-acos-client>=1.4.6
+# a10-openstack-lib>=0.2.1
+-e /opt/src/a10-openstack-lib 
+# acos-client>=1.4.6
+-e /opt/src/acos-client
 debtcollector
 netaddr
 
@@ -10,4 +12,5 @@ python-glanceclient>=0.9.0  # icehouse min
 python-keystoneclient>=0.7.0  # icehouse min
 python-novaclient  # implicit from neutron
 python-neutronclient  # implicit from neutron
+six>=1.10.0 # should be implicit from neutron
 SQLAlchemy  # implicit from neutron

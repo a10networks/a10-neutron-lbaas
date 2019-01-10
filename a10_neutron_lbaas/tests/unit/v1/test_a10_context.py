@@ -18,7 +18,7 @@ import types
 
 import a10_neutron_lbaas.v1.v1_context as a10
 
-import test_base
+from a10_neutron_lbaas.tests.unit.v1 import test_base
 
 
 class FakeException(Exception):

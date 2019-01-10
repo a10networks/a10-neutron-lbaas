@@ -21,9 +21,9 @@ from a10_neutron_lbaas import constants
 from a10_neutron_lbaas.neutron_ext.db.certificate_db \
     import A10CertificateDbMixin as A10CertificateDb
 import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
-import handler_base_v2
-import handler_persist
-import v2_context as a10
+from a10_neutron_lbaas.v2 import handler_base_v2
+from a10_neutron_lbaas.v2 import handler_persist
+from a10_neutron_lbaas.v2 import v2_context as a10
 
 
 LOG = logging.getLogger(__name__)

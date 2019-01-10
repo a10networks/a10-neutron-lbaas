@@ -13,8 +13,9 @@
 #    under the License.
 
 import a10_neutron_lbaas.handler_base as base
-import neutron_ops
+from a10_neutron_lbaas.v2 import neutron_ops
 
+from six import iteritems
 import re
 
 
@@ -35,7 +36,7 @@ class HandlerBaseV2(base.HandlerBase):
         if not os_name or len(os_name) < 1:
             return
 
-        for k, v in redict.iteritems():
+        for k, v in list(iteritems(redict)):
             # check to see if the regex value matches.
             v = redict[k]
 

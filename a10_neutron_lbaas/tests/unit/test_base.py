@@ -40,6 +40,7 @@ class FakeA10OpenstackLB(object):
         self.plumbing_hooks = hooks.PlumbingHooks(self)
         self.openstack_context = _build_openstack_context()
 
+
     def _get_a10_client(self, device_info, **kwargs):
         self.device_info = device_info
         self.last_client = mock.MagicMock()
@@ -59,9 +60,12 @@ class FakeA10OpenstackLBV1(FakeA10OpenstackLB, a10_os.A10OpenstackLBV1):
 class FakeA10OpenstackLBV2(FakeA10OpenstackLB, a10_os.A10OpenstackLBV2):
 
     def __init__(self, openstack_driver, **kw):
+        neutron_mock = mock.Mock()
+        neutron_mock.member_count = mock.Mock(return_value=1)
+
         super(FakeA10OpenstackLBV2, self).__init__(
             openstack_driver,
-            neutron_hooks_module=mock.MagicMock(),
+            neutron_hooks_module=neutron_mock,
             cert_db=mock.MagicMock(),
             **kw)
         self.certmgr = mock.Mock()

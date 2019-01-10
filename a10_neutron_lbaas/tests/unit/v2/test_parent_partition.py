@@ -1,9 +1,9 @@
 import a10_neutron_lbaas.v2.v2_context as a10
 import mock
 
-import fake_objs
-import mocks
-import test_base
+from a10_neutron_lbaas.tests.unit.v2 import fake_objs
+from a10_neutron_lbaas.tests.unit.v2 import mocks
+from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 
 class TestA10PartitionKey(test_base.UnitTestBase):

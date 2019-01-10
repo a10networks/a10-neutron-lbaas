@@ -12,8 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import sys
 import gettext
-_ = gettext.NullTranslations().ugettext
+
+if sys.version_info < (3,):
+    _ = gettext.NullTranslations().ugettext
+else:
+    _ = gettext.NullTranslations().gettext
+
 
 from neutron.db import common_db_mixin as common_db_mixin
 

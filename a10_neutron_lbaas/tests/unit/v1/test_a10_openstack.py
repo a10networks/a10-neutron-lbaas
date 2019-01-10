@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import test_base
+from . import test_base
 
 
 class TestA10Openstack(test_base.UnitTestBase):

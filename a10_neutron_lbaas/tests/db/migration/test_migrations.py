@@ -25,7 +25,7 @@ import sqlalchemy
 
 import a10_neutron_lbaas.db.migration as migration
 import a10_neutron_lbaas.tests.db.session as session
-import test_base
+from . import test_base
 
 
 @attr(db=True)

@@ -14,8 +14,8 @@
 
 import mock
 
-import fake_objs
-import test_base
+from a10_neutron_lbaas.tests.unit.v2 import fake_objs
+from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 

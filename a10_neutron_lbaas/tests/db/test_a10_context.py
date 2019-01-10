@@ -16,7 +16,7 @@ import mock
 from nose.plugins.attrib import attr
 
 import a10_neutron_lbaas.tests.unit.test_a10_openstack_lb as test_a10_openstack_lb
-import test_base
+from . import test_base
 
 import a10_neutron_lbaas.a10_context as a10_context
 import a10_neutron_lbaas.vthunder.instance_manager as instance_manager
