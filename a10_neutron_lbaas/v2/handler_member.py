@@ -66,12 +66,13 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                 else:
                     server_args['conn-limit'] = conn_limit
 
-
             server_args = {'server': server_args}
+
             c.client.slb.server.create(server_name, server_ip,
                                        status=status,
                                        config_defaults=self._get_config_defaults(c, os_name),
                                        axapi_args=server_args)
+
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
             pass
 
@@ -165,4 +166,3 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         rv = {}
         rv = c.a10_driver.config.get_member_expressions()
         return rv
-

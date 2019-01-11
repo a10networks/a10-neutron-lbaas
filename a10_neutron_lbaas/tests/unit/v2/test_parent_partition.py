@@ -16,7 +16,6 @@ import a10_neutron_lbaas.v2.v2_context as a10
 import mock
 
 from a10_neutron_lbaas.tests.unit.v2 import fake_objs
-from a10_neutron_lbaas.tests.unit.v2 import mocks
 from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 
@@ -37,9 +36,9 @@ class TestA10PartitionKey(test_base.UnitTestBase):
     def test_use_parent(self):
         fake_keystone = mock.MagicMock()
         fake_keystone.client.projects.get = mock.MagicMock(
-                return_value=fake_objs.FakeKeystoneClient("brick"))
+            return_value=fake_objs.FakeKeystoneClient("brick"))
         a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock(
-                return_value=fake_keystone)
+            return_value=fake_keystone)
 
         with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             self.assertEqual(c.partition_key, "brick")

@@ -21,7 +21,6 @@ from a10_neutron_lbaas.tests.db import test_base as tbase
 from nose.plugins.attrib import attr
 
 import mock
-from neutron.plugins.common import constants as nconstants
 from neutron.tests.unit.api.v2 import test_base as ntbase
 
 from oslo_log.helpers import logging as logging

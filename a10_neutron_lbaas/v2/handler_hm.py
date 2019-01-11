@@ -33,7 +33,7 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
         url = None
         expect_code = None
         os_name = hm.name
-        port = kwargs.get("port") 
+        port = kwargs.get("port")
 
         if hm.type in ['HTTP', 'HTTPS']:
             method = hm.http_method
