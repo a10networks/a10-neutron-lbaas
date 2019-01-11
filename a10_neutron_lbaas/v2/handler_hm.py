@@ -63,7 +63,7 @@ class HealthMonitorHandler(handler_base_v2.HandlerBaseV2):
         try:
             listener = self.neutron.hm_get_listener(context, hm)
             kwargs["port"] = listener.protocol_port
-        except:
+        except Exception:
             LOG.warn("Listener for HM could not be located")
 
         # Send listener port to acos create
