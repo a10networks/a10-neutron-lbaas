@@ -148,6 +148,7 @@ class A10DeviceInstancePluginBase(ServicePluginBase):
     def update_a10_device_instance(self, context, id, a10_device_instance):
         pass
 
+
 # This is a terrible way of solving a backwards compatibility bug for casing
 class A10DeviceInstance(A10deviceinstance):
     pass
