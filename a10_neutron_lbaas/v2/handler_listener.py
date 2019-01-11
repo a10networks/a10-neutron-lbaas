@@ -50,7 +50,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         return self._barbican_client
 
     def _set(self, set_method, c, context, listener):
-
         status = c.client.slb.UP
         if not listener.admin_state_up:
             status = c.client.slb.DOWN
@@ -173,6 +172,9 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
 
         if "no-dest-nat" in template_args and protocol.lower() in ("http", "https"):
             del template_args["no-dest-nat"]
+
+        if hasattr(listener, 'aflex'):
+            template_args["aflex-scripts"] = listener.aflex
 
         try:
 
