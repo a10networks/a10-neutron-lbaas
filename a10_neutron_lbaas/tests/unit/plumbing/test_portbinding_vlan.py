@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import mock
 from nose.plugins.attrib import attr
 
@@ -20,10 +19,17 @@ from a10_neutron_lbaas.tests.unit import test_base
 
 from a10_neutron_lbaas.plumbing import portbinding_vlan
 
-from neutron.db.models.segment import NetworkSegment, SegmentHostMapping
-from neutron.db.models_v2 import IPAllocation, IPAllocationPool, Route, SubnetRoute, Port, Subnet, Network
-from neutron.plugins.ml2.models import PortBinding, PortBindingLevel
-
+from neutron.db.models.segment import NetworkSegment
+# from neutron.db.models.segment import SegmentHostMapping
+from neutron.db.models_v2 import IPAllocation
+from neutron.db.models_v2 import IPAllocationPool
+from neutron.db.models_v2 import Port
+from neutron.db.models_v2 import PortBinding
+from neutron.db.models_v2 import PortBindingLevel
+from neutron.db.models_v2 import Route
+from neutron.db.models_v2 import Network
+from neutron.db.models_v2 import Subnet
+from neutron.db.models_v2 import SubnetRoute
 
 _SUBNET_ID = "mysubnet"
 _PORT_ID = "portid"
