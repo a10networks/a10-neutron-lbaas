@@ -28,7 +28,6 @@ class L7PolicyHandler(handler_base_v2.HandlerBaseV2):
         set_method(l7policy, file=file, script=script, size=size, action=action)
         
     def create(self, context, l7policy, **kwargs):
-        import pdb; pdb.set_trace()
         with a10.A10WriteStatusContext(self, context, l7policy) as c:
             try:
                 filename= l7policy.id
@@ -38,6 +37,18 @@ class L7PolicyHandler(handler_base_v2.HandlerBaseV2):
                 size = len(script.encode('utf-8'))
                 self._set(c.client.slb.aflex_policy.create,
                           c, context, l7policy, filename,script, size, action)
+                old_listener = l7policy.listener
+                new_listener = l7policy.listener
+                get_listener =  c.client.slb.virtual_server.vport.get(old_listener.loadbalancer_id,
+                old_listener.name, old_listener.protocol, old_listener.protocol_port)
+
+                if 'aflex-scripts' in get_listener['port']:
+                    aflex_scripts = get_listener['port']['aflex-scripts']
+                    aflex_scripts.append({"aflex": filename} )
+                    new_listener.aflex = aflex_scripts
+                else:
+                    new_listener.aflex = [{"aflex": filename}]
+                self.a10_driver.listener.update(context, old_listener, new_listener)
             except acos_errors.Exists:
                 pass
 
@@ -52,7 +63,6 @@ class L7PolicyHandler(handler_base_v2.HandlerBaseV2):
                 pass
 
     def delete(self, context, l7policy):
-        import pdb; pdb.set_trace()
         with a10.A10DeleteContext(self, context, l7policy) as c:
             self._delete(c, context, l7policy)
 
