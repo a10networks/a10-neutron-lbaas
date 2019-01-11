@@ -57,6 +57,7 @@ class TestPools(test_base.UnitTestBase):
         self.a.last_client.slb.service_group.update.assert_called()
 
     def _test_delete(self, pool):
+        self.a.pool.neutron.openstack_driver._member_count.return_value = 1
         self.a.pool.delete(None, pool)
         self.print_mocks()
 
@@ -88,7 +89,7 @@ class TestPools(test_base.UnitTestBase):
 
     def test_delete_without_health_monitor(self):
         pool = fake_objs.FakePool('TCP', 'LEAST_CONNECTIONS')
-        pool.members = [fake_objs.FakePool()]
+        pool.members = [fake_objs.FakeMember()]
         pool.health_monitors_status = []
         self._test_delete(pool)
         (self.a.last_client.slb.service_group.delete.
@@ -98,7 +99,7 @@ class TestPools(test_base.UnitTestBase):
         pool = fake_objs.FakePool('TCP', 'LEAST_CONNECTIONS')
         pool.members = [fake_objs.FakeMember()]
         pool.health_monitors_status = [{'monitor_id': "hm1"}]
-        self.a.pool.delete(None, pool)
+        self._test_delete(pool)
         self.a.last_client.slb.hm.delete.assert_called()
 
     def test_stats(self):

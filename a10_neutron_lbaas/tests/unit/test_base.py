@@ -60,12 +60,9 @@ class FakeA10OpenstackLBV1(FakeA10OpenstackLB, a10_os.A10OpenstackLBV1):
 class FakeA10OpenstackLBV2(FakeA10OpenstackLB, a10_os.A10OpenstackLBV2):
 
     def __init__(self, openstack_driver, **kw):
-        neutron_mock = mock.Mock()
-        neutron_mock.member_count = mock.Mock(return_value=1)
-
         super(FakeA10OpenstackLBV2, self).__init__(
             openstack_driver,
-            neutron_hooks_module=neutron_mock,
+            neutron_hooks_module=mock.MagicMock(),
             cert_db=mock.MagicMock(),
             **kw)
         self.certmgr = mock.Mock()

@@ -14,8 +14,8 @@
 
 import mock
 
-import fake_objs
-import test_base
+from . import fake_objs
+from . import test_base
 
 
 class TestHM(test_base.HandlerTestBase):

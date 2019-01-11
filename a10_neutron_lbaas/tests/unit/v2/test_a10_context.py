@@ -16,9 +16,9 @@ import mock
 import sys
 import types
 
-import fake_objs
-import mocks
-import test_base
+from . import fake_objs
+from . import mocks
+from . import test_base
 import a10_neutron_lbaas.v2.v2_context as a10
 
 

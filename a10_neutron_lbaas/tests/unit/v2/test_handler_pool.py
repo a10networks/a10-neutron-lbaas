@@ -114,6 +114,7 @@ class TestPools(test_base.HandlerTestBase):
                                                   pers, lst,
                                                   members=m,
                                                   hm=hm)
+                        self.a.pool.neutron.member_count.return_value = 1
                         self.a.pool.delete(None, pool)
 
                         self.print_mocks()
