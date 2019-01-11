@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from . import test_base
+from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 
 class TestA10Openstack(test_base.UnitTestBase):

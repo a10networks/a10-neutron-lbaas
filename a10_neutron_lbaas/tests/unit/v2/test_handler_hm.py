@@ -14,8 +14,8 @@
 
 import mock
 
-from . import fake_objs
-from . import test_base
+from a10_neutron_lbaas.tests.unit.v2 import fake_objs
+from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 
 class TestHM(test_base.HandlerTestBase):
@@ -77,7 +77,8 @@ class TestHM(test_base.HandlerTestBase):
             None, m)
         self.a.last_client.slb.hm.update.assert_called_with(
             'fake-hm-id-001', self.a.last_client.slb.hm.TCP, 20, 7, 8,
-            method=None, url=None, expect_code=None, port=None, config_defaults=mock.ANY, axapi_args={})
+            method=None, url=None, expect_code=None, port=None, 
+            config_defaults=mock.ANY, axapi_args={})
 
     def test_update_tcp_add_pool(self):
         m = fake_objs.FakeHM('TCP', pool=mock.MagicMock())
