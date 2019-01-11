@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from . import fake_objs
-from . import test_base
+from a10_neutron_lbaas.tests.unit.v1 import fake_objs
+from a10_neutron_lbaas.tests.unit.v1 import test_base
 
 
 class TestHM(test_base.UnitTestBase):
