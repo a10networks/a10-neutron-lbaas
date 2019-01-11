@@ -15,7 +15,7 @@
 import a10_neutron_lbaas.handler_base as base
 from a10_neutron_lbaas.v2 import neutron_ops
 
-import re 
+import re
 from six import iteritems
 
 

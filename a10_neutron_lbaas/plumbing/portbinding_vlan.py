@@ -33,7 +33,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
     def after_member_update(self, a10_context, os_context, member):
         pass
 
-    def pre_vip_create_v1(self,a10_context, os_context, vip):
+    def pre_vip_create_v1(self, a10_context, os_context, vip):
         # msg = "PRE_CREATE_V1 hook firing", vip, dir(vip)
         # LOG.debug(msg)
         # cidr = self._get_vip_cidr(a10_context, os_context, vip, v1=True)
@@ -73,7 +73,6 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
             tenant_id = vip["tenant_id"]
             vip_id = vip["id"]
 
-
         try:
             binding_level = config.get("vlan_binding_level")
         except Exception as ex:
@@ -95,7 +94,6 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
                 "No VLAN ID for port {0} on segment {1}. Exiting hook.".format(port_id, segment.id))
             return
         # Format the string we're going to use a gazillion times for logging.
-        #VE_LOG_ENTRY = VLAN_LOG_FMT.format(vlan_id, tenant_id, network_id)
 
         # Get the associated VE
         ve = acos.get_ve(vlan_id)
@@ -103,8 +101,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         # Log that this happened.
         # TODO(mdurrant) - Find a way to check if it's in another partition and gripe loudly.
         if ve:
-           LOG.info("Configuration for {0} previously created".format(vlan_id))
-           return
+            LOG.info("Configuration for {0} previously created".format(vlan_id))
+            return
 
         # If DHCP, we can configure the interface with DHCP
         use_dhcp = config.get("plumb_vlan_dhcp")
@@ -130,6 +128,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         LOG.info("Updated VIP {0} with mac {1} vlan {2}".format(vip_id, vip_mac, vlan_id))
         # TODO(mdurrant) - Should host be blank
         ve_portbinding = db.create_port_binding(ve_nport.id, "")
+        assert(ve_portbinding is not None)
+
         # Set defaults
         ve_ip, ve_mask, ve_port = None, None, ve_nport.id
 
@@ -143,8 +143,8 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         # Try to create it. If an exception is raised, it's logged and we stop here.
         ve_created = acos.create_ve(ve_dict)
         if not ve_created:
-           LOG.error("Exception creating VE interface for VLAN:{0}".format(vlan_id))
-           return
+            LOG.error("Exception creating VE interface for VLAN:{0}".format(vlan_id))
+            return
 
         # Log the created VE for troubleshooting purposes.
         LOG.info("Created VE {0}", str(vlan_id))
@@ -155,7 +155,7 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
 
         # Else, it already exists and we're good
         LOG.info("Configured {0} with interface IP: {1}".format(
-           vlan_id, ve_ip))
+            vlan_id, ve_ip))
         # fin.
 
     def after_vip_update(self, a10_context, os_context, vip):

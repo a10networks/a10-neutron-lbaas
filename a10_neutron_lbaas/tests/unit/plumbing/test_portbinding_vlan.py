@@ -125,40 +125,11 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
         self.os_context = mock.Mock(session=self._session, tenant_id="tenant")
 
     def _build_session(self, **kwargs):
-
-        mfirst = mock.Mock(return_value=self._binding_level)
-        mfilter_by = mock.Mock(return_value=mfirst)
-        # mquery = mock.Mock(return_value=mfilter_by)
-
-        # rv.query(PortBindingLevel).filter_by(port_id=self._port_id, level=self._level).first().return_value = self._binding_level
-        # rv.query(NetworkSegment).filter_by(id=self._segment_id).first().return_value = self._segment
-        # rv.configure_mock(**mock_cfg)
-        # rv.query.filter.first.return_value = self._binding_level
-
-        # .filter_by.return_value.first.return_value = self._binding_level
-        # return mock.Mock(return_value=mquery)
         return FakeSession()
 
     def _build_client(self):
         rval = mock.Mock()
-        #      ve_json = """
-        #  {
-        #  "ve": 
-        #  {
-        #      "oper": 
-        #      {
-        #          "state":"DOWN",
-        #          "line_protocol":"DOWN",
-        #          "link_type":"VirtualEthernet",
-        #          "mac":"ffff.ffff.78de"
-        #      },
-        #      "ifnum":5
-        #      }
-        #  }
-        # """ 
         rval.interface.ve.get_oper.return_value = None
-        # json.loads(ve_json)
-        rval.interface.ve.get = lambda : {}
+        rval.interface.ve.get = lambda: {}
 
         return rval
-

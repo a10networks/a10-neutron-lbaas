@@ -46,9 +46,9 @@ class TestA10PartitionKey(test_base.UnitTestBase):
     def test_use_parent_no_parent(self):
         fake_keystone = mock.MagicMock()
         fake_keystone.client.projects.get = mock.MagicMock(
-                return_value=fake_objs.FakeKeystoneClient())
+            return_value=fake_objs.FakeKeystoneClient())
         a10.a10_context.keystone_helpers.KeystoneFromContext = mock.MagicMock(
-                return_value=fake_keystone)
+            return_value=fake_keystone)
 
         with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:
             self.assertEqual(c.partition_key, "get-off-my-lawn")
