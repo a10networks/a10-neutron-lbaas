@@ -15,8 +15,9 @@
 import mock
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-from . import fake_objs
-from . import test_base
+
+from a10_neutron_lbaas.tests.unit.v1 import fake_objs
+from a10_neutron_lbaas.tests.unit.v1 import test_base
 
 
 class TestVIP(test_base.UnitTestBase):

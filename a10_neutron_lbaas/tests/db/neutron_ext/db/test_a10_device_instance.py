@@ -22,15 +22,14 @@ import a10_neutron_lbaas.tests.unit.unit_config.helper as unit_config
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import a10_device_instance as a10_device_instance
 from a10_neutron_lbaas.neutron_ext.extensions import a10DeviceInstance
-from neutron.plugins.common import constants as nconstants
 
 
 class TestA10DeviceInstanceDbMixin(test_base.UnitTestBase):
 
     def setUp(self):
         super(TestA10DeviceInstanceDbMixin, self).setUp()
-        self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
-        nm = self._nm_patcher.start()
+        # self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
+        # nm = self._nm_patcher.start()
         # nm.get_service_plugins.return_value = {
         #    nconstants.LOADBALANCERV2: mock.MagicMock()
         # }

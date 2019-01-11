@@ -77,7 +77,7 @@ class TestHM(test_base.HandlerTestBase):
             None, m)
         self.a.last_client.slb.hm.update.assert_called_with(
             'fake-hm-id-001', self.a.last_client.slb.hm.TCP, 20, 7, 8,
-            method=None, url=None, expect_code=None, port=None, 
+            method=None, url=None, expect_code=None, port=None,
             config_defaults=mock.ANY, axapi_args={})
 
     def test_update_tcp_add_pool(self):

@@ -23,9 +23,9 @@ import alembic.config as alembic_config
 import alembic.op as op
 import sqlalchemy
 
-import a10_neutron_lbaas.db.migration as migration
-import a10_neutron_lbaas.tests.db.session as session
-from . import test_base
+from a10_neutron_lbaas.db import migration
+from a10_neutron_lbaas.tests.db import session 
+from a10_neutron_lbaas.tests.db.migration import test_base
 
 
 @attr(db=True)
