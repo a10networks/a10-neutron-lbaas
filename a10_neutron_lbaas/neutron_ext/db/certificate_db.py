@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sys
 import gettext
+import sys
 
 if sys.version_info < (3,):
     _ = gettext.NullTranslations().ugettext

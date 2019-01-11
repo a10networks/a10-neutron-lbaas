@@ -106,10 +106,10 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
 
     def _build_mocks(self):
         # a10_context dependencies
-        self._vip = FakeModel(vip_subnet_id="mysubnet", 
+        self._vip = FakeModel(vip_subnet_id="mysubnet",
                               vip_port=FakeModel(id=self._port_id, network_id=self._network_id))
         self._devices = {"a": {"host": "1.2.3.4", "api_version": "3.0"}}
-        self._driver=mock.Mock()
+        self._driver = mock.Mock()
         self._client = self._build_client()
         self._config = FakeConfig(
             use_database=False,
@@ -120,15 +120,15 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
             vlan_binding_level=self._level
         )
         self._a10_driver = mock.Mock(config=self._config)
-        self.a10_context = mock.Mock(a10_driver=self._a10_driver,client=self._client)
+        self.a10_context = mock.Mock(a10_driver=self._a10_driver, client=self._client)
         self._session = self._build_session()
-        self.os_context = mock.Mock(session=self._session,tenant_id="tenant")
+        self.os_context = mock.Mock(session=self._session, tenant_id="tenant")
 
     def _build_session(self, **kwargs):
 
         mfirst = mock.Mock(return_value=self._binding_level)
         mfilter_by = mock.Mock(return_value=mfirst)
-        mquery = mock.Mock(return_value=mfilter_by)
+        # mquery = mock.Mock(return_value=mfilter_by)
 
         # rv.query(PortBindingLevel).filter_by(port_id=self._port_id, level=self._level).first().return_value = self._binding_level
         # rv.query(NetworkSegment).filter_by(id=self._segment_id).first().return_value = self._segment
@@ -141,21 +141,21 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
 
     def _build_client(self):
         rval = mock.Mock()
-        ve_json = """
-{
-    "ve": 
-    {
-        "oper": 
-        {
-            "state":"DOWN",
-            "line_protocol":"DOWN",
-            "link_type":"VirtualEthernet",
-            "mac":"ffff.ffff.78de"
-        },
-        "ifnum":5
-        }
-}
-"""
+        #      ve_json = """
+        #  {
+        #  "ve": 
+        #  {
+        #      "oper": 
+        #      {
+        #          "state":"DOWN",
+        #          "line_protocol":"DOWN",
+        #          "link_type":"VirtualEthernet",
+        #          "mac":"ffff.ffff.78de"
+        #      },
+        #      "ifnum":5
+        #      }
+        #  }
+        # """ 
         rval.interface.ve.get_oper.return_value = None
         # json.loads(ve_json)
         rval.interface.ve.get = lambda : {}
