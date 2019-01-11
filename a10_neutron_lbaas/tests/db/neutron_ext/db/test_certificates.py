@@ -238,7 +238,7 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
     def setUp(self):
         super(CertificateDbMixInTestCase, self).setUp()
         self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
-        nm = self._nm_patcher.start()
+        # nm = self._nm_patcher.start()
         # nm.get_service_plugins.return_value = {
         #     nconstants.LOADBALANCERV2: mock.MagicMock()
         # }

@@ -21,6 +21,7 @@ from a10_neutron_lbaas.tests.db import test_base
 
 dt = datetime.datetime.fromtimestamp(1458346727)
 
+
 @attr(db=True)
 class TestTenantBindings(test_base.UnitTestBase):
 
