@@ -19,9 +19,9 @@ import sys
 
 # This is ConfigParser pre-Python3
 if sys.version_info < (3,):
-   import ConfigParser as ini
+    import ConfigParser as ini
 else:
-   import configparser as ini
+    import configparser as ini
 
 from debtcollector import removals
 
@@ -189,7 +189,7 @@ class A10Config(object):
         if hasattr(self._config, "monitor_expressions"):
             self._monitor_expressions = self._config.monitor_expressions
 
-        # self._vlan_interfaces = {} 
+        # self._vlan_interfaces = {}
         # if hasattr(self._config, "vlan_interfaces"):
         #    self._vlan_interfaces = self._config.vlan_interfaces
 
@@ -200,7 +200,6 @@ class A10Config(object):
         self._vlan_binding_level = None
         if hasattr(self._config, "vlan_binding_level"):
             self._vlan_binding_level = self._config.vlan_binding_level
-
 
         # Setup some backwards compat stuff
         self.config = OldConfig(self)
@@ -277,7 +276,6 @@ class A10Config(object):
 
     def get_monitor_expressions(self):
         return self._monitor_expressions
-
 
     # backwards compat
     @removals.remove
