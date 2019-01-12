@@ -21,7 +21,7 @@ from a10_neutron_lbaas.plumbing import portbinding_vlan
 
 from neutron.db.models.segment import NetworkSegment
 from neutron.db.models_v2 import Port
-from neutron.plugins.ml2.db import PortBindingLevel
+from neutron.plugins.ml2.models import PortBindingLevel
 
 _SUBNET_ID = "mysubnet"
 _PORT_ID = "portid"
