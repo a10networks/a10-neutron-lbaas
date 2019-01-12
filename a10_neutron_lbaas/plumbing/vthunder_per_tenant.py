@@ -72,11 +72,11 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
         })
 
         remove_config_keys = [
-                "vport_defaults",
-                "vport_expressions",
-                "virtual_server_expressions",
-                "service_group_expressions",
-                "member_expressions"
+            "vport_defaults",
+            "vport_expressions",
+            "virtual_server_expressions",
+            "service_group_expressions",
+            "member_expressions"
         ]
 
         for x in remove_config_keys:

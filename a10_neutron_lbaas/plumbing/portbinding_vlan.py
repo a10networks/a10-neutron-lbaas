@@ -164,10 +164,10 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
     def partition_delete_last(self, client, openstack_context, name, lbaas_obj):
         # After partition delete, remove any neutron ports created by this hook owned by the tenant
         # Make sure the last object is an LB. The data model ensures this but ... just in case.
-    	# or type(lbaas_obj).__name__ != "LoadBalancer":
+        # or type(lbaas_obj).__name__ != "LoadBalancer":
         if not lbaas_obj:
-           LOG.info("No lbaas obj was set for cleanup, exiting cleanup")
-           return
+            LOG.info("No lbaas obj was set for cleanup, exiting cleanup")
+            return
 
         db = NeutronDbWrapper(openstack_context.session)
         LOG.info("Cleanup ports for {0}".format(name))
@@ -198,8 +198,6 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
 
     def _get_vip_cidr(self, a10_context, os_context, vip, v1=False):
         db = NeutronDbWrapper(os_context.session)
-        acos = AcosWrapper(a10_context.client)
-        config = a10_context.a10_driver.config
         if v1 is True:
             sid = vip["subnet_id"]
         else:
@@ -207,13 +205,10 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
         vip_subnet_info = db.get_subnet(sid)
         return self._format_cidr(vip_subnet_info.cidr)
 
-
     def _create_nat_pool(self, a10_context, os_context, vip, v1=False):
         msg = "CREATE_NAT", (v1 is True), v1, type(v1)
         LOG.debug(msg)
-        db = NeutronDbWrapper(os_context.session)
         acos = AcosWrapper(a10_context.client)
-        config = a10_context.a10_driver.config
         vip_cidr = self._get_vip_cidr(a10_context, os_context, vip, v1=v1)
         if v1 is True:
             try:
@@ -225,8 +220,3 @@ class VlanPortBindingPlumbingHooks(simple.PlumbingHooks):
                 acos.create_nat_pool(vip.id, vip.vip_address, vip.vip_address, vip_cidr)
             except Exception as ex:
                 raise ex
-
-
-
-
-
