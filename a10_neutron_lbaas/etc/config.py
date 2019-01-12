@@ -67,7 +67,7 @@
 # Which version of the keystone protocol to use
 #
 
-# keystone_version = 2 
+# keystone_version = 2
 
 # For Keystone v3:
 

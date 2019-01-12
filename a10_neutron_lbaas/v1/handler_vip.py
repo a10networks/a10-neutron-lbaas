@@ -16,11 +16,9 @@ import logging
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 from a10_neutron_lbaas.acos import openstack_mappings
-
-import acos_client.errors as acos_errors
-import handler_base_v1
-import v1_context as a10
-
+from a10_neutron_lbaas.v1 import handler_base_v1
+from a10_neutron_lbaas.v1 import v1_context as a10
+from acos_client import errors as acos_errors
 
 LOG = logging.getLogger(__name__)
 
@@ -229,4 +227,3 @@ class PersistHandler(object):
 
             except Exception as e:
                 LOG.exception(e)
-

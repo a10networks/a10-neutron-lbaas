@@ -27,7 +27,7 @@
 # the a10-neutron-lbaas package.
 # Recommended for all new installs.
 
-use_database = True 
+use_database = True
 
 # The SQLAlchemy connection string to use to connect to the database.
 # If None, and use_database is True, the driver will attempt to use

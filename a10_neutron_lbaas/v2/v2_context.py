@@ -16,6 +16,7 @@ import a10_neutron_lbaas.a10_context as a10_context
 
 from a10_neutron_lbaas.vthunder import keystone as keystone_helpers
 
+
 class A10Context(a10_context.A10Context):
     pass
 
@@ -56,7 +57,8 @@ class A10DeleteContext(a10_context.A10DeleteContextBase):
         if self.partition_key == self.tenant_id:
             return self.handler.neutron.loadbalancer_total(ctx, self.partition_key)
         else:
-            keystone_context = keystone_helpers.KeystoneFromContext(self.a10_driver.config, self.openstack_context)
+            keystone_context = keystone_helpers.KeystoneFromContext(self.a10_driver.config,
+                                                                    self.openstack_context)
             projects = keystone_context.client.projects.list()
             idlist = [x.id for x in projects if x.parent_id == self.partition_key]
             return self.handler.neutron.loadbalancer_parent(ctx, idlist)

@@ -17,9 +17,11 @@ import binascii
 import logging
 import re
 
-import acos_client.errors as acos_errors
-import handler_base_v2
-import v2_context as a10
+from acos_client import errors as acos_errors
+
+from a10_neutron_lbaas.v2 import handler_base_v2
+from a10_neutron_lbaas.v2 import v2_context as a10
+
 # tenant names allow some funky characters; we do not, as of 4.1.0
 non_alpha = re.compile('[^0-9a-zA-Z_-]')
 
@@ -64,12 +66,13 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                 else:
                     server_args['conn-limit'] = conn_limit
 
-
             server_args = {'server': server_args}
+
             c.client.slb.server.create(server_name, server_ip,
                                        status=status,
                                        config_defaults=self._get_config_defaults(c, os_name),
                                        axapi_args=server_args)
+
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):
             pass
 
@@ -163,4 +166,3 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         rv = {}
         rv = c.a10_driver.config.get_member_expressions()
         return rv
-

@@ -251,6 +251,7 @@ class FakeCertificateBinding(FakeModel):
         self.certificate_id = certificate_id or "certid01"
         self.listener_id = listener_id or 'fake-listen-id-001'
 
+
 class FakeKeystoneClient(object):
 
     def __init__(self, parent_id='default'):

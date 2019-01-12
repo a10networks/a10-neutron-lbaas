@@ -17,6 +17,7 @@ import sqlalchemy.orm
 
 from a10_neutron_lbaas.tests.db import test_base
 
+
 @attr(db=True)
 class UnitTestBase(test_base.DbTestBase):
 

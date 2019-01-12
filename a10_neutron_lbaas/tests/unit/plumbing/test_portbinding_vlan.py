@@ -12,17 +12,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import mock
+from nose.plugins.attrib import attr
 
 from a10_neutron_lbaas.tests.unit import test_base
 
 from a10_neutron_lbaas.plumbing import portbinding_vlan
 
-from neutron.db.models.segment import NetworkSegment, SegmentHostMapping
-from neutron.db.models_v2 import IPAllocation, IPAllocationPool, Route, SubnetRoute, Port, Subnet, Network
-from neutron.plugins.ml2.models import PortBinding, PortBindingLevel
-
+from neutron.db.models.segment import NetworkSegment
+from neutron.db.models_v2 import Port
+from neutron.plugins.ml2.models import PortBindingLevel
 
 _SUBNET_ID = "mysubnet"
 _PORT_ID = "portid"
@@ -31,8 +30,10 @@ _VLAN_ID = 2000
 _NETWORK_ID = "mynetwork"
 _LEVEL = 1
 
+
 def raise_(exc):
     raise exc
+
 
 class FakeModel(object):
     def __init__(self, **kwargs):
@@ -48,6 +49,7 @@ class FakeSession(object):
         NetworkSegment: FakeModel(id=_SEGMENT_ID, segmentation_id=_VLAN_ID),
         Port: FakeModel(id=_PORT_ID, subnet_id=_SUBNET_ID, network_id=_NETWORK_ID),
     }
+
     def __init__(self, *args, **kwargs):
         pass
 
@@ -61,6 +63,7 @@ class FakeSession(object):
     def first(self):
         return self._rval
 
+
 class FakeConfig(object):
     def __init__(self, *args, **kwargs):
         self._dict = kwargs
@@ -68,6 +71,8 @@ class FakeConfig(object):
     def get(self, key):
         return self._dict.get(key)
 
+
+@attr(db=True)
 class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
     version = "v2"
 
@@ -95,52 +100,36 @@ class TestVlanPortBindingPlumbing(test_base.UnitTestBase):
         self._client.vlan.create.assert_called_once_with(_VLAN_ID, mock.ANY, mock.ANY)
 
     def test_after_vip_create_ve_exists(self):
-        self._client.interface.ve.get.return_value = {"ve" : 2}
+        self._client.interface.ve.get.return_value = {"ve": 2}
         self.target.after_vip_create(self.a10_context, self.os_context, self._vip)
         self._client.vlan.create.assert_not_called()
 
-    
-
     def _build_mocks(self):
         # a10_context dependencies
-        self._vip = FakeModel(vip_subnet_id="mysubnet", vip_port=FakeModel(id=self._port_id, network_id=self._network_id))
+        self._vip = FakeModel(vip_subnet_id="mysubnet",
+                              vip_port=FakeModel(id=self._port_id, network_id=self._network_id))
         self._devices = {"a": {"host": "1.2.3.4", "api_version": "3.0"}}
-        self._driver=mock.Mock()
+        self._driver = mock.Mock()
         self._client = self._build_client()
         self._config = FakeConfig(
             use_database=False,
-            vlan_interfaces = {
-                "tagged_trunks": [1,2],
+            vlan_interfaces={
+                "tagged_trunks": [1, 2],
             },
-            use_dhcp = False,
+            use_dhcp=False,
             vlan_binding_level=self._level
         )
         self._a10_driver = mock.Mock(config=self._config)
-        self.a10_context = mock.Mock(a10_driver=self._a10_driver,client=self._client)
+        self.a10_context = mock.Mock(a10_driver=self._a10_driver, client=self._client)
         self._session = self._build_session()
-        self.os_context = mock.Mock(session=self._session,tenant_id="tenant")
+        self.os_context = mock.Mock(session=self._session, tenant_id="tenant")
 
     def _build_session(self, **kwargs):
-
-        mfirst = mock.Mock(return_value=self._binding_level)
-        mfilter_by = mock.Mock(return_value=mfirst)
-        mquery = mock.Mock(return_value=mfilter_by)
-
-        # rv.query(PortBindingLevel).filter_by(port_id=self._port_id, level=self._level).first().return_value = self._binding_level
-        # rv.query(NetworkSegment).filter_by(id=self._segment_id).first().return_value = self._segment
-        # rv.configure_mock(**mock_cfg)
-        # rv.query.filter.first.return_value = self._binding_level
-
-        # .filter_by.return_value.first.return_value = self._binding_level
-        # return mock.Mock(return_value=mquery)
         return FakeSession()
 
     def _build_client(self):
         rval = mock.Mock()
-        ve_json = '{"ve":{"oper":{"state":"DOWN","line_protocol":"DOWN","link_type":"VirtualEthernet","mac":"ffff.ffff.78de"},"a10-url":"/axapi/v3/interface/ve/255/oper","ifnum":5}}'
         rval.interface.ve.get_oper.return_value = None
-        # json.loads(ve_json)
-        rval.interface.ve.get = lambda : {}
+        rval.interface.ve.get = lambda: {}
 
         return rval
-

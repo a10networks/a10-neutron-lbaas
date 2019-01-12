@@ -14,19 +14,19 @@
 
 import mock
 
-import fake_objs
-import test_base
+from a10_neutron_lbaas.tests.unit.v2 import fake_objs
+from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 
 class TestHM(test_base.HandlerTestBase):
 
-    def assert_hm(self, model, mon_type, method, url, expect_code):
+    def assert_hm(self, model, mon_type, method, url, expect_code, port):
         self.a.openstack_driver.health_monitor.successful_completion.assert_called_with(
             None, model)
         self.a.last_client.slb.hm.create.assert_called_with(
             'fake-hm-id-001', mon_type, 7, 7, 8,
             method=method, url=url, expect_code=expect_code,
-            config_defaults=mock.ANY, axapi_args={},
+            config_defaults=mock.ANY, port=port, axapi_args={},
         )
 
     def assert_create_sets_delay_timeout(self, model, mon_type, method, url, expect_code):
@@ -41,28 +41,28 @@ class TestHM(test_base.HandlerTestBase):
     def test_create_ping(self):
         m = fake_objs.FakeHM('PING')
         self.a.hm.create(None, m)
-        self.assert_hm(m, self.a.last_client.slb.hm.ICMP, None, None, None)
+        self.assert_hm(m, self.a.last_client.slb.hm.ICMP, None, None, None, mock.ANY)
 
     def test_create_tcp(self):
         m = fake_objs.FakeHM('TCP')
         self.a.hm.create(None, m)
         self.print_mocks()
-        self.assert_hm(m, self.a.last_client.slb.hm.TCP, None, None, None)
+        self.assert_hm(m, self.a.last_client.slb.hm.TCP, None, None, None, mock.ANY)
 
     def test_create_http(self):
         m = fake_objs.FakeHM('HTTP')
         self.a.hm.create(None, m)
-        self.assert_hm(m, self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
+        self.assert_hm(m, self.a.last_client.slb.hm.HTTP, 'GET', '/', '200', mock.ANY)
 
     def test_create_https(self):
         m = fake_objs.FakeHM('HTTPS')
         self.a.hm.create(None, m)
-        self.assert_hm(m, self.a.last_client.slb.hm.HTTPS, 'GET', '/', '200')
+        self.assert_hm(m, self.a.last_client.slb.hm.HTTPS, 'GET', '/', '200', mock.ANY)
 
     def test_create_http_with_pool(self):
         m = fake_objs.FakeHM('HTTP', pool=mock.MagicMock())
         self.a.hm.create(None, m)
-        self.assert_hm(m, self.a.last_client.slb.hm.HTTP, 'GET', '/', '200')
+        self.assert_hm(m, self.a.last_client.slb.hm.HTTP, 'GET', '/', '200', mock.ANY)
         self.a.last_client.slb.service_group.update.assert_called_with(
             m.pool.id, health_monitor='fake-hm-id-001', health_check_disable=False)
 
@@ -77,7 +77,8 @@ class TestHM(test_base.HandlerTestBase):
             None, m)
         self.a.last_client.slb.hm.update.assert_called_with(
             'fake-hm-id-001', self.a.last_client.slb.hm.TCP, 20, 7, 8,
-            method=None, url=None, expect_code=None, config_defaults=mock.ANY, axapi_args={})
+            method=None, url=None, expect_code=None, port=None,
+            config_defaults=mock.ANY, axapi_args={})
 
     def test_update_tcp_add_pool(self):
         m = fake_objs.FakeHM('TCP', pool=mock.MagicMock())

@@ -18,8 +18,6 @@
 from oslo_log import log
 from oslo_utils import uuidutils
 
-import acos_client as client
-
 # post-Kilo import.
 try:
     from neutron.db.models.segment import NetworkSegment
@@ -42,16 +40,16 @@ _HPB_TEST = True
 
 # THIS FLAG IS CRUCIAL FOR KILO COMPATIBILITY
 # THIS USES tenant_id INSTEAD OF project_id
-_IS_KILO = False 
+_IS_KILO = False
 
 
 class AcosWrapper(object):
     def __init__(self, client, *args, **kwargs):
         self._client = client
 
-    def create_nat_pool(self,name, start_addr, end_addr,cidr):
+    def create_nat_pool(self, name, start_addr, end_addr, cidr):
         try:
-            return self._client.nat.pool.create(name, start_addr, end_addr,cidr)
+            return self._client.nat.pool.create(name, start_addr, end_addr, cidr)
         except Exception as ex:
             raise ex
 
@@ -61,7 +59,6 @@ class AcosWrapper(object):
         except Exception as ex:
             LOG.debug(ex)
             pass
-            #raise ex
 
     def create_ve(self, ve_dict):
         try:
@@ -89,7 +86,9 @@ class AcosWrapper(object):
     def update_vip(self, vip_id, mac_address, vlan_id):
         vip = None
         try:
-            vip = self._client.slb.virtual_server.update(vip_id, mac=1, mac_address=mac_address, vlan=vlan_id)
+            vip = self._client.slb.virtual_server.update(vip_id, mac=1,
+                                                         mac_address=mac_address,
+                                                         vlan=vlan_id)
         except Exception as ex:
             raise ex
         return vip
@@ -164,7 +163,7 @@ class NeutronDbWrapper(object):
                 network_id=record["network_id"],
                 mac_address=record["mac_address"],
                 admin_state_up=record["admin_state_up"],
-		# ACTIVE by default
+                # ACTIVE by default
                 status=record["status"],
                 device_id=record["device_id"],
                 device_owner=record["device_owner"]
@@ -239,16 +238,18 @@ class NeutronDbWrapper(object):
         }
 
     def create_port_binding(self, port_id, host):
-        return self._create_port_binding(port_id, host, self.BINDING_VNIC_TYPE, self.BINDING_PROFILE, 
-                                         self.BINDING_VIF_TYPE, self.BINDING_VIF_DETAILS);
+        return self._create_port_binding(port_id, host, self.BINDING_VNIC_TYPE,
+                                         self.BINDING_PROFILE,
+                                         self.BINDING_VIF_TYPE,
+                                         self.BINDING_VIF_DETAILS)
 
-    def _create_port_binding(self, port_id, host, vnic_type, profile, vif_type, vif_details, status="ACTIVE"):
+    def _create_port_binding(self, port_id, host, vnic, profile, vif, vif_details, status="ACTIVE"):
         with self._session.begin(subtransactions=True):
             binding = PortBinding(
-                port_id = port_id,
-                host = host,
-                vnic_type = vnic_type,
-                vif_type=vif_type,
+                port_id=port_id,
+                host=host,
+                vnic_type=vnic,
+                vif_type=vif,
                 profile=profile,
                 vif_details=vif_details,
                 # status=status,
@@ -268,7 +269,7 @@ class NeutronDbWrapper(object):
             tenant_id = last_lb.tenant_id
         # v1 obj model
         else:
-	    # It's a pool, not a vip, we can work with that
+            # It's a pool, not a vip, we can work with that
             subnet_id = last_lb["subnet_id"]
             subnet = self.get_subnet(subnet_id)
             network_id = subnet["network_id"]
@@ -288,4 +289,3 @@ class NeutronDbWrapper(object):
             port = self._session.query(nmodels.Port).filter_by(**query_args).first()
             if port:
                 self._session.delete(port)
-

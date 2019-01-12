@@ -19,7 +19,7 @@ import acos_client
 from a10_neutron_lbaas.db import models
 import a10_neutron_lbaas.plumbing_hooks as hooks
 
-import test_base
+from a10_neutron_lbaas.tests.db import test_base
 
 dev1 = {'name': 'dev1'}
 dev2 = {'name': 'dev2'}
@@ -40,9 +40,9 @@ devices2 = {
 
 TENANT_ID = 'xxx'
 
-EXPECTED_DEV1 = acos_client.Hash(devices1.keys()).get_server(TENANT_ID)
+EXPECTED_DEV1 = acos_client.Hash(list(devices1)).get_server(TENANT_ID)
 HARDCODE_RESULT1 = 'dev1'
-EXPECTED_DEV2 = acos_client.Hash(devices2.keys()).get_server(TENANT_ID)
+EXPECTED_DEV2 = acos_client.Hash(list(devices2)).get_server(TENANT_ID)
 HARDCODE_RESULT2 = 'dev2'
 
 

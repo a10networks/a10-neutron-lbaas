@@ -16,10 +16,10 @@ import copy
 import logging
 
 from a10_neutron_lbaas.acos import openstack_mappings
+from a10_neutron_lbaas.v2 import handler_base_v2
+from a10_neutron_lbaas.v2 import handler_persist
+from a10_neutron_lbaas.v2 import v2_context as a10
 import acos_client.errors as acos_errors
-import handler_base_v2
-import handler_persist
-import v2_context as a10
 
 LOG = logging.getLogger(__name__)
 
