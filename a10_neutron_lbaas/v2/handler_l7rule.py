@@ -1,4 +1,4 @@
-# Copyright 2014, Omkar Telee (omkartelee01), A10 Networks
+# Copyright 2019, Omkar Telee (omkartelee01), A10 Networks
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -22,23 +22,23 @@ from policy import PolicyUtil
 
 LOG = logging.getLogger(__name__)
 
+
 class L7RuleHandler(handler_base_v2.HandlerBaseV2):
 
-    def _set(self, set_method,c, context, l7policy, file="", script="", size=0, action="", **kwargs):
-        set_method(l7policy, file=file, script=script, size=size, action=action)
+    def _set(self, set_method, c, context, file="", script="", size=0, action="", **kwargs):
+        set_method(file=file, script=script, size=size, action=action)
 
     def create(self, context, l7rule, **kwargs):
-        import pdb; pdb.set_trace()
-        l7policy = l7rule.policy 
+        l7policy = l7rule.policy
         with a10.A10WriteStatusContext(self, context, l7policy) as c:
             try:
-                filename= l7policy.id
-                action="import"
+                filename = l7policy.id
+                action = "import"
                 p = PolicyUtil()
-                script= p.createPolicy(l7policy)
+                script = p.createPolicy(l7policy)
                 size = len(script.encode('utf-8'))
                 self._set(c.client.slb.aflex_policy.create,
-                          c, context, l7policy, filename,script, size, action)
+                          c, context, filename, script, size, action)
             except acos_errors.Exists:
                 pass
 
@@ -46,12 +46,13 @@ class L7RuleHandler(handler_base_v2.HandlerBaseV2):
         self.create(context, l7rule, **kwargs)
 
     def delete(self, context, l7rule):
-        policy = l7rule.policy
-        rules = l7rule.policy.rules
-        for index, rule in enumerate(rules):
-            if rule.id == l7rule.id:
-                del rules[index]
-                break
-        policy.rules = rules
-        l7rule.policy = policy
-        self.create(context, l7rule)
+        with a10.A10DeleteContext(self, context, l7rule) as c:
+            policy = l7rule.policy
+            rules = l7rule.policy.rules
+            for index, rule in enumerate(rules):
+                if rule.id == l7rule.id:
+                    del rules[index]
+                    break
+            policy.rules = rules
+            l7rule.policy = policy
+            self.create(context, l7rule)
