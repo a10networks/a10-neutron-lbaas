@@ -14,21 +14,22 @@
 
 import re
 TYPE_DICT = {
-          "HOST_NAME" : "HTTP::host",
-          "PATH" : "HTTP::uri",
-          "FILE_TYPE" : "HTTP::uri endswith",
-          "HEADER" : "HTTP::header",
-          "COOKIE" : "HTTP::cookie"
-        }
+    "HOST_NAME": "HTTP::host",
+    "PATH": "HTTP::uri",
+    "FILE_TYPE": "HTTP::uri endswith",
+    "HEADER": "HTTP::header",
+    "COOKIE": "HTTP::cookie"
+    }
 
 
 COMPARE_TYPE_DICT = {
-       "REGEX" : "matches_regex",
-       "STARTS_WITH" : "starts_with",
-       "ENDS_WITH" : "ends_with",
-       "CONTAINS" : "contains",
-       "EQUAL_TO" : "equals"
+    "REGEX": "matches_regex",
+    "STARTS_WITH": "starts_with",
+    "ENDS_WITH": "ends_with",
+    "CONTAINS": "contains",
+    "EQUAL_TO": "equals"
     }
+
 
 class PolicyUtil():
     def __init__(self):
@@ -37,20 +38,20 @@ class PolicyUtil():
         {1}  \n
         }} \n
         }} """
-    
-    def createPolicy(self,l7policy):
+
+    def createPolicy(self, l7policy):
         actionString = ""
-        if l7policy.action == "REDIRECT_TO_POOL" :
-            actionString = "pool " + l7policy.redirect_pool.id 
+        if l7policy.action == "REDIRECT_TO_POOL":
+            actionString = "pool " + l7policy.redirect_pool.id
 
         elif l7policy.action == "REDIRECT_TO_URL":
-            actionString = "HTTP::redirect "+ l7policy.redirect_url
+            actionString = "HTTP::redirect " + l7policy.redirect_url
 
         else:
             actionString = "HTTP::close"
-        # placeholder till rules
+
         ruleString = ""
-        if len(l7policy.rules) <= 0 :
+        if len(l7policy.rules) <= 0:
             ruleString = "( true )"
         else:
             ruleArray = []
@@ -58,37 +59,43 @@ class PolicyUtil():
                 temp = self.ruleParser(rule)
                 ruleArray.append(temp)
             ruleString = " and ".join(ruleArray)
-        return self.base.format(ruleString,actionString)
-        
-    def ruleParser(self,l7rule):
+        return self.base.format(ruleString, actionString)
+
+    def ruleParser(self, l7rule):
         ruleString = "("
         # type
         typeString = TYPE_DICT[l7rule.type]
-        if l7rule.key:
-            typeString = typeString + " name " + l7rule.key
-        typeString = "[" + typeString + "]"  
+        if l7rule.key and (l7rule.type == 'HEADER' or l7rule.type == 'COOKIE'):
+            typeString = typeString + " " + l7rule.key
+        typeString = "[" + typeString + "]"
         ruleString += typeString
-        
-        #compare type
-        compare_type_string =  COMPARE_TYPE_DICT[l7rule.compare_type]
+
+        # compare type
+        compare_type_string = COMPARE_TYPE_DICT[l7rule.compare_type]
         ruleString += " " + compare_type_string
 
-        #value 
+        # rule string static - required for file type rules only
+        if l7rule.type == "FILE_TYPE":
+            ruleString = "([HTTP::uri] ends_with"
+
+        # value
         value_string = l7rule.value
         ruleString += " \"" + value_string + "\""
-       
+
         ruleString += ")"
+        if l7rule.invert:
+            ruleString = "not" + ruleString
         return ruleString
 
-    def convertRules(self,l7Rule, policyTCL):
+    def convertRules(self, l7Rule, policyTCL):
         m = re.search('({.*})', policyTCL)
         ruleString = m.group(0)
-        ruleString = ruleString.replace('{' , "").replace('}' , "")
+        ruleString = ruleString.replace('{', "").replace('}', "")
         rules = [x.strip() for x in ruleString.split('and')]
 
     def ruleObjectCreator(self, ruleSring):
         # ([HTTP::header name namer] equals value)
-        ruleString = ruleString.replace('(' , "").replace(')' , "").strip()
+        ruleString = ruleString.replace('(', "").replace(')', "").strip()
         if 'name' in ruleString:
             rules = [x.strip() for x in ruleString.split(" ")]
             r = Rule(rules[0]+"]", rules[3], rules[2], None, rules[2])
@@ -96,4 +103,4 @@ class PolicyUtil():
             rules = [x.strip() for x in ruleString.split(" ")]
             r = Rule(rules[0], rules[1], None, rules[2])
 
-        return r  
+        return r
