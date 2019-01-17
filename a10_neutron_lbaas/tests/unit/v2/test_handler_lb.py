@@ -102,13 +102,13 @@ class TestLB(test_base.HandlerTestBase):
     def test_create_template_virtual_server(self):
         self._test_create_template_virtual_server("2.1", None)
 
-    def test_create_default_vrid_set_v21(self):
+    def test_create_default_vrid_set_v21_with_template(self):
         self._test_create_template_virtual_server("2.1", "testTemplate")
 
-    def test_create_default_vrid_none_v30(self):
+    def test_create_default_vrid_none_v30_with_template(self):
         self._test_create_template_virtual_server("3.0", None)
 
-    def test_create_default_vrid_set_v30(self):
+    def test_create_default_vrid_set_v30_with_template(self):
         self._test_create_template_virtual_server("3.0", "testTemplate")
 
     # There's no code that causes listeners to be added
