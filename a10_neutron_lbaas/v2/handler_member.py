@@ -68,7 +68,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                     server_args['conn_limit'] = conn_limit
 
             if conn_resume is not None:
-                if conn_resume < 0 or conn_resume > 1000000:
+                if conn_resume < 1 or conn_resume > 1000000:
                     LOG.warning("The specified conn_resume value is invalid. \
                     The value should be either 0 or 1")
                 else:
