@@ -50,6 +50,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                                                c.device_cfg['use_float'])
         server_name = self._meta_name(member, server_ip)
         conn_limit = c.device_cfg.get('conn-limit')
+        conn_resume = c.device_cfg.get('conn-resume')
         status = c.client.slb.UP
         if not member.admin_state_up:
             status = c.client.slb.DOWN
@@ -57,14 +58,21 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
 
         try:
             server_args = self.meta(member, 'server', {})
-            if conn_limit:
+            if conn_limit is not None:
                 if conn_limit < 1 or conn_limit > 8000000:
                     LOG.warning("The specified member server connection limit " +
                                 "(configuration setting: conn-limit) is out of " +
                                 "bounds with value {0}. Please set to between " +
                                 "1-8000000. Defaulting to 8000000".format(conn_limit))
                 else:
-                    server_args['conn-limit'] = conn_limit
+                    server_args['conn_limit'] = conn_limit
+
+            if conn_resume is not None:
+                if conn_resume < 1 or conn_resume > 1000000:
+                    LOG.warning("The specified conn_resume value is invalid. \
+                    The value should be either 0 or 1")
+                else:
+                    server_args['conn_resume'] = conn_resume
 
             server_args = {'server': server_args}
 

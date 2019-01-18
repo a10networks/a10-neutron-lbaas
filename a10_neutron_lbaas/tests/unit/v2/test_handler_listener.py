@@ -171,6 +171,102 @@ class TestListeners(test_base.HandlerTestBase):
     def test_create_ip_in_ip_negative_v30(self):
         self._test_create_ipinip()
 
+    def _test_create_ha_conn_mirror(self, api_ver="3.0", ha_conn_mirror=False):
+        for k, v in self.a.config.devices.items():
+            v['ha-conn-mirror'] = ha_conn_mirror
+            v['api_version'] = api_ver
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+
+        self.a.listener.create(None, m)
+        self.print_mocks()
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn("ha_conn_mirror=%s" % ha_conn_mirror, s)
+
+    def test_create_ha_conn_mirror_positive_v21(self):
+        self._test_create_ha_conn_mirror(api_ver="2.1", ha_conn_mirror=True)
+
+    def test_create_ha_conn_mirror_negative_v21(self):
+        self._test_create_ha_conn_mirror(api_ver="2.1")
+
+    def test_create_ha_conn_mirror_positive_v30(self):
+        self._test_create_ha_conn_mirror(ha_conn_mirror=True)
+
+    def test_create_ha_conn_mirror_negative_v30(self):
+        self._test_create_ha_conn_mirror()
+
+    def _test_create_no_dest_nat(self, api_ver="3.0", no_dest_nat=False):
+        for k, v in self.a.config.devices.items():
+            v['no-dest-nat'] = no_dest_nat
+            v['api_version'] = api_ver
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+
+        self.a.listener.create(None, m)
+        self.print_mocks()
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn("no_dest_nat=%s" % no_dest_nat, s)
+
+    def test_create_no_dest_nat_positive_v21(self):
+        self._test_create_no_dest_nat(api_ver="2.1", no_dest_nat=True)
+
+    def test_create_no_dest_nat_negative_v21(self):
+        self._test_create_no_dest_nat(api_ver="2.1")
+
+    def test_create_no_dest_nat_positive_v30(self):
+        self._test_create_no_dest_nat(no_dest_nat=True)
+
+    def test_create_no_dest_nat_negative_v30(self):
+        self._test_create_no_dest_nat()
+
+    def _test_create_conn_limit(self, api_ver="3.0", conn_limit=None):
+        for k, v in self.a.config.devices.items():
+            v['conn-limit'] = conn_limit
+            v['api_version'] = api_ver
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+
+        self.a.listener.create(None, m)
+        self.print_mocks()
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn("conn_limit=%s" % conn_limit, s)
+
+    def test_create_conn_limit_ib_v21(self,):
+        self._test_create_conn_limit(api_ver="2.1", conn_limit=3211)
+
+    def test_create_conn_limit_ib_v30(self):
+        self._test_create_conn_limit(conn_limit=3211)
+
+    def test_create_conn_limit_ub_v21(self):
+        self._test_create_conn_limit(api_ver="2.1", conn_limit=8000001)
+
+    def test_create_conn_limit_ub_v30(self):
+        self._test_create_conn_limit(conn_limit=8000001)
+
+    def test_create_conn_limit_lb_v21(self):
+        self._test_create_conn_limit(api_ver="2.1", conn_limit=0)
+
+    def test_create_conn_limit_lb_v30(self):
+        self._test_create_conn_limit(conn_limit=0)
+
     def test_update_no_lb(self):
         m = fake_objs.FakeListener('TCP', 2222, pool=mock.MagicMock(),
                                    loadbalancer=None)
@@ -247,7 +343,7 @@ class TestListeners(test_base.HandlerTestBase):
     def _test_create_source_nat_pool(self, source_nat_pool):
         if source_nat_pool:
             for k, v in self.a.config.devices.items():
-                v['source_nat_pool'] = source_nat_pool
+                v['source-nat-pool'] = source_nat_pool
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
