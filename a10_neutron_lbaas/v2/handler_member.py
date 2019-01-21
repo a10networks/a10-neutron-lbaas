@@ -76,8 +76,15 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
 
             server_args = {'server': server_args}
 
+            conf_templates = c.device_cfg.get('templates')
+            if conf_templates:
+                server_templates = conf_templates.get("server", None)
+            else:
+                server_templates = None
+
             c.client.slb.server.create(server_name, server_ip,
                                        status=status,
+                                       server_templates=server_templates,
                                        config_defaults=self._get_config_defaults(c, os_name),
                                        axapi_args=server_args)
 

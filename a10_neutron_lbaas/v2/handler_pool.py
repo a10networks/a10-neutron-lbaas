@@ -30,10 +30,18 @@ class PoolHandler(handler_base_v2.HandlerBaseV2):
         self._update_session_persistence(old_pool, pool, c, context)
         args = {'service_group': self.meta(pool, 'service_group', {})}
         os_name = pool.name
+
+        conf_templates = c.device_cfg.get('templates')
+        if conf_templates:
+            service_group_templates = conf_templates.get("service-group", None)
+        else:
+            service_group_templates = None
+
         set_method(
             self._meta_name(pool),
             protocol=openstack_mappings.service_group_protocol(c, pool.protocol),
             lb_method=openstack_mappings.service_group_lb_method(c, pool.lb_algorithm),
+            service_group_templates=service_group_templates,
             config_defaults=self._get_config_defaults(c, os_name),
             axapi_args=args)
 

@@ -84,6 +84,7 @@ class TestMembers(test_base.HandlerTestBase):
             name, ip,
             status=status,
             config_defaults=mock.ANY,
+            server_templates=None,
             axapi_args={'server': server_args})
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             m.pool.id, name, m.protocol_port, status=status,
@@ -181,6 +182,7 @@ class TestMembers(test_base.HandlerTestBase):
             mock.ANY,
             mock.ANY,
             status=mock.ANY,
+            server_templates=None,
             config_defaults=expected,
             axapi_args={'server': {}})
         # self.assertIn("member.create", s)
@@ -213,6 +215,7 @@ class TestMembers(test_base.HandlerTestBase):
         self.a.last_client.slb.server.create.assert_called_with(
             mock.ANY, mock.ANY,
             status=mock.ANY,
+            server_templates=None,
             config_defaults={},
             axapi_args={'server': {}})
 
@@ -231,5 +234,25 @@ class TestMembers(test_base.HandlerTestBase):
         self.a.last_client.slb.server.create.assert_called_with(
             mock.ANY, mock.ANY,
             status=mock.ANY,
+            server_templates=None,
             config_defaults={},
+            axapi_args={'server': {}})
+
+    def test_create_with_template(self,):
+        template = {
+            "server": {
+                "template-server": "sg1"
+            }
+        }
+        expect = {'template-server': 'sg1'}
+        for k, v in self.a.config.get_devices().items():
+            v['templates'] = template
+        m = fake_objs.FakeMember(admin_state_up=True,
+                                 pool=mock.MagicMock())
+        self.a.member.create(None, m)
+        self.a.last_client.slb.server.create.assert_called_with(
+            mock.ANY, mock.ANY,
+            status=mock.ANY,
+            config_defaults=mock.ANY,
+            server_templates=expect,
             axapi_args={'server': {}})

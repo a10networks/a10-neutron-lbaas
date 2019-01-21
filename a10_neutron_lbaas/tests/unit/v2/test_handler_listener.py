@@ -281,6 +281,49 @@ class TestListeners(test_base.HandlerTestBase):
         self.a.listener.create(None, m)
         self.assertFalse('update' in str(self.a.last_client.mock_calls))
 
+    def _test_create_with_templates(self, api_ver="3.0", virtual_port_templates=None, update=False):
+        for k, v in self.a.config.devices.items():
+            v['api_version'] = api_ver
+            v['templates'] = virtual_port_templates
+
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        if update:
+            self.a.listener.create(None, m)
+        else:
+            self.a.listener.update(None, m, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("test-template-virtual-port", s)
+        self.assertIn("test-template-tcp", s)
+        self.assertIn("test-template-policy", s)
+        self.assertIn("test-template-scaleout", s)
+
+    def test_create_virtual_port_with_templates(self):
+        template = {
+            "virtual-port": {
+                "template-virtual-port": "test-template-virtual-port",
+                "template-tcp": "test-template-tcp",
+                "template-policy": "test-template-policy",
+                "template-scaleout": "test-template-scaleout"
+            }
+        }
+        self._test_create_with_templates("3.0", virtual_port_templates=template)
+
+    def test_update_virtual_port_with_templates(self):
+        template = {
+            "virtual-port": {
+                "template-virtual-port": "test-template-virtual-port",
+                "template-tcp": "test-template-tcp",
+                "template-policy": "test-template-policy",
+                "template-scaleout": "test-template-scaleout"
+            }
+        }
+        self._test_create_with_templates("3.0", virtual_port_templates=template, update=True)
+
     def test_update(self):
         pool = fake_objs.FakePool('HTTP', 'ROUND_ROBIN', None)
         lb = fake_objs.FakeLoadBalancer()
