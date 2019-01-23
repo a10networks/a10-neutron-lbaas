@@ -18,16 +18,17 @@ import a10_neutron_lbaas.a10_exceptions as a10_ex
 import fake_objs
 import test_base
 
+
 class TestL7Rule(test_base.HandlerTestBase):
     def test_create_l7Rule(self):
         lb = fake_objs.FakeLoadBalancer()
         flist = fake_objs.FakeListener('HTTP', 80, pool=None,
-                                  loadbalancer=lb)
+                                       loadbalancer=lb)
         flist.loadbalancer_id = "fake-lb-id-001"
         policy = fake_objs.FakeL7Policy(flist, "REDIRECT_TO_URL", None,
                                         "http//:google.com", 23)
-        rule =fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
-                                   'STARTS_WITH', 'testkey', 'testvalue')
+        rule = fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
+                                    'STARTS_WITH', 'testkey', 'testvalue')
         policy.rules = []
         policy.rules.append(rule)
         rule.policy = policy
@@ -36,7 +37,6 @@ class TestL7Rule(test_base.HandlerTestBase):
         self.assertTrue('fake-l7policy-id-001' in sm)
         self.assertTrue('slb.aflex_policy.create' in sm)
 
-
     def test_update_l7Rule(self):
         lb = fake_objs.FakeLoadBalancer()
         flist = fake_objs.FakeListener('HTTP', 80, pool=None,
@@ -44,18 +44,18 @@ class TestL7Rule(test_base.HandlerTestBase):
         flist.loadbalancer_id = "fake-lb-id-001"
         policy = fake_objs.FakeL7Policy(flist, "REDIRECT_TO_URL", None,
                                         "http//:google.com", 23)
-        rule =fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
-                                   'STARTS_WITH', 'testkey', 'oldvalue')
+        rule = fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
+                                    'STARTS_WITH', 'testkey', 'oldvalue')
         policy.rules = []
         policy.rules.append(rule)
         old_rule = rule
         old_rule.policy = policy
         rule = fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
-                                    'STARTS_WITH', 'testkey', 
+                                    'STARTS_WITH', 'testkey',
                                     'updatedtestvalue')
         policy.rules = []
         policy.rules.append(rule)
-        rule.policy = policy 
+        rule.policy = policy
         self.a.l7rule.update(None, old_rule, rule)
         sm = str(self.a.last_client.mock_calls)
         self.assertTrue('fake-l7policy-id-001' in sm)
@@ -63,16 +63,15 @@ class TestL7Rule(test_base.HandlerTestBase):
         self.assertTrue('updatedtestvalue' in sm)
         self.assertFalse('oldvalue' in sm)
 
-
     def test_delete_l7Rule(self):
         lb = fake_objs.FakeLoadBalancer()
         flist = fake_objs.FakeListener('HTTP', 80, pool=None,
-                                  loadbalancer=lb)
+                                       loadbalancer=lb)
         flist.loadbalancer_id = "fake-lb-id-001"
         policy = fake_objs.FakeL7Policy(flist, "REDIRECT_TO_URL", None,
                                         "http//:google.com", 23)
-        rule =fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
-                                   'STARTS_WITH', 'testkey', 'testvalue')
+        rule = fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
+                                    'STARTS_WITH', 'testkey', 'testvalue')
         policy.rules = []
         policy.rules.append(rule)
         rule.policy = policy
@@ -83,7 +82,6 @@ class TestL7Rule(test_base.HandlerTestBase):
         self.assertTrue('true' in sm)
         self.assertFalse('testvalue' in sm)
 
-
     def test_delete_l7Rule_from_multiple(self):
         lb = fake_objs.FakeLoadBalancer()
         flist = fake_objs.FakeListener('HTTP', 80, pool=None,
@@ -92,7 +90,7 @@ class TestL7Rule(test_base.HandlerTestBase):
         policy = fake_objs.FakeL7Policy(flist, "REDIRECT_TO_URL", None,
                                         "http//:google.com", 23)
         rule1 = fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
-        'STARTS_WITH', 'testkey', 'oldvalue')
+                                     'STARTS_WITH', 'testkey', 'oldvalue')
         rule1.id = 'testrule1'
         policy.rules = []
         policy.rules.append(rule1)
@@ -102,14 +100,13 @@ class TestL7Rule(test_base.HandlerTestBase):
         rule2 = fake_objs.FakeL7Rule(policy.id, 'FILE_TYPE',
                                      'STARTS_WITH', 'testkey',
                                      'updatedtestvalue')
-        rule2.id = 'testrule2' 
+        rule2.id = 'testrule2'
         policy.rules.append(rule2)
         rule2.policy = policy
         self.a.l7rule.create(None, rule2)
-        
         self.a.l7rule.delete(None, rule2)
         sm = str(self.a.last_client.mock_calls)
         self.assertTrue('fake-l7policy-id-001' in sm)
         self.assertTrue('slb.aflex_policy.create' in sm)
         self.assertFalse('updatedtestvalue' in sm)
-        self.assertTrue('oldvalue' in sm) 
+        self.assertTrue('oldvalue' in sm)

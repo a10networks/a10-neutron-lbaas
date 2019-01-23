@@ -86,21 +86,3 @@ class PolicyUtil():
         if l7rule.invert:
             ruleString = "not" + ruleString
         return ruleString
-
-    def convertRules(self, l7Rule, policyTCL):
-        m = re.search('({.*})', policyTCL)
-        ruleString = m.group(0)
-        ruleString = ruleString.replace('{', "").replace('}', "")
-        rules = [x.strip() for x in ruleString.split('and')]
-
-    def ruleObjectCreator(self, ruleSring):
-        # ([HTTP::header name namer] equals value)
-        ruleString = ruleString.replace('(', "").replace(')', "").strip()
-        if 'name' in ruleString:
-            rules = [x.strip() for x in ruleString.split(" ")]
-            r = Rule(rules[0]+"]", rules[3], rules[2], None, rules[2])
-        else:
-            rules = [x.strip() for x in ruleString.split(" ")]
-            r = Rule(rules[0], rules[1], None, rules[2])
-
-        return r
