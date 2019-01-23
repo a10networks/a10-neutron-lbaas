@@ -83,8 +83,8 @@ class TestMembers(test_base.HandlerTestBase):
         self.a.last_client.slb.server.create.assert_called_with(
             name, ip,
             status=status,
-            config_defaults=mock.ANY,
             server_templates=None,
+            config_defaults=mock.ANY,
             axapi_args={'server': server_args})
         self.a.last_client.slb.service_group.member.create.assert_called_with(
             m.pool.id, name, m.protocol_port, status=status,
