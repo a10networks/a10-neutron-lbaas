@@ -96,7 +96,7 @@ class TestPools(test_base.HandlerTestBase):
             "template-server": "sg1",
             "template-port": "sg1",
             "template-policy": "sg1"
-            }
+        }
         for k, v in self.a.config.get_devices().items():
             v['templates'] = template
 
@@ -139,7 +139,7 @@ class TestPools(test_base.HandlerTestBase):
             "template-server": "sg1",
             "template-port": "sg1",
             "template-policy": "sg1"
-            }
+        }
         for k, v in self.a.config.get_devices().items():
             v['templates'] = template
 

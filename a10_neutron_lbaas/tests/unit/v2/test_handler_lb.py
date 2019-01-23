@@ -111,7 +111,8 @@ class TestLB(test_base.HandlerTestBase):
     def test_create_default_vrid_set_v30_with_template(self):
         self._test_create_template_virtual_server("3.0", "testTemplate")
 
-    def _test_create_virtual_server_templates(self, api_ver="3.0", virtual_server_templates=None, update=False):
+    def _test_create_virtual_server_templates(self, api_ver="3.0", virtual_server_templates=None,
+                                              update=False):
         for k, v in self.a.config.get_devices().items():
             v['api_version'] = api_ver
             v['templates'] = virtual_server_templates
@@ -157,7 +158,8 @@ class TestLB(test_base.HandlerTestBase):
                 "template-scaleout": "test-scaleout",
             }
         }
-        self._test_create_virtual_server_templates("3.0", virtual_server_templates=template, update=True)
+        self._test_create_virtual_server_templates("3.0", virtual_server_templates=template,
+                                                   update=True)
 
     # There's no code that causes listeners to be added
     # if they are present when the pool is created.
