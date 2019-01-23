@@ -29,7 +29,7 @@ from a10_neutron_lbaas.v2 import handler_lb as v2_handler_lb
 from a10_neutron_lbaas.v2 import handler_listener as v2_handler_listener
 from a10_neutron_lbaas.v2 import handler_member as v2_handler_member
 from a10_neutron_lbaas.v2 import handler_pool as v2_handler_pool
-from a10_neutron_lbaas.v2 import handler_l7policy as v2_handler_l7policy 
+from a10_neutron_lbaas.v2 import handler_l7policy as v2_handler_l7policy
 from a10_neutron_lbaas.v2 import handler_l7policy as v2_handler_l7rule
 
 logging.basicConfig()
@@ -163,7 +163,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def l7rule(self):
-        return v2_handler_l7rule.L7RuleHandler(
+        return v2.handler_l7rule.L7RuleHandler(
             self,
             self.openstack_driver.l7rule,
             neutron=self.neutron)
