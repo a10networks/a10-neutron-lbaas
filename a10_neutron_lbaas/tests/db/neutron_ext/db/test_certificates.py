@@ -18,8 +18,9 @@ from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.db import certificate_db as certs_db
 from a10_neutron_lbaas.tests.db import test_base as tbase
 
+from nose.plugins.attrib import attr
+
 import mock
-from neutron.plugins.common import constants as nconstants
 from neutron.tests.unit.api.v2 import test_base as ntbase
 
 from oslo_log.helpers import logging as logging
@@ -208,6 +209,7 @@ CERTIFICATE_EXT = "a10-certificate"
 #         self.plugin.delete_a10_certificate_binding.assert_called_with(mock.ANY, binding_id)
 
 
+@attr(db=True)
 class CertificateDbMixInTestCase(tbase.UnitTestBase):
 
     """Tests a10_openstack.neutron_ext.db.certificate_db.CertificateManager"""
@@ -233,7 +235,7 @@ class CertificateDbMixInTestCase(tbase.UnitTestBase):
     def setUp(self):
         super(CertificateDbMixInTestCase, self).setUp()
         self._nm_patcher = mock.patch('neutron.manager.NeutronManager')
-        nm = self._nm_patcher.start()
+        # nm = self._nm_patcher.start()
         # nm.get_service_plugins.return_value = {
         #     nconstants.LOADBALANCERV2: mock.MagicMock()
         # }

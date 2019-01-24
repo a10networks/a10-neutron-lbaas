@@ -27,6 +27,7 @@ GLOBAL_DEFAULTS = {
     "plumbing_hooks_class": a10_neutron_lbaas.plumbing_hooks.PlumbingHooks,
     "nova_api_version": "2.1",
     "vport_defaults": {},
+    "use_parent_project": False
 }
 
 DEVICE_REQUIRED_FIELDS = [

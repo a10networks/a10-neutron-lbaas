@@ -15,8 +15,9 @@
 import mock
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-import fake_objs
-import test_base
+
+from a10_neutron_lbaas.tests.unit.v2 import fake_objs
+from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 
 class TestLB(test_base.HandlerTestBase):
@@ -69,6 +70,46 @@ class TestLB(test_base.HandlerTestBase):
             self.assertFalse(
                 foundVrid,
                 'Expected to find no vrid in {0}'.format(str(calls)))
+
+    def _test_create_template_virtual_server(self, api_ver=None, template_virtual_server=None):
+
+        """
+        Due to how the config is pulled in, we override the config
+        for all of the devices.
+        """
+
+        for k, v in self.a.config.get_devices().items():
+            v['api_version'] = api_ver
+            v['template-virtual-server'] = template_virtual_server
+
+        lb = fake_objs.FakeLoadBalancer()
+        self.a.lb.create(None, lb)
+
+        create = self.a.last_client.slb.virtual_server.create
+        create.assert_has_calls([mock.ANY])
+        calls = create.call_args_list
+
+        if template_virtual_server is not None:
+            self.assertIn("template_virtual_server='%s'" % template_virtual_server, str(calls))
+        if template_virtual_server is None:
+            foundVrid = any(
+                'template_virtual_server' in x.get('axapi_args', {}).get('virtual_server', {})
+                for (_, x) in calls)
+            self.assertFalse(
+                foundVrid,
+                'Expected to find no template-virtual-server in {0}'.format(str(calls)))
+
+    def test_create_template_virtual_server(self):
+        self._test_create_template_virtual_server("2.1", None)
+
+    def test_create_default_vrid_set_v21_with_template(self):
+        self._test_create_template_virtual_server("2.1", "testTemplate")
+
+    def test_create_default_vrid_none_v30_with_template(self):
+        self._test_create_template_virtual_server("3.0", None)
+
+    def test_create_default_vrid_set_v30_with_template(self):
+        self._test_create_template_virtual_server("3.0", "testTemplate")
 
     # There's no code that causes listeners to be added
     # if they are present when the pool is created.

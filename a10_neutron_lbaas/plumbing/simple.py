@@ -17,7 +17,7 @@ import acos_client
 from a10_neutron_lbaas import a10_exceptions as ex
 from a10_neutron_lbaas.db import models
 
-import base
+from a10_neutron_lbaas.plumbing import base
 
 
 
@@ -40,7 +40,7 @@ class PlumbingHooks(base.BasePlumbingHooks):
         if self.devices is None:
             self.devices = self.driver.config.get_devices()
         if self.appliance_hash is None:
-            self.appliance_hash = acos_client.Hash(self.devices.keys())
+            self.appliance_hash = acos_client.Hash(list(self.devices))
 
     def _select_device_hash(self, tenant_id):
         self._late_init()

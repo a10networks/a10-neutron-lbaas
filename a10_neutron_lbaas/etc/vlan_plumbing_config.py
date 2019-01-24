@@ -27,24 +27,13 @@
 # the a10-neutron-lbaas package.
 # Recommended for all new installs.
 
-# use_database = False
+use_database = True
 
 # The SQLAlchemy connection string to use to connect to the database.
 # If None, and use_database is True, the driver will attempt to use
 # the configured neutron database.
 
 # database_connection = None
-
-# Should only be set to true if projects have been created with
-# parent-child relationships within openstack.
-
-# use_parent_project = False
-
-#
-# Used to persist partitions upon deletion of lb objects
-#
-
-# disable_partition_delete = False
 
 # Sometimes we need things from neutron. We will look in the usual places,
 # but this is here if you need to override the location.
@@ -56,29 +45,14 @@
 
 # member_name_use_uuid = False
 
-# For Keystone v2:
-
 # If not None, use this keystone auth URL instead of the one from the
 # neutron.conf file.
 
-# keystone_auth_url = 'http://X.X.X.X/identity'
+# keystone_auth_url = None
 
-#
 # Which version of the keystone protocol to use
-#
 
 # keystone_version = 2
-
-# For Keystone v3:
-
-# If not None, use this keystone auth URL instead of the one from the
-# neutron.conf file.
-
-# keystone_auth_url = 'http://X.X.X.X/identity/v3'
-
-# Which version of the keystone protocol to use
-
-# keystone_version = 3
 
 # Certain functions of this driver can be overridden by passing in an alternate
 # set of plumbing hooks, including scheduling where a tenant's VIPs are going
@@ -103,9 +77,118 @@
 # import a10_neutron_lbaas.plumbing.vthunder_per_vip as hooks
 # plumbing_hooks_class = hooks.VThunderPerVIPPlumbingHooks
 
+import a10_neutron_lbaas.plumbing.portbinding_vlan as hooks
+plumbing_hooks_class = hooks.VlanPortBindingPlumbingHooks
+
 # Nova API version; defaults to '2.1' (hint: use '2' for kilo.)
 
 # nova_api_version = '2.1'
+
+#
+# Main devices dictionary, containing a list of available ACOS devices.
+#
+
+devices = {
+    "ax411p1": {
+        "host": "10.48.1.30",
+        "username": "admin",
+        "password": "a10",
+        "api_version": "3.0",
+        "port": 443,
+    }
+    # A sample ACOS 2.7.2 box
+    # "ax2": {
+    #     "host": "10.10.100.20",
+    #     "conn-limit": 8000000,
+    #     "port": 8443,
+    #     "username": "admin",
+    #     "password": "a10",
+    #     "api_version": "3.1",
+    # },
+    # A sample ACOS 5.0.1 box
+    # "ax4": {
+    #     "host": "10.10.100.20",
+    #     "conn-limit": 8000000,
+    #     "port": 443,
+    #     "username": "admin",
+    #     "password": "a10",
+    #     "api_version": "3.0",
+    # },
+    # The complete list of available options for a device entry, with
+    # their default values.
+    # "axN": {
+    #
+    # Hostname of ACOS device
+    #     "host": <required>,
+    #
+    # Protocol and port number for AxAPI on ACOS device
+    #     "protocol": "https",
+    #     "port": 443,
+    #
+    # Specify the maximum number of concurrent connections allowed on a
+    # real server.
+    #    "conn-limit": 8000000,
+    #
+    # Admin username for ACOS device
+    #     "username": <required>,
+    #
+    # Admin password for ACOS device
+    #     "password": <required>,
+    #
+    # Which version of AxAPI to use; "2.1" for ACOS<3.0, and "3.0" for >=3.0
+    #     "api_version": "2.1",
+    #
+    # status of device; True if online and ready for use
+    #     "status": True,
+    #
+    # Set to true if you want automatic source nat on vports
+    #     "autosnat": False,
+    #
+    # Set to the name of a nat pool to use that pool for source nat on vports
+    # The nat pool must already exist on the ACOS device.
+    #     "source_nat_pool": None,
+    #
+    # Partition method; "LSI" to put all slb's in a single shared partition,
+    # or "ADP" to use a partition per tenant. Partitions are RBA style in
+    # ACOS 2.x, and L3V in ACOS 4.x.
+    #     "v_method": "LSI",
+    #
+    # If using a shared partition (v_method=LSI), then this field configures
+    # which partition to use. By default, it is the main shared partition.
+    #     "shared_partition": "shared",
+    #
+    # For nova based pool/service-group members, setting this to True will
+    # cause the driver to lookup the nova server's floating ip and use that
+    # for communication instead of its neutron port IP address.
+    #     "use_float": False,
+    #
+    # Virtual servers will be created on this VRID. The VRID must already
+    # be configured on the device. Example values: None, 1, 2, ...
+    #     "default_virtual_server_vrid": None,
+    #
+    # Enable IP in IP on vports.
+    #     "ipinip": False,
+    #
+    # Contains a list of hostnames or IP addresses that the driver will run
+    # the 'ha sync' command against whenever a write operation occurs.
+    #     "ha_sync_list": [],
+    #
+    # Enable or disable calling write memory directly after any operation that
+    # changes ACOS's running state. Turning this off also disables all ha sync
+    # operations, regardless of the settings in ha_sync_list.
+    #     "write_memory": True,
+    # },
+}
+
+# vthunder = {
+#     'username': 'admin',
+#     'password': 'a10',
+
+#     'nova_flavor': 'vthunder.small',  # 1 core, 4096MB ram, 12GB disk
+#     'glance_image': None,
+
+#     'vthunder_management_network': 'private-mgmt',
+#     'vthunder_data_networks': [ 'vip-net', 'member-net' ],
 
 # # License the launched instances
 #
@@ -143,4 +226,12 @@
 #         'password': ''
 #     }
 # }
+
 vport_defaults = {}
+vport_binding_level = 0
+
+vlan_interfaces = {
+    "tagged_trunks": [1]
+}
+
+plumb_vlan_dhcp = True

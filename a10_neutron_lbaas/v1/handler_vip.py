@@ -16,11 +16,9 @@ import logging
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
 from a10_neutron_lbaas.acos import openstack_mappings
-
-import acos_client.errors as acos_errors
-import handler_base_v1
-import v1_context as a10
-
+from a10_neutron_lbaas.v1 import handler_base_v1
+from a10_neutron_lbaas.v1 import v1_context as a10
+from acos_client import errors as acos_errors
 
 LOG = logging.getLogger(__name__)
 
@@ -39,6 +37,8 @@ class VipHandler(handler_base_v1.HandlerBaseV1):
             status = c.client.slb.UP
             if not vip['admin_state_up']:
                 status = c.client.slb.DOWN
+            msg = "create_handler _vip and _context_info:", vip, context
+            LOG.error(msg)
 
             pool_name = self._pool_name(context, vip['pool_id'])
 

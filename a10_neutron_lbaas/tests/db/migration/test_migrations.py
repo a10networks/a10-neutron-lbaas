@@ -16,16 +16,20 @@ import copy
 import mock
 import os
 
+from nose.plugins.attrib import attr
+
 import alembic.command as alembic_command
 import alembic.config as alembic_config
 import alembic.op as op
 import sqlalchemy
 
-import a10_neutron_lbaas.db.migration as migration
-import a10_neutron_lbaas.tests.db.session as session
-import test_base
+from a10_neutron_lbaas.db import migration
+
+from a10_neutron_lbaas.tests.db.migration import test_base
+from a10_neutron_lbaas.tests.db import session
 
 
+@attr(db=True)
 class TestMigrations(test_base.UnitTestBase):
 
     def setUp(self):
@@ -123,7 +127,7 @@ class TestMigrations(test_base.UnitTestBase):
                     'nullable': c['nullable'],
                     'default': c['default'],
                     'type': normalize(c['type']),
-                    'name': unicode(c['name'])
+                    'name': str(c['name'])
                 }
                 for c in columns],
                 key=lambda x: x['name'])
@@ -135,17 +139,17 @@ class TestMigrations(test_base.UnitTestBase):
                     'nullable': c.nullable,
                     'default': ddl_compiler.get_column_default_string(c),
                     'type': normalize(c.type),
-                    'name': unicode(c.name)
+                    'name': str(c.name)
                 }
                 for c in mapper.columns
                 if c.table.name == model.__tablename__],
                 key=lambda x: x['name'])
 
             if (actual_columns != expected_columns):
-                print ("The model and installed columns for {0} don't match".
-                       format(model.__tablename__))
-                print ("Model columns    ", [c['name'] for c in expected_columns])
-                print ("Installed columns", [c['name'] for c in actual_columns])
+                print("The model and installed columns for {0} don't match".
+                      format(model.__tablename__))
+                print("Model columns    ", [c['name'] for c in expected_columns])
+                print("Installed columns", [c['name'] for c in actual_columns])
             self.assertEqual(expected_columns, actual_columns)
 
     def test_upgrade_heads_downgrade_base(self):

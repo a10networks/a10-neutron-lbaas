@@ -14,9 +14,9 @@
 # You should really import the models you want directly; this is a placeholder
 # to allow existing code to run, while it's converted.
 
-from a10_device import A10Device
-from a10_device import A10DeviceKey
-from a10_device import A10DeviceValue
+from a10_neutron_lbaas.db.models.a10_device import A10Device
+from a10_neutron_lbaas.db.models.a10_device import A10DeviceKey
+from a10_neutron_lbaas.db.models.a10_device import A10DeviceValue
 
-from a10_slb import A10SLB
-from a10_tenant_binding import A10TenantBinding
+from a10_neutron_lbaas.db.models.a10_slb import A10SLB
+from a10_neutron_lbaas.db.models.a10_tenant_binding import A10TenantBinding

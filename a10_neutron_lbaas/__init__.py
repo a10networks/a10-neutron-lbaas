@@ -15,8 +15,8 @@
 
 # Version foo
 
-from version import VERSION
-from version import VERSION as __version__
+from a10_neutron_lbaas.version import VERSION
+from a10_neutron_lbaas.version import VERSION as __version__
 
 # Make sure the '_' function works, as others need it
 
@@ -36,7 +36,7 @@ except ImportError:
     # Maybe running tests or utilties?
     pass
 else:
-    from a10_openstack_lb import A10OpenstackLBV1
+    from a10_neutron_lbaas.a10_openstack_lb import A10OpenstackLBV1
 
 try:
     import neutron  # noqa
@@ -45,4 +45,4 @@ except ImportError:
     # Maybe running tests or utilties?
     pass
 else:
-    from a10_openstack_lb import A10OpenstackLBV2
+    from a10_neutron_lbaas.a10_openstack_lb import A10OpenstackLBV2

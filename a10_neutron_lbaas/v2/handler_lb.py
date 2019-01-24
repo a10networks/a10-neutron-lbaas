@@ -1,4 +1,4 @@
-# Copyright 2014, Doug Wiegley (dougwig), A10 Networks
+# Copyright 2014 A10 Networks
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -16,8 +16,8 @@ import logging
 
 import acos_client.errors as acos_errors
 
-import handler_base_v2
-import v2_context as a10
+from a10_neutron_lbaas.v2 import handler_base_v2
+from a10_neutron_lbaas.v2 import v2_context as a10
 
 LOG = logging.getLogger(__name__)
 
@@ -35,8 +35,10 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
             set_method(
                 self._meta_name(lb),
                 lb.vip_address,
-                status,
+                arp_disable=c.device_cfg.get('arp_disable'),
+                status=status,
                 vrid=c.device_cfg.get('default_virtual_server_vrid'),
+                template_virtual_server=c.device_cfg.get('template-virtual-server'),
                 config_defaults=self._get_config_defaults(c, os_name),
                 axapi_body=vip_meta)
         except acos_errors.Exists:
@@ -107,7 +109,9 @@ class LoadbalancerHandler(handler_base_v2.HandlerBaseV2):
         }
 
     def create(self, context, lb):
+        LOG.debug('IN CREATE_TEST_V2')
         with a10.A10WriteStatusContext(self, context, lb, action='create') as c:
+            # This is to modify the VIP creation hooks and setup the source nat pool as needed.
             self._create(c, context, lb)
             self.hooks.after_vip_create(c, context, lb)
 

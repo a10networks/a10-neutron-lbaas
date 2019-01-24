@@ -13,7 +13,13 @@
 #    under the License.
 
 import gettext
-_ = gettext.NullTranslations().ugettext
+import sys
+
+if sys.version_info < (3,):
+    _ = gettext.NullTranslations().ugettext
+else:
+    _ = gettext.NullTranslations().gettext
+
 
 from neutron.db import common_db_mixin as common_db_mixin
 

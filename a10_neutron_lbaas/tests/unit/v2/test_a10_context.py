@@ -13,11 +13,12 @@
 #    under the License.
 
 import mock
+import sys
+import types
 
-import a10_neutron_lbaas.v2.v2_context as a10
-
-import fake_objs
-import test_base
+from a10_neutron_lbaas.tests.unit.v2 import fake_objs
+from a10_neutron_lbaas.tests.unit.v2 import test_base
+from a10_neutron_lbaas.v2 import v2_context as a10
 
 
 class FakeException(Exception):
@@ -33,11 +34,39 @@ class TestA10Context(test_base.UnitTestBase):
 
         return mock.Mock(get_admin_context=mock.Mock(return_value=admin_context))
 
+    def _py2_copy(self, func):
+        copy_func = types.FunctionType(func.func_code, func.func_globals,
+                                       name=func.func_name,
+                                       argdefs=func.func_defaults,
+                                       closure=func.func_closure)
+        return copy_func
+
+    def _py3_copy(self, func):
+        copy_func = types.FunctionType(func.__code__,
+                                       func.__globals__,
+                                       name=func.__name__,
+                                       argdefs=func.__defaults__,
+                                       closure=func.__closure__)
+        return copy_func
+
+    def _copy_func(self, func):
+        if sys.version_info[0] == 2:
+            return self._py2_copy(func)
+        else:
+            return self._py3_copy(func)
+
+    def _clean_import(self):
+        a10.a10_context.A10Context.get_partition_key = self.partition_key_save
+
     def setUp(self, **kwargs):
         super(TestA10Context, self).setUp(**kwargs)
         self.handler = self.a.pool
         self.ctx = self._build_openstack_context()
         self.m = fake_objs.FakeLoadBalancer()
+        self.partition_key_save = self._copy_func(a10.a10_context.A10Context.get_partition_key)
+        self.addCleanup(self._clean_import)
+        a10.a10_context.A10Context.get_partition_key = mock.Mock()
+        a10.a10_context.A10Context.partition_key = 'get-off-my-lawn'
 
     def test_context(self):
         with a10.A10Context(self.handler, self.ctx, self.m) as c:
@@ -73,7 +102,6 @@ class TestA10Context(test_base.UnitTestBase):
                 raise FakeException()
         except FakeException:
             self.empty_close_mocks()
-            pass
 
     def test_write_status(self):
         with a10.A10WriteStatusContext(self.handler, self.ctx, self.m) as c:
@@ -91,7 +119,6 @@ class TestA10Context(test_base.UnitTestBase):
         except FakeException:
             self.a.openstack_driver.pool.failed_completion.assert_called_with(
                 self.ctx, self.m)
-            pass
 
     def test_delete(self):
         with a10.A10DeleteContext(self.handler, self.ctx, self.m) as c:
@@ -107,7 +134,6 @@ class TestA10Context(test_base.UnitTestBase):
                 raise FakeException()
         except FakeException:
             self.empty_close_mocks()
-            pass
 
     def test_partition_name(self):
         with a10.A10WriteContext(self.handler, self.ctx, self.m, device_name='axadp-noalt') as c:

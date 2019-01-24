@@ -12,11 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.from neutron.db import model_base
 
+from nose.plugins.attrib import attr
 import sqlalchemy.orm
 
 from a10_neutron_lbaas.tests.db import test_base
 
 
+@attr(db=True)
 class UnitTestBase(test_base.DbTestBase):
 
     def setUp(self):

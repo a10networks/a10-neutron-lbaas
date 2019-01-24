@@ -20,10 +20,10 @@ from a10_neutron_lbaas.acos import openstack_mappings
 from a10_neutron_lbaas import constants
 from a10_neutron_lbaas.neutron_ext.db.certificate_db \
     import A10CertificateDbMixin as A10CertificateDb
-import a10_neutron_lbaas.v2.wrapper_certmgr as certwrapper
-import handler_base_v2
-import handler_persist
-import v2_context as a10
+from a10_neutron_lbaas.v2 import handler_base_v2
+from a10_neutron_lbaas.v2 import handler_persist
+from a10_neutron_lbaas.v2 import v2_context as a10
+from a10_neutron_lbaas.v2 import wrapper_certmgr as certwrapper
 
 
 LOG = logging.getLogger(__name__)
@@ -151,7 +151,31 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         vport_meta = self.meta(listener.loadbalancer, 'vip_port', {})
         template_args.update(**self._get_vport_defaults(c, os_name))
 
+        vport_defaults = self._get_vport_defaults(c, os_name)
+
+        # ADD A CONDITION TO VPORT DEFAULTS TO FIX THIS
+        # EXAMPLE:
+        # "condition": {"field": "protocol", "op": "=", "value": "http"}}
+        if "ha-conn-mirror" in vport_defaults and protocol.lower() not in ("tcp", "udp"):
+            del vport_defaults["ha-conn-mirror"]
+
+        if "ha-conn-mirror" in template_args and protocol.lower() not in ("tcp", "udp"):
+            del template_args["ha-conn-mirror"]
+
+        if "template-http" in vport_defaults and protocol.lower() not in ("http", "https"):
+            del vport_defaults["template-http"]
+
+        if "template-http" in template_args and protocol.lower() not in ("http", "https"):
+            del template_args["template-http"]
+
+        if "no-dest-nat" in vport_defaults and protocol.lower() in ("http", "https"):
+            del vport_defaults["no-dest-nat"]
+
+        if "no-dest-nat" in template_args and protocol.lower() in ("http", "https"):
+            del template_args["no-dest-nat"]
+
         try:
+
             set_method(
                 self.a10_driver.loadbalancer._name(listener.loadbalancer),
                 self._meta_name(listener),
@@ -163,9 +187,12 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
                 status=status,
                 autosnat=c.device_cfg.get('autosnat'),
                 ipinip=c.device_cfg.get('ipinip'),
-                source_nat_pool=c.device_cfg.get('source_nat_pool'),
+                source_nat_pool=c.device_cfg.get('source-nat-pool'),
+                ha_conn_mirror=c.device_cfg.get('ha-conn-mirror'),
+                no_dest_nat=c.device_cfg.get('no-dest-nat'),
+                conn_limit=c.device_cfg.get('conn-limit'),
                 # Device-level defaults
-                vport_defaults=self._get_vport_defaults(c, os_name),
+                vport_defaults=vport_defaults,
                 axapi_body=vport_meta,
                 **template_args)
         except acos_errors.Exists:

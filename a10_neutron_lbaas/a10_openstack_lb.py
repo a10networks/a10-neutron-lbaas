@@ -16,20 +16,19 @@ import logging
 
 import acos_client
 
-import a10_config
-import monkey_patch
-import version
+from a10_neutron_lbaas import a10_config
+from a10_neutron_lbaas import monkey_patch
+from a10_neutron_lbaas import version
 
-import v1.handler_hm
-import v1.handler_member
-import v1.handler_pool
-import v1.handler_vip
-
-import v2.handler_hm
-import v2.handler_lb
-import v2.handler_listener
-import v2.handler_member
-import v2.handler_pool
+from a10_neutron_lbaas.v1 import handler_hm as v1_handler_hm
+from a10_neutron_lbaas.v1 import handler_member as v1_handler_member
+from a10_neutron_lbaas.v1 import handler_pool as v1_handler_pool
+from a10_neutron_lbaas.v1 import handler_vip as v1_handler_vip
+from a10_neutron_lbaas.v2 import handler_hm as v2_handler_hm
+from a10_neutron_lbaas.v2 import handler_lb as v2_handler_lb
+from a10_neutron_lbaas.v2 import handler_listener as v2_handler_listener
+from a10_neutron_lbaas.v2 import handler_member as v2_handler_member
+from a10_neutron_lbaas.v2 import handler_pool as v2_handler_pool
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
@@ -116,7 +115,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def lb(self):
-        return v2.handler_lb.LoadbalancerHandler(
+        return v2_handler_lb.LoadbalancerHandler(
             self,
             self.openstack_driver.load_balancer,
             neutron=self.neutron)
@@ -127,7 +126,7 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def listener(self):
-        return v2.handler_listener.ListenerHandler(
+        return v2_handler_listener.ListenerHandler(
             self,
             self.openstack_driver.listener,
             neutron=self.neutron,
@@ -136,20 +135,20 @@ class A10OpenstackLBV2(A10OpenstackLBBase):
 
     @property
     def pool(self):
-        return v2.handler_pool.PoolHandler(
+        return v2_handler_pool.PoolHandler(
             self, self.openstack_driver.pool,
             neutron=self.neutron)
 
     @property
     def member(self):
-        return v2.handler_member.MemberHandler(
+        return v2_handler_member.MemberHandler(
             self,
             self.openstack_driver.member,
             neutron=self.neutron)
 
     @property
     def hm(self):
-        return v2.handler_hm.HealthMonitorHandler(
+        return v2_handler_hm.HealthMonitorHandler(
             self,
             self.openstack_driver.health_monitor,
             neutron=self.neutron)
@@ -159,16 +158,16 @@ class A10OpenstackLBV1(A10OpenstackLBBase):
 
     @property
     def pool(self):
-        return v1.handler_pool.PoolHandler(self)
+        return v1_handler_pool.PoolHandler(self)
 
     @property
     def vip(self):
-        return v1.handler_vip.VipHandler(self)
+        return v1_handler_vip.VipHandler(self)
 
     @property
     def member(self):
-        return v1.handler_member.MemberHandler(self)
+        return v1_handler_member.MemberHandler(self)
 
     @property
     def hm(self):
-        return v1.handler_hm.HealthMonitorHandler(self)
+        return v1_handler_hm.HealthMonitorHandler(self)

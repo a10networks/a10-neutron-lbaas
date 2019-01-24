@@ -12,12 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from nose.plugins.attrib import attr
+
 import acos_client
 
 from a10_neutron_lbaas.db import models
 import a10_neutron_lbaas.plumbing_hooks as hooks
 
-import test_base
+from a10_neutron_lbaas.tests.db import test_base
 
 dev1 = {'name': 'dev1'}
 dev2 = {'name': 'dev2'}
@@ -39,15 +41,16 @@ devices2 = {
 TENANT_ID = 'xxx'
 
 # This returns dev1 because there is only an entry for dev1 in the list
-EXPECTED_DEV1 = acos_client.Hash(devices1).get_server(TENANT_ID)
+EXPECTED_DEV1 = acos_client.Hash(list(devices1)).get_server(TENANT_ID)
 HARDCODE_RESULT1 = 'dev1'
 # This returns dev2 because we are asking for the node named dev2
 # If you ask for TENANT_ID, you will get back the first key in the hash
 # which is not in an consistent order
-EXPECTED_DEV2 = acos_client.Hash(devices2).get_server('dev2')
+EXPECTED_DEV2 = acos_client.Hash(list(devices2)).get_server(TENANT_ID)
 HARDCODE_RESULT2 = 'dev2'
 
 
+@attr(db=True)
 class TestSelectDevice(test_base.UnitTestBase):
 
     def test_test_setup(self):

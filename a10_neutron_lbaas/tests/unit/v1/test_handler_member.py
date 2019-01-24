@@ -12,8 +12,8 @@
 #    under the License.
 
 import a10_neutron_lbaas.a10_exceptions as a10_ex
-import fake_objs
-import test_base
+from a10_neutron_lbaas.tests.unit.v1 import fake_objs
+from a10_neutron_lbaas.tests.unit.v1 import test_base
 
 
 def return_one(*args):
@@ -65,11 +65,13 @@ class TestMembers(test_base.UnitTestBase):
         if conn_limit < 1 or conn_limit > 8000000:
             self.a.last_client.slb.server.create.assert_called_with(
                 name, ip,
+                '80',
                 status=status,
                 axapi_args={'server': {}})
         else:
             self.a.last_client.slb.server.create.assert_called_with(
                 name, ip,
+                '80',
                 status=status,
                 axapi_args={'server': {'conn-limit': conn_limit}})
         pool_name = self.a.member._pool_name(None, m['pool_id'])

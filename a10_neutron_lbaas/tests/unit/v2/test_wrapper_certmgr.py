@@ -14,8 +14,6 @@
 
 import mock
 
-from neutron_lbaas.common.cert_manager import cert_manager
-
 from a10_neutron_lbaas.tests import test_case
 from a10_neutron_lbaas.v2 import wrapper_certmgr
 
@@ -25,7 +23,7 @@ class TestCertManagerWrapper(test_case.TestCase):
     def setUp(self, **kwargs):
         super(TestCertManagerWrapper, self).setUp(**kwargs)
 
-        certmgr = mock.create_autospec(cert_manager.CertManager)
+        certmgr = mock.Mock()
         self.target = wrapper_certmgr.CertManagerWrapper(certmgr=certmgr)
 
     def test_get_certificate_type_checks(self):

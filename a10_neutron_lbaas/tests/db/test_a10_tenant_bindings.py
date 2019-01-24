@@ -13,14 +13,16 @@
 #    under the License.
 
 import datetime
+from nose.plugins.attrib import attr
 
 from a10_neutron_lbaas.db import models
 
-import test_base
+from a10_neutron_lbaas.tests.db import test_base
 
 dt = datetime.datetime.fromtimestamp(1458346727)
 
 
+@attr(db=True)
 class TestTenantBindings(test_base.UnitTestBase):
 
     def test_model_create(self):

@@ -3,9 +3,9 @@ a10-neutron-lbaas CHANGELOG
 ---------------------------
 
 Unfortunately this document was not born at the same time as a10-neutron-lbaas. Changes tracked from 1.6.5 > onward
-* 1.6.9
+* 1.7.4
 - Move devices dict out of config.py into a DB
-- Pinned a10-openstack-lib dependency to v0.2.1
+- Pinned a10-openstack-lib dependency to v0.2.2
 - Changed name of a10_device_instance module to a10_device as well as classes and functions that contained A10DeviceInstance to A10Device.
 - The preferred service_plugin name used in neutron.conf
   will no longer be: a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin
@@ -15,6 +15,23 @@ Unfortunately this document was not born at the same time as a10-neutron-lbaas. 
 - Moved all ACOS specific options as a list passed to --a10-opts for a10-device-create, a10-device-update, a10-vthunder-create and a10-vthunder-update
 - write_memory defaults to True
 - Storing all a10-opts values in the a10_device_key and a10_device_value neutron database tables
+
+* 1.7.3
+- Pinned acos-client dependency to 1.4.6
+- This ensures duplicate sg-bug fixed in acos-client 1.4.6 is tagged to thise release
+
+* 1.7.2
+- Corrected order of lb 'set' arguments so status/arp-disable don't get wires crossed.
+
+* 1.7.1
+- Pinned acos-client dependency to 1.4.5
+- I missed the ref in setup.py on the last one. :doh:
+
+* 1.7.0
+- Pinned acos-client dependency to v1.4.4
+- Support for utilizing parent project ID for partitioning
+- Support for HPB mechanism
+- Support for creating VE interfaces on LB vlans
 
 * 1.6.8
 - Pinned acos-client dependency to v1.4.3

@@ -14,7 +14,7 @@
 
 import collections
 
-import attributes
+from a10_neutron_lbaas.neutron_ext.common import attributes
 
 import six
 

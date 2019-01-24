@@ -14,9 +14,9 @@
 
 import logging
 
+from a10_neutron_lbaas.v1 import handler_base_v1
+from a10_neutron_lbaas.v1 import v1_context as a10
 import acos_client.errors as acos_errors
-import handler_base_v1
-import v1_context as a10
 
 LOG = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class MemberHandler(handler_base_v1.HandlerBaseV1):
                 else:
                     server_args['conn-limit'] = conn_limit
             server_args = {'server': server_args}
-            c.client.slb.server.create(server_name, server_ip,
+            c.client.slb.server.create(server_name, server_ip, member['protocol_port'],
                                        status=status,
                                        axapi_args=server_args)
         except (acos_errors.Exists, acos_errors.AddressSpecifiedIsInUse):

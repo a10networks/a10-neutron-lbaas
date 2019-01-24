@@ -61,6 +61,12 @@ class BasePlumbingHooks(object):
     def after_member_delete(self, a10_context, os_context, member):
         pass
 
+    def pre_vip_create_v1(self, a10_context, os_context, vip):
+        pass
+
+    def pre_vip_create_v2(self, a10_context, os_context, vip):
+        pass
+
     def after_vip_create(self, a10_context, os_context, vip):
         pass
 
