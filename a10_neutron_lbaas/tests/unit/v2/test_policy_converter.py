@@ -14,8 +14,8 @@
 
 from a10_neutron_lbaas.v2.policy import PolicyUtil
 
-import fake_objs
-import test_base
+from a10_neutron_lbaas.tests.unit.v2 import fake_objs
+from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 
 class TestPolicy(test_base.HandlerTestBase):

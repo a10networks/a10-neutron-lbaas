@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import fake_objs
-import test_base
+from a10_neutron_lbaas.tests.unit.v2 import fake_objs
+from a10_neutron_lbaas.tests.unit.v2 import test_base
 
 
 class TestL7Rule(test_base.HandlerTestBase):
