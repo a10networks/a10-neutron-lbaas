@@ -39,9 +39,10 @@ class L7PolicyHandler(handler_base_v2.HandlerBaseV2):
                           c, context, filename, script, size, action)
                 old_listener = l7policy.listener
                 new_listener = l7policy.listener
-                get_listener = c.client.slb.virtual_server.vport.get
-                (old_listener.loadbalancer_id, old_listener.name, old_listener.protocol,
-                 old_listener.protocol_port)
+                get_listener = c.client.slb.virtual_server.vport.get(old_listener.loadbalancer_id,
+                                                                     old_listener.name,
+                                                                     old_listener.protocol,
+                                                                     old_listener.protocol_port)
 
                 if 'aflex-scripts' in get_listener['port']:
                     aflex_scripts = get_listener['port']['aflex-scripts']
@@ -61,9 +62,10 @@ class L7PolicyHandler(handler_base_v2.HandlerBaseV2):
         try:
             old_listener = l7policy.listener
             new_listener = l7policy.listener
-            get_listener = c.client.slb.virtual_server.vport.get
-            (old_listener.loadbalancer_id, old_listener.name, old_listener.protocol,
-             old_listener.protocol_port)
+            get_listener = c.client.slb.virtual_server.vport.get(old_listener.loadbalancer_id,
+                                                                 old_listener.name,
+                                                                 old_listener.protocol,
+                                                                 old_listener.protocol_port)
             # removing listener attachment
             if 'aflex-scripts' in get_listener['port']:
                 aflex_scripts = get_listener['port']['aflex-scripts']
