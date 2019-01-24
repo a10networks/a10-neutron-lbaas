@@ -12,9 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-
-import a10_neutron_lbaas.a10_exceptions as a10_ex
 import fake_objs
 import test_base
 

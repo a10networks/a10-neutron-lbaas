@@ -12,14 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import re
 TYPE_DICT = {
     "HOST_NAME": "HTTP::host",
     "PATH": "HTTP::uri",
     "FILE_TYPE": "HTTP::uri endswith",
     "HEADER": "HTTP::header",
     "COOKIE": "HTTP::cookie"
-    }
+}
 
 
 COMPARE_TYPE_DICT = {
@@ -28,10 +27,10 @@ COMPARE_TYPE_DICT = {
     "ENDS_WITH": "ends_with",
     "CONTAINS": "contains",
     "EQUAL_TO": "equals"
-    }
+}
 
 
-class PolicyUtil():
+class PolicyUtil(object):
     def __init__(self):
         self.base = """ when HTTP_REQUEST {{ \n
         if {{ {0} }} {{ \n

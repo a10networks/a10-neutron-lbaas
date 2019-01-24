@@ -12,11 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from a10_neutron_lbaas.v2.policy import PolicyUtil
 
 import fake_objs
 import test_base
-from a10_neutron_lbaas.v2.policy import PolicyUtil
 
 
 class TestPolicy(test_base.HandlerTestBase):

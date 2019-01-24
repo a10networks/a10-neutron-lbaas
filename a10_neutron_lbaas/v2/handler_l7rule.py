@@ -17,7 +17,6 @@ import handler_base_v2
 import logging
 import v2_context as a10
 
-from a10_neutron_lbaas.acos import openstack_mappings
 from policy import PolicyUtil
 
 LOG = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ class L7RuleHandler(handler_base_v2.HandlerBaseV2):
         self.create(context, l7rule, **kwargs)
 
     def delete(self, context, l7rule):
-        with a10.A10DeleteContext(self, context, l7rule) as c:
+        with a10.A10DeleteContext(self, context, l7rule):
             policy = l7rule.policy
             rules = l7rule.policy.rules
             for index, rule in enumerate(rules):

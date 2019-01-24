@@ -50,6 +50,7 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         return self._barbican_client
 
     def _set(self, set_method, c, context, listener):
+
         status = c.client.slb.UP
         if not listener.admin_state_up:
             status = c.client.slb.DOWN

@@ -17,7 +17,6 @@ import handler_base_v2
 import logging
 import v2_context as a10
 
-from a10_neutron_lbaas.acos import openstack_mappings
 from policy import PolicyUtil
 
 LOG = logging.getLogger(__name__)
