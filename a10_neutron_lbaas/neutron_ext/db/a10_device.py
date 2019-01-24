@@ -17,12 +17,12 @@ import uuid
 
 from neutron.api.v2 import resource_helper
 from neutron.db import common_db_mixin
+from oslo_db.exceptions import DBDuplicateEntry
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm.exc import NoResultFound
 
 from a10_neutron_lbaas import a10_config
 from a10_neutron_lbaas.db import models
-from a10_neutron_lbaas.etc import defaults
 from a10_neutron_lbaas.neutron_ext.common import attributes
 from a10_neutron_lbaas.neutron_ext.common import constants
 from a10_neutron_lbaas.neutron_ext.common import resources
@@ -36,6 +36,7 @@ LOG = logging.getLogger(__name__)
 
 def _uuid_str():
     return str(uuid.uuid4())
+
 
 def convert_to_boolean(input):
     if input:
@@ -66,8 +67,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             return device_value_object_list
 
     def _rebuild_resources(self, resource_map):
-        my_plurals = resource_helper.build_plural_mappings(
-            {}, resource_map)
+        my_plurals = resource_helper.build_plural_mappings({}, resource_map)
         attributes.PLURALS.update(my_plurals)
         resources = resource_helper.build_resource_info(my_plurals,
                                                         resource_map,
@@ -77,10 +77,13 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
     def _add_device_kv(self, a10_opts, device_id):
         LOG.debug("A10DeviceDbMixin:_add_device_kv() a10_opts=%s" % (a10_opts))
         for key_name, key_value in a10_opts.items():
-            device_value = {'a10_device_value': {'key_id': self._get_a10_device_key_by_name(key_name).id,
-                                                 'value': key_value,
-                                                 'associated_obj_id':
-                                                     device_id}}
+            device_value = {
+                'a10_device_value': {
+                    'key_id': self._get_a10_device_key_by_name(key_name).id,
+                    'value': key_value,
+                    'associated_obj_id': device_id
+                }
+            }
             self.create_a10_device_value(self.context, device_value)
 
     def _make_a10_device_dict(self, a10_device_db, fields=None):
@@ -125,7 +128,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 'allow_post': True,
                 'allow_put': True,
                 'validate': {
-                    'type:' + key_db.data_type : None,
+                    'type:' + key_db.data_type: None,
                 },
                 'is_visible': True,
                 'default': str(key_db.default_value)
@@ -136,7 +139,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 LOG.debug("A10DeviceDbMixin:_make_extra_resource() "
                           "convert %s to bool %s" % (key, value))
             elif 'string' in key_db.data_type:
-                if not value: 
+                if not value:
                     value = None
                     LOG.debug("A10DeviceDbMixin:_make_extra_resource() "
                               "convert key %s empty string to none" % (key))
@@ -176,7 +179,7 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         for opt in self.get_a10_device_key_list():
             LOG.error("A10DeviceDbMixin:validate_a10_opts() found a10_opt: %s in db" % (opt))
             valid_opts.append(opt)
-            valid_opts.append(opt.replace('_','-'))
+            valid_opts.append(opt.replace('_', '-'))
         for opt in opts:
             # If a Key/Value assignment
             if '=' in opt:
@@ -184,12 +187,16 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                 key_db = self._get_a10_device_key_by_name(k)
                 if k in valid_opts:
                     if 'boolean' in key_db.data_type:
-                        LOG.error("A10DeviceDbMixin:validate_a10_opts() a10_opts boolean option: %s can not be assigned a value" % (k))
+                        LOG.error("A10DeviceDbMixin:validate_a10_opts() "
+                                  "a10_opts boolean option: %s can not be "
+                                  "assigned a value" % (k))
                         raise a10Device.A10DeviceKeyNotFoundError(k)
                     else:
                         opts_dict[k.replace('-', '_').strip()] = v.strip()
                 else:
-                    LOG.error("A10DeviceDbMixin:validate_a10_opts() invalid a10_opts option: %s assigned value: %s" % (k, v))
+                    LOG.error("A10DeviceDbMixin:validate_a10_opts() "
+                              "invalid a10_opts option: %s assigned "
+                              "value: %s" % (k, v))
                     raise a10Device.A10DeviceKeyNotFoundError(k)
 
             # Else a Boolean Option or --no-something is being passed
@@ -210,15 +217,17 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
                             false_value = []
                         opts_dict[false_opt.replace('-', '_').strip()] = false_value
                     else:
-                        LOG.error("A10DeviceDbMixin:validate_a10_opts() negative of invalid a10_opts option: %s valid_opts: %s"
-                                  % (false_opt, valid_opts))
+                        LOG.error("A10DeviceDbMixin:validate_a10_opts() "
+                                  "negative of invalid a10_opts option: %s "
+                                  "valid_opts: %s" % (false_opt, valid_opts))
                         raise a10Device.A10DeviceKeyNotFoundError(false_opt)
                 else:
-                    LOG.error("A10DeviceDbMixin:validate_a10_opts() invalid a10_opts boolean option: %s"
-                              % (opt))
+                    LOG.error("A10DeviceDbMixin:validate_a10_opts() invalid "
+                              "a10_opts boolean option: %s" % (opt))
                     raise a10Device.A10DeviceKeyNotFoundError(opt)
 
-        LOG.debug("A10DeviceDbMixin:validate_a10_opts() opts_dict=%s " % (opts_dict))
+        LOG.debug("A10DeviceDbMixin:validate_a10_opts() opts_dict=%s "
+                  % (opts_dict))
         return opts_dict
 
     def a10_device_body_defaults(self, body, tenant_id, device_id):
@@ -228,7 +237,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         Convert a10_opts dict to flat device record ready to insert into db
         '''
 
-        LOG.debug("A10DeviceDbMixin:a10_device_body_defaults() body=%s " % (body))
+        LOG.debug("A10DeviceDbMixin:a10_device_body_defaults() body=%s "
+                  % (body))
         device_record = {'id': device_id,
                          'tenant_id': tenant_id,
                          'name': body.get('name', ''),
@@ -247,8 +257,9 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         keys_db = self.get_a10_device_keys(self.context)
         default_a10_opts = {}
         for key in keys_db:
-            default_a10_opts[key['name']] = a10_opts.get(key['name'],
-                                                      key['default_value'])
+            default_a10_opts[key['name']] = a10_opts.get(
+                key['name'],
+                key['default_value'])
         return default_a10_opts
 
     def create_a10_device(self, context, a10_device, resource='a10_device'):
@@ -260,13 +271,13 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         if not body['name']:
             body['name'] = 'a10-' + device_id
 
-        LOG.debug("A10DeviceDbMixin:create_a10_device() body=%s" %
-                  (body))
+        LOG.debug("A10DeviceDbMixin:create_a10_device() body=%s" % (body))
 
         try:
             validated_a10_opts = self.validate_a10_opts(body.pop('a10_opts', []))
         except a10Device.A10DeviceKeyNotFoundError as e:
-            LOG.error("A10DeviceDbMixin:create_a10_device() Invalid a10_opt Option.  Exception: %s" % (e.message))
+            LOG.error("A10DeviceDbMixin:create_a10_device() Invalid a10_opt "
+                      "Option.  Exception: %s" % (e.message))
             raise
 
         a10_opts = {}
@@ -281,7 +292,9 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
             try:
                 self.context.session.add(device_record)
             except DBDuplicateEntry as e:
-                LOG.error("A10DeviceDbMixin:create_a10_device() a10_device already exists for this tenant id:.  Exception: %s" % (e.message))
+                LOG.error("A10DeviceDbMixin:create_a10_device() a10_device "
+                          "already exists for this tenant id:.  Exception: %s"
+                          % (e.message))
                 raise
 
         self._add_device_kv(a10_opts, device_id)
@@ -350,7 +363,9 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         try:
             return self.context.session.query(models.A10DeviceKey).filter_by(name=key_name).one()
         except Exception as e:
-            LOG.error("A10DeviceDbMixin:_get_a10_device_key_by_name error accessing key name \"%s\", Error: %s" % (key_name, e.message))
+            LOG.error("A10DeviceDbMixin:_get_a10_device_key_by_name error "
+                      "accessing key name \"%s\", Error: %s"
+                      % (key_name, e.message))
             raise a10Device.A10DeviceKeyNotFoundError(key_name)
 
     def _get_a10_device_key(self, key_id):
@@ -394,7 +409,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
     def delete_a10_device_key(self, context, id):
         self.context = context
         with self.context.session.begin(subtransactions=True):
-            LOG.debug("A10DeviceDbMixin:delete_a10_device_key() id={}".format(id))
+            LOG.debug("A10DeviceDbMixin:delete_a10_device_key() "
+                      "id={}".format(id))
             device_key = self._get_a10_device_key(id)
 
             self.context.session.delete(device_key)
@@ -405,19 +421,21 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         return self._make_a10_device_key_dict(device_key, fields)
 
     def get_a10_device_key_list(self, filters=None, fields=None,
-                            sorts=None, limit=None, marker=None,
-                            page_reverse=False):
+                                sorts=None, limit=None, marker=None,
+                                page_reverse=False):
         key_list = []
         for key in self.get_a10_device_keys(self.context, fields="name"):
             key_list.append(key['name'])
-        LOG.debug("A10DeviceDbMixin:get_a10_device_key_list() key_list: %s" % (key_list))
+        LOG.debug("A10DeviceDbMixin:get_a10_device_key_list() "
+                  "key_list: %s" % (key_list))
         return key_list
 
     def get_a10_device_keys(self, context, filters=None, fields=None,
                             sorts=None, limit=None, marker=None,
                             page_reverse=False):
         self.context = context
-        LOG.debug("A10DeviceDbMixin:get_a10_device_keys() filters: %s fields: %s" % (filters, fields))
+        LOG.debug("A10DeviceDbMixin:get_a10_device_keys() "
+                  "filters: %s fields: %s" % (filters, fields))
         return self._get_collection(self.context, models.A10DeviceKey,
                                     self._make_a10_device_key_dict, filters=filters,
                                     fields=fields, sorts=sorts, limit=limit,
@@ -431,7 +449,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
         try:
             return self._get_by_id(self.context, models.A10DeviceValue, value_id)
         except Exception as e:
-            LOG.error("_get_a10_device_value value_id=%s, Error: %s" % (value_id, e))
+            LOG.error("_get_a10_device_value value_id=%s, Error: %s"
+                      % (value_id, e))
             raise a10Device.A10DeviceValueNotFoundError(value_id)
 
     def _make_a10_device_value_dict(self, a10_device_value_db, fields=None):
@@ -484,7 +503,8 @@ class A10DeviceDbMixin(common_db_mixin.CommonDbMixin,
     def delete_a10_device_value(self, context, id):
         self.context = context
         with self.context.session.begin(subtransactions=True):
-            LOG.debug("A10DeviceDbMixin:delete_a10_device_value() id={}".format(id))
+            LOG.debug("A10DeviceDbMixin:delete_a10_device_value() "
+                      "id={}".format(id))
             device_value = self._get_a10_device_value(id)
 
             context.session.delete(device_value)

@@ -20,7 +20,6 @@ from a10_neutron_lbaas.db import models
 from a10_neutron_lbaas.plumbing import base
 
 
-
 # The default set of plumbing hooks/scheduler, meant for hardware or manual orchestration
 
 class PlumbingHooks(base.BasePlumbingHooks):

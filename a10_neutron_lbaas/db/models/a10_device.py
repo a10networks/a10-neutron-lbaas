@@ -66,8 +66,13 @@ class A10DeviceValue(model_base.A10Base, model_base.A10BaseMixin):
 
     __tablename__ = 'a10_device_value'
     __table_args__ = (
-        sa.UniqueConstraint('associated_obj_id', 'tenant_id', 'key_id',
-            name='uix_a10_device_value_key_id'),)
+        sa.UniqueConstraint(
+            'associated_obj_id',
+            'tenant_id',
+            'key_id',
+            name='uix_a10_device_value_key_id'
+        ),
+    )
 
     associated_obj_id = sa.Column(
         sa.String(36), sa.ForeignKey('a10_devices.id'), nullable=False)

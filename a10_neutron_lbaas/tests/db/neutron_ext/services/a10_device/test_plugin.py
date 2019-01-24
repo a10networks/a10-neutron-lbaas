@@ -135,8 +135,6 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
 
         result.pop('extra_resources', None)
         expected = self.vthunder_default_options()
-        #expected.update(
-            #self.plugin.validate_a10_opts(instance.pop('a10_opts', None)))
         expected.pop('a10_opts', None)
         expected.update(
             {
@@ -249,7 +247,7 @@ class TestPlugin(test_a10_device.TestA10DevicePluginBase):
                                                  result['id']))
 
         a10_opts = self.plugin.a10_opts_defaults()
-        #Use _make_extra_resource to convert values to boolean and empty strings to None
+        # Use _make_extra_resource to convert values to boolean and empty strings to None
         for a10_opt in a10_opts.keys():
             (extra_resource, value) = self.plugin._make_extra_resource(a10_opt, a10_opts[a10_opt])
             expected[a10_opt] = value

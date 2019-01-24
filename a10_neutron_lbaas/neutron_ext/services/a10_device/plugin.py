@@ -25,7 +25,6 @@ import a10_neutron_lbaas.vthunder.instance_manager as instance_manager
 from a10_openstack_lib.resources import a10_device as resources
 
 
-
 LOG = logging.getLogger(__name__)
 
 # api, vthunder, instance, and db keys

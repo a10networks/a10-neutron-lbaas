@@ -36,6 +36,7 @@ def a10_models():
     return [model for model in Base._decl_class_registry.values()
             if not isinstance(model, clsregistry._ModuleMarker)]
 
+
 def insert_a10_keys(db_session):
     keys = [
         {'name': 'ipinip', 'default_value': '0', 'data_type': 'boolean'},

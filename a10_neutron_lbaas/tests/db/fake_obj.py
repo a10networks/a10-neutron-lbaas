@@ -75,7 +75,6 @@ class FakeA10DeviceKey(object):
         self.default_value = 'fake-value'
         self.data_type = 'string'
 
-
     def __setitem__(self, key, item):
         self.__dict__[key] = item
 

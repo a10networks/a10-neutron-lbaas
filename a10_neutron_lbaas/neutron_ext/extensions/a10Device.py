@@ -62,7 +62,7 @@ def _item(self, request, id, do_authz=False, field_list=None,
     obj_getter = getattr(self._plugin, action)
     net_obj = obj_getter(request.context, id, **kwargs)
 
-    obj, extra_resources = net_obj if type(net_obj) == type(()) else (net_obj, None)
+    obj, extra_resources = net_obj if isinstance(net_obj, tuple) else (net_obj, None)
 
     if extra_resources:
         for resource in extra_resources:

@@ -84,7 +84,8 @@ class A10OpenstackLBBase(object):
             return self.hooks.select_device_with_lbaas_obj(
                 tenant_id, a10_context=a10_context, lbaas_obj=lbaas_obj, **kwargs)
         else:
-            LOG.debug("A10OpenstackLBBase_select_a10_device: else: use_database=%s",  (self.hooks.driver.config.use_database))
+            LOG.debug("A10OpenstackLBBase_select_a10_device: else: use_database=%s", (
+                self.hooks.driver.config.use_database))
             return self.hooks.select_device(tenant_id, **kwargs)
 
     def _get_a10_client(self, device_info, **kwargs):

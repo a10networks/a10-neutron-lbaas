@@ -140,7 +140,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 
         # Now make sure that we remember where it is.
 
-        #Get rid of this?
+        # Get rid of this?
         models.A10TenantBinding.create_and_save(
             tenant_id=tenant_id,
             device_name=device_config['name'],

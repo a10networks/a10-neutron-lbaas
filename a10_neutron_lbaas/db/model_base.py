@@ -32,6 +32,7 @@ def _uuid_str():
 def _get_date():
     return datetime.datetime.now()
 
+
 def convert_to_boolean(input):
     if input:
         return True

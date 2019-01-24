@@ -147,9 +147,10 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
                                                        result['id']))
 
         a10_opts = self.db_extension.a10_opts_defaults()
-        #Use _make_extra_resource to convert values to boolean and empty strings to None
+        # Use _make_extra_resource to convert values to boolean and empty strings to None
         for a10_opt in a10_opts.keys():
-            (extra_resource, value) = self.db_extension._make_extra_resource(a10_opt, a10_opts[a10_opt])
+            (extra_resource, value) = self.db_extension._make_extra_resource(
+                a10_opt, a10_opts[a10_opt])
             expected[a10_opt] = value
 
         expected.update(
@@ -241,14 +242,14 @@ class TestA10DeviceDbMixin(TestA10DevicePluginBase):
 
         expected = {}
         # Create an a10_opts dict from the request body
-        #expected.update(a10_opts)
         expected.update(self.db_extension.a10_device_body_defaults(
             device.__dict__, context.tenant_id, result['id']))
 
         expected['extra_resources'] = []
         a10_opts = self.db_extension.a10_opts_defaults()
         for a10_opt in a10_opts.keys():
-            (extra_resource, value) = self.db_extension._make_extra_resource(a10_opt, a10_opts[a10_opt])
+            (extra_resource, value) = self.db_extension._make_extra_resource(
+                a10_opt, a10_opts[a10_opt])
             expected[a10_opt] = value
             expected['extra_resources'].append({str(a10_opt): extra_resource})
 
