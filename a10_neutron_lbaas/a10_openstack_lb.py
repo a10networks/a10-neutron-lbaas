@@ -26,11 +26,11 @@ from a10_neutron_lbaas.v1 import handler_pool as v1_handler_pool
 from a10_neutron_lbaas.v1 import handler_vip as v1_handler_vip
 from a10_neutron_lbaas.v2 import handler_hm as v2_handler_hm
 from a10_neutron_lbaas.v2 import handler_lb as v2_handler_lb
+from a10_neutron_lbaas.v2 import handler_l7policy as v2_handler_l7policy
+from a10_neutron_lbaas.v2 import handler_l7rule as v2_handler_l7rule
 from a10_neutron_lbaas.v2 import handler_listener as v2_handler_listener
 from a10_neutron_lbaas.v2 import handler_member as v2_handler_member
 from a10_neutron_lbaas.v2 import handler_pool as v2_handler_pool
-from a10_neutron_lbaas.v2 import handler_l7policy as v2_handler_l7policy
-from a10_neutron_lbaas.v2 import handler_l7rule as v2_handler_l7rule
 
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
