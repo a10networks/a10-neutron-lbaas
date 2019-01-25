@@ -17,7 +17,7 @@ import uuid
 
 from neutron.api.v2 import resource_helper
 from neutron.db import common_db_mixin
-from oslo_db.exceptions import DBDuplicateEntry
+from oslo_db.exception import DBDuplicateEntry
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm.exc import NoResultFound
 
