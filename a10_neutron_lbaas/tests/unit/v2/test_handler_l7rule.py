@@ -55,6 +55,7 @@ class TestL7Rule(test_base.HandlerTestBase):
         rule.policy = policy
         self.a.l7rule.update(None, old_rule, rule)
         sm = str(self.a.last_client.mock_calls)
+
         self.assertTrue('fake-l7policy-id-001' in sm)
         self.assertTrue('slb.aflex_policy.create' in sm)
         self.assertTrue('updatedtestvalue' in sm)
