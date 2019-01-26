@@ -177,3 +177,9 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             vip_subnet_id,
             [vip_ip_address],
             wrong_ips=[instance['host']])
+
+    def after_vip_delete(self, a10_context, os_context, vip):
+        # Clean up Tenant Bindings entry when deleting a VIP / LoadBalancer
+        tenant_binding_instance = models.A10TenantBinding.find_by_tenant_id(
+            vip.tenant_id)
+        models.A10TenantBinding.delete(tenant_binding_instance)

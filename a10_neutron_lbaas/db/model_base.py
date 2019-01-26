@@ -103,9 +103,11 @@ class A10Base(Base):
         for key in kwargs:
             setattr(self, key, kwargs[key])
 
-    def delete(self, db_session=None):
-        db = db_session or inspect(self).session
-        db.delete(self)
+    @classmethod
+    def delete(cls, instance, db_session=None):
+        with db_api.magic_session(db_session) as db:
+            db.delete(instance)
+            db.commit()
 
     created_at = sa.Column(sa.DateTime, default=_get_date, nullable=False)
     updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date, nullable=False)
