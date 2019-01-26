@@ -93,7 +93,8 @@ Networks:
 
 #### Extension configuration
 Open `/etc/neutron/neutron.conf` in your preferred text editor.
-Under the `service_plugins` setting, ensure `a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin` is listed. The `service_plugins` are separated by `,`s.
+Under the `service_plugins` setting, ensure `a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DevicePlugin` is listed. The `service_plugins` are separated by `,`s.
+Note that the A10 Service Plugin name has been changed to `A10DevicePlugin` from `A10DeviceInstancePlugin`.  The original name `a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin` will continue to be supported.
 
 Under the `api_extensions_path` setting, ensure the path to `a10_neutron_lbaas.neutron_ext.extensions` is listed. The `api_extensions_path`s are separated by `:`s. You can find the path of the installed extension by running 
 ```shell
@@ -102,7 +103,12 @@ python -c "import os; import a10_neutron_lbaas.neutron_ext.extensions as m; prin
 
 ## Creating A10 Devices
 
-### A10 Device configuration
+### A10 Device configuration using the config.py config file
+A10 devices and vThunder configurations can now be managed using the neutron cli.  Existing deployments can continue to use the `config.py` config file.  It is also possible to use both the `config.py` file and neutron cli based configurations.
+
+For complete documentation of the a10 config.py file, please refer to the [sample config file](https://github.com/a10networks/a10-neutron-lbaas/blob/master/a10_neutron_lbaas/etc/config.py).
+
+### A10 Device configuration using the neutron cli
 A10 devices are stored in the neutron database and can be created using the neutron cli.
 
 The following command configures an A10 device in the neutron database with a name of `ax1` that can be reached by accessing `10.10.100.20`, using a username of `admin`, a password of `a10`, and AXAPI version `3.0`.  All server load balancers will be configured with `autosnat` enabled, using the `http` protocol and using port `80`.
@@ -168,7 +174,7 @@ Contains a list of hostnames or IP addresses that the driver will run the `ha sy
 
 Enable IP in IP on vports.
 
-##### `source-nat-pool` (default `None`)
+##### `source_nat_pool` (default `None`)
 
 Set to the name of a nat pool to use that pool for source nat on vports the nat pool must already exist on the ACOS device.
 
@@ -188,8 +194,7 @@ Partition method; "LSI" to put all slb's in a single shared partition, or "ADP" 
 
 * LSI (Logical Service Instance) This configuration is realized by multiple tenant VIPs in the shared partition.
 
-* ADP (Application Delivery Partition) This refers to the RBAC partitions on the Advanced Core Operating System
-(ACOS) on any Thunder/AX device.
+* ADP (Application Delivery Partition) This refers to the RBAC partitions on any Thunder/AX device.
 
 ##### `write-memory` (default `True`)
 
@@ -200,7 +205,7 @@ Enable or disable calling write memory directly after any operation that changes
 
 A10's LBaaS driver supports a default scheduling strategy of "one appliance per tenant".  Create vThunder configuarations using the neutron cli.
 
-neutron a10-vthunder-create `nova-flavor` `glance-image` `username` `api-version` `vthunder-management-network` `[vthunder-data-neteworks]` 
+neutron a10-vthunder-create `nove-flavor` `glance-image` `username` `api-version` `vthunder-management-network` `[vthunder-data-neteworks]` 
 ```shell
 neutron a10-vthunder-create acos.min c2722746-0c06-48b1-93c3-a9dbc2f6e628 admin a10 3.0 private vipnet,membernet --a10-opts vthunder-tenant-name=admina,vthunder-tenant-username=admina,vthunder-tenant-password=password
 ```
@@ -268,11 +273,6 @@ Port that the AXAPI is using.
 
 `http` or `https`
 
-### A10 config.py 
-A10 devices and vThunder configurations are now managed using the neutron cli.  All other config options are managed in the `/etc/a10/config.py` config file.
-
-For complete documentation of the a10 config.py file, please refer to the [sample config file](https://github.com/a10networks/a10-neutron-lbaas/blob/master/a10_neutron_lbaas/etc/config.py).
-
 ### Essential device configuration
 
 ##### `host` (required)
@@ -294,7 +294,8 @@ Version of the A10 appliance's AXAPI. `"2.1"` for 2.X series ACOS versions,
 
 
 ### vThunder License Manager Configuration
-The A10 vThunder virtual load balancing appliance has a flexible system for licensing.  Below is a sample configuration for license management (stored in `/etc/a10/config.py`):
+The A10 vThunder virtual load balancing appliance has a flexible system for licensing.  Below is a sample configuration for license management.
+Note that in the current version of a10-neutron-lbaas, this configuration can only be stored in the `config.py` file.
 ```python
 license_manager = {
         "hosts": [
@@ -335,8 +336,7 @@ More details about A10 Licensing can be found at `TODO(Add licensing info url)`.
 
 ## Install database migrations
 
-If 'use_database' is enabled, after installing the package and after any
-upgrades, run:
+After installing the package and after any upgrades, run the following commands to apply the latest database schema to the a10 neutron tables:
 
 ```
 a10-manage upgrade
@@ -350,7 +350,7 @@ Restart neutron after configuration updates in the /etc/a10/config.py file (exac
 service neutron-server restart
 ```
 
-Note: it is no longer necessary to restart neutron when adding, updating or deleting a10-devices or a10-vthunders using the neutron cli.
+Note: it is no longer necessary to restart neutron when adding, updating or deleting a10-devices or a10-vthunders using the neutron cli; but it is necessary to restart when updating the `config.py` file directly.
 
 ## Example architectures
 
