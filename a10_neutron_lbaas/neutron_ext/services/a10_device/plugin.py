@@ -217,6 +217,9 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
                 return ['Table is not there...']
             else:
                 raise
+        except a10Device.A10DeviceKeyNotFoundError as e:
+            LOG.debug("A10DevicePlugin:create_a10_devices() Exception:  %s" % (e.message))
+            return 'Invalid a10_opt option passed'
         except a10Device.A10DeviceNotFoundError as e:
             LOG.debug("A10DevicePlugin:create_a10_devices() Exception:  %s" % (e.message))
             return 'Invalid a10_opt option passed'
