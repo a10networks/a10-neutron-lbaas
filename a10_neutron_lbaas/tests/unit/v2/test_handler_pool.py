@@ -84,6 +84,34 @@ class TestPools(test_base.HandlerTestBase):
                                 cookie_persistence.create.
                                 assert_called_with(pool.id))
 
+    def test_create_with_template(self):
+        template = {
+            "service-group": {
+                "template-server": "sg1",
+                "template-port": "sg1",
+                "template-policy": "sg1"
+            }
+        }
+        exp_template = {
+            "template-server": "sg1",
+            "template-port": "sg1",
+            "template-policy": "sg1"
+        }
+        for k, v in self.a.config.get_devices().items():
+            v['templates'] = template
+
+        pers1 = None
+        pool = fake_objs.FakePool('TCP', 'ROUND_ROBIN', pers1, True)
+
+        self.a.pool.create(None, pool)
+        self.a.last_client.slb.service_group.create.assert_called_with(
+            pool.id,
+            axapi_args={"service_group": {}},
+            lb_method=mock.ANY,
+            config_defaults=mock.ANY,
+            protocol=mock.ANY,
+            service_group_templates=exp_template)
+
     def test_update(self):
         pers1 = None
         pers2 = None
@@ -96,7 +124,38 @@ class TestPools(test_base.HandlerTestBase):
             axapi_args={"service_group": {}},
             lb_method=mock.ANY,
             config_defaults=mock.ANY,
-            protocol=mock.ANY)
+            protocol=mock.ANY,
+            service_group_templates=None)
+
+    def test_update_with_template(self):
+        template = {
+            "service-group": {
+                "template-server": "sg1",
+                "template-port": "sg1",
+                "template-policy": "sg1"
+            }
+        }
+        exp_template = {
+            "template-server": "sg1",
+            "template-port": "sg1",
+            "template-policy": "sg1"
+        }
+        for k, v in self.a.config.get_devices().items():
+            v['templates'] = template
+
+        pers1 = None
+        pers2 = None
+        old_pool = fake_objs.FakePool('TCP', 'LEAST_CONNECTIONS', pers1, True)
+        pool = fake_objs.FakePool('TCP', 'ROUND_ROBIN', pers2, True)
+        self.a.pool.update(None, pool, old_pool)
+
+        self.a.last_client.slb.service_group.update.assert_called_with(
+            pool.id,
+            axapi_args={"service_group": {}},
+            lb_method=mock.ANY,
+            config_defaults=mock.ANY,
+            protocol=mock.ANY,
+            service_group_templates=exp_template)
 
     def test_delete(self):
         members = [[], [fake_objs.FakeMember()]]

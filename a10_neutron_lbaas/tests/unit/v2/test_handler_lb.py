@@ -111,6 +111,57 @@ class TestLB(test_base.HandlerTestBase):
     def test_create_default_vrid_set_v30_with_template(self):
         self._test_create_template_virtual_server("3.0", "testTemplate")
 
+    def _test_create_virtual_server_templates(self, api_ver="3.0",
+                                              virtual_server_templates=None, update=False):
+        for k, v in self.a.config.get_devices().items():
+            v['api_version'] = api_ver
+            v['templates'] = virtual_server_templates
+
+        lb = fake_objs.FakeLoadBalancer()
+        if update:
+            self.a.lb.update(None, lb, lb)
+            create = self.a.last_client.slb.virtual_server.update
+        else:
+            self.a.lb.create(None, lb)
+            create = self.a.last_client.slb.virtual_server.create
+        create.assert_has_calls([mock.ANY])
+        calls = create.call_args_list
+        if virtual_server_templates is not None:
+            self.assertIn('test-template-virtual-server', str(calls))
+            self.assertIn('test-template-logging', str(calls))
+            self.assertIn('test-policy', str(calls))
+        if virtual_server_templates is None:
+            foundVrid = any(
+                'virtual_server_templates' in x.get('axapi_args', {}).get('virtual_server', {})
+                for (_, x) in calls)
+            self.assertFalse(
+                foundVrid,
+                'Expected to find no virtual_server_templates in {0}'.format(str(calls)))
+
+    def test_create_with_template_virtual_server(self):
+        template = {
+            "virtual-server": {
+                "template-virtual-server": "test-template-virtual-server",
+                "template-logging": "test-template-logging",
+                "template-policy": "test-policy",
+                "template-scaleout": "test-scaleout",
+            }
+        }
+        self._test_create_virtual_server_templates("3.0", virtual_server_templates=template)
+
+    def test_update_with_template_virtual_server(self):
+        template = {
+            "virtual-server": {
+                "template-virtual-server": "test-template-virtual-server",
+                "template-logging": "test-template-logging",
+                "template-policy": "test-policy",
+                "template-scaleout": "test-scaleout",
+            }
+        }
+        self._test_create_virtual_server_templates("3.0",
+                                                   virtual_server_templates=template,
+                                                   update=True)
+
     # There's no code that causes listeners to be added
     # if they are present when the pool is created.
     # We'd use unittest.skip if it worked with cursed 2.6

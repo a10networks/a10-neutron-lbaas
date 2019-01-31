@@ -65,19 +65,26 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
                                 "bounds with value {0}. Please set to between " +
                                 "1-8000000. Defaulting to 8000000".format(conn_limit))
                 else:
-                    server_args['conn_limit'] = conn_limit
+                    server_args['conn-limit'] = conn_limit
 
             if conn_resume is not None:
                 if conn_resume < 1 or conn_resume > 1000000:
                     LOG.warning("The specified conn_resume value is invalid. \
                     The value should be either 0 or 1")
                 else:
-                    server_args['conn_resume'] = conn_resume
+                    server_args['conn-resume'] = conn_resume
 
             server_args = {'server': server_args}
 
+            conf_templates = c.device_cfg.get('templates')
+            if conf_templates:
+                server_templates = conf_templates.get("server", None)
+            else:
+                server_templates = None
+
             c.client.slb.server.create(server_name, server_ip,
                                        status=status,
+                                       server_templates=server_templates,
                                        config_defaults=self._get_config_defaults(c, os_name),
                                        axapi_args=server_args)
 
