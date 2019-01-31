@@ -174,7 +174,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
         if "no-dest-nat" in template_args and protocol.lower() in ("http", "https"):
             del template_args["no-dest-nat"]
 
-
         if hasattr(listener, 'aflex'):
             template_args["aflex-scripts"] = listener.aflex
 
