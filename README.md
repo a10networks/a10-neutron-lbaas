@@ -154,6 +154,10 @@ Prefix `no-` to options with assigned values to null out the value in the databa
 
 Note: When updating options, it will be necessary to recreate existing Load Balancers and VIPs for the config options to be passed to the A10 device or vThunder. 
 
+##### `arp-disable` (default `False`)
+
+Disable ARP replies from a virtual server.
+
 ##### `autosnat` (default `False`)
 
 Source address translation is configured on the VIP.
@@ -162,11 +166,21 @@ Source address translation is configured on the VIP.
 
 Specify the maximum number of concurrent connections allowed on a real server.
 
+##### `conn-resume` (default `0`)
+
+Specify the maximum number of connections the server can have before the ACOS device resumes use of the server. Use does not resume until the nummber of connections reaches the configured maximum or less.
+
+Specify the maximum number of concurrent connections allowed on a real server.
+
 ##### `default-virtual-server-vrid` (default `None`)
 
 Virtual servers will be created on this VRID. The VRID must already be configured on the device. Example values: None, 1, 2, ...
 
-##### `ha-sync-list` (defalut `False`)
+##### `ha-conn-mirror` (default `False`)
+
+Enable connection mirroring (session synchronization) for the virtual port.
+
+##### `ha-sync-list` (default `False`)
 
 Contains a list of hostnames or IP addresses that the driver will run the `ha sync` command against whenever a write operation occurs.
 
@@ -174,13 +188,33 @@ Contains a list of hostnames or IP addresses that the driver will run the `ha sy
 
 Enable IP in IP on vports.
 
-##### `source_nat_pool` (default `None`)
+##### `member-expressions` (default `{}`)
 
-Set to the name of a nat pool to use that pool for source nat on vports the nat pool must already exist on the ACOS device.
+JSON structure of config options which are applied if the member server's name matches the regex.
+
+##### `no-dest-nat` (default `False`)
+
+Disable destination NAT.
+
+##### `plumb-vlan-dhcp` (default `False`)
+
+Configure the VE Interface to use DHCP
+
+##### `service-group-expressions` (default `{}`)
+
+JSON structure of config options which are applied if the service group's name matches the regex.
 
 ##### `shared-partition` (default `shared`)
 
 If using a shared partition (v_method=LSI), then this field configures which partition to use. By default, it is the main shared partition.
+
+##### `source-nat-pool` (default `None`)
+
+Set to the name of a nat pool to use that pool for source nat on vports the nat pool must already exist on the ACOS device.
+
+##### `template-virtual-server` (default `{}`)
+
+Apply the specified JSON virtual server template to all newly defined virtual servers.
 
 ##### `use-float` (default `False`)
 
@@ -195,6 +229,26 @@ Partition method; "LSI" to put all slb's in a single shared partition, or "ADP" 
 * LSI (Logical Service Instance) This configuration is realized by multiple tenant VIPs in the shared partition.
 
 * ADP (Application Delivery Partition) This refers to the RBAC partitions on any Thunder/AX device.
+
+##### `virtual-server-expressions` (default `{}`)
+
+JSON structure of config options which are applied if the virtual server's name matches the regex.
+
+##### `vlan-binding-level` (default `0`)
+
+Hierarchical Port Binding Level that the VLAN will exist in.
+
+##### `vlan-interfaces` (default `{}`)
+
+Interfaces the VLAN will be bound to.
+
+##### `vport-defaults` (default `{}`)
+
+JSON structure of config options which are applied as default values to all vports.
+
+##### `vport-expressions` (default `{}`)
+
+JSON structure of config options which are applied if the vport's name matches the regex.
 
 ##### `write-memory` (default `True`)
 
