@@ -214,15 +214,17 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
                 LOG.debug("A10DevicePlugin:create_a10_devices() Handling ",
                           "\"Table Doesn't Exist\" ProgrammingError ",
                           "Exception:  %s" % (e.message))
-                return ['Table is not there...']
+                return {'error': 'Table Doesn\'t Exist. Run a10-manage upgrade'}
             else:
                 raise
         except a10Device.A10DeviceKeyNotFoundError as e:
-            LOG.debug("A10DevicePlugin:create_a10_devices() Exception:  %s" % (e.message))
-            return 'Invalid a10_opt option passed'
+            LOG.debug("A10DevicePlugin:create_a10_devices() Invalid a10_opt "
+                      "option passed.  Exception:  %s" % (e.message))
+            return {'error': 'Invalid a10_opt option passed'}
         except a10Device.A10DeviceNotFoundError as e:
-            LOG.debug("A10DevicePlugin:create_a10_devices() Exception:  %s" % (e.message))
-            return 'Invalid a10_opt option passed'
+            LOG.debug("A10DevicePlugin:create_a10_devices() Invalid a10_opt "
+                      "option passed.  Exception:  %s" % (e.message))
+            return {'error': 'Invalid a10_opt option passed'}
 
     def get_a10_device(self, context, id, fields=None):
         LOG.debug("A10DevicePlugin.get_a10_device(): id=%s, fields=%s" %
@@ -247,8 +249,17 @@ class A10DevicePlugin(a10_device.A10DeviceDbMixin):
             id,
             a10_device)
 
-        return super(A10DevicePlugin, self).update_a10_device(
-            context, id, a10_device)
+        try:
+            return super(A10DevicePlugin, self).update_a10_device(
+                context, id, a10_device)
+        except a10Device.A10DeviceKeyNotFoundError as e:
+            LOG.debug("A10DevicePlugin:update_a10_devices() Invalid a10_opt "
+                      "option passed.  Exception:  %s" % (e.message))
+            return {'error': 'Invalid a10_opt option passed'}
+        except a10Device.A10DeviceNotFoundError as e:
+            LOG.debug("A10DevicePlugin:update_a10_devices() Invalid a10_opt "
+                      "option passed.  Exception:  %s" % (e.message))
+            return {'error': 'Invalid a10_opt option passed'}
 
     def delete_a10_device(self, context, id):
         LOG.debug("A10DevicePlugin.a10_device_delete(): id=%s", id)
