@@ -61,42 +61,151 @@ def upgrade():
         sasql.column('default_value', sa.String))
     dt = str(datetime.now())
     keys = [
-        {'id': str(uuid.uuid4()), 'name': 'shared_partition',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
+        {'name': 'arp_disable', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': 'Disable ARP replies from a virtual server.',
+         'default_value': '0', 'data_type': 'boolean'},
+        {'name': 'autosnat', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': 'Source address translation is configured on the VIP.',
+         'default_value': '0', 'data_type': 'boolean'},
+        {'name': 'conn_limit', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Specify the maximum number of concurrent connections '
+                         'allowed on a real server.'),
+         'default_value': '8000000', 'data_type': 'integer'},
+        {'name': 'conn_resume', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Specify the maximum number of connections the '
+                         'server can have before the ACOS device resumes use '
+                         'of the server. Use does not resume until the '
+                         'nummber of connections reaches the configured '
+                         'maximum or less.'),
+         'default_value': '0', 'data_type': 'integer'},
+        {'name': 'default_virtual_server_vrid', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Virtual servers will be created on this VRID. The '
+                         'VRID must already be configured on the device.'),
+         'default_value': '', 'data_type': 'string'},
+        {'name': 'ha_conn_mirror', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Enable connection mirroring (session '
+                         'synchronization) for the virtual port.'),
+         'default_value': '0', 'data_type': 'boolean'},
+        {'name': 'ha_sync_list', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Contains a list of hostnames or IP addresses that '
+                         'the driver will run the `ha sync` command against '
+                         'whenever a write operation occurs.'),
+         'default_value': '[]', 'data_type': 'literal'},
+        {'name': 'ipinip', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Enables IP-in-IP tunneling. This option is available '
+                         'only on the following port types: TCP, UDP, RSTP, '
+                         'FTP, MMS, SIP, TFTP and Radius.'),
+         'default_value': '0', 'data_type': 'boolean'},
+        {'name': 'member_expressions', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('JSON structure of config options which are applied '
+                         'if the member server\'s name matches the regex.'),
+         'default_value': '{}', 'data_type': 'literal'},
+        {'name': 'no_dest_nat', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': 'Disable destination NAT.',
+         'default_value': '0', 'data_type': 'boolean'},
+        {'name': 'plumb_vlan_dhcp', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': 'Configure the VE Interface to use DHCP',
+         'default_value': '0', 'data_type': 'boolean'},
+        {'name': 'service_group_expressions', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('JSON structure of config options which are applied '
+                         'if the service group\'s name matches the regex.'),
+         'default_value': '{}', 'data_type': 'literal'},
+        {'name': 'shared_partition', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('If using a shared partition (v_method=LSI), then '
+                         'this field configures which partition to use. By '
+                         'default, it is the main shared partition.'),
          'default_value': 'shared', 'data_type': 'string'},
-        {'id': str(uuid.uuid4()), 'name': 'v_method',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
+        {'name': 'source_nat_pool', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Set to the name of a nat pool to use that pool for '
+                         'source nat on vports the nat pool must already exist '
+                         'on the ACOS device.'),
+         'default_value': '', 'data_type': 'string'},
+        {'name': 'template_virtual_server', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Apply the defined virtual server template to all '
+                         'newly defined virtual servers.'),
+         'default_value': '{}', 'data_type': 'literal'},
+        {'name': 'use_float', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Utilize the floating address of the member and not '
+                         'the actual interface ip.'),
+         'default_value': '0', 'data_type': 'boolean'},
+        {'name': 'v_method', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Partition method; "LSI" to put all slb\'s in a '
+                         'single shared partition, or "ADP" to use a partition '
+                         'per tenant. Partitions are RBA style in ACOS 2.x, '
+                         'and L3V in ACOS 4.x.'),
          'default_value': 'LSI', 'data_type': 'string'},
-        {'id': str(uuid.uuid4()), 'name': 'write_memory',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
-         'default_value': '1', 'data_type': 'boolean'},
-        {'id': str(uuid.uuid4()), 'name': 'source_nat_pool',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
-         'default_value': '', 'data_type': 'string'},
-        {'id': str(uuid.uuid4()), 'name': 'autosnat',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
-         'default_value': '0', 'data_type': 'boolean'},
-        {'id': str(uuid.uuid4()), 'name': 'ipinip',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
-         'default_value': '0', 'data_type': 'boolean'},
-        {'id': str(uuid.uuid4()), 'name': 'use_float',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
-         'default_value': '0', 'data_type': 'boolean'},
-        {'id': str(uuid.uuid4()), 'name': 'default_virtual_server_vrid',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
-         'default_value': '', 'data_type': 'string'},
-        {'id': str(uuid.uuid4()), 'name': 'conn_limit',
-         'created_at': op.inline_literal(dt), 'updated_at': op.inline_literal(dt),
-         'description': '',
-         'default_value': '8000000', 'data_type': 'string'}]
+        {'name': 'virtual_server_expressions', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('JSON structure of config options which are applied '
+                         'if the virtual server\'s name matches the regex.'),
+         'default_value': '{}', 'data_type': 'literal'},
+        {'name': 'vlan_binding_level', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Hierarchical Port Binding Level that the VLAN will ',
+                         'exist in.'),
+         'default_value': '0', 'data_type': 'integer'},
+        {'name': 'vlan_interfaces', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': 'Interfaces the VLAN will be bound to.',
+         'default_value': '{}', 'data_type': 'literal'},
+        {'name': 'vport_defaults', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('JSON structure of config options which are applied '
+                         'as default values to all vports.'),
+         'default_value': '{}', 'data_type': 'literal'},
+        {'name': 'vport_expressions', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('JSON structure of config options which are applied '
+                         'if the vport\'s name matches the regex.'),
+         'default_value': '{}', 'data_type': 'literal'},
+        {'name': 'write_memory', 'id': str(uuid.uuid4()),
+         'created_at': op.inline_literal(dt),
+         'updated_at': op.inline_literal(dt),
+         'description': ('Enable or disable calling write memory directly '
+                         'after any operation that changes ACOS\'s running '
+                         'state. Turning this off also disables all ha sync '
+                         'operations, regardless of the settings in '
+                         'ha-sync-list.'),
+         'default_value': '1', 'data_type': 'boolean'}]
     op.bulk_insert(key_table, keys, multiinsert=False)
 
 

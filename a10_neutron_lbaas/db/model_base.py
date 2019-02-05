@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ast
 from contextlib import contextmanager
 import datetime
 import uuid
@@ -122,20 +123,22 @@ class A10DeviceBase(A10Base):
         Takes a list of <a10_neutron_lbaas.db.models.a10_device.A10DeviceValue>
         objects and returns a dict with key value mappings of the a10_opt key
         name to a10_opt value.
-        Modifies the valeu based on the data_type of the key
+        Modifies the value based on the data_type of the key
         '''
 
         a10_opts_dict = {}
         for a10_opt in a10_opts:
             if 'boolean' in a10_opt.associated_key.data_type:
-                value = convert_to_boolean(int(a10_opt.value))
-                a10_opts_dict[a10_opt.associated_key.name] = value
+                a10_opts_dict[a10_opt.associated_key.name] = convert_to_boolean(
+                    int(a10_opt.value))
             elif 'integer' in a10_opt.associated_key.data_type:
-                value = int(a10_opt.value)
-                a10_opts_dict[a10_opt.associated_key.name] = value
+                a10_opts_dict[a10_opt.associated_key.name] = int(a10_opt.value)
             elif 'list' in a10_opt.associated_key.data_type:
-                value = a10_opt.value.split(',')
-                a10_opts_dict[a10_opt.associated_key.name] = value
+                a10_opts_dict[a10_opt.associated_key.name] = a10_opt.value.split(
+                    ',')
+            elif 'literal' in a10_opt.associated_key.data_type:
+                a10_opts_dict[a10_opt.associated_key.name] = ast.literal_eval(
+                    a10_opt.value)
             else:
                 a10_opts_dict[a10_opt.associated_key.name] = a10_opt.value
         return a10_opts_dict
