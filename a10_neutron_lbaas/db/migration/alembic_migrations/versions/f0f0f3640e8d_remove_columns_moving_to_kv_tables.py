@@ -177,7 +177,7 @@ def upgrade():
         {'name': 'vlan_binding_level', 'id': str(uuid.uuid4()),
          'created_at': op.inline_literal(dt),
          'updated_at': op.inline_literal(dt),
-         'description': ('Hierarchical Port Binding Level that the VLAN will ',
+         'description': ('Hierarchical Port Binding Level that the VLAN will '
                          'exist in.'),
          'default_value': '0', 'data_type': 'integer'},
         {'name': 'vlan_interfaces', 'id': str(uuid.uuid4()),
