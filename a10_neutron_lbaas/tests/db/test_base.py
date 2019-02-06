@@ -69,4 +69,13 @@ class UnitTestBase(DbTestBase):
             raise e
 
         Session = sessionmaker(bind=self.connection)
+
+        try:
+            db_session = Session()
+            session.insert_a10_keys(db_session)
+        except Exception as e:
+            # tearDown doesn't run if setUp throws an exception!
+            self.tearDownDb()
+            raise e
+
         self.open_session = Session

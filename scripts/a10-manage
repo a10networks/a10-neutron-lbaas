@@ -20,13 +20,6 @@ if [ $? -ne 0 ]; then
 fi
 ao=$(python -c 'import a10_openstack; print(a10_openstack.__path__[0])' 2>/dev/null)
 
-if [ ! -d /etc/a10 ]; then
-    echo "error: no /etc/a10 directory; please add a config file. Suggest running the following command and modifying for your site:"
-    echo "  sudo mkdir /etc/a10"
-    echo "  sudo cp $d/etc/config.py /etc/a10"
-    exit 1
-fi
-
 config_dir_setup() {
     if [ ! -d /etc/a10 ]; then
         echo "Creating /etc/a10 directory"
@@ -43,7 +36,7 @@ if [ -n "$ao" ]; then
     ae="${ae}:${ao}/neutron_ext/extensions"
 fi
 
-sp="a10_neutron_lbaas.neutron_ext.services.a10_device_instance.plugin.A10DeviceInstancePlugin"
+sp="a10_neutron_lbaas.neutron_ext.services.a10_device.plugin.A10DevicePlugin"
 if [ -n "$ao" ]; then
     sp="${sp},a10_openstack.neutron_ext.services.a10_scaling_group.plugin.A10ScalingGroupPlugin"
 fi
@@ -122,24 +115,24 @@ EOF
 elif [ "$1" = "vthunder-info" ]; then
     cat - <<EOF
 `boilerplate $2 $3 $4`
-print(im._device_instance(cfg.get_vthunder_config()))
+print(im._device_vthunder(cfg.get_vthunder_config()))
 EOF
 
     python <<EOF
 `boilerplate $2 $3 $4`
-print(im._device_instance(cfg.get_vthunder_config()))
+print(im._device_vthunder(cfg.get_vthunder_config()))
 EOF
 
 elif [ "$1" = "vthunder-boot" ]; then
     python <<EOF
 `boilerplate $2 $3 $4`
-print(im.create_device_instance(cfg.get_vthunder_config()))
+print(im.create_vthunder(cfg.get_vthunder_config()))
 EOF
 
 elif [ "$1" = "vthunder-destroy" ]; then
     python <<EOF
 $boilerplate
-print(im.delete_instance("$5"))
+print(im.delete_vthunder("$5"))
 EOF
 
 fi

@@ -117,15 +117,17 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             'add it back to config or migrate loadbalancers' % tenant_id
         )
 
-        tb = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
+        tb = models.A10Devices.find_by_attribute(
+            'tenant_id', tenant_id, db_session=db_session)
         if tb is not None:
-            d = self.driver.config.get_device(tb.device_name, db_session=db_session)
-            if d is None:
+            device = self.driver.config.get_device(
+                device_id=tb.id, db_session=db_session)
+            if device is None:
                 LOG.error(missing_instance)
                 raise ex.InstanceMissing(missing_instance)
 
-            LOG.debug("select_device, returning cached instance %s", d)
-            return d
+            LOG.debug("select_device, returning cached instance %s", device)
+            return device
 
         # No? Then we need to create one.
 
@@ -138,6 +140,7 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
 
         # Now make sure that we remember where it is.
 
+        # Get rid of this?
         models.A10TenantBinding.create_and_save(
             tenant_id=tenant_id,
             device_name=device_config['name'],
@@ -174,3 +177,9 @@ class VThunderPerTenantPlumbingHooks(base.BasePlumbingHooks):
             vip_subnet_id,
             [vip_ip_address],
             wrong_ips=[instance['host']])
+
+    def after_vip_delete(self, a10_context, os_context, vip):
+        # Clean up Tenant Bindings entry when deleting a VIP / LoadBalancer
+        tenant_binding_instance = models.A10TenantBinding.find_by_tenant_id(
+            vip.tenant_id)
+        models.A10TenantBinding.delete(tenant_binding_instance)

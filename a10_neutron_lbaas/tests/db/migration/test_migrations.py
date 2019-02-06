@@ -80,6 +80,7 @@ class TestMigrations(test_base.UnitTestBase):
         self.upgrade('heads')
 
     def test_install_schema_matches_model_schema(self):
+        self.maxDiff = None
         self.upgrade('heads')
 
         a10_models = session.a10_models()

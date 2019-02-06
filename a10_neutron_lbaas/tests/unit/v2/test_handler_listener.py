@@ -379,6 +379,7 @@ class TestListeners(test_base.HandlerTestBase):
         bindings = [binding]
         get_bindings_mock = mock.Mock(return_value=bindings)
         self.a.listener.cert_db.get_bindings_for_listener = get_bindings_mock
+        self.a.config.use_database = False
         self.a.listener.delete(None, m)
         expected = self.a.listener.cert_db.delete_a10_certificate_binding.call_count
         self.assertEqual(expected, 0)

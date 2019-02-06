@@ -51,7 +51,7 @@ class PlumbingHooks(base.BasePlumbingHooks):
     def _select_device_db(self, tenant_id, db_session=None):
         self._late_init()
 
-        # See if we have a saved tenant
+        # Check if the tenant_id is associated with an a10_tenant_binding db entry
         a10 = models.A10TenantBinding.find_by_tenant_id(tenant_id, db_session=db_session)
         if a10 is not None:
             if a10.device_name in self.devices:
@@ -59,10 +59,10 @@ class PlumbingHooks(base.BasePlumbingHooks):
             else:
                 raise ex.DeviceConfigMissing(
                     'A10 device %s mapped to tenant %s is not present in config; '
-                    'add it back to config or migrate loadbalancers' %
-                    (a10.device_name, tenant_id))
+                    'add it back to config or migrate loadbalancers self.devices: %s' %
+                    (a10.device_name, tenant_id, self.devices))
 
-        # Nope, so we hash and save
+        # Nope, so we hash and save an entry in the a10_tenant_binding table
         d = self._select_device_hash(tenant_id)
         models.A10TenantBinding.create_and_save(
             tenant_id=tenant_id, device_name=d['name'],
@@ -71,7 +71,13 @@ class PlumbingHooks(base.BasePlumbingHooks):
         return d
 
     def select_device(self, tenant_id, **kwargs):
-        if self.driver.config.get('use_database'):
+        if self.driver.config.use_database:
             return self._select_device_db(tenant_id)
         else:
             return self._select_device_hash(tenant_id)
+
+    def after_vip_delete(self, a10_context, os_context, vip):
+        # Clean up Tenant Bindings entry when deleting a VIP / LoadBalancer
+        tenant_binding_instance = models.A10TenantBinding.find_by_tenant_id(
+            vip.tenant_id)
+        models.A10TenantBinding.delete(tenant_binding_instance)

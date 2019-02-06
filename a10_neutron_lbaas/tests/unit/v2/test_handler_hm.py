@@ -26,7 +26,7 @@ class TestHM(test_base.HandlerTestBase):
         self.a.last_client.slb.hm.create.assert_called_with(
             'fake-hm-id-001', mon_type, 7, 7, 8,
             method=method, url=url, expect_code=expect_code,
-            config_defaults=mock.ANY, port=port, axapi_args={},
+            config_defaults=mock.ANY, axapi_args={}, port=mock.ANY
         )
 
     def assert_create_sets_delay_timeout(self, model, mon_type, method, url, expect_code):
@@ -77,8 +77,8 @@ class TestHM(test_base.HandlerTestBase):
             None, m)
         self.a.last_client.slb.hm.update.assert_called_with(
             'fake-hm-id-001', self.a.last_client.slb.hm.TCP, 20, 7, 8,
-            method=None, url=None, expect_code=None, port=None,
-            config_defaults=mock.ANY, axapi_args={})
+            method=None, url=None, expect_code=None, config_defaults=mock.ANY,
+            axapi_args={}, port=mock.ANY)
 
     def test_update_tcp_add_pool(self):
         m = fake_objs.FakeHM('TCP', pool=mock.MagicMock())

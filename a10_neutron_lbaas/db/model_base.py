@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ast
 from contextlib import contextmanager
 import datetime
 import uuid
@@ -18,6 +19,9 @@ import sqlalchemy as sa
 from sqlalchemy.inspection import inspect
 
 from a10_neutron_lbaas.db import api as db_api
+import logging
+LOG = logging.getLogger(__name__)
+
 
 Base = db_api.get_base()
 
@@ -28,6 +32,13 @@ def _uuid_str():
 
 def _get_date():
     return datetime.datetime.now()
+
+
+def convert_to_boolean(input):
+    if input:
+        return True
+    else:
+        return False
 
 
 class A10Base(Base):
@@ -93,12 +104,62 @@ class A10Base(Base):
         for key in kwargs:
             setattr(self, key, kwargs[key])
 
-    def delete(self, db_session=None):
-        db = db_session or inspect(self).session
-        db.delete(self)
+    @classmethod
+    def delete(cls, instance, db_session=None):
+        with db_api.magic_session(db_session) as db:
+            db.delete(instance)
+            db.commit()
 
     created_at = sa.Column(sa.DateTime, default=_get_date, nullable=False)
     updated_at = sa.Column(sa.DateTime, default=_get_date, onupdate=_get_date, nullable=False)
+
+
+class A10DeviceBase(A10Base):
+    __abstract__ = True
+
+    @classmethod
+    def _get_a10_opts(cls, a10_opts):
+        '''
+        Takes a list of <a10_neutron_lbaas.db.models.a10_device.A10DeviceValue>
+        objects and returns a dict with key value mappings of the a10_opt key
+        name to a10_opt value.
+        Modifies the value based on the data_type of the key
+        '''
+
+        a10_opts_dict = {}
+        for a10_opt in a10_opts:
+            if 'boolean' in a10_opt.associated_key.data_type:
+                a10_opts_dict[a10_opt.associated_key.name] = convert_to_boolean(
+                    int(a10_opt.value))
+            elif 'integer' in a10_opt.associated_key.data_type:
+                a10_opts_dict[a10_opt.associated_key.name] = int(a10_opt.value)
+            elif 'list' in a10_opt.associated_key.data_type:
+                a10_opts_dict[a10_opt.associated_key.name] = a10_opt.value.split(
+                    ',')
+            elif 'literal' in a10_opt.associated_key.data_type:
+                a10_opts_dict[a10_opt.associated_key.name] = ast.literal_eval(
+                    a10_opt.value)
+            else:
+                a10_opts_dict[a10_opt.associated_key.name] = a10_opt.value
+        return a10_opts_dict
+
+    @classmethod
+    def find_a10_device_by(cls, db_session=None, **kwargs):
+        d = {}
+        with cls._query(db_session) as q:
+            d = q.filter_by(**kwargs).first().as_dict()
+            d.update(cls._get_a10_opts(d.pop('a10_opts')))
+            LOG.debug("find_a10_device_by: %s" % (d))
+        return d
+
+    @classmethod
+    def find_all_a10_devices(cls, db_session=None):
+        d = {}
+        with cls._query(db_session) as q:
+            for x in q:
+                d[x.name] = x.as_dict()
+                d[x.name].update(cls._get_a10_opts(x.a10_opts))
+            return d
 
 
 class A10BaseMixin(object):

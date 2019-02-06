@@ -150,6 +150,7 @@ class TestA10ContextADP(TestA10Context):
     def setUp(self):
         super(TestA10ContextADP, self).setUp()
         self.reset_v_method('adp')
+        self.a.config.use_database = False
 
     def tearDown(self):
         self.reset_v_method('lsi')

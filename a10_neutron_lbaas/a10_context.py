@@ -32,6 +32,7 @@ class A10Context(object):
         self.openstack_context = openstack_context
         self.openstack_lbaas_obj = openstack_lbaas_obj
         self.device_name = kwargs.get('device_name', None)
+        self.device_id = kwargs.get('device_id', None)
         self.action = kwargs.get('action', '')
         LOG.debug("A10Context obj=%s", openstack_lbaas_obj)
         LOG.debug("A10Context action=%s", self.action)
@@ -39,8 +40,15 @@ class A10Context(object):
 
     def _get_device(self):
         if self.device_name:
-            d = self.a10_driver.config.get_device(self.device_name)
+            LOG.debug("A10Context._get_device(): self.device_name=%s"
+                      % (self.device_name))
+
+            d = self.a10_driver.config.get_device(device_name=self.device_name)
         else:
+            LOG.debug("A10Context._get_device(): no self.device_name calling "
+                      "a10_driver._select_a10_device tenant_id=%s "
+                      "use_database=%s"
+                      % (self.tenant_id, self.a10_driver.config.use_database))
             d = self.a10_driver._select_a10_device(self.tenant_id, a10_context=self,
                                                    lbaas_obj=self.openstack_lbaas_obj,
                                                    action=self.action)
@@ -91,6 +99,7 @@ class A10Context(object):
     def select_appliance_partition(self):
         self.get_partition_key()
 
+        LOG.debug("A10Context.select_appliance_partition: device_cfg=%s" % (self.device_cfg))
         name = self.device_cfg.get("shared_partition", "shared")
 
         if self.device_cfg['v_method'].lower() == 'adp':

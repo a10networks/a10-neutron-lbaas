@@ -18,7 +18,7 @@ import a10_neutron_lbaas.plumbing_hooks
 
 GLOBAL_DEFAULTS = {
     "verify_appliances": False,
-    "use_database": False,
+    "use_database": True,
     "database_connection": None,
     "neutron_conf_dir": '/etc/neutron',
     "member_name_use_uuid": False,
@@ -34,22 +34,24 @@ DEVICE_REQUIRED_FIELDS = [
     "host",
     "username",
     "password",
+    "api_version",
 ]
 
 DEVICE_OPTIONAL_DEFAULTS = {
     "protocol": "https",
     "port": 443,
-    "api_version": "2.1",
-    "status": True,
     "autosnat": False,
-    "v_method": "LSI",
-    "shared_partition": "shared",
-    "use_float": False,
+    "conn_limit": 8000000,
     "default_virtual_server_vrid": None,
-    "ipinip": False,
     "ha_sync_list": [],
-    "write_memory": True,
+    "ipinip": False,
+    "source_nat_pool": None,
+    "shared_partition": "shared",
+    "status": True,
+    "use_float": False,
     "vport_defaults": {},
+    "v_method": "LSI",
+    "write_memory": True,
     # "max_instance": 5000,
     # "method": "hash",
 
@@ -57,7 +59,6 @@ DEVICE_OPTIONAL_DEFAULTS = {
     # "per_partition_lif_max": 10,
     # "peer_mgmt_ip": "",
     # "peer_mgmt_port": "",
-    # "default_virtual_server_vrid": 1,
     # "vlan": 0,
     # "gateway_mode": 1,
 }

@@ -40,8 +40,12 @@ devices2 = {
 
 TENANT_ID = 'xxx'
 
+# This returns dev1 because there is only an entry for dev1 in the list
 EXPECTED_DEV1 = acos_client.Hash(list(devices1)).get_server(TENANT_ID)
 HARDCODE_RESULT1 = 'dev1'
+# This returns dev2 because we are asking for the node named dev2
+# If you ask for TENANT_ID, you will get back the first key in the hash
+# which is not in an consistent order
 EXPECTED_DEV2 = acos_client.Hash(list(devices2)).get_server(TENANT_ID)
 HARDCODE_RESULT2 = 'dev2'
 
@@ -60,7 +64,7 @@ class TestSelectDevice(test_base.UnitTestBase):
         self.assertEqual(d['name'], EXPECTED_DEV1)
 
         h = hooks.PlumbingHooks(None, devices=devices2)
-        d = h._select_device_hash(TENANT_ID)
+        d = h._select_device_hash('dev2')
         self.assertEqual(d['name'], EXPECTED_DEV2)
 
     def test_select_device_db(self):
