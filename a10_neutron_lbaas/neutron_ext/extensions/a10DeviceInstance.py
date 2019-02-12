@@ -51,8 +51,9 @@ _ALIAS = constants.A10_DEVICE_INSTANCE_EXT
 # TODO(rename this to *Extension to avoid config file confusion)
 class A10deviceinstance(extensions.ExtensionDescriptor):
 
-    nextensions.register_custom_supported_check(
-        _ALIAS, lambda: True, plugin_agnostic=True)
+    if hasattr(nextensions, 'register_custom_supported_check'):
+        nextensions.register_custom_supported_check(
+            _ALIAS, lambda: True, plugin_agnostic=True)
 
     def get_name(cls):
         return "A10 Device Instances"
