@@ -257,3 +257,31 @@ class FakeKeystoneClient(object):
     def __init__(self, parent_id='default'):
         self.parent_id = parent_id
         self.domain_id = 'default'
+
+
+class FakeL7Policy(FakeModel):
+
+    def __init__(self, listener, action, redirect_pool, redirect_url, index):
+        super(FakeL7Policy, self).__init__()
+        self.id = 'fake-l7policy-id-001'
+        self.listener = listener
+        self.action = action
+        self.redirect_pool = redirect_pool
+        self.redirect_url = redirect_url
+        self.index = index
+        self.rules = []
+        self.root_loadbalancer = FakeLoadBalancer()
+
+
+class FakeL7Rule(FakeModel):
+
+    def __init__(self, l7_policy_id, type, compare_type, key, value):
+        super(FakeL7Rule, self).__init__()
+        self.id = 'fake-l7rule-id-001'
+        self.l7_policy_id = l7_policy_id
+        self.type = type
+        self.compare_type = compare_type
+        self.key = key
+        self.value = value
+        self.invert = False
+        self.root_loadbalancer = FakeLoadBalancer()
