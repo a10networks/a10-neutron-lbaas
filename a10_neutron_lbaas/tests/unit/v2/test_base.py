@@ -32,6 +32,7 @@ class HandlerTestBase(UnitTestBase):
         self.EXPR_BEGIN = "beginning"
         self.EXPR_END = "end"
         self.EXPR_CLASS = "charclass"
+        self.EXPR_PROTOCOL = "protocol"
 
     def _get_expressions_mock(self):
         return {
@@ -52,6 +53,12 @@ class HandlerTestBase(UnitTestBase):
                 "regex": "[w]{2,3}",
                 "json": {
                     "scaleout-bucket-count": 64
+                }
+            },
+            self.EXPR_PROTOCOL: {
+                "regex": "^protocol",
+                "json": {
+                    "protocol": "tcp"
                 }
             }
         }

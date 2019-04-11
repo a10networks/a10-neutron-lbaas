@@ -539,3 +539,6 @@ class TestListeners(test_base.HandlerTestBase):
         handler = self.a.listener
         handler.create(None, m)
         # This test should just run without raising any exceptions
+
+    def test_create_vport_expressions_match_beginning(self):
+        self._test_create_expressions("protocol", self.EXPR_PROTOCOL)
