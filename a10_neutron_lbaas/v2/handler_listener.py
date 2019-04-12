@@ -180,7 +180,6 @@ class ListenerHandler(handler_base_v2.HandlerBaseV2):
             template_args["aflex-scripts"] = listener.aflex
 
         if "protocol" in vport_defaults:
-            # import pdb; pdb.set_trace()
             protocol = vport_defaults["protocol"]
             del vport_defaults["protocol"]
 
