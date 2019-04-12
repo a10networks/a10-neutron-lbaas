@@ -544,14 +544,12 @@ class TestListeners(test_base.HandlerTestBase):
         # Duplicated because this is a slightly different test.
         pattern = "params"
         self.a.config.get_vport_expressions = self._get_expressions_mock
-        expressions = self.a.config.get_vport_expressions()
-        expected = expressions.get(pattern, {}).get("json", {})
         p = 'TCP'
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
         m = fake_objs.FakeListener(p, 2222, pool=pool,
                                    loadbalancer=lb)
-        m.name = pattern 
+        m.name = pattern
         handler = self.a.listener
         handler.create(None, m)
 
@@ -563,8 +561,6 @@ class TestListeners(test_base.HandlerTestBase):
         # Duplicated because this is a slightly different test.
         pattern = "params"
         self.a.config.get_vport_expressions = self._get_expressions_mock
-        expressions = self.a.config.get_vport_expressions()
-        expected = expressions.get(pattern, {}).get("json", {})
         p = 'UDP'
         lb = fake_objs.FakeLoadBalancer()
         pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
