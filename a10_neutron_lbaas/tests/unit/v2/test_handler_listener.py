@@ -540,5 +540,22 @@ class TestListeners(test_base.HandlerTestBase):
         handler.create(None, m)
         # This test should just run without raising any exceptions
 
-    def test_create_vport_expressions_match_beginning(self):
-        self._test_create_expressions("protocol", self.EXPR_PROTOCOL)
+    def test_create_vport_expressions_doesnt_break_acos_args(self):
+        # Duplicated because this is a slightly different test.
+        pattern = "params"
+        self.a.config.get_vport_expressions = self._get_expressions_mock
+        expressions = self.a.config.get_vport_expressions()
+        expected = expressions.get(pattern, {}).get("json", {})
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        m.name = pattern 
+        handler = self.a.listener
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn("protocol='tcp'", s)
+
