@@ -539,3 +539,37 @@ class TestListeners(test_base.HandlerTestBase):
         handler = self.a.listener
         handler.create(None, m)
         # This test should just run without raising any exceptions
+
+    def test_create_vport_expressions_doesnt_break_acos_args(self):
+        # Duplicated because this is a slightly different test.
+        pattern = "params"
+        self.a.config.get_vport_expressions = self._get_expressions_mock
+        p = 'TCP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        m.name = pattern
+        handler = self.a.listener
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn("protocol='tcp'", s)
+
+    def test_create_vport_expressions_overrides_protocol(self):
+        # Duplicated because this is a slightly different test.
+        pattern = "params"
+        self.a.config.get_vport_expressions = self._get_expressions_mock
+        p = 'UDP'
+        lb = fake_objs.FakeLoadBalancer()
+        pool = fake_objs.FakePool(p, 'ROUND_ROBIN', None)
+        m = fake_objs.FakeListener(p, 2222, pool=pool,
+                                   loadbalancer=lb)
+        m.name = pattern
+        handler = self.a.listener
+        handler.create(None, m)
+
+        s = str(self.a.last_client.mock_calls)
+        self.assertIn("vport.create", s)
+        self.assertIn("protocol='tcp'", s)
