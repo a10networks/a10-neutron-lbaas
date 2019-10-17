@@ -137,6 +137,7 @@ class MemberHandler(handler_base_v2.HandlerBaseV2):
         server_name = self._meta_name(member, server_ip)
 
         try:
+            c.client.slb.server.port.delete(server_name, member.protocol_port, 'TCP')
             if self.neutron.member_count(context, member) > 1:
                 c.client.slb.service_group.member.delete(
                     self._pool_name(context, pool_id=member.pool_id, pool=member.pool),
