@@ -67,7 +67,7 @@ def vip_protocols(c, os_protocol):
         'TCP': z.TCP,
         'UDP': z.UDP,
         'HTTP': z.HTTP,
-        'HTTPS': z.TCP,
+        'HTTPS': z.HTTPS,
         'TERMINATED_HTTPS': z.HTTPS,
         'OTHERS': z.OTHERS,
         'RTSP': z.RTSP,
