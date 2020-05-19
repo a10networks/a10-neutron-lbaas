@@ -3,9 +3,7 @@ hacking>=0.10,<0.11
 mock>=1.0.1,<1.1.0
 mox
 mox3
--e git+https://github.com/openstack/neutron-lbaas#egg=neutron-lbaas
-#neutron
-#neutron-lbaas
+neutron-lbaas>=14.0.0,<15.0.0
 nose
 nose-exclude
 oslotest
@@ -15,5 +13,4 @@ pifpaf
 pymysql
 testresources
 testscenarios
-# TODO(dougwig) -- can we remove this?
--e git+https://github.com/openstack/neutron#egg=neutron
+neutron>=14.0.0,<15.0.0
