@@ -75,11 +75,9 @@ class TestMembers(test_base.HandlerTestBase):
             status = self.a.last_client.slb.DOWN
         server_args = {}
         if conn_limit is not None:
-            if conn_limit > 0 and conn_limit <= 8000000:
-                server_args['conn-limit'] = conn_limit
+            server_args['conn-limit'] = conn_limit
         if conn_resume is not None:
-            if conn_resume > 0 and conn_resume <= 1000000:
-                server_args['conn-resume'] = conn_resume
+            server_args['conn-resume'] = conn_resume
         self.a.last_client.slb.server.create.assert_called_with(
             name, ip,
             status=status,
