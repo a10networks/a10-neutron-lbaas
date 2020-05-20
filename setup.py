@@ -14,8 +14,8 @@ setup(
     license = "Apache",
     keywords = "a10 axapi acos adc slb load balancer openstack neutron lbaas",
     url = "https://github.com/a10networks/a10-neutron-lbaas",
-
     long_description = open('README.md').read(),
+    long_description_content_type = "text/markdown",
 
     classifiers = [
         'License :: OSI Approved :: Apache Software License',
