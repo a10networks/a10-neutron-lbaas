@@ -16,6 +16,9 @@ import logging
 
 from acos_client import errors as acos_errors
 
+from a10_neutron_lbaas.agalaxy import client as agalaxy_client
+from a10_neutron_lbaas.agalaxy import errors as agalaxy_errors
+
 LOG = logging.getLogger(__name__)
 
 
@@ -71,6 +74,42 @@ def initialize_sflow(vth_cfg, device_cfg, client):
         pass
 
 
+def initialize_agalaxy(vth_cfg, device_cfg, device_client):
+
+    agalaxy_host = vth_cfg.get('agalaxy', None)
+    if agalaxy_host is None:
+        return
+
+    host = device_client.host
+    username = device_client.session.username
+    password = device_client.session.password
+
+    device = {
+        "device_host": host,
+        "device_credentials": {
+            "cli_credentials": {
+                "username": username,
+                "password": password,
+            },
+            "https_credentials": {
+                "username": username,
+                "password": password
+            }
+        }
+    }
+
+    client = agalaxy_client.Client(**agalaxy_host)
+    try:
+        client.device.create(device)
+    except agalaxy_errors.AGalaxyException as e:
+        LOG.error("Error registering %s with agalaxy. %s" % (host, e))
+    finally:
+        try:
+            client.session.close()
+        except Exception:
+            pass
+
+
 def initialize_vthunder(a10_cfg, device_cfg, client):
     """Perform initialization of system-wide settings"""
 
@@ -79,3 +118,4 @@ def initialize_vthunder(a10_cfg, device_cfg, client):
     initialize_dns(vth, device_cfg, client)
     initialize_licensing(vth, device_cfg, client)
     initialize_sflow(vth, device_cfg, client)
+    initialize_agalaxy(vth, device_cfg, client)

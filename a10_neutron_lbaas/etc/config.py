@@ -237,7 +237,15 @@ devices = {
 #     'sflow_collector': {
 #          'host': '10.20.100.7',
 #          'port': 6343
-#     }
+#     },
+
+# # Configure registering launched devices with agalaxy
+#
+#     'agalaxy': {
+#         'host': '192.0.2.200',
+#         'username': '',
+#         'password': ''
+#     },
 
 #     # The following are required if you wish to use a service tenant.
 #     'service_tenant': {
