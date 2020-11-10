@@ -32,6 +32,7 @@ devices = {
 }
 EOF
     fi
+    a10-manage install
 }
 
 function configure_a10_v1 {
